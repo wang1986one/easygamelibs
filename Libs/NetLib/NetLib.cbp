@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="NetLib" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../Bin/Debug/libNetLibD" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Debug" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-g" />
+					<Add option="-O0" />
+					<Add option="-D_DEBUG" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../Bin/Release/libNetLib" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Release" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Unit filename="BaseServer.cpp" />
+		<Unit filename="BaseServer.h" />
+		<Unit filename="BaseService.cpp" />
+		<Unit filename="BaseService.h" />
+		<Unit filename="BaseTCPConnection.cpp" />
+		<Unit filename="BaseTCPConnection.h" />
+		<Unit filename="ClassifiedID.h" />
+		<Unit filename="EasyFileServerConnection.cpp" />
+		<Unit filename="EasyFileServerConnection.h" />
+		<Unit filename="EasyFileService.cpp" />
+		<Unit filename="EasyFileService.h" />
+		<Unit filename="EasyNetLinkConnection.cpp" />
+		<Unit filename="EasyNetLinkConnection.h" />
+		<Unit filename="EasyNetLinkManager.cpp" />
+		<Unit filename="EasyNetLinkManager.h" />
+		<Unit filename="EasyNetLinkService.cpp" />
+		<Unit filename="EasyNetLinkService.h" />
+		<Unit filename="EpollEventObject.cpp" />
+		<Unit filename="EpollEventObject.h" />
+		<Unit filename="EpollEventRouter.cpp" />
+		<Unit filename="EpollEventRouter.h" />
+		<Unit filename="EpollThread.cpp" />
+		<Unit filename="EpollThread.h" />
+		<Unit filename="IEpollEventHandler.cpp" />
+		<Unit filename="IEpollEventHandler.h" />
+		<Unit filename="IIOCPEventHandler.h" />
+		<Unit filename="IOCPEventRouter.h" />
+		<Unit filename="IOCPFileAccessor.h" />
+		<Unit filename="IOCPListenThread.h" />
+		<Unit filename="IOCPThread.h" />
+		<Unit filename="IPAddress.h" />
+		<Unit filename="IPPattern.h" />
+		<Unit filename="NetConnectionEpoll.cpp" />
+		<Unit filename="NetConnectionEpoll.h" />
+		<Unit filename="NetConnectionIOCP.h" />
+		<Unit filename="NetLib.h" />
+		<Unit filename="NetPTCPConnectionEpoll.cpp" />
+		<Unit filename="NetPTCPConnectionEpoll.h" />
+		<Unit filename="NetPTCPConnectionIOCP.h" />
+		<Unit filename="NetPUDPServiceIOCP.h" />
+		<Unit filename="NetServerEpoll.cpp" />
+		<Unit filename="NetServerEpoll.h" />
+		<Unit filename="NetServerIOCP.h" />
+		<Unit filename="NetServiceEpoll.cpp" />
+		<Unit filename="NetServiceEpoll.h" />
+		<Unit filename="NetServiceIOCP.h" />
+		<Unit filename="NetSocket.cpp" />
+		<Unit filename="NetSocket.h" />
+		<Unit filename="OverLappedObject.h" />
+		<Unit filename="ReadMe.txt" />
+		<Unit filename="stdafx.cpp" />
+		<Unit filename="stdafx.h">
+			<Option compile="1" />
+			<Option weight="0" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
