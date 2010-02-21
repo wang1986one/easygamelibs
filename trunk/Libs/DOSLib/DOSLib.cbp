@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="DOSLib" />
+		<Option platforms="Unix;" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option platforms="Unix;" />
+				<Option output="../Bin/Debug/libDOSLib" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Debug" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-g" />
+					<Add option="-O0" />
+					<Add option="-D_DEBUG" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option platforms="Unix;" />
+				<Option output="../Bin/Release/libDOSLib" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Release" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Unit filename="DOSBaseObject.cpp" />
+		<Unit filename="DOSBaseObject.h" />
+		<Unit filename="DOSClient.cpp" />
+		<Unit filename="DOSClient.h" />
+		<Unit filename="DOSClientMsgCatcher.cpp" />
+		<Unit filename="DOSClientMsgCatcher.h" />
+		<Unit filename="DOSClientMsgManager.cpp" />
+		<Unit filename="DOSClientMsgManager.h" />
+		<Unit filename="DOSDefines.h" />
+		<Unit filename="DOSLib.h" />
+		<Unit filename="DOSMessage.h" />
+		<Unit filename="DOSMsgCatcher.cpp" />
+		<Unit filename="DOSMsgCatcher.h" />
+		<Unit filename="DOSMsgManager.cpp" />
+		<Unit filename="DOSMsgManager.h" />
+		<Unit filename="DOSObjectGroup.cpp" />
+		<Unit filename="DOSObjectGroup.h" />
+		<Unit filename="DOSObjectManager.cpp" />
+		<Unit filename="DOSObjectManager.h" />
+		<Unit filename="DOSObjectProxyService.cpp" />
+		<Unit filename="DOSObjectProxyService.h" />
+		<Unit filename="DOSProxyConnection.cpp" />
+		<Unit filename="DOSProxyConnection.h" />
+		<Unit filename="DOSRouterLinkConnection.cpp" />
+		<Unit filename="DOSRouterLinkConnection.h" />
+		<Unit filename="DOSRouterService.cpp" />
+		<Unit filename="DOSRouterService.h" />
+		<Unit filename="DOSServer.cpp" />
+		<Unit filename="DOSServer.h" />
+		<Unit filename="stdafx.cpp" />
+		<Unit filename="stdafx.h">
+			<Option compile="1" />
+			<Option weight="0" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

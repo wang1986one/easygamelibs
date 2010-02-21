@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Utils" />
+		<Option platforms="Unix;" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option platforms="Unix;" />
+				<Option output="../Bin/Debug/libUtilsD" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Debug" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-g" />
+					<Add option="-O0" />
+					<Add option="-D_DEBUG" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../Bin/Release/libUtils" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Release" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-D_LIB" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Unit filename="AutoLock.h" />
+		<Unit filename="AutoPerformanceCounter.h" />
+		<Unit filename="CrtDebugNew.h" />
+		<Unit filename="CycleBuffer.cpp" />
+		<Unit filename="CycleBuffer.h" />
+		<Unit filename="CycleBufferEx.cpp" />
+		<Unit filename="CycleBufferEx.h" />
+		<Unit filename="EasyBuffer.cpp" />
+		<Unit filename="EasyBuffer.h" />
+		<Unit filename="EasyCriticalSectionLinux.h" />
+		<Unit filename="EasyList.h" />
+		<Unit filename="EasyString.h" />
+		<Unit filename="EasyThreadLinux.cpp" />
+		<Unit filename="EasyThreadLinux.h" />
+		<Unit filename="EasyTimer.h" />
+		<Unit filename="ExceptionHandler.cpp" />
+		<Unit filename="ExceptionHandler.h" />
+		<Unit filename="ExceptionParser.h" />
+		<Unit filename="ExpressionCaculator.cpp" />
+		<Unit filename="ExpressionCaculator.h" />
+		<Unit filename="FastMemoryPool.cpp" />
+		<Unit filename="FastMemoryPool.h" />
+		<Unit filename="FileLogPrinter.cpp" />
+		<Unit filename="FileLogPrinter.h" />
+		<Unit filename="FilePathManager.h" />
+		<Unit filename="FileSearcherLinux.cpp" />
+		<Unit filename="FileSearcherLinux.h" />
+		<Unit filename="FileSystemManager.cpp">
+			<Option weight="75" />
+		</Unit>
+		<Unit filename="FileSystemManager.h" />
+		<Unit filename="FloatRect.h" />
+		<Unit filename="Gif.h" />
+		<Unit filename="GrowBuffer.cpp" />
+		<Unit filename="GrowBuffer.h" />
+		<Unit filename="GuardThread.cpp" />
+		<Unit filename="GuardThread.h" />
+		<Unit filename="HashMD5.cpp" />
+		<Unit filename="HashMD5.h" />
+		<Unit filename="IDStorage.h" />
+		<Unit filename="IFileAccessor.cpp" />
+		<Unit filename="IFileAccessor.h" />
+		<Unit filename="IFileObjectCreator.cpp" />
+		<Unit filename="IFileObjectCreator.h" />
+		<Unit filename="ILogPrinter.h" />
+		<Unit filename="IndexSet.h" />
+		<Unit filename="LZWPack.cpp" />
+		<Unit filename="LZWPack.h" />
+		<Unit filename="LinuxAddOn.h" />
+		<Unit filename="LinuxFileAccessor.cpp" />
+		<Unit filename="LinuxFileAccessor.h" />
+		<Unit filename="LinuxFileAccessorObjectCreator.cpp" />
+		<Unit filename="LinuxFileAccessorObjectCreator.h" />
+		<Unit filename="LogManager.cpp" />
+		<Unit filename="LogManager.h" />
+		<Unit filename="MemoryAllocatee.cpp" />
+		<Unit filename="MemoryAllocatee.h" />
+		<Unit filename="MemoryLeakDetective.h" />
+		<Unit filename="NameObject.cpp" />
+		<Unit filename="NameObject.h" />
+		<Unit filename="NameStorage.h" />
+		<Unit filename="ObjectManager.h" />
+		<Unit filename="PerformanceStatistician.h" />
+		<Unit filename="ResourceFileAccessor.h" />
+		<Unit filename="ResourceFileObjectCreator.h" />
+		<Unit filename="SettingFile.h" />
+		<Unit filename="SmartPtr.h" />
+		<Unit filename="SmartStruct.cpp" />
+		<Unit filename="SmartStruct.h" />
+		<Unit filename="SmartValue.cpp" />
+		<Unit filename="SmartValue.h" />
+		<Unit filename="StandardFileAccessor.cpp" />
+		<Unit filename="StandardFileAccessor.h" />
+		<Unit filename="StandardFileObjectCreator.cpp" />
+		<Unit filename="StandardFileObjectCreator.h" />
+		<Unit filename="StaticList.h" />
+		<Unit filename="StaticMap.h" />
+		<Unit filename="StaticObject.h" />
+		<Unit filename="StringFile.cpp" />
+		<Unit filename="StringFile.h" />
+		<Unit filename="StringSplitter.h" />
+		<Unit filename="SystemProcessList.cpp" />
+		<Unit filename="SystemProcessList.h" />
+		<Unit filename="ThreadSafeCycleBuffer.cpp" />
+		<Unit filename="ThreadSafeCycleBuffer.h" />
+		<Unit filename="ThreadSafeIDStorage.h" />
+		<Unit filename="ThreadSafeList.h" />
+		<Unit filename="ToolsLinux.h" />
+		<Unit filename="TreeObject.cpp" />
+		<Unit filename="TreeObject.h" />
+		<Unit filename="USOFile.cpp" />
+		<Unit filename="USOFile.h" />
+		<Unit filename="USOObjectCreateFilter.cpp" />
+		<Unit filename="USOObjectCreateFilter.h" />
+		<Unit filename="Utils.cpp" />
+		<Unit filename="Utils.h" />
+		<Unit filename="VSOutputLogPrinter.cpp" />
+		<Unit filename="VSOutputLogPrinter.h" />
+		<Unit filename="WinFileAccessor.h" />
+		<Unit filename="WinFileAccessorObjectCreator.h" />
+		<Unit filename="WinTypeWrap.h" />
+		<Unit filename="pugxml.h" />
+		<Unit filename="stdafx.cpp" />
+		<Unit filename="stdafx.h">
+			<Option compile="1" />
+			<Option weight="0" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

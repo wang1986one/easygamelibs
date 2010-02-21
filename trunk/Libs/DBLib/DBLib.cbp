@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="DBLib" />
+		<Option platforms="Unix;" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../Bin/Debug/libDBLibD" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Debug" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-g" />
+					<Add option="-O0" />
+					<Add option="-D_DEBUG" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../Bin/Release/libDBLib" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Release" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Unit filename="DBFakeRecordSet.cpp" />
+		<Unit filename="DBFakeRecordSet.h" />
+		<Unit filename="DBInterfaces.cpp" />
+		<Unit filename="DBInterfaces.h" />
+		<Unit filename="DBLib.h" />
+		<Unit filename="DBStaticRecordSet.cpp" />
+		<Unit filename="DBStaticRecordSet.h" />
+		<Unit filename="DBTransaction.cpp" />
+		<Unit filename="DBTransaction.h" />
+		<Unit filename="DBTransationManager.cpp" />
+		<Unit filename="DBTransationManager.h" />
+		<Unit filename="DBTransationWorkThread.cpp" />
+		<Unit filename="DBTransationWorkThread.h" />
+		<Unit filename="DBTypes.h" />
+		<Unit filename="DBValue.cpp" />
+		<Unit filename="DBValue.h" />
+		<Unit filename="MySQLConnection.cpp" />
+		<Unit filename="MySQLConnection.h" />
+		<Unit filename="MySQLDatabase.cpp" />
+		<Unit filename="MySQLDatabase.h" />
+		<Unit filename="MySQLRecordSet.cpp" />
+		<Unit filename="MySQLRecordSet.h" />
+		<Unit filename="stdafx.cpp" />
+		<Unit filename="stdafx.h">
+			<Option compile="1" />
+			<Option weight="0" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

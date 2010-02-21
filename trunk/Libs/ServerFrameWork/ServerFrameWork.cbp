@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="ServerFrameWork" />
+		<Option platforms="Unix;" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../Bin/Debug/libServerFrameWorkD" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Debug" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-g" />
+					<Add option="-O0" />
+					<Add option="-D_DEBUG" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="Release/libServerFrameWork" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Release" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Unit filename="ControlPanel.cpp" />
+		<Unit filename="ControlPanel.h" />
+		<Unit filename="FileLogWorkThread.cpp" />
+		<Unit filename="FileLogWorkThread.h" />
+		<Unit filename="IBaseServer.h" />
+		<Unit filename="MainGuardThread.cpp" />
+		<Unit filename="MainGuardThread.h" />
+		<Unit filename="ServerAppLinux.cpp" />
+		<Unit filename="ServerAppLinux.h" />
+		<Unit filename="ServerFrameWork.h" />
+		<Unit filename="ServerLogPrinter.cpp" />
+		<Unit filename="ServerLogPrinter.h" />
+		<Unit filename="ServerThread.cpp" />
+		<Unit filename="ServerThread.h" />
+		<Unit filename="SystemConfig.cpp" />
+		<Unit filename="SystemConfig.h" />
+		<Unit filename="SystemControlPort.cpp" />
+		<Unit filename="SystemControlPort.h" />
+		<Unit filename="SystemNetLink.cpp" />
+		<Unit filename="SystemNetLink.h" />
+		<Unit filename="SystemNetLinkManager.cpp" />
+		<Unit filename="SystemNetLinkManager.h" />
+		<Unit filename="Tools.cpp" />
+		<Unit filename="Tools.h" />
+		<Unit filename="stdafx.cpp" />
+		<Unit filename="stdafx.h">
+			<Option compile="1" />
+			<Option weight="0" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
