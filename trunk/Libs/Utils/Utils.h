@@ -127,7 +127,7 @@ enum EASY_DATA_STORAGE_MODE
 #endif
 
 
-#include "SlkReader.h"
+
 
 
 #include "SettingFile.h"
