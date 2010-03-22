@@ -1,0 +1,71 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerManager", "ServerManager\ServerManager.vcproj", "{AA8490BB-8AAA-4C41-AD4E-2CBB3A71BC24}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8} = {F4126B50-6B57-4B34-A58A-987D6B4219C8}
+		{91800885-0BE8-4AA8-937F-6FE5C28790EA} = {91800885-0BE8-4AA8-937F-6FE5C28790EA}
+		{4B66B9DF-5BC1-4FBD-AA7E-AA517B99D9D9} = {4B66B9DF-5BC1-4FBD-AA7E-AA517B99D9D9}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utils", "..\Libs\Utils\Utils.vcproj", "{F4126B50-6B57-4B34-A58A-987D6B4219C8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetLib", "..\Libs\NetLib\NetLib.vcproj", "{4B66B9DF-5BC1-4FBD-AA7E-AA517B99D9D9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerFrameWork", "..\Libs\ServerFrameWork\ServerFrameWork.vcproj", "{91800885-0BE8-4AA8-937F-6FE5C28790EA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Work", "Work", "{2B32DF5D-9E64-4A5A-BD2F-11DF057242D0}"
+	ProjectSection(SolutionItems) = preProject
+		Work\Config.xml = Work\Config.xml
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerManagerClient", "ServerManagerClient\ServerManagerClient.vcproj", "{B374EF8A-E4FF-4F6A-9761-1DB3CDC45B55}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8} = {F4126B50-6B57-4B34-A58A-987D6B4219C8}
+		{4B66B9DF-5BC1-4FBD-AA7E-AA517B99D9D9} = {4B66B9DF-5BC1-4FBD-AA7E-AA517B99D9D9}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServiceController", "ServiceController\ServiceController.vcproj", "{CE7CEA77-940C-4294-8F39-5A05721EA349}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8} = {F4126B50-6B57-4B34-A58A-987D6B4219C8}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AA8490BB-8AAA-4C41-AD4E-2CBB3A71BC24}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AA8490BB-8AAA-4C41-AD4E-2CBB3A71BC24}.Debug|Win32.Build.0 = Debug|Win32
+		{AA8490BB-8AAA-4C41-AD4E-2CBB3A71BC24}.Release|Win32.ActiveCfg = Release|Win32
+		{AA8490BB-8AAA-4C41-AD4E-2CBB3A71BC24}.Release|Win32.Build.0 = Release|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Debug|Win32.Build.0 = Debug|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Release|Win32.ActiveCfg = Release|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Release|Win32.Build.0 = Release|Win32
+		{4B66B9DF-5BC1-4FBD-AA7E-AA517B99D9D9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4B66B9DF-5BC1-4FBD-AA7E-AA517B99D9D9}.Debug|Win32.Build.0 = Debug|Win32
+		{4B66B9DF-5BC1-4FBD-AA7E-AA517B99D9D9}.Release|Win32.ActiveCfg = Release|Win32
+		{4B66B9DF-5BC1-4FBD-AA7E-AA517B99D9D9}.Release|Win32.Build.0 = Release|Win32
+		{91800885-0BE8-4AA8-937F-6FE5C28790EA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{91800885-0BE8-4AA8-937F-6FE5C28790EA}.Debug|Win32.Build.0 = Debug|Win32
+		{91800885-0BE8-4AA8-937F-6FE5C28790EA}.Release|Win32.ActiveCfg = Release|Win32
+		{91800885-0BE8-4AA8-937F-6FE5C28790EA}.Release|Win32.Build.0 = Release|Win32
+		{B374EF8A-E4FF-4F6A-9761-1DB3CDC45B55}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B374EF8A-E4FF-4F6A-9761-1DB3CDC45B55}.Debug|Win32.Build.0 = Debug|Win32
+		{B374EF8A-E4FF-4F6A-9761-1DB3CDC45B55}.Release|Win32.ActiveCfg = Release|Win32
+		{B374EF8A-E4FF-4F6A-9761-1DB3CDC45B55}.Release|Win32.Build.0 = Release|Win32
+		{CE7CEA77-940C-4294-8F39-5A05721EA349}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CE7CEA77-940C-4294-8F39-5A05721EA349}.Debug|Win32.Build.0 = Debug|Win32
+		{CE7CEA77-940C-4294-8F39-5A05721EA349}.Release|Win32.ActiveCfg = Release|Win32
+		{CE7CEA77-940C-4294-8F39-5A05721EA349}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
