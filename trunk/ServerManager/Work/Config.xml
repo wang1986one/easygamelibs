@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="gb2312" ?>
+<Main ServerID="6-0-0-1">
+  <ClientListen IP="0" Port="8300" MaxClient="500" />
+  <ProcessMonitor ProcessInfoFetchTime="5000" MaxProcessCount="256" />
+  <FileCache CacheSize="5" QueryQueueSize="32"/>
+  <ServiceList>
+    <Service Name="GS" ImageFilePath="D:\Server\GameServer.exe" WorkDir="D:\Server\" StartupParam=""/>
+  </ServiceList>
+
+</Main>
+<System>
+  <UDPControlAddress IP="0" Port="9600" />
+</System>
+<EasyLink ServerID="6-0-0-1">
+  <Connections>
+    <Connection IP="0" Port="9550" />
+  </Connections>
+</EasyLink>
+<SystemLink ServerID="6-0-0-1">
+  <Services ReallocConnectionID="true">
+    <Service ID="6-0-0-1" IP="0" Port="9200">
+	</Services>
+</SystemLink>
