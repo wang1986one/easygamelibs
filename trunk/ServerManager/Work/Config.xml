@@ -4,7 +4,7 @@
   <ProcessMonitor ProcessInfoFetchTime="5000" MaxProcessCount="256" />
   <FileCache CacheSize="5" QueryQueueSize="32"/>
   <ServiceList>
-    <Service Name="GS" ImageFilePath="D:\Server\GameServer.exe" WorkDir="D:\Server\" StartupParam=""/>
+    <Service Name="GS" ImageFilePath="D:\TDOnline\Server\bin\ServiceContainerD.exe" WorkDir="D:\TDOnline\Server\bin\" StartupParam=""/>
   </ServiceList>
 
 </Main>
