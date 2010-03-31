@@ -48,7 +48,6 @@
 #include "ControlPanel.h"
 
 
-#include "FileLogWorkThread.h"
 #include "ServerLogPrinter.h"
 
 #include "SystemNetLink.h"

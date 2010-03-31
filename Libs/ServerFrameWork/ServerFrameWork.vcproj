@@ -319,14 +319,6 @@
 			Name="Log"
 			>
 			<File
-				RelativePath=".\FileLogWorkThread.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\FileLogWorkThread.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ServerLogPrinter.cpp"
 				>
 			</File>
