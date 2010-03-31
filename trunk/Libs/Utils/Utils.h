@@ -192,7 +192,8 @@ enum EASY_DATA_STORAGE_MODE
 #include "Gif.h"
 #endif
 
-
+#include "AsyncFileLogWorkThread.h"
+#include "AsyncFileLogPrinter.h"
 
 #include "HashMD5.h"
 
