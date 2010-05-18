@@ -243,8 +243,10 @@ bool CD3DTexture::LoadTextureFromMemory(LPVOID pData,int DataSize,UINT MipLevels
 			m_TextureOrgInfo.MipLevels=MipLevels;
 			m_TextureOrgInfo.UseFilter=UseFilter;
 			m_TextureOrgInfo.IsManaged=IsManaged;
+			m_TextureOrgInfo.WantRestore=!IsManaged;
 			m_TextureOrgInfo.KeyColor=0;
 		}
+		
 	}
 	
 
@@ -344,6 +346,7 @@ bool CD3DTexture::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT 
 	m_TextureOrgInfo.MipLevels=Packet.GetMember(SST_D3DTEX_MIP_LEVEL);
 	m_TextureOrgInfo.UseFilter=(BYTE)Packet.GetMember(SST_D3DTEX_USE_FILTER)!=0;
 	m_TextureOrgInfo.IsManaged=(BYTE)Packet.GetMember(SST_D3DTEX_IS_MANAGED)!=0;
+	m_TextureOrgInfo.WantRestore=!m_TextureOrgInfo.IsManaged;
 	m_TextureOrgInfo.KeyColor=Packet.GetMember(SST_D3DTEX_KEY_COLOR);
 
 	CSmartValue TextureData=Packet.GetMember(SST_D3DTEX_TESTURE_DATA);
@@ -368,6 +371,7 @@ UINT CD3DTexture::GetSmartStructSize(UINT Param)
 	if(m_pTexture)
 	{		
 		SAFE_RELEASE(m_pTextureSaveData);
+		
 		if(D3DXSaveTextureToFileInMemory(&m_pTextureSaveData,D3DXIFF_PNG,m_pTexture,NULL)!=D3D_OK)
 			return false;
 		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(m_pTextureSaveData->GetBufferSize());		
@@ -573,6 +577,7 @@ bool CD3DTexture::LoadBLPTexture(LPVOID pData,int DataSize,DWORD Usage,bool IsMa
 	m_TextureOrgInfo.MipLevels=0;
 	m_TextureOrgInfo.UseFilter=true;
 	m_TextureOrgInfo.IsManaged=IsManaged;
+	m_TextureOrgInfo.WantRestore=!IsManaged;
 	m_TextureOrgInfo.KeyColor=0;
 
 	

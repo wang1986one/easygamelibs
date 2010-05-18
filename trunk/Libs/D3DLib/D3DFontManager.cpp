@@ -30,10 +30,8 @@ CD3DFontManager::~CD3DFontManager(void)
 	Pos=m_FontStorage.GetFirstObjectPos();
 	while(Pos)
 	{
-		char Msg[256];
 		CD3DBaseFont * pFont=*(m_FontStorage.GetNext(Pos));
-		sprintf_s(Msg,256,"字体<%s>未释放！\r\n",(LPCTSTR)pFont->GetName());
-		OutputDebugString(Msg);
+		PrintSystemLog(0,"字体<%s>未释放！",(LPCTSTR)pFont->GetName());
 	}
 	m_FontStorage.Destory();
 #endif

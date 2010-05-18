@@ -26,11 +26,23 @@ CCycleBufferEx::CCycleBufferEx(void):CNameObject()
 
 CCycleBufferEx::CCycleBufferEx(UINT Size,UINT SmoothSize):CNameObject()
 {
+	m_pBuffer=NULL;
+	m_BufferSize=0;	
+	m_SmoothSize=0;
+	m_BufferHead=0;
+	m_BufferTail=0;	
+	m_IsSelfBuffer=true;
 	Create(Size,SmoothSize);	
 }
 
 CCycleBufferEx::CCycleBufferEx(LPVOID pBuff,UINT Size,UINT SmoothSize):CNameObject()
 {
+	m_pBuffer=NULL;
+	m_BufferSize=0;	
+	m_SmoothSize=0;
+	m_BufferHead=0;
+	m_BufferTail=0;	
+	m_IsSelfBuffer=true;
 	Create(pBuff,Size,SmoothSize);
 }
 

@@ -35,8 +35,8 @@
 #include "D3DLib.h"
 
 
-#define FUNCTION_BEGIN				{static int s_FunctionIndex=0;if(!s_FunctionIndex) s_FunctionIndex=CPerformanceStatistician::GetInstance()->GetFunctionIndex(s_FunctionIndex,__FUNCTION__); CAutoPerformanceCounter tmpPerformanceCounter(s_FunctionIndex);
-#define FUNCTION_END				}
+#define FUNCTION_BEGIN				//{static int s_FunctionIndex=0;if(!s_FunctionIndex) s_FunctionIndex=CPerformanceStatistician::GetInstance()->GetFunctionIndex(s_FunctionIndex,__FUNCTION__); CAutoPerformanceCounter tmpPerformanceCounter(s_FunctionIndex);
+#define FUNCTION_END				//}
 
 
 #define BLOCK_BEGIN(BlockName)		//{static int s_FunctionIndex=0;if(!s_FunctionIndex) s_FunctionIndex=CPerformanceStatistician::GetInstance()->GetFunctionIndex(s_FunctionIndex,BlockName); CAutoPerformanceCounter tmpPerformanceCounter(s_FunctionIndex);

@@ -18,7 +18,6 @@ class CD3DBaseStaticModel :
 {
 protected:
 protected:
-	CD3DBoundingFrame *			m_pBoundingFrame;
 
 	DECLARE_CLASS_INFO(CD3DBaseStaticModel)
 public:
@@ -31,8 +30,6 @@ public:
 	virtual bool Restore();
 	
 
-	virtual void ShowBoundingFrame(int Operator);
-	virtual void UpdateBoundingFrame();
 };
 
 }

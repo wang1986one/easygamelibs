@@ -1,27 +1,11 @@
-/****************************************************************************/
-/*                                                                          */
-/*      文件名:    ServerFrameWorkResource.h                                */
-/*      创建日期:  2009年07月06日                                           */
-/*      作者:      Sagasarate                                               */
-/*                                                                          */
-/*      本软件版权归Sagasarate(sagasarate@sina.com)所有                     */
-/*      你可以将本软件用于任何商业和非商业软件开发，但                      */
-/*      必须保留此版权声明                                                  */
-/*                                                                          */
-/****************************************************************************/
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
 // Used by ServerFrameWork.rc
 //
-#define IDM_ABOUTBOX                    0x0010
-#define IDD_ABOUTBOX                    100
-#define IDS_ABOUTBOX                    101
 #define IDD_SERVER_CONSOLE              2102
-#define IDR_MAINFRAME                   2128
 #define IDI_ICON_TRAY                   2131
 #define IDC_STATIC_VER                  21000
-#define IDC_EDIT1                       21005
-#define IDC_ST_CLIENT_COUNT             21006
+#define IDC_EDIT_LOG                    21005
 #define IDC_ST_CYCLE_TIME               21007
 #define IDC_ST_TCP_SEND                 21008
 #define IDC_ST_TCP_RECV                 21009
@@ -30,6 +14,7 @@
 #define IDC_EDIT_COMMAND                21013
 #define IDC_EXEC_COMMAND                21014
 #define IDC_CLOSE_SERVER                21015
+#define IDC_SHOW_SERVER_STATUS          21016
 
 // Next default values for new objects
 // 

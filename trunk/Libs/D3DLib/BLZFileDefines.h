@@ -40,25 +40,27 @@ namespace D3DLib{
 #define BLZ_DBC_ITEM_DISPLAY_INFO_RECORD_SIZE			(100)
 #define BLZ_DBC_HELMET_GEOSET_VISIBLE_RECORD_SIZE		(32)
 #define BLZ_DBC_MAP_RECORD_SIZE							(472)
+#define BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_RECORD_SIZE	(28)
 
 #define BLZ_DBC_STR_LOCAL_ZH_CN							4
 #define BLZ_DBC_STR_LOCAL_NUM							17
 
-#define BLZ_DBC_CHAR_SECTION_FILE_NAME			"CharSections.dbc"
-#define BLZ_DBC_ANIMATION_DATA_FILE_NAME		"AnimationData.dbc"
-#define BLZ_DBC_CHAR_HAIR_GEOSET_FILE_NAME		"CharHairGeosets.dbc"
-#define BLZ_DBC_CHAR_WHISKER_GEOSET_FILE_NAME	"CharacterFacialHairStyles.dbc"
-#define BLZ_DBC_CHAR_RACE_FILE_NAME				"ChrRaces.dbc"
-#define BLZ_DBC_CREATURE_DISPLAY_INFO_FILE_NAME	"CreatureDisplayInfo.dbc"
-#define BLZ_DBC_CREATURE_MODEL_INFO_FILE_NAME	"CreatureModelData.dbc"
-#define BLZ_DBC_ITEM_CLASS_FILE_NAME			"ItemClass.dbc"
-#define BLZ_DBC_ITEM_SUB_CLASS_FILE_NAME		"ItemSubClass.dbc"
-#define BLZ_DBC_ITEM_SUB_CLASS_MASK_FILE_NAME	"ItemSubClassMask.dbc"
-#define BLZ_DBC_ITEM_DATA_FILE_NAME				"Item.dbc"
-#define BLZ_DBC_ITEM_CACHE_DATA_FILE_NAME		"ItemData.csv"
-#define BLZ_DBC_ITEM_DISPLAY_INFO_FILE_NAME		"ItemDisplayInfo.dbc"
-#define BLZ_DBC_HELMET_GEOSET_VISIBLE_FILE_NAME	"HelmetGeosetVisData.dbc"
-#define BLZ_DBC_MAP_FILE_NAME					"Map.dbc"
+#define BLZ_DBC_CHAR_SECTION_FILE_NAME					"CharSections.dbc"
+#define BLZ_DBC_ANIMATION_DATA_FILE_NAME				"AnimationData.dbc"
+#define BLZ_DBC_CHAR_HAIR_GEOSET_FILE_NAME				"CharHairGeosets.dbc"
+#define BLZ_DBC_CHAR_WHISKER_GEOSET_FILE_NAME			"CharacterFacialHairStyles.dbc"
+#define BLZ_DBC_CHAR_RACE_FILE_NAME						"ChrRaces.dbc"
+#define BLZ_DBC_CREATURE_DISPLAY_INFO_FILE_NAME			"CreatureDisplayInfo.dbc"
+#define BLZ_DBC_CREATURE_MODEL_INFO_FILE_NAME			"CreatureModelData.dbc"
+#define BLZ_DBC_ITEM_CLASS_FILE_NAME					"ItemClass.dbc"
+#define BLZ_DBC_ITEM_SUB_CLASS_FILE_NAME				"ItemSubClass.dbc"
+#define BLZ_DBC_ITEM_SUB_CLASS_MASK_FILE_NAME			"ItemSubClassMask.dbc"
+#define BLZ_DBC_ITEM_DATA_FILE_NAME						"Item.dbc"
+#define BLZ_DBC_ITEM_CACHE_DATA_FILE_NAME				"ItemData.csv"
+#define BLZ_DBC_ITEM_DISPLAY_INFO_FILE_NAME				"ItemDisplayInfo.dbc"
+#define BLZ_DBC_HELMET_GEOSET_VISIBLE_FILE_NAME			"HelmetGeosetVisData.dbc"
+#define BLZ_DBC_MAP_FILE_NAME							"Map.dbc"
+#define BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_FILE_NAME		"SpellVisualEffectName.dbc"
 
 
 #define EQUIPMENT_ARM_UPPER_TEXTURE_PATH		"ITEM\\TEXTURECOMPONENTS\\ARMUPPERTEXTURE"
@@ -694,6 +696,133 @@ struct DBC_MAP_INFO
 	UINT32	ExpansionID;							//  Integer Vanilla: 0, BC: 1, WotLK: 2  
 	UINT32	Unknown3;								//  Integer  Another resettime? Is the same as the heroic one for some entries.  
 
+};
+
+struct DBC_SPELL_INFO
+{
+	UINT32      Id;                                             // 0        m_ID
+	UINT32      Category;                                       // 1        m_category
+	UINT32      Dispel;                                         // 2        m_dispelType
+	UINT32      Mechanic;                                       // 3        m_mechanic
+	UINT32      Attributes;                                     // 4        m_attribute
+	UINT32      AttributesEx;                                   // 5        m_attributesEx
+	UINT32      AttributesEx2;                                  // 6        m_attributesExB
+	UINT32      AttributesEx3;                                  // 7        m_attributesExC
+	UINT32      AttributesEx4;                                  // 8        m_attributesExD
+	UINT32      AttributesEx5;                                  // 9        m_attributesExE
+	UINT32      AttributesEx6;                                  // 10       m_attributesExF
+	UINT32      unk_320_1;                                      // 11       3.2.0 (0x20 - totems, 0x4 - paladin auras, etc...)
+	UINT32      Stances;                                        // 12       m_shapeshiftMask
+	UINT32      unk_320_2;                                      // 13       3.2.0
+	UINT32      StancesNot;                                     // 14       m_shapeshiftExclude
+	UINT32      unk_320_3;                                      // 15       3.2.0
+	UINT32      Targets;                                        // 16       m_targets
+	UINT32      TargetCreatureType;                             // 17       m_targetCreatureType
+	UINT32      RequiresSpellFocus;                             // 18       m_requiresSpellFocus
+	UINT32      FacingCasterFlags;                              // 19       m_facingCasterFlags
+	UINT32      CasterAuraState;                                // 20       m_casterAuraState
+	UINT32      TargetAuraState;                                // 21       m_targetAuraState
+	UINT32      CasterAuraStateNot;                             // 22       m_excludeCasterAuraState
+	UINT32      TargetAuraStateNot;                             // 23       m_excludeTargetAuraState
+	UINT32      casterAuraSpell;                                // 24       m_casterAuraSpell
+	UINT32      targetAuraSpell;                                // 25       m_targetAuraSpell
+	UINT32      excludeCasterAuraSpell;                         // 26       m_excludeCasterAuraSpell
+	UINT32      excludeTargetAuraSpell;                         // 27       m_excludeTargetAuraSpell
+	UINT32      CastingTimeIndex;                               // 28       m_castingTimeIndex
+	UINT32      RecoveryTime;                                   // 29       m_recoveryTime
+	UINT32      CategoryRecoveryTime;                           // 30       m_categoryRecoveryTime
+	UINT32      InterruptFlags;                                 // 31       m_interruptFlags
+	UINT32      AuraInterruptFlags;                             // 32       m_auraInterruptFlags
+	UINT32      ChannelInterruptFlags;                          // 33       m_channelInterruptFlags
+	UINT32      procFlags;                                      // 34       m_procTypeMask
+	UINT32      procChance;                                     // 35       m_procChance
+	UINT32      procCharges;                                    // 36       m_procCharges
+	UINT32      maxLevel;                                       // 37       m_maxLevel
+	UINT32      baseLevel;                                      // 38       m_baseLevel
+	UINT32      spellLevel;                                     // 39       m_spellLevel
+	UINT32      DurationIndex;                                  // 40       m_durationIndex
+	UINT32      powerType;                                      // 41       m_powerType
+	UINT32      manaCost;                                       // 42       m_manaCost
+	UINT32      manaCostPerlevel;                               // 43       m_manaCostPerLevel
+	UINT32      manaPerSecond;                                  // 44       m_manaPerSecond
+	UINT32      manaPerSecondPerLevel;                          // 45       m_manaPerSecondPerLeve
+	UINT32      rangeIndex;                                     // 46       m_rangeIndex
+	FLOAT       speed;                                          // 47       m_speed
+	UINT32      modalNextSpell;                                 // 48       m_modalNextSpell 
+	UINT32      StackAmount;                                    // 49       m_cumulativeAura
+	UINT32      Totem[2];                                       // 50-51    m_totem
+	INT32       Reagent[8];                                     // 52-59    m_reagent
+	UINT32      ReagentCount[8];                                // 60-67    m_reagentCount
+	INT32       EquippedItemClass;                              // 68       m_equippedItemClass (value)
+	INT32       EquippedItemSubClassMask;                       // 69       m_equippedItemSubclass (mask)
+	INT32       EquippedItemInventoryTypeMask;                  // 70       m_equippedItemInvTypes (mask)
+	UINT32      Effect[3];                                      // 71-73    m_effect
+	INT32       EffectDieSides[3];                              // 74-76    m_effectDieSides
+	FLOAT       EffectRealPointsPerLevel[3];                    // 77-79    m_effectRealPointsPerLevel
+	INT32       EffectBasePoints[3];                            // 80-82    m_effectBasePoints (don't must be used in spell/auras explicitly, must be used cached Spell::m_currentBasePoints)
+	UINT32      EffectMechanic[3];                              // 83-85    m_effectMechanic
+	UINT32      EffectImplicitTargetA[3];                       // 86-88    m_implicitTargetA
+	UINT32      EffectImplicitTargetB[3];                       // 89-91    m_implicitTargetB
+	UINT32      EffectRadiusIndex[3];                           // 92-94    m_effectRadiusIndex - spellradius.dbc
+	UINT32      EffectApplyAuraName[3];                         // 95-97    m_effectAura
+	UINT32      EffectAmplitude[3];                             // 98-100   m_effectAuraPeriod
+	FLOAT       EffectMultipleValue[3];                         // 101-103  m_effectAmplitude
+	UINT32      EffectChainTarget[3];                           // 104-106  m_effectChainTargets
+	UINT32      EffectItemType[3];                              // 107-109  m_effectItemType
+	INT32       EffectMiscValue[3];                             // 110-112  m_effectMiscValue
+	INT32       EffectMiscValueB[3];                            // 113-115  m_effectMiscValueB
+	UINT32      EffectTriggerSpell[3];                          // 116-118  m_effectTriggerSpell
+	FLOAT       EffectPointsPerComboPoint[3];                   // 119-121  m_effectPointsPerCombo
+	UINT32      EffectSpellClassMaskA[3];                       // 122-124  m_effectSpellClassMaskA, effect 0
+	UINT32      EffectSpellClassMaskB[3];                       // 125-127  m_effectSpellClassMaskB, effect 1
+	UINT32      EffectSpellClassMaskC[3];                       // 128-130  m_effectSpellClassMaskC, effect 2
+	UINT32      SpellVisual[2];                                 // 131-132  m_spellVisualID
+	UINT32      SpellIconID;                                    // 133      m_spellIconID
+	UINT32      activeIconID;                                   // 134      m_activeIconID
+	UINT32      spellPriority;                                  // 135      m_spellPriority     
+	UINT32      SpellName[BLZ_DBC_STR_LOCAL_NUM];               // 136-151  m_name_lang
+	UINT32      SpellNameFlag;                                  // 152 
+	UINT32      Rank[BLZ_DBC_STR_LOCAL_NUM];                    // 153-168  m_nameSubtext_lang
+	UINT32      RankFlags;                                      // 169 
+	UINT32      Description[BLZ_DBC_STR_LOCAL_NUM];             // 170-185  m_description_lang 
+	UINT32      DescriptionFlags;                               // 186 
+	UINT32      ToolTip[BLZ_DBC_STR_LOCAL_NUM];                 // 187-202  m_auraDescription_lang 
+	UINT32      ToolTipFlags;                                   // 203 
+	UINT32      ManaCostPercentage;                             // 204      m_manaCostPct
+	UINT32      StartRecoveryCategory;                          // 205      m_startRecoveryCategory
+	UINT32      StartRecoveryTime;                              // 206      m_startRecoveryTime
+	UINT32      MaxTargetLevel;                                 // 207      m_maxTargetLevel
+	UINT32      SpellFamilyName;                                // 208      m_spellClassSet
+	UINT64      SpellFamilyFlags;                               // 209-210  m_spellClassMask NOTE: size is 12 bytes!!!
+	UINT32      SpellFamilyFlags2;                              // 211      addition to m_spellClassMask
+	UINT32      MaxAffectedTargets;                             // 212      m_maxTargets
+	UINT32      DmgClass;                                       // 213      m_defenseType
+	UINT32      PreventionType;                                 // 214      m_preventionType
+	UINT32      StanceBarOrder;                                 // 215      m_stanceBarOrder 
+	FLOAT       DmgMultiplier[3];                               // 216-218  m_effectChainAmplitude
+	UINT32      MinFactionId;                                   // 219      m_minFactionID 
+	UINT32      MinReputation;                                  // 220      m_minReputation 
+	UINT32      RequiredAuraVision;                             // 221      m_requiredAuraVision 
+	UINT32      TotemCategory[2];                               // 222-223  m_requiredTotemCategoryID
+	INT32       AreaGroupId;                                    // 224      m_requiredAreaGroupId
+	UINT32      SchoolMask;                                     // 225      m_schoolMask
+	UINT32      runeCostID;                                     // 226      m_runeCostID
+	UINT32      spellMissileID;                                 // 227      m_spellMissileID 
+	UINT32      PowerDisplayId;                                 // 228      PowerDisplay.dbc, new in 3.1
+	FLOAT       unk_320_4[3];                                   // 229-231  3.2.0
+	UINT32      spellDescriptionVariableID;                     // 232      3.2.0
+	UINT32      SpellDifficultyId;                              // 233      3.3.0
+};
+
+struct DBC_SPELL_VISUAL_EFFECT_NAME
+{
+	UINT32	ID;							//Integer 	
+	UINT32	DisplayName; 				//String 		The name of the model effects used for some editor probably 
+	UINT32	ModelLocation; 				//String 		Location of the model 
+	FLOAT	Type; 						//Float 	        Probably flags or type of some sort but hard to tell 0.0 ~ 50.0, mostly 0.0 and 1.0
+	FLOAT	Sizemodifier; 				//Float 	        another size modifier? only a few have not 1.0 or 0.0 "Acid Breath (45 yd)" has 45.0 ...0.15 ~ 5.0, mostly 1.0 
+	FLOAT	Scale; 						//Float 		since 95 is "Missile: Meteor (Scale: x3) and this column is 3.00.1 and 0.01 
+	FLOAT	Unknown; 					//Float           1.0 ~ 100.0, mostly 100.0
 };
 
 struct BLZ_M2_HEADER
@@ -1447,6 +1576,8 @@ struct MH2OInfo
 	UINT32	HeightMapOffset;	//Offset to MH2O_HeightmapData structure for this chunk.
 };
 
+
+
 struct BLZ_CHUNK_MH2O:public BLZ_CHUNK_HEADER
 {
 	MH2OHeader	Header[256];
@@ -1555,6 +1686,21 @@ struct MCSESoundEmitter
 	UINT32		SoundEntriesAdvancedId;
 	CD3DVector3 Position;
 	CD3DVector3 Size; 					// I'm not really sure with this. I'm far too lazy to analyze this. Seems like noone ever needed these anyway.
+};
+
+struct MCLQLiquidInfo
+{
+	UINT16		Color1;
+	UINT16		Color2;
+	FLOAT		Height;
+};
+
+struct BLZ_CHUNK_MCLQ:public BLZ_CHUNK_HEADER
+{
+	FLOAT			MinHeight;
+	FLOAT			MaxHeight;
+	MCLQLiquidInfo	LiquidInfo[9][9];
+	BYTE			RenderFlag[8][8];
 };
 
 struct BLZ_CHUNK_MCSE:public BLZ_CHUNK_HEADER

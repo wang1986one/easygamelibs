@@ -118,7 +118,7 @@ void CD3DSortedRender::Render()
 				{
 					if(pSubMesh->IsVisible())
 					{
-						if(BoxCut==1)
+						if(BoxCut==1&&pObject->CanDoSubMeshViewCull())
 						{
 							//对于对象部分可见的，进行SubMesh级裁减
 							CD3DBoundingBox BBox=pSubMesh->GetBoundingBox();

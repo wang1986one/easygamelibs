@@ -44,25 +44,25 @@ public:
 		CStaticList::Clear();
 	}
 
-	T * PushFront()
+	LPVOID PushFront()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CStaticList::PushFront();
 	}
 
-	BOOL PushFront(T& Object)
+	LPVOID PushFront(T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CStaticList::PushFront(Object);
 	}
 
-	T* PushBack()
+	LPVOID PushBack()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CStaticList::PushBack();
 	}
 
-	BOOL PushBack(T& Object)
+	LPVOID PushBack(T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CStaticList::PushBack(Object);
@@ -107,5 +107,11 @@ public:
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CStaticList::GetPrev(Pos);
+	}
+
+	T * GetObject(LPVOID Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CStaticList::GetObject(Pos);
 	}
 };

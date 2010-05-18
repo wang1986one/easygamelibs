@@ -74,6 +74,11 @@ CD3DBoundingSphere * CD3DWOWM2RibbonEmitter::GetBoundingSphere()
 	return NULL;
 }
 
+bool CD3DWOWM2RibbonEmitter::CanDoSubMeshViewCull()
+{
+	return false;
+}
+
 bool CD3DWOWM2RibbonEmitter::CloneFrom(CNameObject * pObject,UINT Param)
 {
 	if(!pObject->IsKindOf(GET_CLASS_INFO(CD3DWOWM2RibbonEmitter)))
@@ -240,9 +245,9 @@ bool CD3DWOWM2RibbonEmitter::Init(CD3DWOWM2ModelResource * pModelResource,UINT E
 	for(UINT i=0;i<m_MaxRibbonCount;i++)
 	{
 		m_pRibbonVertexBuffer[i].Vertex[0].Tex.x=0.0f;
-		m_pRibbonVertexBuffer[i].Vertex[0].Tex.y=(FLOAT)i/(m_MaxRibbonCount-1);
-		m_pRibbonVertexBuffer[i].Vertex[1].Tex.x=1.0f;
-		m_pRibbonVertexBuffer[i].Vertex[1].Tex.y=(FLOAT)i/(m_MaxRibbonCount-1);		
+		m_pRibbonVertexBuffer[i].Vertex[0].Tex.y=0.0f;
+		m_pRibbonVertexBuffer[i].Vertex[1].Tex.x=0.0f;
+		m_pRibbonVertexBuffer[i].Vertex[1].Tex.y=1.0f;		
 	}
 	for(UINT i=0;i<pRibbonEmitterInfo->Textures.GetCount();i++)
 	{
@@ -263,19 +268,9 @@ bool CD3DWOWM2RibbonEmitter::Init(CD3DWOWM2ModelResource * pModelResource,UINT E
 }
 
 void CD3DWOWM2RibbonEmitter::BuildRibbon(CD3DWOWM2ModelResource::RIBBON_EMITTER_INFO * pRibbonEmitterInfo,CD3DWOWM2ModelResource::RIBBON_PARAM * pParam)
-{		
-	FLOAT Tex=0.0f;
-	if(m_RibbonCount)
-	{
-		m_pRibbonVertexBuffer[m_RibbonCount-1].Vertex[0].Tex.y;
-		Tex+=1.0f/pRibbonEmitterInfo->Resolution;
-	}
-	//FLOAT RibbonLen=0.0f;
-	//for(UINT i=1;i<m_RibbonCount;i++)
-	//{
-	//	CD3DVector3 LenVec=m_pRibbonVertexBuffer[i].Vertex[0].Pos-m_pRibbonVertexBuffer[i-1].Vertex[0].Pos;
-	//	RibbonLen+=LenVec.Length();
-	//}
+{	
+	
+	
 	if(m_RibbonCount>=m_MaxRibbonCount)//||RibbonLen>=m_ClipLength*pRibbonEmitterInfo->Resolution)
 	{
 		for(UINT i=0;i<m_RibbonCount-1;i++)
@@ -286,20 +281,27 @@ void CD3DWOWM2RibbonEmitter::BuildRibbon(CD3DWOWM2ModelResource::RIBBON_EMITTER_
 		
 		m_pRibbonVertexBuffer[m_RibbonCount-1].Vertex[0].Pos=CD3DVector3(pParam->Above,0,0)*GetWorldMatrix();
 		m_pRibbonVertexBuffer[m_RibbonCount-1].Vertex[0].Color=pParam->Color;
-		m_pRibbonVertexBuffer[m_RibbonCount-1].Vertex[0].Tex.y=Tex;
 		m_pRibbonVertexBuffer[m_RibbonCount-1].Vertex[1].Pos=CD3DVector3(-pParam->Below,0,0)*GetWorldMatrix();
 		m_pRibbonVertexBuffer[m_RibbonCount-1].Vertex[1].Color=pParam->Color;	
-		m_pRibbonVertexBuffer[m_RibbonCount-1].Vertex[1].Tex.y=Tex;
 	}
 	else
 	{
 		m_pRibbonVertexBuffer[m_RibbonCount].Vertex[0].Pos=CD3DVector3(pParam->Above,0,0)*GetWorldMatrix();
 		m_pRibbonVertexBuffer[m_RibbonCount].Vertex[0].Color=pParam->Color;
-		m_pRibbonVertexBuffer[m_RibbonCount].Vertex[0].Tex.y=Tex;
 		m_pRibbonVertexBuffer[m_RibbonCount].Vertex[1].Pos=CD3DVector3(-pParam->Below,0,0)*GetWorldMatrix();
 		m_pRibbonVertexBuffer[m_RibbonCount].Vertex[1].Color=pParam->Color;	
-		m_pRibbonVertexBuffer[m_RibbonCount].Vertex[1].Tex.y=Tex;
 		m_RibbonCount++;
+
+		
+	}
+
+	m_pRibbonVertexBuffer[0].Vertex[0].Tex.x=0.0f;
+	m_pRibbonVertexBuffer[0].Vertex[1].Tex.x=0.0f;
+
+	for(UINT i=1;i<m_RibbonCount;i++)
+	{
+		m_pRibbonVertexBuffer[i].Vertex[0].Tex.x=i*1.0f/(m_RibbonCount-1);
+		m_pRibbonVertexBuffer[i].Vertex[1].Tex.x=i*1.0f/(m_RibbonCount-1);
 	}
 	
 }

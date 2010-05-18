@@ -19,14 +19,14 @@ class CNetConnection :
 	public CBaseTCPConnection,public IIOCPEventHandler
 {
 protected:	
-	CNetServer*								m_pServer;	
-	volatile BOOL							m_WantClose;
-	int										m_CurProtocol;		
+	CNetServer*									m_pServer;	
+	volatile BOOL								m_WantClose;
+	int											m_CurProtocol;		
 	
-	CThreadSafeList<COverLappedObject *>	m_DataQueue;
-	CIOCPEventRouter *						m_pIOCPEventRouter;
+	CThreadSafeIDStorage<COverLappedObject *>	m_DataQueue;
+	CIOCPEventRouter *							m_pIOCPEventRouter;
 
-	volatile UINT							m_SendQueryCount;	
+	volatile UINT								m_SendQueryCount;	
 	
 
 	DECLARE_CLASS_INFO_STATIC(CNetConnection);

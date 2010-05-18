@@ -43,17 +43,17 @@ class CIOCPFileAccessor :
 	public CNameObject,public IIOCPEventHandler
 {
 protected:
-	volatile HANDLE							m_FileHandle;
-	CNetServer*							m_pServer;	
-	volatile BOOL							m_WantClose;
-	CThreadSafeList<COverLappedObject *>	m_DataQueue;
-	CThreadSafeList<COverLappedObject *>	m_RequestQueue;
-	CThreadSafeList<FIOCP_ERROR_INFO>		m_ErrorQueue;
-	volatile UINT							m_Session;
-	CIOCPEventRouter *						m_pIOCPEventRouter;
-	ULONG64_CONVERTER						m_ReadPosition;
-	ULONG64_CONVERTER						m_WritePosition;
-	bool									m_UseAsyncQuery;
+	volatile HANDLE								m_FileHandle;
+	CNetServer*									m_pServer;	
+	volatile BOOL								m_WantClose;
+	CThreadSafeIDStorage<COverLappedObject *>	m_DataQueue;
+	CThreadSafeIDStorage<COverLappedObject *>	m_RequestQueue;
+	CThreadSafeIDStorage<FIOCP_ERROR_INFO>		m_ErrorQueue;
+	volatile UINT								m_Session;
+	CIOCPEventRouter *							m_pIOCPEventRouter;
+	ULONG64_CONVERTER							m_ReadPosition;
+	ULONG64_CONVERTER							m_WritePosition;
+	bool										m_UseAsyncQuery;
 
 	DECLARE_CLASS_INFO_STATIC(CIOCPFileAccessor);
 public:

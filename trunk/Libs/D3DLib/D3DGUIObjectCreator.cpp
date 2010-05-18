@@ -61,7 +61,7 @@ IUITexture * CD3DGUIObjectCreator::CreateTextureFromFile(LPCTSTR FileName)
 		pTexture=new CD3DGUITexture(m_pDevice->GetTextureManager());
 		if(pTexture)
 		{
-			if(!pTexture->LoadTexture(FileName))
+			if(!pTexture->LoadTexture(FileName,1,false))
 			{
 				delete pTexture;
 				return NULL;

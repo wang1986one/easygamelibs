@@ -143,9 +143,7 @@ void CD3DScene::ReadBlock(IFileAccessor * pFile,SN2_DATA_BLOCK_HEADER& BlockHead
 				pModel->Update(0.0f);				
 #ifdef _DEBUG
 				{
-					char Msg[1000];
-					sprintf_s(Msg,1000,"装入场景模型<%s>\r\n",(LPCTSTR)m_CurObjectFileName);
-					OutputDebugString(Msg);
+					PrintSystemLog(0,"装入场景模型<%s>",(LPCTSTR)m_CurObjectFileName);
 				}
 #endif
 				
@@ -156,9 +154,7 @@ void CD3DScene::ReadBlock(IFileAccessor * pFile,SN2_DATA_BLOCK_HEADER& BlockHead
 				pModel->Release();
 #ifdef _DEBUG
 				{
-					char Msg[1000];
-					sprintf_s(Msg,1000,"装入场景模型失败<%s>\r\n",(LPCTSTR)m_CurObjectFileName);
-					OutputDebugString(Msg);
+					PrintSystemLog(0,"装入场景模型失败<%s>",(LPCTSTR)m_CurObjectFileName);
 				}
 #endif
 			}

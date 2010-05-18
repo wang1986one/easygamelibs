@@ -514,14 +514,6 @@
 					Name="WOWÄ£ÐÍ"
 					>
 					<File
-						RelativePath=".\BLZChunkFile.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\BLZChunkFile.h"
-						>
-					</File>
-					<File
 						RelativePath=".\BLZFileDefines.h"
 						>
 					</File>
@@ -613,6 +605,30 @@
 						RelativePath=".\D3DWOWWMOModelResource.h"
 						>
 					</File>
+					<Filter
+						Name="ChunkFile"
+						>
+						<File
+							RelativePath=".\BLZChunkFile.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\BLZChunkFile.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="DBCFile"
+						>
+						<File
+							RelativePath=".\BLZDBCFile.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\BLZDBCFile.h"
+							>
+						</File>
+					</Filter>
 				</Filter>
 			</Filter>
 			<Filter

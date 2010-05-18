@@ -58,7 +58,26 @@ public:
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::NewObject();
 	}	
-
+	LPVOID InsertAfter(LPVOID Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::InsertAfter(Pos);
+	}
+	LPVOID InsertAfter(T& Object,LPVOID Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::InsertAfter(Object,Pos);
+	}
+	LPVOID InsertBefore(LPVOID Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::InsertBefore(Pos);
+	}
+	LPVOID InsertBefore(T& Object,LPVOID Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::InsertBefore(Object,Pos);
+	}
 	UINT AddObject(T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
@@ -74,6 +93,16 @@ public:
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::GetObject(Pos);
 	}	
+	T* GetObject(UINT ID)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::GetObject(ID);
+	}
+	UINT GetObjectID(LPVOID Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::GetObjectID(Pos);
+	}
 	bool DeleteObject(UINT ID)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
@@ -100,25 +129,46 @@ public:
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::MoveAfterTo(Pos,After);
 	}
+	LPVOID PushFront()
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::PushFront();
+	}
+
+	LPVOID PushFront(T& Object)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::PushFront(Object);
+	}
+
+	LPVOID PushBack()
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::PushBack();
+	}
+
+	LPVOID PushBack(T& Object)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::PushBack(Object);
+	}
+
+	BOOL PopFront(T& Object)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::PopFront(Object);
+	}
+
+	BOOL PopBack(T& Object)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::PopBack(Object);
+	}
+
 	void Verfy(UINT& UsedCount,UINT& FreeCount)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 
-		UsedCount=0;
-		FreeCount=0;
-
-		StorageNode * pNode=m_pObjectListHead;
-		while(pNode&&UsedCount<m_ObjectBuffSize)
-		{
-			pNode=pNode->pNext;
-			UsedCount++;
-		}
-
-		pNode=m_pFreeListHead;
-		while(pNode&&FreeCount<m_ObjectBuffSize)
-		{
-			pNode=pNode->pNext;
-			FreeCount++;
-		}
+		CIDStorage::Verfy(UsedCount,FreeCount);
 	}
 };

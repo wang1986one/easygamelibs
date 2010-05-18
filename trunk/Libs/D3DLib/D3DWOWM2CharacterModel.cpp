@@ -1124,6 +1124,21 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 		return false;
 	}
 
+	int PosRate=1;
+
+	if(pSkinTexture->GetTextureInfo().Width==256&&pSkinTexture->GetTextureInfo().Height==256)
+	{
+		PosRate=1;
+	}
+	else if(pSkinTexture->GetTextureInfo().Width==512&&pSkinTexture->GetTextureInfo().Height==512)
+	{
+		PosRate=2;
+	}
+	else
+	{
+		return false;
+	}
+
 	pSkinExtraTexture=pD3DDevice->GetTextureManager()->LoadTexture(pSkinSection->Texture2);	
 
 	CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pFaceSection=CBLZWOWDatabase::GetInstance()->FindCharSection(1,m_CharRace,m_CharSex,m_CharFaceType,m_CharSkinColor);
@@ -1132,12 +1147,12 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 		if(!pFaceSection->Texture1.IsEmpty())
 		{
 			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pFaceSection->Texture1);
-			AddTexture(pSkinTexture,pTexture,128,64,0,192);
+			AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,192*PosRate);
 		}
 		if(!pFaceSection->Texture2.IsEmpty())
 		{
 			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pFaceSection->Texture2);	
-			AddTexture(pSkinTexture,pTexture,128,32,0,160);
+			AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,160*PosRate);
 		}
 	}
 	
@@ -1149,12 +1164,12 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 		if(!pWhiskerSection->Texture1.IsEmpty())
 		{
 			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pWhiskerSection->Texture1);
-			AddTexture(pSkinTexture,pTexture,128,64,0,192);
+			AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,192*PosRate);
 		}
 		if(!pWhiskerSection->Texture2.IsEmpty())
 		{
 			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pWhiskerSection->Texture2);	
-			AddTexture(pSkinTexture,pTexture,128,32,0,160);
+			AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,160*PosRate);
 		}
 	}
 
@@ -1168,12 +1183,12 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 		if(!pHairSection->Texture2.IsEmpty())
 		{
 			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pHairSection->Texture2);
-			AddTexture(pSkinTexture,pTexture,128,64,0,192);
+			AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,192*PosRate);
 		}
 		if(!pHairSection->Texture3.IsEmpty())
 		{
 			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pHairSection->Texture3);
-			AddTexture(pSkinTexture,pTexture,128,32,0,160);
+			AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,160*PosRate);
 		}
 	}
 
@@ -1183,12 +1198,12 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 		if(!pUnderwearSection->Texture1.IsEmpty())
 		{
 			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pUnderwearSection->Texture1);
-			AddTexture(pSkinTexture,pTexture,128,64,128,96);
+			AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,96*PosRate);
 		}
 		if(!pUnderwearSection->Texture2.IsEmpty())
 		{
 			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pUnderwearSection->Texture2);
-			AddTexture(pSkinTexture,pTexture,128,64,128,0);
+			AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,0);
 		}
 	}	
 
@@ -1209,7 +1224,7 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 						CEasyString TextureFileName=EQUIPMENT_ARM_UPPER_TEXTURE_PATH;						
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->UpperArmTexture;						
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128,64,0,0);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,0);
 					}
 					if((!HaveSleeve)||i==CES_BUST)
 					{
@@ -1218,7 +1233,7 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 							CEasyString TextureFileName=EQUIPMENT_ARM_LOWER_TEXTURE_PATH;
 							TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->LowerArmTexture;
 							CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-							AddTexture(pSkinTexture,pTexture,128,64,0,64);
+							AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,64*PosRate);
 						}
 					}
 
@@ -1227,7 +1242,7 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 						CEasyString TextureFileName=EQUIPMENT_HAND_TEXTURE_PATH;
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->HandsTexture;
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128,32,0,128);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,128*PosRate);
 					}
 
 					if(!pItemDisplayInfo->UpperTorsoTexture.IsEmpty()&&(i==CES_BUST||i==CES_SHIRT))
@@ -1235,7 +1250,7 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 						CEasyString TextureFileName=EQUIPMENT_TORSO_UPPER_TEXTURE_PATH;						
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->UpperTorsoTexture;						
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128,64,128,0);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,0);
 					}
 					
 					if(!pItemDisplayInfo->LowerTorsoTexture.IsEmpty()&&(i==CES_BUST||i==CES_SHIRT))
@@ -1243,7 +1258,7 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 						CEasyString TextureFileName=EQUIPMENT_TORSO_LOWER_TEXTURE_PATH;						
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->LowerTorsoTexture;						
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128,32,128,64);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,128*PosRate,64*PosRate);
 					}
 
 					
@@ -1252,7 +1267,7 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 						CEasyString TextureFileName=EQUIPMENT_LEG_UPPER_TEXTURE_PATH;
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->UpperLegTexture;
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128,64,128,96);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,96*PosRate);
 					}
 
 					if(!pItemDisplayInfo->LowerLegTexture.IsEmpty()&&(i==CES_BUST||i==CES_LEG||i==CES_FOOT))
@@ -1260,7 +1275,7 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 						CEasyString TextureFileName=EQUIPMENT_LEG_LOWER_TEXTURE_PATH;
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->LowerLegTexture;
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128,64,128,160);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,160*PosRate);
 					}
 					
 
@@ -1269,7 +1284,7 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 						CEasyString TextureFileName=EQUIPMENT_FOOT_TEXTURE_PATH;
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->FootTexture;
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128,32,128,224);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,128*PosRate,224*PosRate);
 					}
 					
 				}
@@ -1297,9 +1312,7 @@ void CD3DWOWM2CharacterModel::AlphaMix(D3D_A8B8G8R8_PIXEL& DestPixel,D3D_A8B8G8R
 bool CD3DWOWM2CharacterModel::AddTexture(CD3DTexture * pDestTexture,CD3DTexture * pSrcTexture,UINT SrcWifth,UINT SrcHeight,UINT DestOffsetX,UINT DestOffsetY)
 {
 	if((pDestTexture->GetTextureInfo().Format==D3DFMT_X8B8G8R8||
-		pDestTexture->GetTextureInfo().Format==D3DFMT_A8B8G8R8)&&
-		pDestTexture->GetTextureInfo().Width==256&&
-		pDestTexture->GetTextureInfo().Height==256)
+		pDestTexture->GetTextureInfo().Format==D3DFMT_A8B8G8R8))
 	{
 		int MipLevels=pDestTexture->GetTextureInfo().MipLevels;
 		for(int i=0;i<MipLevels;i++)
@@ -1324,9 +1337,15 @@ bool CD3DWOWM2CharacterModel::MixTexture(CD3DTexture * pSrcTexture,int MipLevel,
 {
 	if(pSrcTexture!=NULL)
 	{
-		if(pSrcTexture->GetTextureInfo().Width==SrcWifth&&
-			pSrcTexture->GetTextureInfo().Height==SrcHeight)
+		if(pSrcTexture->GetTextureInfo().Width<=SrcWifth&&
+			pSrcTexture->GetTextureInfo().Height<=SrcHeight)
 		{
+			int Rate=SrcWifth/pSrcTexture->GetTextureInfo().Width;
+			if(pSrcTexture->GetTextureInfo().Width*Rate!=SrcWifth||
+				pSrcTexture->GetTextureInfo().Height*Rate!=SrcHeight)
+			{
+				return false;
+			}
 			UINT OffsetX=(DestOffsetX>>MipLevel);
 			UINT OffsetY=(DestOffsetY>>MipLevel);
 			UINT Width=(SrcWifth>>MipLevel);
@@ -1343,20 +1362,23 @@ bool CD3DWOWM2CharacterModel::MixTexture(CD3DTexture * pSrcTexture,int MipLevel,
 				for(UINT y=0;y<Height;y++)
 				{
 					D3D_A8B8G8R8_PIXEL * pDestLine=(D3D_A8B8G8R8_PIXEL *)(pDestPixels+sizeof(D3D_A8B8G8R8_PIXEL)*OffsetX);
-					D3D_A8B8G8R8_PIXEL * pSrcLine=(D3D_A8B8G8R8_PIXEL *)pSrcPixels;
+					D3D_A8B8G8R8_PIXEL * pSrcLine=(D3D_A8B8G8R8_PIXEL *)(pSrcPixels+SrcLockRect.Pitch*(y/Rate));
 					if(pSrcTexture->GetTextureInfo().Format==D3DFMT_X8B8G8R8)
 					{
-						memcpy(pDestLine,pSrcLine,sizeof(D3D_A8B8G8R8_PIXEL)*Width);
+						//memcpy(pDestLine,pSrcLine,sizeof(D3D_A8B8G8R8_PIXEL)*Width);
+						for(UINT x=0;x<Width;x++)
+						{
+							pDestLine[x]=pSrcLine[x/Rate];
+						}
 					}
 					else if(pSrcTexture->GetTextureInfo().Format==D3DFMT_A8B8G8R8)
 					{
 						for(UINT x=0;x<Width;x++)
 						{
-							AlphaMix(pDestLine[x],pSrcLine[x]);
+							AlphaMix(pDestLine[x],pSrcLine[x/Rate]);
 						}
 					}								
 					pDestPixels+=DestPitch;
-					pSrcPixels+=SrcLockRect.Pitch;
 				}							
 				pSrcTexture->GetD3DTexture()->UnlockRect(MipLevel);
 				return true;

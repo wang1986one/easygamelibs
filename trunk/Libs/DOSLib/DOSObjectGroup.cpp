@@ -106,7 +106,7 @@ BOOL CDOSObjectGroup::RegisterObject(DOS_OBJECT_INFO& ObjectInfo)
 BOOL CDOSObjectGroup::UnregisterObject(OBJECT_ID ObjectID)
 {
 	FUNCTION_BEGIN;
-	return m_ObjectUnregisterQueue.PushBack(ObjectID);
+	return m_ObjectUnregisterQueue.PushBack(ObjectID)!=NULL;
 	FUNCTION_END;
 	return FALSE;
 }

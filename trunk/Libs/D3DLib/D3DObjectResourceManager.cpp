@@ -29,10 +29,8 @@ CD3DObjectResourceManager::~CD3DObjectResourceManager(void)
 	Pos=m_ObjectStorage.GetFirstObjectPos();
 	while(Pos)
 	{
-		char Msg[256];
 		CD3DObjectResource * pResource=*(m_ObjectStorage.GetNext(Pos));
-		sprintf_s(Msg,256,"对象资源<%s>未释放！\r\n",(LPCTSTR)pResource->GetName());
-		OutputDebugString(Msg);
+		PrintSystemLog(0,"对象资源<%s>未释放！",(LPCTSTR)pResource->GetName());
 
 	}
 	m_ObjectStorage.Destory();

@@ -18,7 +18,6 @@ IMPLEMENT_CLASS_INFO(CD3DStaticModel,CD3DBaseStaticModel);
 CD3DStaticModel::CD3DStaticModel(void):CD3DBaseStaticModel()
 {
 	m_pResource=NULL;
-	m_pBoundingFrame=NULL;	
 	m_Property=0;
 }
 
@@ -29,7 +28,6 @@ CD3DStaticModel::~CD3DStaticModel(void)
 
 void CD3DStaticModel::Destory()
 {
-	SAFE_RELEASE(m_pResource);
 	CD3DBaseStaticModel::Destory();
 }
 
@@ -340,37 +338,7 @@ void CD3DStaticModel::Update(FLOAT Time)
 	//}
 }
 
-void CD3DStaticModel::ShowBoundingFrame(int Operator)
-{
-	switch(Operator)
-	{
-	case DBFO_HIDE:
-		{
-			if(m_pBoundingFrame)
-				m_pBoundingFrame->SetVisible(false);
-		}
-		break;
-	case DBFO_SHOW:
-		{
-			if(m_pBoundingFrame)
-				m_pBoundingFrame->SetVisible(true);
-			else
-			{
-				if(GetRender()==NULL)
-					return;
-				m_pBoundingFrame=new CD3DBoundingFrame();
-				m_pBoundingFrame->SetRender(GetRender());
-				m_pBoundingFrame->CreateFromBBox(*GetBoundingBox());
-				m_pBoundingFrame->SetParent(this);
-				GetRender()->AddObject(m_pBoundingFrame);
-			}
-		}
-		break;
-	case DBFO_RELEASE:
-		SAFE_RELEASE(m_pBoundingFrame);
-		break;
-	}
-}
+
 
 bool CD3DStaticModel::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
 {

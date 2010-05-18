@@ -31,6 +31,7 @@ enum MEDIA_SOURCE_PIXEL_FORMAT
 	MSPF_R8G8B8,
 	MSPF_X8R8G8B8,
 	MSPF_R5G6B5,
+	MSPF_I420,
 };
 
 class CFilterRenderOnTexture :

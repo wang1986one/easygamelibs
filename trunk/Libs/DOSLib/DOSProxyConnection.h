@@ -17,12 +17,12 @@ class CDOSProxyConnection :
 	public CNetConnection
 {
 protected:
-	OBJECT_ID								m_ObjectID;
-	CDOSObjectProxyService					*m_pService;
+	OBJECT_ID									m_ObjectID;
+	CDOSObjectProxyService						*m_pService;
 
-	CEasyBuffer								m_AssembleBuffer;		
-	CThreadSafeList<CDOSMessagePacket *>	m_MsgQueue;
-	CStaticMap<WORD,OBJECT_ID>				m_MessageMap;
+	CEasyBuffer									m_AssembleBuffer;		
+	CThreadSafeIDStorage<CDOSMessagePacket *>	m_MsgQueue;
+	CStaticMap<WORD,OBJECT_ID>					m_MessageMap;
 
 	DECLARE_CLASS_INFO(CDOSProxyConnection);
 public:

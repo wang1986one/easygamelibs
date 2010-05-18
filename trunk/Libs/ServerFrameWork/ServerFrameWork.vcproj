@@ -373,5 +373,9 @@
 		</File>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="ServerFrameWork.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

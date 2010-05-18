@@ -1,7 +1,7 @@
 /****************************************************************************/
 /*                                                                          */
-/*      文件名:    ThreadSafeCycleBuffer.cpp                                */
-/*      创建日期:  2009年07月06日                                           */
+/*      文件名:    ThreadSafeCycleBufferEx.cpp                                        */
+/*      创建日期:  2009年09月11日                                           */
 /*      作者:      Sagasarate                                               */
 /*                                                                          */
 /*      本软件版权归Sagasarate(sagasarate@sina.com)所有                     */
@@ -12,49 +12,30 @@
 #include "StdAfx.h"
 
 
-IMPLEMENT_CLASS_INFO_STATIC(CThreadSafeCycleBuffer,CNameObject);
+IMPLEMENT_CLASS_INFO_STATIC(CThreadSafeCycleBufferEx,CCycleBufferEx);
 
-CThreadSafeCycleBuffer::CThreadSafeCycleBuffer(void):CNameObject()
+CThreadSafeCycleBufferEx::CThreadSafeCycleBufferEx(void):CCycleBufferEx()
 {
-	m_pBuffer=NULL;
-	m_BufferSize=0;	
-	m_BufferHead=0;
-	m_BufferTail=0;	
-	m_IsSelfBuffer=true;
 	m_IsLockFront=true;
 	m_IsLockBack=true;
 }
 
-CThreadSafeCycleBuffer::CThreadSafeCycleBuffer(UINT Size):CNameObject()
+CThreadSafeCycleBufferEx::CThreadSafeCycleBufferEx(UINT Size,UINT SmoothSize):CCycleBufferEx()
 {
-	m_pBuffer=NULL;
-	m_BufferSize=0;	
-	m_BufferHead=0;
-	m_BufferTail=0;	
-	m_IsSelfBuffer=true;
-	m_IsLockFront=true;
-	m_IsLockBack=true;
-	Create(Size);	
+	Create(Size,SmoothSize);	
 }
 
-CThreadSafeCycleBuffer::CThreadSafeCycleBuffer(LPVOID pBuff,UINT Size):CNameObject()
+CThreadSafeCycleBufferEx::CThreadSafeCycleBufferEx(LPVOID pBuff,UINT Size,UINT SmoothSize):CCycleBufferEx()
 {
-	m_pBuffer=NULL;
-	m_BufferSize=0;	
-	m_BufferHead=0;
-	m_BufferTail=0;	
-	m_IsSelfBuffer=true;
-	m_IsLockFront=true;
-	m_IsLockBack=true;
-	Create(pBuff,Size);
+	Create(pBuff,Size,SmoothSize);
 }
 
-CThreadSafeCycleBuffer::~CThreadSafeCycleBuffer(void)
+CThreadSafeCycleBufferEx::~CThreadSafeCycleBufferEx(void)
 {
 	Destory();
 }
 
-BOOL CThreadSafeCycleBuffer::Create(UINT Size)
+BOOL CThreadSafeCycleBufferEx::Create(UINT Size,UINT SmoothSize)
 {
 	Destory();
 	CAutoLockEx FrontLock;
@@ -67,17 +48,21 @@ BOOL CThreadSafeCycleBuffer::Create(UINT Size)
 	{
 		BackLock.Lock(m_BackLock);
 	}
+
+	if(Size<=SmoothSize*2)
+	{
+		return FALSE;
+	}
 	m_pBuffer=new BYTE[Size];
-	m_BufferSize=Size;
+	m_BufferSize=Size-SmoothSize;
+	m_SmoothSize=SmoothSize;
 	m_BufferHead=0;
 	m_BufferTail=0;	
 	m_IsSelfBuffer=true;
-	m_IsLockFront=true;
-	m_IsLockBack=true;
 	return TRUE;
 }
 
-BOOL CThreadSafeCycleBuffer::Create(LPVOID pBuff,UINT Size)
+BOOL CThreadSafeCycleBufferEx::Create(LPVOID pBuff,UINT Size,UINT SmoothSize)
 {
 	Destory();
 	CAutoLockEx FrontLock;
@@ -90,17 +75,22 @@ BOOL CThreadSafeCycleBuffer::Create(LPVOID pBuff,UINT Size)
 	{
 		BackLock.Lock(m_BackLock);
 	}
+	
+	if(Size<=SmoothSize*2)
+	{
+		return FALSE;
+	}
+
 	m_pBuffer=(BYTE *)pBuff;
-	m_BufferSize=Size;
+	m_BufferSize=Size-SmoothSize;
+	m_SmoothSize=SmoothSize;
 	m_BufferHead=0;
 	m_BufferTail=0;	
 	m_IsSelfBuffer=false;
-	m_IsLockFront=true;
-	m_IsLockBack=true;
 	return TRUE;
 }
 
-void CThreadSafeCycleBuffer::Destory()
+void CThreadSafeCycleBufferEx::Destory()
 {
 	CAutoLockEx FrontLock;
 	if(m_IsLockFront)
@@ -114,11 +104,11 @@ void CThreadSafeCycleBuffer::Destory()
 	}
 	if(m_IsSelfBuffer)
 		SAFE_DELETE_ARRAY(m_pBuffer);
+
 	m_pBuffer=NULL;
 	m_BufferSize=0;	
+	m_SmoothSize=0;
 	m_BufferHead=0;
 	m_BufferTail=0;	
 	m_IsSelfBuffer=true;
-	m_IsLockFront=true;
-	m_IsLockBack=true;
 }

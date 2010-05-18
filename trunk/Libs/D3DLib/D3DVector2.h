@@ -25,6 +25,8 @@ public:
 
 	~CD3DVector2(void){}
 
+	void SetValue(FLOAT vx, FLOAT vy);
+
 	//±ê×¼»¯
 	void Normalize();
 	CD3DVector2 GetNormalize();
@@ -37,6 +39,12 @@ public:
 	FLOAT Dot(const D3DXVECTOR2& V2);	
 
 };
+
+inline void CD3DVector2::SetValue(FLOAT vx, FLOAT vy)
+{
+	x=vx;
+	y=vy;
+}
 
 inline void CD3DVector2::Normalize()
 {

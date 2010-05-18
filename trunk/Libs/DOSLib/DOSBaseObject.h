@@ -21,14 +21,14 @@ class CDOSBaseObject :
 	public CNameObject
 {
 protected:
-	OBJECT_ID					m_ObjectID;
+	OBJECT_ID									m_ObjectID;
 
-	CDOSRouter *			m_pRouter;
-	CDOSObjectManager *			m_pManager;
-	CDOSObjectGroup *			m_pGroup;
+	CDOSRouter *								m_pRouter;
+	CDOSObjectManager *							m_pManager;
+	CDOSObjectGroup *							m_pGroup;
 
-	CDOSMsgManager							m_MsgManager;
-	CThreadSafeList<CDOSMessagePacket *>	m_MsgQueue;
+	CDOSMsgManager								m_MsgManager;
+	CThreadSafeIDStorage<CDOSMessagePacket *>	m_MsgQueue;
 
 	DECLARE_CLASS_INFO(CDOSBaseObject);
 public:

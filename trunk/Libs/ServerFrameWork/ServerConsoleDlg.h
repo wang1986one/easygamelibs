@@ -60,16 +60,18 @@ protected:
 	virtual void OnCommand(LPCTSTR szCommand);
 	virtual void OnConsoleMsg(PANEL_MSG * pMsg);
 	virtual void OnLogMsg(LPCTSTR szLogMsg);
-public:
-	CEdit m_edMsgWnd;
 	void OnTimer(UINT nIDEvent);
-	CString m_ClientCount;
+	void OnBnClickedExecCommand();
+	afx_msg void OnBnClickedCloseServer();
+
+	CEdit m_edMsgWnd;	
 	CString m_CycleTime;
 	CString m_TCPRecv;
 	CString m_TCPSend;
 	CString m_UDPRecv;
 	CString m_UCPSend;
 	CString	m_Command;
-	void OnBnClickedExecCommand();
-	afx_msg void OnBnClickedCloseServer();
+	
+public:
+	afx_msg void OnBnClickedShowServerStatus();
 };

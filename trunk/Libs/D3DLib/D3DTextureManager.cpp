@@ -30,11 +30,8 @@ CD3DTextureManager::~CD3DTextureManager(void)
 	Pos=m_TextureStorage.GetFirstObjectPos();
 	while(Pos)
 	{
-		char Msg[256];
 		CD3DTexture * pTexture=*(m_TextureStorage.GetNext(Pos));
-		sprintf_s(Msg,256,"纹理<%s>未释放！\r\n",(LPCTSTR)pTexture->GetName());
-		OutputDebugString(Msg);
-		
+		PrintSystemLog(0,"纹理<%s>未释放！",(LPCTSTR)pTexture->GetName());
 	}
 	m_TextureStorage.Destory();
 #endif

@@ -36,6 +36,7 @@ CD3DObject::CD3DObject():CTreeObject()
 	m_LocalMatrix.SetIdentity();
 	m_WorldMatrix.SetIdentity();
 	m_IsCulled=false;		
+	m_pBoundingFrame=NULL;
 }
 
 CD3DObject::~CD3DObject(void)
@@ -45,6 +46,8 @@ CD3DObject::~CD3DObject(void)
 
 void CD3DObject::Destory()
 {	
+	SAFE_RELEASE(m_pBoundingFrame);
+
 	CTreeObject::Destory();	
 	if(m_pRender)
 		m_pRender->DelObject(this);
@@ -289,11 +292,44 @@ bool CD3DObject::GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& y)
 
 void CD3DObject::ShowBoundingFrame(int Operator)
 {
+	switch(Operator)
+	{
+	case DBFO_HIDE:
+		{
+			if(m_pBoundingFrame)
+				m_pBoundingFrame->SetVisible(false);
+		}
+		break;
+	case DBFO_SHOW:
+		{
+			if(m_pBoundingFrame)
+				m_pBoundingFrame->SetVisible(true);
+			else
+			{
+				if(GetRender()==NULL)
+					return;
+				if(GetBoundingBox()==NULL)
+					return;
+				m_pBoundingFrame=new CD3DBoundingFrame();
+				m_pBoundingFrame->SetRender(GetRender());
+				m_pBoundingFrame->CreateFromBBox(*GetBoundingBox());
+				m_pBoundingFrame->SetParent(this);
+				GetRender()->AddObject(m_pBoundingFrame);
+			}
+		}
+		break;
+	case DBFO_RELEASE:
+		SAFE_RELEASE(m_pBoundingFrame);
+		break;
+	}
 }
 
 void CD3DObject::UpdateBoundingFrame()
 {
-
+	if(m_pBoundingFrame)
+	{
+		m_pBoundingFrame->CreateFromBBox(*GetBoundingBox());
+	}
 }
 
 

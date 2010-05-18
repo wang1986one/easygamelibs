@@ -70,7 +70,12 @@ void CD3DRender::Destory()
 
 bool CD3DRender::Reset()
 {	
-	Destory();
+	SAFE_RELEASE(m_pVertexBuffer);
+	SAFE_RELEASE(m_pIndexBuffer);
+	for(UINT i=0;i<m_ObjectList.GetCount();i++)
+	{
+		m_ObjectList[i]->Reset();
+	}
 	return true;
 }
 
@@ -101,6 +106,10 @@ bool CD3DRender::Restore()
 			D3DPOOL_DEFAULT,
 			&m_pIndexBuffer,
 			NULL);
+	}
+	for(UINT i=0;i<m_ObjectList.GetCount();i++)
+	{
+		m_ObjectList[i]->Restore();
 	}
     return true;
 }

@@ -200,7 +200,7 @@ public:
 		m_ObjectCount=0;	
 	}
 
-	T * PushFront()
+	LPVOID PushFront()
 	{
 		if(m_pFreeList)
 		{			
@@ -220,38 +220,23 @@ public:
 			pNode->IsFree=false;			
 			pNode->NewObject();
 			m_ObjectCount++;
-			return pNode->GetObjectPointer();
+			return pNode;
 		}
 		return NULL;
 	}
 
-	BOOL PushFront(T& Object)
+	LPVOID PushFront(T& Object)
 	{
-		if(m_pFreeList)
+		StorageNode * pNode=(StorageNode *)PushFront();
+		if(pNode)
 		{			
-			volatile StorageNode * pNode;
-
-			pNode=m_pFreeList;
-			m_pFreeList=pNode->pNext;
-			if(m_pFreeList)
-				m_pFreeList->pPrev=NULL;
-			pNode->pPrev=NULL;
-			pNode->pNext=m_pObjectList;
-			if(m_pObjectList)
-				m_pObjectList->pPrev=pNode;
-			else
-				m_pObjectListTail=pNode;
-			m_pObjectList=pNode;
-			pNode->IsFree=false;
-			pNode->NewObject();
 			pNode->GetObjectRef()=Object;
-			m_ObjectCount++;
-			return TRUE;
+			return pNode;
 		}
-		return FALSE;
+		return NULL;
 	}
 
-	T* PushBack()
+	LPVOID PushBack()
 	{
 		if(m_pFreeList)
 		{			
@@ -271,35 +256,20 @@ public:
 			pNode->IsFree=false;
 			pNode->NewObject();
 			m_ObjectCount++;
-			return pNode->GetObjectPointer();
+			return pNode;
 		}
 		return NULL;
 	}
 
-	BOOL PushBack(T& Object)
+	LPVOID PushBack(T& Object)
 	{
-		if(m_pFreeList)
+		StorageNode * pNode=(StorageNode *)PushBack();
+		if(pNode)
 		{			
-			StorageNode * pNode;
-
-			pNode=m_pFreeList;
-			m_pFreeList=pNode->pNext;
-			if(m_pFreeList)
-				m_pFreeList->pPrev=NULL;
-			pNode->pPrev=m_pObjectListTail;
-			pNode->pNext=NULL;
-			if(m_pObjectListTail)
-				m_pObjectListTail->pNext=pNode;
-			else
-				m_pObjectList=pNode;
-			m_pObjectListTail=pNode;
-			pNode->IsFree=false;
-			pNode->NewObject();
 			pNode->GetObjectRef()=Object;
-			m_ObjectCount++;
-			return TRUE;
+			return pNode;
 		}
-		return FALSE;
+		return NULL;
 	}
 
 	BOOL PopFront(T& Object)
@@ -388,6 +358,19 @@ public:
 		}
 		return NULL;
 	}
+
+	T * GetObject(LPVOID Pos)
+	{
+		if(Pos)
+		{
+			StorageNode * pNode=(StorageNode *)Pos;
+			return pNode->GetObjectPointer();
+		}
+		return NULL;
+	}
+
+
+
 
 protected:
 	void DeleteNode(StorageNode * pNode)

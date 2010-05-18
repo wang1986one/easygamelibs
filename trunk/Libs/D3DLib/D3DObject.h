@@ -29,7 +29,7 @@ enum D3DOBJ_BOUNDING_FRAME_OPT
 	DBFO_RELEASE,
 };
 
-
+class CD3DBoundingFrame;
 
 class CD3DObject :
 	public CTreeObject
@@ -59,6 +59,8 @@ protected:
 	
 	bool						m_IsCulled;	
 
+	CD3DBoundingFrame *			m_pBoundingFrame;
+
 	DECLARE_CLASS_INFO(CD3DObject)
 
 public:	
@@ -81,6 +83,7 @@ public:
 	CD3DRender * GetRender();
 
 	virtual bool CanRender();
+	virtual bool CanDoSubMeshViewCull();
 
 
 	virtual void SetParent(CTreeObject* pParent);
@@ -172,6 +175,11 @@ inline CD3DRender * CD3DObject::GetRender()
 }
 
 inline bool CD3DObject::CanRender()
+{
+	return true;
+}
+
+inline bool CD3DObject::CanDoSubMeshViewCull()
 {
 	return true;
 }

@@ -55,8 +55,6 @@ public:
 	BOOL PopBack(LPVOID pData,UINT Size);
 	BOOL PopBack(UINT Data,UINT Size);
 
-	BOOL PushBackSelf(UINT Size);
-
 	void Clear();
 
 };
@@ -146,7 +144,7 @@ inline BOOL CCycleBufferEx::PushBack(LPVOID pData,UINT Size)
 				UINT CutSize=GetSmoothSize()-m_BufferTail;
 				if(CutSize>Size)
 					CutSize=Size;
-				memcpy(m_pBuffer+m_BufferSize+m_BufferTail,pData,CutSize);
+				memcpy(m_pBuffer+m_BufferSize+m_BufferTail,m_pBuffer+m_BufferTail,CutSize);
 			}
 			m_BufferTail+=Size;
 		}
@@ -154,10 +152,8 @@ inline BOOL CCycleBufferEx::PushBack(LPVOID pData,UINT Size)
 		{
 			UINT CutSize=m_BufferSize-m_BufferTail;
 			if(pData)
-			{
 				memcpy(m_pBuffer+m_BufferTail,pData,Size);
-				memcpy(m_pBuffer,(BYTE *)pData+CutSize,Size-CutSize);
-			}
+			memcpy(m_pBuffer,m_pBuffer+m_BufferSize,Size-CutSize);
 			m_BufferTail=Size-CutSize;
 		}		
 		return TRUE;
@@ -195,32 +191,6 @@ inline BOOL CCycleBufferEx::PopFront(LPVOID pData,UINT Size)
 inline BOOL CCycleBufferEx::PopFront(UINT Data,UINT Size)
 {
 	return PopFront(&Data,Size);
-}
-
-inline BOOL CCycleBufferEx::PushBackSelf(UINT Size)
-{
-	if(GetUsedSize()+Size<=GetBufferSize()&&Size<=GetSmoothSize())
-	{
-		if(m_BufferSize-m_BufferTail>=Size)
-		{		
-			if(m_BufferTail<GetSmoothSize())
-			{
-				UINT CutSize=GetSmoothSize()-m_BufferTail;
-				if(CutSize>Size)
-					CutSize=Size;
-				memcpy(m_pBuffer+m_BufferSize+m_BufferTail,m_pBuffer+m_BufferTail,CutSize);
-			}
-			m_BufferTail+=Size;
-		}
-		else
-		{
-			UINT CutSize=m_BufferSize-m_BufferTail;			
-			memcpy(m_pBuffer,m_pBuffer+m_BufferSize,Size-CutSize);			
-			m_BufferTail=Size-CutSize;
-		}		
-		return TRUE;
-	}
-	return FALSE;
 }
 
 inline void CCycleBufferEx::Clear()

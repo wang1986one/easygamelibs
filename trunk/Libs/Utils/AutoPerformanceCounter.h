@@ -28,6 +28,6 @@ public:
 	{
 		QueryPerformanceCounter(&m_PerformanceEnd);
 		CPerformanceStatistician::GetInstance()->
-			AddPerformanceCount(m_Index,m_PerformanceEnd.QuadPart-m_PerformanceStart.QuadPart);
+			AddPerformanceCount(m_Index,(UINT)(m_PerformanceEnd.QuadPart-m_PerformanceStart.QuadPart));
 	}
 };

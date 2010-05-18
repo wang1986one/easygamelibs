@@ -23,12 +23,12 @@ class CDBTransationWorkThread :
 	public CEasyThread
 {
 protected:
-	CDBTransationManager *				m_pManager;
-	IDBConnection *						m_pConnection;
-	CEasyString							m_ConnectString;
-	CThreadSafeList<CDBTransaction *>	m_TransQueue;
-	CThreadSafeList<CDBTransaction *>	m_FinishTransQueue;
-	CEasyTimer							m_ConnectionTestTimer;
+	CDBTransationManager *					m_pManager;
+	IDBConnection *							m_pConnection;
+	CEasyString								m_ConnectString;
+	CThreadSafeIDStorage<CDBTransaction *>	m_TransQueue;
+	CThreadSafeIDStorage<CDBTransaction *>	m_FinishTransQueue;
+	CEasyTimer								m_ConnectionTestTimer;
 
 	DECLARE_CLASS_INFO_STATIC(CDBTransationWorkThread)
 public:

@@ -27,6 +27,8 @@ public:
 
 	~CD3DVector4(void){}
 
+	void SetValue(FLOAT vx, FLOAT vy, FLOAT vz, FLOAT vw);
+
 	//±ê×¼»¯
 	void Normalize();
 	CD3DVector4 GetNormalize();
@@ -56,6 +58,14 @@ inline CD3DVector4::CD3DVector4(const D3DCOLORVALUE& Color)
 	y=Color.g;
 	z=Color.b;
 	w=Color.a;
+}
+
+inline void CD3DVector4::SetValue(FLOAT vx, FLOAT vy, FLOAT vz, FLOAT vw)
+{
+	x=vx;
+	y=vy;
+	z=vz;
+	w=vw;
 }
 
 inline void CD3DVector4::Normalize()

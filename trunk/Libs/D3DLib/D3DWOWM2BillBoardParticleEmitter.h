@@ -111,6 +111,8 @@ public:
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();
 
+	virtual bool CanDoSubMeshViewCull();
+
 	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
 
 	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera);

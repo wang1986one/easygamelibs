@@ -11,7 +11,7 @@
 /****************************************************************************/
 #pragma once
 
-#include "ExceptionParser.h"
+
 
 
 
@@ -21,6 +21,15 @@
 {\
 	PrintSystemLog(0xff00ff,"HResult Error:<%s><%d>[%x]",__FILE__,__LINE__,hr);\
 	return false;\
+}
+
+inline CEasyString GetModuleFilePath(HMODULE hModule)
+{
+	CEasyString ModulePath;
+	ModulePath.Resize(MAX_PATH);
+	GetModuleFileName(hModule,ModulePath,MAX_PATH);
+	ModulePath.TrimBuffer();
+	return ModulePath;
 }
 
 inline CEasyString GetModulePath(HMODULE hModule)

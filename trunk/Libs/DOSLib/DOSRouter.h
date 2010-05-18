@@ -19,8 +19,8 @@ class CDOSRouter :
 {
 protected:
 	
-	CDOSServer									*m_pServer;
-	CThreadSafeList<CDOSMessagePacket *>		m_MsgQueue;
+	CDOSServer										*m_pServer;
+	CThreadSafeIDStorage<CDOSMessagePacket *>		m_MsgQueue;
 	
 	
 

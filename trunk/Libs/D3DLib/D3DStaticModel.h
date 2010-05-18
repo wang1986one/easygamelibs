@@ -40,7 +40,6 @@ protected:
 	CD3DStaticModelResource*	m_pResource;
 	//CD3DBoundingBox				m_WholeBoundingBox;
 	//CD3DBoundingSphere			m_WholeBoundingSphere;
-	CD3DBoundingFrame *			m_pBoundingFrame;
 	UINT64						m_Property;
 
 	DECLARE_CLASS_INFO(CD3DStaticModel)
@@ -74,7 +73,6 @@ public:
 
 	virtual void Update(FLOAT Time);
 
-	virtual void ShowBoundingFrame(int Operator);
 
 	CD3DStaticModelResource * GetStaticModelResource();
 
