@@ -182,6 +182,14 @@ public:
 		return true;
 
 	}
+	UINT GetBufferSize()
+	{
+		return m_ObjectBuffSize;
+	}
+	BOOL IsCreated()
+	{
+		return m_pObjectBuff!=NULL;
+	}
 	void Destory()
 	{
 		for(UINT i=0;i<m_ObjectBuffSize;i++)
@@ -237,7 +245,7 @@ public:
 		}
 		*ppObject=NULL;
 		return 0;
-	}	
+	}
 
 	T* NewObject()
 	{
@@ -263,7 +271,69 @@ public:
 			return ID;
 		}
 		return 0;
-	}		
+	}
+	LPVOID InsertAfter(LPVOID Pos)
+	{
+		StorageNode * pNode=NewNode();
+		if(pNode)
+		{				
+			InsertNodeAfter(pNode,(StorageNode *)Pos);			
+			return pNode;
+		}
+		return NULL;
+	}
+	LPVOID InsertAfter(T& Object,LPVOID Pos)
+	{
+		StorageNode * pNode=(StorageNode *)InsertAfter(Pos);
+		if(pNode)
+		{		
+			pNode->GetObjectRef()=Object;
+			return pNode;
+		}
+		return NULL;
+	}
+	LPVOID InsertBefore(LPVOID Pos)
+	{
+		StorageNode * pNode=NewNode();
+		if(pNode)
+		{				
+			InsertNodeBefore(pNode,(StorageNode *)Pos);			
+			return pNode;
+		}
+		return NULL;
+	}
+	LPVOID InsertBefore(T& Object,LPVOID Pos)
+	{
+		StorageNode * pNode=(StorageNode *)InsertNodeBefore(Pos);
+		if(pNode)
+		{		
+			pNode->GetObjectRef()=Object;
+			return pNode;
+		}
+		return NULL;
+	}
+	LPVOID InsertSorted(T& Object)
+	{
+		StorageNode * pNode=NewNode();
+		if(pNode)
+		{	
+			StorageNode * pHead=GetFirstObjectPos();
+			while(pHead&&pHead->GetObjectRef()<Object)
+			{
+				pHead=pHead->pNext;
+			}
+			if(pHead)
+			{
+				InsertNodeBefore(pNode,pHead);
+			}
+			else
+			{
+				InsertNodeAfter(pNode,pHead);
+			}
+			return pNode;
+		}
+		return NULL;
+	}
 	LPVOID GetObjectPos(UINT ID)
 	{
 		if(ID>0&&ID<=m_ObjectBuffSize)
@@ -286,6 +356,15 @@ public:
 	{		
 		return GetObject(GetObjectPos(ID));
 	}
+	UINT GetObjectID(LPVOID Pos)
+	{
+		StorageNode * pNode=(StorageNode *)Pos;	
+		if(Pos)
+			return pNode->ID;
+		else
+			return 0;
+	}
+	
 	bool DeleteObject(UINT ID)
 	{
 		StorageNode * pNode=(StorageNode *)GetObjectPos(ID);
@@ -353,6 +432,72 @@ public:
 			StorageNode * pAfter=(StorageNode *)After;
 			PickNode(pNode);
 			InsertNodeAfter(pNode,pAfter);
+			return TRUE;
+		}
+		return FALSE;
+	}
+
+	LPVOID PushFront()
+	{
+		StorageNode * pNode=NewNode();
+		if(pNode)
+		{				
+			InsertNodeBefore(pNode,m_pObjectListHead);			
+			return pNode;
+		}
+		return NULL;
+	}
+
+	LPVOID PushFront(T& Object)
+	{
+		StorageNode * pNode=(StorageNode *)PushFront();
+		if(pNode)
+		{			
+			pNode->GetObjectRef()=Object;
+			return pNode;
+		}
+		return NULL;
+	}
+
+	LPVOID PushBack()
+	{
+		StorageNode * pNode=NewNode();
+		if(pNode)
+		{				
+			InsertNodeAfter(pNode,m_pObjectListTail);			
+			return pNode;
+		}
+		return NULL;
+	}
+
+	LPVOID PushBack(T& Object)
+	{
+		StorageNode * pNode=(StorageNode *)PushBack();
+		if(pNode)
+		{			
+			pNode->GetObjectRef()=Object;
+			return pNode;
+		}
+		return NULL;
+	}
+
+	BOOL PopFront(T& Object)
+	{
+		if(m_pObjectListHead)
+		{
+			Object=m_pObjectListHead->GetObjectRef();
+			DeleteNode(m_pObjectListHead);
+			return TRUE;
+		}
+		return FALSE;
+	}	
+
+	BOOL PopBack(T& Object)
+	{
+		if(m_pObjectListTail)
+		{
+			Object=m_pObjectListTail->GetObjectRef();
+			DeleteNode(m_pObjectListTail);
 			return TRUE;
 		}
 		return FALSE;
@@ -463,6 +608,26 @@ protected:
 			m_pFreeListTail=pNode;
 		}
 		m_ObjectCount--;
+	}
+
+	void Verfy(UINT& UsedCount,UINT& FreeCount)
+	{
+		UsedCount=0;
+		FreeCount=0;
+
+		StorageNode * pNode=m_pObjectListHead;
+		while(pNode&&UsedCount<m_ObjectBuffSize)
+		{
+			pNode=pNode->pNext;
+			UsedCount++;
+		}
+
+		pNode=m_pFreeListHead;
+		while(pNode&&FreeCount<m_ObjectBuffSize)
+		{
+			pNode=pNode->pNext;
+			FreeCount++;
+		}
 	}
 
 };

@@ -17,11 +17,11 @@ class CDOSObjectGroup :
 	public CEasyThread
 {
 protected:
-	CDOSObjectManager *					m_pManager;
-	UINT								m_Index;
-	volatile int						m_Weight;
-	CThreadSafeList<DOS_OBJECT_INFO>	m_ObjectRegisterQueue;
-	CThreadSafeList<OBJECT_ID>			m_ObjectUnregisterQueue;
+	CDOSObjectManager *						m_pManager;
+	UINT									m_Index;
+	volatile int							m_Weight;
+	CThreadSafeIDStorage<DOS_OBJECT_INFO>	m_ObjectRegisterQueue;
+	CThreadSafeIDStorage<OBJECT_ID>			m_ObjectUnregisterQueue;
 
 	CIDStorage<DOS_OBJECT_INFO>			m_ObjectPool;
 

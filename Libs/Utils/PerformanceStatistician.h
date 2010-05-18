@@ -62,16 +62,17 @@ inline void CPerformanceStatistician::AddPerformanceCount(UINT Index,UINT Perfor
 
 inline int CPerformanceStatistician::GetFunctionIndex(int OldIndex,LPCTSTR FunctionName)
 {
-	CAutoLock Lock(m_EasyCriticalSection);
-
 	if(OldIndex==0)
 	{
-		m_FunctionCount++;
-		m_PerformanceFunctionNames[m_FunctionCount]=FunctionName;
-		return m_FunctionCount;
+		CAutoLock Lock(m_EasyCriticalSection);
+		if(OldIndex==0)
+		{
+			m_FunctionCount++;
+			m_PerformanceFunctionNames[m_FunctionCount]=FunctionName;
+			return m_FunctionCount;
+		}
+		
 	}
-	else
-	{
-		return OldIndex;
-	}
+	return OldIndex;
 }
+

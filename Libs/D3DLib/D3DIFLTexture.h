@@ -23,11 +23,7 @@ protected:
 		float			FrameTime;
 	};
 
-	//struct STORAGE_STRUCT:public CNameObject::STORAGE_STRUCT
-	//{		
-	//	UINT			FrameCount;
-	//	
-	//};
+	
 	enum SST_MEMBER_ID
 	{
 		SST_D3DITEX_FRAME=SST_NO_MAX,		
@@ -39,11 +35,7 @@ protected:
 		SST_FI_TEXTURE,
 	};
 
-	//struct STORAGE_FRAME_STRUCT
-	//{
-	//	float FrameTime;
-	//	int	TextureIndex;
-	//};
+	
 
 	CEasyArray<TEXTURE_FRAME>	m_TextrueList;
 	float						m_FlipStartTime;
@@ -56,6 +48,8 @@ public:
 	virtual ~CD3DIFLTexture(void);
 
 	virtual bool LoadTexture(LPCTSTR TextureFileName,UINT MipLevels=1,bool UseFilter=true,bool IsManaged=true,D3DCOLOR KeyColor=0);
+
+	void AddFrame(CD3DTexture *	pTexture,float FrameTime);
 
 	virtual LPDIRECT3DTEXTURE9 GetD3DTexture();
 	virtual bool ApplyTexture(int stage);

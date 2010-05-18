@@ -129,16 +129,34 @@ void CExceptionParser::ParseException(LPEXCEPTION_POINTERS pException)
 	m_ExceptionCount++;
 
 	SymInit();
-	
-	
-	PrintImportantLog(0xff,"-----------------------------------------------------------------");
 
-	PrintImportantLog(0xff,"程序发生异常:类型: 0x%x  地址: 0x%x", 
+	WriteDump(pException);
+
+
+	CEasyString ModulePath=GetModulePath(NULL);
+	CEasyString ExceptionLogFileName;
+	CEasyTime CurTime;
+
+
+	CurTime.FetchLocalTime();
+
+	ExceptionLogFileName.Format("%s.Exception%d-%02d-%02d %02d-%02d-%02d",
+		(LPCTSTR)ModulePath,
+		CurTime.Year(),CurTime.Month(),CurTime.Day(),
+		CurTime.Hour(),CurTime.Minute(),CurTime.Second());
+
+
+	m_ExceptionLog.Create(ExceptionLogFileName,0);
+	
+	
+	LogException("-----------------------------------------------------------------");
+
+	LogException("程序发生异常:类型: 0x%x  地址: 0x%x", 
 		pException->ExceptionRecord->ExceptionCode ,pException->ExceptionRecord->ExceptionAddress);
 
 	if(pException->ExceptionRecord->ExceptionCode==EXCEPTION_ACCESS_VIOLATION)
 	{
-		PrintImportantLog(0xff,"地址:0x%x%s",
+		LogException("地址:0x%x%s",
 			pException->ExceptionRecord->ExceptionInformation[1],
 			pException->ExceptionRecord->ExceptionInformation[0]?"不可写":"不可读");
 	}
@@ -147,16 +165,16 @@ void CExceptionParser::ParseException(LPEXCEPTION_POINTERS pException)
 	static ADDRESS_INFO AddressInfo;
 
 	GetAddressInfo((DWORD64)pException->ExceptionRecord->ExceptionAddress,&AddressInfo);
-	PrintImportantLog(0xff,"地址描述:函数(%s),文件(%s)(%d)",AddressInfo.SymbolInfo.Name,AddressInfo.CppFileName,AddressInfo.LineNumber);
+	LogException("地址描述:函数(%s),文件(%s)(%d)",AddressInfo.SymbolInfo.Name,AddressInfo.CppFileName,AddressInfo.LineNumber);
 
-	PrintImportantLog(0xff,"调用堆栈:");
+	LogException("调用堆栈:");
 
 	
 	ParseCallStack(pException->ContextRecord);
 
-	PrintImportantLog(0xff,"-----------------------------------------------------------------");
+	LogException("-----------------------------------------------------------------");
 
-	WriteDump(pException);
+	
 	
 }
 
@@ -190,11 +208,11 @@ void CExceptionParser::ParseCallStack(PCONTEXT pContextRecord,UINT MaxLoopCount)
 		if(LastInstance!=AddressInfo.hInstance)
 		{	
 			LastInstance=AddressInfo.hInstance;
-			PrintImportantLog(0xff,"调用模块:%s",AddressInfo.ModuleName);
+			LogException("调用模块:%s",AddressInfo.ModuleName);
 		}
-		PrintImportantLog(0xff,"调用地址:0x%X",(DWORD)StackFrame.AddrPC.Offset);
+		LogException("调用地址:0x%X",(DWORD)StackFrame.AddrPC.Offset);
 		if(Ret)
-			PrintImportantLog(0xff,"地址描述:函数(%s),文件(%s)(%d)",AddressInfo.SymbolInfo.Name,AddressInfo.CppFileName,AddressInfo.LineNumber);
+			LogException("地址描述:函数(%s),文件(%s)(%d)",AddressInfo.SymbolInfo.Name,AddressInfo.CppFileName,AddressInfo.LineNumber);
 		
 		
 		MaxLoopCount--;
@@ -247,17 +265,17 @@ BOOL CExceptionParser::GetAddressInfo(DWORD64 Address,ADDRESS_INFO * pAddressInf
 
 BOOL CExceptionParser::WriteDump(LPEXCEPTION_POINTERS pException)
 {
-	static CWinFileAccessor DumpFile;
+	CWinFileAccessor DumpFile;
 
-	static CEasyString ModulePath=GetModulePath(NULL);
-	static CEasyString DumpFileName;
-	static CEasyTime CurTime;
+	CEasyString ModulePath=GetModulePath(NULL);
+	CEasyString DumpFileName;
+	CEasyTime CurTime;
 
 	PrintImportantLog(0xff,"开始制作Dump文件");
 
 	CurTime.FetchLocalTime();
 
-	DumpFileName.Format("%sDump%d-%02d-%02d %02d-%02d-%02d.dmp",
+	DumpFileName.Format("%s.Dump%d-%02d-%02d %02d-%02d-%02d.dmp",
 		(LPCTSTR)ModulePath,
 		CurTime.Year(),CurTime.Month(),CurTime.Day(),
 		CurTime.Hour(),CurTime.Minute(),CurTime.Second());
@@ -357,6 +375,14 @@ UINT CExceptionParser::GetCallStack(DWORD64 * pAddressBuffer,UINT Depth)
 		Depth--;
 	}
 	return Count;
+}
+
+void CExceptionParser::LogException(LPCTSTR Format,...)
+{
+	va_list	vl;
+	va_start(vl,Format);
+	m_ExceptionLog.PrintLog(ILogPrinter::LOG_LEVEL_NORMAL,0,Format,vl);
+	va_end( vl);
 }
 
 void CExceptionParser::InvalidParameterHandler(const wchar_t * expression,const wchar_t * function,const wchar_t * file,unsigned int line,uintptr_t pReserved)

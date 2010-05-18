@@ -30,6 +30,7 @@ LPCTSTR TEXT_RECT_FX=
 	"		Texture[0] = <TexLay0>;"
 	"		AlphaTestEnable = false;"
 	"		AlphaBlendEnable = true;"
+	"		BlendOp = Add;"
 	"		SrcBlend = SrcAlpha;"
 	"		DestBlend = InvSrcAlpha;"
 	"		Texture[0] = <TexLay0>;"

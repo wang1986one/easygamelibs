@@ -43,6 +43,8 @@ protected:
 	IMediaControl*              m_pMediaControl;
 	IMediaSeeking*              m_pMediaSeeking;
 	IMediaEvent*                m_pMediaEvent;
+
+	IBaseFilter *				m_pDirectVobSub;
 	
 	
 	CFilterRenderOnTexture*			m_pFilterRenderOnTexture;
@@ -52,6 +54,7 @@ protected:
 
 
 	char							m_VideoFile[MAX_PATH];
+	bool							m_ForceLoadVobSub;
 
 	DECLARE_CLASS_INFO(CD3DVideoTexture)
 public:
@@ -98,6 +101,16 @@ public:
 	LONGLONG GetTimeUnit()
 	{
 		return m_TimeUnit;
+	}
+
+	void EnableForceLoadVobSub(bool Enable)
+	{
+		m_ForceLoadVobSub=Enable;
+	}
+
+	bool IsForceLoadVobSub()
+	{
+		return m_ForceLoadVobSub;
 	}
 
 	HRESULT FindFilter(IFilterGraph *pGraph,REFIID riid,__RPC__deref_out void __RPC_FAR *__RPC_FAR *ppvObject);

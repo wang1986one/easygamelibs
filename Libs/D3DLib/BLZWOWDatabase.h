@@ -252,6 +252,8 @@ protected:
 
 	CEasyArray<BLZ_DB_MAP_INFO>									m_MaoInfo;
 
+	CBLZDBCFile													m_SpellVisualEffectNameInfo;
+
 public:
 	CBLZWOWDatabase(void);
 	~CBLZWOWDatabase(void);

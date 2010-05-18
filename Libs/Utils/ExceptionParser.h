@@ -56,6 +56,7 @@ protected:
 	CEasyCriticalSection	m_CriticalSection;
 	HANDLE					m_hProcess;
 	int						m_ExceptionCount;
+	CFileLogPrinter			m_ExceptionLog;
 public:
 	CExceptionParser(void);
 	~CExceptionParser(void);
@@ -77,6 +78,8 @@ public:
 
 protected:
 	void ParseCallStack(PCONTEXT pContextRecord,UINT MaxLoopCount=16);	
+
+	void LogException(LPCTSTR Format,...);
 
 
 	static void InvalidParameterHandler(

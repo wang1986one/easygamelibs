@@ -31,10 +31,8 @@ CD3DFXManager::~CD3DFXManager(void)
 	Pos=m_FXStorage.GetFirstObjectPos();
 	while(Pos)
 	{
-		char Msg[256];
 		CD3DFX * pFx=*(m_FXStorage.GetNext(Pos));
-		sprintf_s(Msg,256,"FX<%s>Î´ÊÍ·Å£¡\r\n",(LPCTSTR)pFx->GetName());
-		OutputDebugString(Msg);
+		PrintSystemLog(0,"FX<%s>Î´ÊÍ·Å£¡",(LPCTSTR)pFx->GetName());
 	}
 	m_FXStorage.Destory();
 #endif

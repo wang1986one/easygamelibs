@@ -18,18 +18,18 @@ class CNetService :
 	public CBaseService,public IIOCPEventHandler
 {
 protected:
-	volatile BOOL							m_WantClose;
-	CNetServer *							m_pServer;	
-	int										m_CurProtocol;	
-	CThreadSafeList<COverLappedObject *>	m_AcceptQueue;
-	int										m_AcceptQueueSize;
-	int										m_RecvQueueSize;
-	int										m_SendQueueSize;
-	int										m_ParallelAcceptCount;
-	int										m_ParallelRecvCount;
-	bool									m_IsUseListenThread;
-	CIOCPEventRouter *						m_pIOCPEventRouter;
-	CIOCPListenThread *						m_pListenThread;
+	volatile BOOL								m_WantClose;
+	CNetServer *								m_pServer;	
+	int											m_CurProtocol;	
+	CThreadSafeIDStorage<COverLappedObject *>	m_AcceptQueue;
+	int											m_AcceptQueueSize;
+	int											m_RecvQueueSize;
+	int											m_SendQueueSize;
+	int											m_ParallelAcceptCount;
+	int											m_ParallelRecvCount;
+	bool										m_IsUseListenThread;
+	CIOCPEventRouter *							m_pIOCPEventRouter;
+	CIOCPListenThread *							m_pListenThread;
 
 	
 

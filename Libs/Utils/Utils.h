@@ -113,6 +113,7 @@ enum EASY_DATA_STORAGE_MODE
 #include "FileLogPrinter.h"
 
 #ifdef WIN32
+#include "ExceptionParser.h"
 #include "PerformanceStatistician.h"
 #include "AutoPerformanceCounter.h"
 #endif
@@ -156,7 +157,7 @@ enum EASY_DATA_STORAGE_MODE
 #include "EasyList.h"
 #include "IDStorage.h"
 #include "NameStorage.h"
-#include "StaticList.h"
+//#include "StaticList.h"
 #include "StaticMap.h"
 #include "TreeObject.h"
 #include "ObjectManager.h"
@@ -178,9 +179,10 @@ enum EASY_DATA_STORAGE_MODE
 #include "GrowBuffer.h"
 #include "CycleBuffer.h"
 #include "CycleBufferEx.h"
-#include "ThreadSafeList.h"
+//#include "ThreadSafeList.h"
 #include "ThreadSafeIDStorage.h"
 #include "ThreadSafeCycleBuffer.h"
+#include "ThreadSafeCycleBufferEx.h"
 #include "ThreadSafeStaticMap.h"
 #include "FastMemoryPool.h"
 

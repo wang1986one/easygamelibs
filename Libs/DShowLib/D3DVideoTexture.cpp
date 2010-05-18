@@ -22,6 +22,7 @@ IMPLEMENT_CLASS_INFO(CD3DVideoTexture,CD3DTexture);
 
 
 
+
 CD3DVideoTexture::CD3DVideoTexture(void):CD3DTexture()
 {
 	m_pFilterGraph=NULL;
@@ -29,8 +30,10 @@ CD3DVideoTexture::CD3DVideoTexture(void):CD3DTexture()
 	m_pMediaControl=NULL;
 	m_pMediaSeeking=NULL;
 	m_pMediaEvent=NULL;	
+	m_pDirectVobSub=NULL;
 	m_pFilterRenderOnTexture=NULL;
 	m_TimeUnit=VTU_ORIGINAL;
+	m_ForceLoadVobSub=false;
 
 }
 
@@ -47,20 +50,25 @@ CD3DVideoTexture::CD3DVideoTexture(CD3DTextureManager * pManager):CD3DTexture(pM
 
 CD3DVideoTexture::~CD3DVideoTexture(void)
 {
-	CD3DVideoTexture::Destory();
+	Destory();
 }
 
 
 void CD3DVideoTexture::Destory()
 {
+	ULONG Ref=0;
 	
-	SAFE_RELEASE(m_pFilterGraph);
-	SAFE_RELEASE(m_pGraphBuilder);
+	
 	SAFE_RELEASE(m_pMediaControl);
 	SAFE_RELEASE(m_pMediaSeeking);
 	SAFE_RELEASE(m_pMediaEvent);
+	SAFE_RELEASE(m_pDirectVobSub);	
 	SAFE_RELEASE(m_pFilterRenderOnTexture);
 	SAFE_RELEASE(m_pTexture);
+
+	SAFE_RELEASE(m_pGraphBuilder);
+
+	SAFE_RELEASE(m_pFilterGraph);
 }
 
 bool CD3DVideoTexture::Reset()
@@ -90,10 +98,8 @@ bool CD3DVideoTexture::Create(LPCTSTR FileName)
 	USES_CONVERSION;
 
 	HRESULT							hr = S_OK;
-	CSmartPtr<IBaseFilter>			pBaseFilter;
-	CSmartPtr<IVMRFilterConfig9>	pVMRConfig;
 
-	CD3DVideoTexture::Destory();	
+	Destory();	
 
 	SetName(FileName);
 
@@ -103,6 +109,13 @@ bool CD3DVideoTexture::Create(LPCTSTR FileName)
 		(LPVOID *)&m_pFilterGraph);
 	CHECK_HRESULT(hr);	
 
+	if(m_ForceLoadVobSub)
+	{
+		CoCreateInstance(CLSID_DirectVobSub,NULL, CLSCTX_INPROC,__uuidof(IBaseFilter), 
+			(LPVOID *)&m_pDirectVobSub);
+	}
+
+	hr = S_OK;
 
 	m_pFilterRenderOnTexture=new CFilterRenderOnTexture(m_pManager->GetDevice(),&hr);
 	CHECK_HRESULT(hr);
@@ -112,12 +125,19 @@ bool CD3DVideoTexture::Create(LPCTSTR FileName)
 	hr=m_pFilterGraph->AddFilter(m_pFilterRenderOnTexture, L"FilterRenderOnTexture");
 	CHECK_HRESULT(hr);
 	
+	if(m_pDirectVobSub)
+	{
+		hr=m_pFilterGraph->AddFilter(m_pDirectVobSub, L"DirectVobSub");
+		CHECK_HRESULT(hr);
+	}
 
 	hr=m_pFilterGraph->QueryInterface(IID_IGraphBuilder, (LPVOID *)&m_pGraphBuilder);
 	CHECK_HRESULT(hr);
 
 	hr=m_pGraphBuilder->RenderFile(T2W(FileName),NULL);
 	CHECK_HRESULT(hr);
+
+	
 
 	int Width,Height;
 	DWORD TextureFormat=0;
@@ -155,10 +175,44 @@ bool CD3DVideoTexture::Create(LPCTSTR FileName)
 	{
 		pDirectVobSub->put_HideSubtitles(true);
 		pDirectVobSub->put_HideSubtitles(false);
+		int LanguageCount=0;
+		pDirectVobSub->get_LanguageCount(&LanguageCount);
+		PrintSystemLog(0,"LanguageCount=%d",
+			LanguageCount);
+		for(int i=0;i<LanguageCount;i++)
+		{
+			LPWSTR pLanguageName=NULL;
+			pDirectVobSub->get_LanguageName(i,&pLanguageName);
+			CEasyString LanguageName=pLanguageName;
+			PrintSystemLog(0,"Language%d=%s",
+				i,(LPCTSTR)LanguageName);
+			CoTaskMemFree(pLanguageName);
+		}
 		pDirectVobSub->Release();
 	}
 
-	//EnumFilters(m_pFilterGraph);
+	IAMStreamSelect * pAMStreamSelect;
+
+	if(SUCCEEDED(FindFilter(m_pFilterGraph,__uuidof(pAMStreamSelect),(void **)&pAMStreamSelect)))
+	{
+		DWORD StreamCount=0;
+		pAMStreamSelect->Count(&StreamCount);			
+		DWORD Flag=0;
+		LCID lcID=0;
+		DWORD Group=0;
+		LPWSTR pName;
+		for(long i=0;i<StreamCount;i++)
+		{
+			pAMStreamSelect->Info(i,NULL,&Flag,&lcID,&Group,&pName,NULL,NULL);
+			CEasyString StreamName=pName;
+			PrintSystemLog(0,"        Stream:(Flag=%u,LCID=%u,Group=%u)%s",Flag,lcID,Group,(LPCTSTR)StreamName);
+			CoTaskMemFree(pName);
+		}
+
+		pAMStreamSelect->Release();
+	}
+
+	EnumFilters(m_pFilterGraph);
 	
 	
 	return true;
@@ -293,7 +347,8 @@ HRESULT CD3DVideoTexture::FindFilter(IFilterGraph *pGraph,REFIID riid,__RPC__der
 			if(SUCCEEDED(pFilter->QueryInterface(riid,ppvObject)))
 			{
 				hr = S_OK;
-			}					
+			}	
+			pFilter->Release();
 		}
 
 		pEnum->Release();

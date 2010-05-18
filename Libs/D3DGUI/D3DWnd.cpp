@@ -1192,7 +1192,7 @@ bool CD3DWnd::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Para
 
 		if(Doc.children()>0)
 		{
-			if(LoadFromXml(&Doc.child(0)))
+			if(!LoadFromXml(&Doc.child(0)))
 			{	
 				return false;
 			}

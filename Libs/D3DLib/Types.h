@@ -116,7 +116,6 @@ const LPCTSTR DEFAULT_MODEL_FX_NT=
 "		zwriteenable = true;							\r\n"
 "		lighting = true;								\r\n"
 "		CullMode = none;								\r\n"
-"		FillMode = WireFrame;							\r\n"
 "		fogenable = false;								\r\n"
 "		Texture[0] = <TexLay0>;							\r\n"
 "		AlphaTestEnable = false;						\r\n"

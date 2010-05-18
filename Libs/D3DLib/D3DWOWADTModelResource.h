@@ -25,6 +25,19 @@ protected:
 		CD3DVector2			Tex;		
 	};
 
+	struct MODEL_LIQUID_VERTEXT
+	{
+		CD3DVector3			Pos;
+		D3DCOLOR			Color;
+		CD3DVector2			Tex;		
+	};
+
+	struct MODEL_NORMAL_VERTEXT
+	{
+		CD3DVector3			Pos;
+		D3DCOLOR			Color;
+	};
+
 	struct TEXTURE_INFO
 	{
 		BYTE						TextureIndex;
@@ -141,6 +154,7 @@ protected:
 	bool LoadAlphaLayer(TEXTURE_LAYER_INFO& LayInfo,UINT LayerCount,BLZ_CHUNK_MCLY * pMCLY,BLZ_CHUNK_MCAL * pMCAL);
 	CD3DTexture * CreateAlphaMap(int DataType,LPBYTE pData,UINT DataSize,UINT& ProcessSize);
 	bool LoadShadowMap(TEXTURE_LAYER_INFO& LayInfo,BLZ_CHUNK_MCSH * pMCSH);
+	CD3DTexture * LoadLiquidTexture(int LiquidType);
 };
 
 

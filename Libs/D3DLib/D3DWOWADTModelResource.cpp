@@ -17,7 +17,34 @@ namespace D3DLib{
 const WORD	ADT_HOLE_MASK[4][4]={	{0x1,	0x2,	0x4,	0x8},
 									{0x10,	0x20,	0x40,	0x80},
 									{0x100,	0x200,	0x400,	0x800},
-									{0x1000,0x2000,	0x4000,	0x8000}};
+									{0x100a0,0x2000,	0x4000,	0x8000}};
+
+
+static LPCTSTR DEFAULT_NORMAL_FX_NT=
+"texture TexLay0 < string name = \"test.jpg\"; >;	\r\n"
+"texture TexLay1 < string name = \"test1.jpg\"; >;	\r\n"
+"technique tec0										\r\n"
+"{													\r\n"
+"    pass p0										\r\n"
+"    {												\r\n"
+"		MultiSampleAntialias = false;				\r\n"	
+"		Lighting = false;							\r\n"
+"		zenable = true;								\r\n"
+"		zwriteenable = true;						\r\n"
+"		CullMode = none;							\r\n"
+"		fogenable = false;							\r\n"
+"		Texture[0] = <TexLay0>;						\r\n"
+"		AlphaTestEnable = false;					\r\n"
+"		AlphaBlendEnable = false;					\r\n"
+"     	ColorOp[0] = SelectArg1;					\r\n"
+"       ColorArg1[0] = Diffuse;						\r\n"      	
+"       AlphaOp[0] = disable;						\r\n"
+"		ColorOp[1] = disable;						\r\n"
+"		AlphaOp[1] = disable;						\r\n"
+"		VertexShader = NULL;						\r\n"
+"		PixelShader  = NULL;						\r\n"
+"    }												\r\n"
+"}													\r\n";
 
 
 IMPLEMENT_CLASS_INFO(CD3DWOWADTModelResource,CD3DObjectResource);
@@ -129,15 +156,17 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 	TextureCount=0;
 	while(Ptr<pMTEX->ChunkSize)
 	{
-		TextureList[TextureCount]=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(pMTEX->TextureFileNames+Ptr);
+		CEasyString TextureFileName=pMTEX->TextureFileNames+Ptr;
+		TextureFileName.MakeUpper();
+		TextureFileName.Replace(".BLP","_S.BLP");
+		TextureList[TextureCount]=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(TextureFileName);
 		TextureCount++;
 		Ptr+=strlen(pMTEX->TextureFileNames+Ptr)+1;
 	}
 
 	
 
-	CD3DVector3 MapAreaPos;
-
+	CEasyArray<CD3DSubMesh *> LiquidSubMeshList;
 
 	CBLZChunkFile::CChunkList * pChunkList=ADTChunk.GetChunks(CHUNK_ID_ADT_MCNK);
 	m_SubMeshList.Create(pChunkList->GetCount());
@@ -155,6 +184,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 		BLZ_CHUNK_MCLY * pMCLY=(BLZ_CHUNK_MCLY *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCLY,pMCNK->MCLYOffset);
 		BLZ_CHUNK_MCAL * pMCAL=(BLZ_CHUNK_MCAL *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCAL,pMCNK->MCALOffset);
 		BLZ_CHUNK_MCSH * pMCSH=(BLZ_CHUNK_MCSH *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCSH,pMCNK->MCSHOffset);
+		BLZ_CHUNK_MCLQ * pMCLQ=(BLZ_CHUNK_MCLQ *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCLQ,pMCNK->MCLQOffset);
 		
 
 		//if(pMCCV)
@@ -238,6 +268,29 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 		Pos.y=BLZ_ADT_MAP_TRANS_VALUE-Pos.y;
 
 		Pos=BLZTranslationToD3D(Pos);
+
+
+
+		CD3DSubMesh * pNormalSubMesh=new CD3DSubMesh;
+
+		pNormalSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE;
+		pNormalSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_NORMAL_VERTEXT);
+		pNormalSubMesh->SetVertexCount(VertexCount*2);
+		pNormalSubMesh->SetPrimitiveCount(VertexCount);
+		pNormalSubMesh->SetPrimitiveType(D3DPT_LINELIST);
+
+		pNormalSubMesh->AllocDXVertexBuffer(m_pManager->GetDevice());
+
+		pNormalSubMesh->GetMaterial().SetFX(
+			m_pManager->GetDevice()->GetFXManager()->
+			LoadFXFromMemory("DEFAULT_NORMAL_FX_NT",(void *)DEFAULT_NORMAL_FX_NT,
+			(int)strlen(DEFAULT_NORMAL_FX_NT)));
+
+
+
+		MODEL_NORMAL_VERTEXT * pNormalVertices=NULL;
+		pNormalSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pNormalVertices,0);
+
 	
 
 		float Pitch=BLZ_ADT_MAP_TILE_SIZE/16;
@@ -257,15 +310,20 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 					pModelVertices[VertexIndex].Pos+=Pos;
 
 					CD3DVector3 Normal;
-					Normal.x=pMCNR->Normals[VertexIndex][0]/127.0f;
-					Normal.y=pMCNR->Normals[VertexIndex][1]/127.0f;
-					Normal.z=pMCNR->Normals[VertexIndex][2]/127.0f;
-					pModelVertices[VertexIndex].Normal=BLZTranslationToD3D(Normal);
+					Normal.z=pMCNR->Normals[VertexIndex][0]/127.0f;
+					Normal.x=-pMCNR->Normals[VertexIndex][1]/127.0f;
+					Normal.y=pMCNR->Normals[VertexIndex][2]/127.0f;
+					pModelVertices[VertexIndex].Normal=Normal;
 
 					pModelVertices[VertexIndex].Color=0xffffffff;
 
 					pModelVertices[VertexIndex].Tex.x=(x*2.0f+1.0f)/16.0f;
 					pModelVertices[VertexIndex].Tex.y=Line/16.0f;
+
+					pNormalVertices[VertexIndex*2].Pos=pModelVertices[VertexIndex].Pos;
+					pNormalVertices[VertexIndex*2].Color=0xFFFF0000;
+					pNormalVertices[VertexIndex*2+1].Pos=pModelVertices[VertexIndex].Pos+pModelVertices[VertexIndex].Normal*2;
+					pNormalVertices[VertexIndex*2+1].Color=0xFF0000FF;
 					
 
 					VertexIndex++;
@@ -283,15 +341,21 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 					pModelVertices[VertexIndex].Pos+=Pos;
 
 					CD3DVector3 Normal;
-					Normal.x=pMCNR->Normals[VertexIndex][0]/127.0f;
-					Normal.y=pMCNR->Normals[VertexIndex][1]/127.0f;
-					Normal.z=pMCNR->Normals[VertexIndex][2]/127.0f;
-					pModelVertices[VertexIndex].Normal=BLZTranslationToD3D(Normal);		
+					Normal.z=pMCNR->Normals[VertexIndex][0]/127.0f;
+					Normal.x=-pMCNR->Normals[VertexIndex][1]/127.0f;
+					Normal.y=pMCNR->Normals[VertexIndex][2]/127.0f;
+					pModelVertices[VertexIndex].Normal=Normal;		
 
 					pModelVertices[VertexIndex].Color=0xffffffff;
 
 					pModelVertices[VertexIndex].Tex.x=(x*2.0f)/16.0f;
 					pModelVertices[VertexIndex].Tex.y=Line/16.0f;
+
+
+					pNormalVertices[VertexIndex*2].Pos=pModelVertices[VertexIndex].Pos;
+					pNormalVertices[VertexIndex*2].Color=0xFFFF0000;
+					pNormalVertices[VertexIndex*2+1].Pos=pModelVertices[VertexIndex].Pos+pModelVertices[VertexIndex].Normal*2;
+					pNormalVertices[VertexIndex*2+1].Color=0xFF0000FF;
 	
 
 					VertexIndex++;
@@ -332,6 +396,8 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 			}
 		}
 
+		pNormalSubMesh->GetDXVertexBuffer()->Unlock();
+
 		pD3DSubMesh->SetIndexCount(IndexIndex);
 
 		pD3DSubMesh->GetDXVertexBuffer()->Unlock();
@@ -344,113 +410,248 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 		pD3DSubMesh->SetName(SubMeshName);
 
 		m_SubMeshList.Add(pD3DSubMesh);
-		
-	}
 
-	UINT Count=pMDDF->ChunkSize/sizeof(ADT_M2_OBJECT_INFO);
-	m_M2ObjectList.Resize(Count);
-	for(UINT i=0;i<Count;i++)
-	{
-		m_M2ObjectList[i].ID=pMDDF->M2Objects[i].ID;
-		m_M2ObjectList[i].pModelResource=NULL;
-		CEasyString ModelFileName=pMMDX->M2FileNames+pMMID->M2FileNameIndices[pMDDF->M2Objects[i].Index];
-		CEasyString SkinFileName;
-		int Pos=ModelFileName.ReverseFind('.');
-		if(Pos>=0)
+		m_SubMeshList.Add(pNormalSubMesh);
+
+
+		if(pMH2O)
 		{
-			ModelFileName=ModelFileName.Left(Pos);
-			SkinFileName=ModelFileName+"00.skin";
-			ModelFileName+=".m2";
+			pD3DSubMesh=new CD3DSubMesh;
 
-			CEasyString ObjectName=ModelFileName+"_"+GetPathFileName(SkinFileName);
 
-			CD3DWOWM2ModelResource* pResource=
-				dynamic_cast<CD3DWOWM2ModelResource*>(m_pManager->GetResource(ObjectName));
-			if(!pResource)
+			MH2OInfo * pWaterInfo=(MH2OInfo *)(ADTChunk.GetData()+OffsetStart+pMH2O->Header[i].InformationOffset);
+
+
+			SubMeshName.Format("W%d",i);
+			pD3DSubMesh->SetName(SubMeshName);
+
+			LiquidSubMeshList.Add(pD3DSubMesh);
+		}
+		else if(pMCNK->LiquidSize>sizeof(BLZ_CHUNK_HEADER))
+		{
+			pD3DSubMesh=new CD3DSubMesh;
+
+
+			IndexCount=8*8*2*3;
+
+			VertexCount=9*9;
+
+			pD3DSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1;
+			pD3DSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_LIQUID_VERTEXT);
+			pD3DSubMesh->GetVertexFormat().IndexSize=sizeof(WORD);
+			pD3DSubMesh->SetPrimitiveType(D3DPT_TRIANGLELIST);
+			pD3DSubMesh->SetPrimitiveCount(IndexCount/3);		
+			pD3DSubMesh->SetVertexCount(VertexCount);
+			pD3DSubMesh->SetIndexCount(IndexCount);
+
+			pD3DSubMesh->AllocDXIndexBuffer(m_pManager->GetDevice());
+			pD3DSubMesh->AllocDXVertexBuffer(m_pManager->GetDevice());
+			
+
+			pD3DSubMesh->GetMaterial().GetMaterial().Ambient=WhiteColor;
+			pD3DSubMesh->GetMaterial().GetMaterial().Diffuse=WhiteColor;
+			pD3DSubMesh->GetMaterial().GetMaterial().Specular=WhiteColor;
+			pD3DSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
+			pD3DSubMesh->GetMaterial().GetMaterial().Power=40.0f;
+
+			pFX=m_pManager->GetDevice()->GetFXManager()->LoadFX("ADTLiquid.fx");
+			pD3DSubMesh->GetMaterial().SetFX(pFX);
+			pD3DSubMesh->SetTransparent(true);
+
+			CD3DTexture * pLiquidTexture=LoadLiquidTexture(0);
+
+			if(pLiquidTexture)
 			{
-				pResource=new CD3DWOWM2ModelResource(m_pManager);
-				if(pResource->LoadFromFile(ModelFileName,SkinFileName))
+				pD3DSubMesh->GetMaterial().AddTexture(pLiquidTexture,0);
+			}
+
+
+
+			pModelIndices=NULL;
+			pD3DSubMesh->GetDXIndexBuffer()->Lock(0,0,(LPVOID *)&pModelIndices,0);
+
+			MODEL_LIQUID_VERTEXT * pLiquidVertices=NULL;
+			pD3DSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pLiquidVertices,0);
+
+			
+
+			VertexIndex=0;
+			for(int y=0;y<9;y++)
+			{
+				for(int x=0;x<9;x++)
 				{
-					PrintSystemLog(0,"加载了[%s]",(LPCTSTR)ModelFileName);
-					if(!m_pManager->AddResource(pResource,ObjectName))
+					pLiquidVertices[VertexIndex].Pos.x=Pitch*x*2;
+					pLiquidVertices[VertexIndex].Pos.z=-Pitch*y*2;
+
+					pLiquidVertices[VertexIndex].Pos+=Pos;
+
+
+					pLiquidVertices[VertexIndex].Pos.y=pMCLQ->LiquidInfo[y][x].Height;
+					
+					if(pLiquidVertices[VertexIndex].Pos.y<pMCLQ->MinHeight)
+						pLiquidVertices[VertexIndex].Pos.y=pMCLQ->MinHeight;
+					if(pLiquidVertices[VertexIndex].Pos.y>pMCLQ->MaxHeight)
+						pLiquidVertices[VertexIndex].Pos.y=pMCLQ->MaxHeight;
+					
+
+					pLiquidVertices[VertexIndex].Color=0x80303030;
+
+					pLiquidVertices[VertexIndex].Tex.x=(x*2.0f)/16.0f;
+					pLiquidVertices[VertexIndex].Tex.y=y*2/16.0f;
+
+					VertexIndex++;
+				}
+			}
+
+			IndexIndex=0;
+
+			for(int y=0;y<8;y++)
+			{
+				for(int x=0;x<8;x++)
+				{
+					if((pMCLQ->RenderFlag[y][x]&8)==0)
 					{
-						pResource->Release();
-						pResource=NULL;
+						pModelIndices[IndexIndex]	=y*9+x;
+						pModelIndices[IndexIndex+1]	=y*9+x+1;
+						pModelIndices[IndexIndex+2]	=(y+1)*9+x;
+
+
+						pModelIndices[IndexIndex+3]	=(y+1)*9+x;
+						pModelIndices[IndexIndex+4]	=y*9+x+1;
+						pModelIndices[IndexIndex+5]	=(y+1)*9+x+1;
+
+						IndexIndex+=6;
 					}
 				}
-				else
-				{
-					pResource->Release();
-					pResource=NULL;
-				}						
 			}
-			else
-			{
-				pResource->AddUseRef();
-			}	
-			m_M2ObjectList[i].pModelResource=pResource;
-		}			
-		
-		m_M2ObjectList[i].Position.x=pMDDF->M2Objects[i].Position.x;
-		m_M2ObjectList[i].Position.y=pMDDF->M2Objects[i].Position.y;
-		m_M2ObjectList[i].Position.z=-pMDDF->M2Objects[i].Position.z;					
-		m_M2ObjectList[i].Orientation=CD3DQuaternion::FromRotationYawPitchRoll(
-			-pMDDF->M2Objects[i].Orientation.y*PI/180.0f,
-			-pMDDF->M2Objects[i].Orientation.x*PI/180.0f,
-			pMDDF->M2Objects[i].Orientation.z*PI/180.0f);
-		m_M2ObjectList[i].Orientation.Normalize();
-		m_M2ObjectList[i].Scale=pMDDF->M2Objects[i].Scale/1024.0f;
-	}
+
+			pD3DSubMesh->SetIndexCount(IndexIndex);
 
 
-	Count=pMODF->ChunkSize/sizeof(ADT_WMO_OBJECT_INFO);
-	m_WMOObjectList.Resize(Count);
-	for(UINT i=0;i<Count;i++)
-	{
-		m_WMOObjectList[i].ID=pMODF->WMOObjects[i].ID;
-		CEasyString FileName=pMWMO->WMOFileNames+pMWID->WMOFileNameIndices[pMODF->WMOObjects[i].Index];
-		FileName.MakeUpper();
-		FileName.Replace(".MDX",".M2");		
+			pD3DSubMesh->GetDXVertexBuffer()->Unlock();
 
-		CD3DWOWWMOModelResource* pResource=
-			dynamic_cast<CD3DWOWWMOModelResource*>(m_pManager->GetResource(FileName));
-		if(!pResource)
-		{
-			pResource=new CD3DWOWWMOModelResource(m_pManager);
-			if(pResource->LoadFromFile(FileName))
-			{
-				PrintSystemLog(0,"加载了[%s]",(LPCTSTR)FileName);
-				if(!m_pManager->AddResource(pResource,FileName))
-				{
-					pResource->Release();
-					pResource=NULL;
-				}
-			}
-			else
-			{
-				PrintImportantLog(0,"加载WMO文件%s失败",(LPCTSTR)FileName);
-				pResource->Release();
-				pResource=NULL;
-			}						
+			pD3DSubMesh->GetDXIndexBuffer()->Unlock();
+
+			pD3DSubMesh->SetID(1000+i);
+
+			SubMeshName.Format("L%d",i);
+			pD3DSubMesh->SetName(SubMeshName);
+
+			LiquidSubMeshList.Add(pD3DSubMesh);
 		}
-		else
-		{
-			pResource->AddUseRef();
-		}	
-
-		m_WMOObjectList[i].pModelResource=pResource;
 		
-		m_WMOObjectList[i].Position.x=pMODF->WMOObjects[i].Position.x;
-		m_WMOObjectList[i].Position.y=pMODF->WMOObjects[i].Position.y;
-		m_WMOObjectList[i].Position.z=-pMODF->WMOObjects[i].Position.z;		
-			
-		m_WMOObjectList[i].Orientation=CD3DQuaternion::FromRotationYawPitchRoll(
-			-pMODF->WMOObjects[i].Orientation.y*PI/180.0f,
-			-pMODF->WMOObjects[i].Orientation.x*PI/180.0f,
-			pMODF->WMOObjects[i].Orientation.z*PI/180.0f);
-		m_WMOObjectList[i].Orientation.Normalize();
-		m_WMOObjectList[i].DoodadSet=pMODF->WMOObjects[i].DoodadSet;
 	}
+	
+	
+	for(UINT i=0;i<LiquidSubMeshList.GetCount();i++)
+	{
+		m_SubMeshList.Add(LiquidSubMeshList[i]);
+	}
+
+	//UINT Count=pMDDF->ChunkSize/sizeof(ADT_M2_OBJECT_INFO);
+	//m_M2ObjectList.Resize(Count);
+	//for(UINT i=0;i<Count;i++)
+	//{
+	//	m_M2ObjectList[i].ID=pMDDF->M2Objects[i].ID;
+	//	m_M2ObjectList[i].pModelResource=NULL;
+	//	CEasyString ModelFileName=pMMDX->M2FileNames+pMMID->M2FileNameIndices[pMDDF->M2Objects[i].Index];
+	//	CEasyString SkinFileName;
+	//	int Pos=ModelFileName.ReverseFind('.');
+	//	if(Pos>=0)
+	//	{
+	//		ModelFileName=ModelFileName.Left(Pos);
+	//		SkinFileName=ModelFileName+"00.skin";
+	//		ModelFileName+=".m2";
+
+	//		CEasyString ObjectName=ModelFileName+"_"+GetPathFileName(SkinFileName);
+
+	//		CD3DWOWM2ModelResource* pResource=
+	//			dynamic_cast<CD3DWOWM2ModelResource*>(m_pManager->GetResource(ObjectName));
+	//		if(!pResource)
+	//		{
+	//			pResource=new CD3DWOWM2ModelResource(m_pManager);
+	//			if(pResource->LoadFromFile(ModelFileName,SkinFileName))
+	//			{
+	//				PrintSystemLog(0,"加载了[%s]",(LPCTSTR)ModelFileName);
+	//				if(!m_pManager->AddResource(pResource,ObjectName))
+	//				{
+	//					pResource->Release();
+	//					pResource=NULL;
+	//				}
+	//			}
+	//			else
+	//			{
+	//				pResource->Release();
+	//				pResource=NULL;
+	//			}						
+	//		}
+	//		else
+	//		{
+	//			pResource->AddUseRef();
+	//		}	
+	//		m_M2ObjectList[i].pModelResource=pResource;
+	//	}			
+	//	
+	//	m_M2ObjectList[i].Position.x=pMDDF->M2Objects[i].Position.x;
+	//	m_M2ObjectList[i].Position.y=pMDDF->M2Objects[i].Position.y;
+	//	m_M2ObjectList[i].Position.z=-pMDDF->M2Objects[i].Position.z;					
+	//	m_M2ObjectList[i].Orientation=CD3DQuaternion::FromRotationYawPitchRoll(
+	//		-pMDDF->M2Objects[i].Orientation.y*PI/180.0f,
+	//		-pMDDF->M2Objects[i].Orientation.x*PI/180.0f,
+	//		pMDDF->M2Objects[i].Orientation.z*PI/180.0f);
+	//	m_M2ObjectList[i].Orientation.Normalize();
+	//	m_M2ObjectList[i].Scale=pMDDF->M2Objects[i].Scale/1024.0f;
+	//}
+
+
+	//Count=pMODF->ChunkSize/sizeof(ADT_WMO_OBJECT_INFO);
+	//m_WMOObjectList.Resize(Count);
+	//for(UINT i=0;i<Count;i++)
+	//{
+	//	m_WMOObjectList[i].ID=pMODF->WMOObjects[i].ID;
+	//	CEasyString FileName=pMWMO->WMOFileNames+pMWID->WMOFileNameIndices[pMODF->WMOObjects[i].Index];
+	//	FileName.MakeUpper();
+	//	FileName.Replace(".MDX",".M2");		
+
+	//	CD3DWOWWMOModelResource* pResource=
+	//		dynamic_cast<CD3DWOWWMOModelResource*>(m_pManager->GetResource(FileName));
+	//	if(!pResource)
+	//	{
+	//		pResource=new CD3DWOWWMOModelResource(m_pManager);
+	//		if(pResource->LoadFromFile(FileName))
+	//		{
+	//			PrintSystemLog(0,"加载了[%s]",(LPCTSTR)FileName);
+	//			if(!m_pManager->AddResource(pResource,FileName))
+	//			{
+	//				pResource->Release();
+	//				pResource=NULL;
+	//			}
+	//		}
+	//		else
+	//		{
+	//			PrintImportantLog(0,"加载WMO文件%s失败",(LPCTSTR)FileName);
+	//			pResource->Release();
+	//			pResource=NULL;
+	//		}						
+	//	}
+	//	else
+	//	{
+	//		pResource->AddUseRef();
+	//	}	
+
+	//	m_WMOObjectList[i].pModelResource=pResource;
+	//	
+	//	m_WMOObjectList[i].Position.x=pMODF->WMOObjects[i].Position.x;
+	//	m_WMOObjectList[i].Position.y=pMODF->WMOObjects[i].Position.y;
+	//	m_WMOObjectList[i].Position.z=-pMODF->WMOObjects[i].Position.z;		
+	//		
+	//	m_WMOObjectList[i].Orientation=CD3DQuaternion::FromRotationYawPitchRoll(
+	//		-pMODF->WMOObjects[i].Orientation.y*PI/180.0f,
+	//		-pMODF->WMOObjects[i].Orientation.x*PI/180.0f,
+	//		pMODF->WMOObjects[i].Orientation.z*PI/180.0f);
+	//	m_WMOObjectList[i].Orientation.Normalize();
+	//	m_WMOObjectList[i].DoodadSet=pMODF->WMOObjects[i].DoodadSet;
+	//}
 
 	CreateBounding();
 	return true;
@@ -929,6 +1130,24 @@ bool CD3DWOWADTModelResource::LoadShadowMap(TEXTURE_LAYER_INFO& LayInfo,BLZ_CHUN
 	{
 		return false;
 	}
+}
+
+
+CD3DTexture * CD3DWOWADTModelResource::LoadLiquidTexture(int LiquidType)
+{
+	CD3DIFLTexture * pLiquidTexture=new CD3DIFLTexture;
+	for(int i=0;i<30;i++)
+	{
+		CEasyString FileName;
+		
+		FileName.Format("XTEXTURES\\river\\lake_a.%d.blp",i+1);
+
+		CD3DTexture * pTexture=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(FileName);
+
+		pLiquidTexture->AddFrame(pTexture,1.0f/30);
+	}
+
+	return pLiquidTexture;
 }
 
 }

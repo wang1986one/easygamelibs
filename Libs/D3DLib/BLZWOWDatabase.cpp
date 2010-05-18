@@ -364,6 +364,20 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
+	//FileName=DBCPath;
+	//FileName+="\\";
+	//FileName+=BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_FILE_NAME;
+	//PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
+	//LoadTime=CEasyTimer::GetTime();
+	//if(!m_SpellVisualEffectNameInfo.Load(FileName,
+	//	BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_RECORD_SIZE))
+	//{
+	//	ErrorMsg=FileName+"装载失败！";
+	//	return false;
+	//}
+	//PrintSystemLog(0,"装载%s花了%u毫秒",
+	//	(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
+
 	PrintSystemLog(0,"CBLZWOWDatabase装载完毕");
 
 	return true;

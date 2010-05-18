@@ -36,11 +36,11 @@ public:
 	}
 	virtual FLOAT X2U(int X)
 	{
-		return ((FLOAT)X)/(m_TextureSurfaceInfo.Width);
+		return ((FLOAT)X+0.5f)/(m_TextureSurfaceInfo.Width);
 	}
 	virtual FLOAT Y2V(int Y)
 	{
-		return ((FLOAT)Y)/(m_TextureSurfaceInfo.Height);
+		return ((FLOAT)Y+0.5f)/(m_TextureSurfaceInfo.Height);
 	}
 	virtual int U2X(FLOAT U)
 	{

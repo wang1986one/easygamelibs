@@ -34,16 +34,15 @@ struct PANEL_MSG
 
 struct SERVER_INFO
 {
-	UINT	ClientCount;
-	double	CycleTime;
-	double	TCPRecvFlow;
-	double	TCPSendFlow;
-	double	UDPRecvFlow;
-	double	UDPSendFlow;
-	double	TCPRecvCount;
-	double	TCPSendCount;
-	double	UDPRecvCount;
-	double	UDPSendCount;
+	float	CycleTime;
+	float	TCPRecvFlow;
+	float	TCPSendFlow;
+	float	UDPRecvFlow;
+	float	UDPSendFlow;
+	float	TCPRecvCount;
+	float	TCPSendCount;
+	float	UDPRecvCount;
+	float	UDPSendCount;
 };
 
 class CControlPanel :

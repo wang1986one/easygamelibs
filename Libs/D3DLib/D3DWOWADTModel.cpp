@@ -190,10 +190,15 @@ void CD3DWOWADTModel::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,
 				pMaterial->GetFX()->SetTexture(szTexName,pMaterial->GetTexture(i));
 			}
 
-			CD3DMatrix Mat=GetWorldMatrix()*pCamera->GetViewMat()*pCamera->GetProjectMat();
+			CD3DMatrix Mat=GetWorldMatrix();
+			pMaterial->GetFX()->SetMatrix("WorldMatrix",Mat);
 
-			pMaterial->GetFX()->SetMatrix("WorldMatrix",GetWorldMatrix());
+			Mat=GetWorldMatrix()*pCamera->GetViewMat();
+			pMaterial->GetFX()->SetMatrix("WorldViewMatrix",Mat);
+
+			Mat=GetWorldMatrix()*pCamera->GetViewMat()*pCamera->GetProjectMat();
 			pMaterial->GetFX()->SetMatrix("WorldViewPrjMatrix",Mat);
+
 			pMaterial->GetFX()->SetVector("CameraPos",pCamera->GetWorldMatrix().GetTranslation());
 		}	
 	}

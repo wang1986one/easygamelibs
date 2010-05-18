@@ -790,6 +790,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ThreadSafeCycleBufferEx.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ThreadSafeCycleBufferEx.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ThreadSafeIDStorage.h"
 				>
 			</File>
@@ -1357,11 +1365,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\hppa.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\hpc\hppa.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\hpc\hppa.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\hppa.h"
 					>
 				</File>
 				<File
@@ -1401,11 +1409,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\ibmc\powerpc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\powerpc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\powerpc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\ibmc\powerpc.h"
 					>
 				</File>
 				<File
@@ -1429,11 +1437,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\sparc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\sunc\sparc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\sunc\sparc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\sparc.h"
 					>
 				</File>
 				<File
@@ -1449,11 +1457,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\x86.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\msftc\x86.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\msftc\x86.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\x86.h"
 					>
 				</File>
 				<File

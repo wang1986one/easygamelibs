@@ -29,7 +29,10 @@ public:
 
 	BOOL Load(IFileAccessor * pFile);
 	BOOL Load(BYTE * pData,UINT DataSize);
-	void Close();	
+	void Close();
+
+	BYTE * GetData();
+	UINT GetDataSize();
 
 	CChunkList * GetChunks(UINT ChunkID);
 	BLZ_CHUNK_HEADER * GetFirstChunk(UINT ChunkID);
@@ -38,7 +41,15 @@ public:
 
 };
 
+inline BYTE * CBLZChunkFile::GetData()
+{
+	return m_pData;
+}
 
+inline UINT CBLZChunkFile::GetDataSize()
+{
+	return m_DataSize;
+}
 
 
 }

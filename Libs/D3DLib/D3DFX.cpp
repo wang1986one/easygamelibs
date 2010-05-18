@@ -85,9 +85,7 @@ bool CD3DFX::LoadFromFile(LPCTSTR FileName)
 		return false;
 
 #ifdef _DEBUG
-	char Msg[1024];
-	sprintf_s(Msg,1024,"装载FX<%s>.....\r\n",(LPCTSTR)FxFileName);
-	OutputDebugString(Msg);
+	PrintSystemLog(0,"装载FX<%s>.....",(LPCTSTR)FxFileName);
 #endif
 	if(pFile->Open(FileName,IFileAccessor::modeRead))
 	{
@@ -108,8 +106,7 @@ bool CD3DFX::LoadFromFile(LPCTSTR FileName)
 	else
 		pFile->Release();
 #ifdef _DEBUG	
-	sprintf_s(Msg,1024,"装载FX<%s>失败\r\n",FileName);
-	OutputDebugString(Msg);
+	PrintSystemLog(0,"装载FX<%s>失败",FileName);
 #endif
 	return false;
 }
@@ -448,12 +445,10 @@ bool CD3DFX::LoadFXDirect(const void * pData,int DataSize)
 		&pErrors);
 	if(m_pEffect==NULL)
 	{
-		CEasyString ErrorMsg;
 		if(pErrors)
-			ErrorMsg.Format("无法加载FX,Err=(%s)",(char*)(pErrors->GetBufferPointer()));
+			PrintSystemLog(0,"无法加载FX,Err=(%s)",(char*)(pErrors->GetBufferPointer()));
 		else
-			ErrorMsg.Format("无法加载FX");
-		MessageBox(GetForegroundWindow(),ErrorMsg,"无法加载FX",MB_OK);
+			PrintSystemLog(0,"无法加载FX");
 		SAFE_RELEASE(pErrors);
 		return false;
 	}

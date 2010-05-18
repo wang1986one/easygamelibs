@@ -25,11 +25,21 @@ CCycleBuffer::CCycleBuffer(void):CNameObject()
 
 CCycleBuffer::CCycleBuffer(UINT Size):CNameObject()
 {
+	m_pBuffer=NULL;
+	m_BufferSize=0;	
+	m_BufferHead=0;
+	m_BufferTail=0;	
+	m_IsSelfBuffer=true;
 	Create(Size);	
 }
 
 CCycleBuffer::CCycleBuffer(LPVOID pBuff,UINT Size):CNameObject()
 {
+	m_pBuffer=NULL;
+	m_BufferSize=0;	
+	m_BufferHead=0;
+	m_BufferTail=0;	
+	m_IsSelfBuffer=true;
 	Create(pBuff,Size);
 }
 

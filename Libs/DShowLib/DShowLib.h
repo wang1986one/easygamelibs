@@ -13,7 +13,7 @@
 
 #define DSHOWLIB_VERSION	"1.0.0.0"
 
-
+#define USE_CRT_DETAIL_NEW
 
 #include "dshow.h"
 #include "vmr9.h"

@@ -66,6 +66,7 @@ void CAsyncFileLogPrinter::PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list
 
 		vsprintf_s(MsgBuff+17,4096-17,Format, vl );
 		MsgBuff[4095]=0;
+		strncat_s(MsgBuff,5000,"\r\n",4096);
 
 		m_FileLogWorkThread.PushLog(MsgBuff);
 			

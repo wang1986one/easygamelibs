@@ -20,7 +20,7 @@ CLogManager::CLogManager(void):CNameObject()
 {
 	m_LogChannels.Insert(LOG_SYSTEM_CHANNEL,new CVSOutputLogPrinter());
 
-	CEasyString ImportLogFileName=MakeModuleFullPath(NULL,IMPORTANT_LOG_FILE_NAME);	
+	CEasyString ImportLogFileName=GetModuleFilePath(NULL);	
 
 	m_LogChannels.Insert(LOG_IMPORTANT_CHANNEL,new CFileLogPrinter(ImportLogFileName,FILE_LOG_APPEND|FILE_LOG_SAFE_WRITE));
 }

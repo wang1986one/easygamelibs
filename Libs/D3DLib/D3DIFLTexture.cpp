@@ -38,9 +38,7 @@ bool CD3DIFLTexture::LoadTexture(LPCTSTR TextureFileName,UINT MipLevels,bool Use
 		return false;
 	Temp=FindFileOne(TextureFileName);
 #ifdef _DEBUG
-	char Msg[1024];
-	sprintf_s(Msg,1024,"装载IFL纹理<%s>...\r\n",Temp);
-	OutputDebugString(Msg);
+	PrintSystemLog(0,"装载IFL纹理<%s>...",Temp);
 #endif
 
 	CStringFile	Lines(Temp,m_FileChannel);
@@ -74,6 +72,20 @@ bool CD3DIFLTexture::LoadTexture(LPCTSTR TextureFileName,UINT MipLevels,bool Use
 		return true;
 	else
 		return false;
+}
+
+void CD3DIFLTexture::AddFrame(CD3DTexture *	pTexture,float FrameTime)
+{
+	if(pTexture)
+	{
+		TEXTURE_FRAME Frame;
+
+		Frame.pTexture=pTexture;
+		Frame.FrameTime=FrameTime;
+
+		m_TextrueList.Add(Frame);
+	}
+	
 }
 
 LPDIRECT3DTEXTURE9 CD3DIFLTexture::GetD3DTexture()
@@ -125,7 +137,7 @@ void CD3DIFLTexture::Destory()
 {
 	for(int i=0;i<(int)m_TextrueList.GetCount();i++)
 	{
-		SAFE_DELETE(m_TextrueList[i].pTexture);
+		SAFE_RELEASE(m_TextrueList[i].pTexture);
 	}	
 	m_TextrueList.Clear();
 	CD3DTexture::Destory();
@@ -241,178 +253,7 @@ UINT CD3DIFLTexture::GetSmartStructSize(UINT Param)
 }
 
 
-//bool CD3DIFLTexture::ToUSOFile(CUSOFile * pUSOFile,UINT Param)
-//{	
-//
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;	
-//
-//	STORAGE_STRUCT Data;
-//	
-//	strncpy_0(Data.ObjectHead.Type,USO_FILE_MAX_TYPE_LEN,GetClassInfo().ClassName,USO_FILE_MAX_TYPE_LEN);		
-//	strncpy_0(Data.ObjectHead.Name,USO_FILE_MAX_OBJECT_NAME,GetName(),USO_FILE_MAX_OBJECT_NAME);
-//	Data.FrameCount=(UINT)m_TextrueList.GetCount();
-//	Data.ObjectHead.Size=sizeof(STORAGE_STRUCT)+Data.FrameCount*sizeof(STORAGE_FRAME_STRUCT);
-//
-//	pFile->Write(&Data,sizeof(STORAGE_STRUCT));
-//	
-//	for(int i=0;i<(int)m_TextrueList.GetCount();i++)
-//	{
-//		STORAGE_FRAME_STRUCT Frame;
-//		Frame.FrameTime=m_TextrueList[i].FrameTime;
-//		Frame.TextureIndex=pUSOFile->ResourceObjectToIndex(m_TextrueList[i].pTexture);
-//		pFile->Write(&Frame,sizeof(Frame));		
-//	}	
-//
-//	return true;
-//}
-//
-//bool CD3DIFLTexture::FromUSOFile(CUSOFile * pUSOFile,UINT Param)
-//{
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//	STORAGE_STRUCT * pData;
-//	BYTE * pBuff;
-//	UINT Size;
-//
-//	pFile->Read(&Size,sizeof(UINT));
-//	pBuff=new BYTE[Size];
-//	pFile->Read(pBuff+sizeof(UINT),Size-sizeof(UINT));
-//	pData=(STORAGE_STRUCT *)pBuff;
-//	pData->ObjectHead.Size=Size;
-//	
-//
-//	if((!GetClassInfo().IsKindOf(pData->ObjectHead.Type))||
-//		pData->ObjectHead.Size<sizeof(STORAGE_STRUCT)+pData->FrameCount*sizeof(float))
-//	{	
-//		delete[] pBuff;
-//		return false;
-//	}
-//	pData->ObjectHead.Name[USO_FILE_MAX_OBJECT_NAME-1]=0;
-//	SetName(pData->ObjectHead.Name);
-//	if(m_pManager)
-//		m_pManager->AddTexture(this,GetName());
-//
-//	STORAGE_FRAME_STRUCT * pFrames=(STORAGE_FRAME_STRUCT *)(pBuff+sizeof(STORAGE_STRUCT));
-//
-//	Destory();
-//	for(UINT i=0;i<pData->FrameCount;i++)
-//	{
-//		TEXTURE_FRAME Frame;
-//		Frame.FrameTime=pFrames[i].FrameTime;
-//		Frame.pTexture=dynamic_cast<CD3DTexture *>(pUSOFile->ResourceIndexToObject(pFrames[i].TextureIndex));
-//		if(Frame.pTexture)
-//		{
-//			Frame.pTexture->AddUseRef();
-//			m_TextrueList.push_back(Frame);
-//		}
-//	}
-//	
-//	delete[] pBuff;
-//	return true;
-//
-//}
 
-//CNameObject::STORAGE_STRUCT * CD3DIFLTexture::USOCreateHead(UINT Param)
-//{
-//	STORAGE_STRUCT * pHead=new STORAGE_STRUCT;
-//	ZeroMemory(pHead,sizeof(STORAGE_STRUCT));
-//	pHead->Size=sizeof(STORAGE_STRUCT);
-//	return pHead;
-//}
-//
-//int CD3DIFLTexture::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{
-//	int HeadSize=CNameObject::USOWriteHead(pHead,pUSOFile,Param);
-//	if(HeadSize<0)
-//		return -1;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//
-//	pLocalHead->Size+=m_TextrueList.GetCount()*sizeof(STORAGE_FRAME_STRUCT);
-//
-//	pLocalHead->FrameCount=(UINT)m_TextrueList.GetCount();
-//	
-//	return sizeof(STORAGE_STRUCT);
-//}
-//
-//bool CD3DIFLTexture::USOWriteData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{
-//	if(!CNameObject::USOWriteData(pHead,pUSOFile,Param))
-//		return false;
-//
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//	for(int i=0;i<(int)m_TextrueList.GetCount();i++)
-//	{
-//		STORAGE_FRAME_STRUCT Frame;
-//		Frame.FrameTime=m_TextrueList[i].FrameTime;
-//		Frame.TextureIndex=pUSOFile->ResourceObjectToIndex(m_TextrueList[i].pTexture);
-//		if(pFile->Write(&Frame,sizeof(Frame))<sizeof(Frame))
-//			return false;
-//	}	
-//	return true;
-//}
-//
-//int CD3DIFLTexture::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{	
-//	int ReadSize=CNameObject::USOReadHead(pHead,pUSOFile,Param);
-//	if(ReadSize<0)
-//		return -1;	
-//
-//	return sizeof(STORAGE_STRUCT);
-//}
-//
-//int CD3DIFLTexture::USOReadData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,BYTE * pData,int DataSize,UINT Param)
-//{
-//	int ReadSize=CNameObject::USOReadData(pHead,pUSOFile,pData,DataSize,Param);
-//
-//	pData+=ReadSize;
-//	DataSize-=ReadSize;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//
-//	
-//	STORAGE_FRAME_STRUCT * pFrames=(STORAGE_FRAME_STRUCT *)pData;		
-//	ReadSize+=sizeof(STORAGE_FRAME_STRUCT)*pLocalHead->FrameCount;
-//	for(UINT i=0;i<pLocalHead->FrameCount;i++)
-//	{
-//		TEXTURE_FRAME Frame;
-//		Frame.FrameTime=pFrames[i].FrameTime;
-//		Frame.pTexture=dynamic_cast<CD3DTexture *>(pUSOFile->ResourceIndexToObject(pFrames[i].TextureIndex,GET_CLASS_INFO(CD3DTexture)));
-//		if(Frame.pTexture)
-//		{
-//			Frame.pTexture->AddUseRef();
-//			m_TextrueList.Add(Frame);
-//		}
-//	}		
-//	
-//	return ReadSize;
-//}
-//
-//bool CD3DIFLTexture::USOReadFinish(CNameObject::STORAGE_STRUCT * pHead,UINT Param)
-//{
-//	if(!CNameObject::USOReadFinish(pHead,Param))
-//		return false;
-//
-//	if(m_pManager)
-//		m_pManager->AddTexture(this,GetName());
-//	return true;
-//}
 
 
 }

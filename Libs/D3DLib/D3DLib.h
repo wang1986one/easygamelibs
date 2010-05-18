@@ -82,8 +82,10 @@
 
 #include "D3DFrameDynamicModel.h"
 
-#include "BLZWOWDatabase.h"
+
 #include "BLZChunkFile.h"
+#include "BLZDBCFile.h"
+#include "BLZWOWDatabase.h"
 #include "D3DWOWM2ModelResource.h"
 #include "D3DWOWM2BillBoardParticleEmitter.h"
 #include "D3DWOWM2RibbonEmitter.h"

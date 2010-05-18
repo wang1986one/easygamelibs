@@ -15,6 +15,29 @@
 
 namespace DShowLib{
 
+#ifndef OUR_GUID_ENTRY
+#define OUR_GUID_ENTRY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+	const GUID  name \
+	= { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+#endif
+
+// 30323449-0000-0010-8000-00AA00389B71  'I420' == MEDIASUBTYPE_I420
+OUR_GUID_ENTRY(MEDIASUBTYPE_I420,
+	0x30323449, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
+
+
+
+#define YUV2RGB(y,u,v,r,g,b)\
+{\
+	float R=(y)+1.13983f*(v);\
+	float G=(y)-0.39465f*(u)-0.58060f*(v);\
+	float B=(y)+2.03211f*(u);\
+	(r)=(BYTE)(R>255.0f?255:(R<0?0:(BYTE)R));\
+	(g)=(BYTE)(G>255.0f?255:(G<0?0:(BYTE)G));\
+	(b)=(BYTE)(B>255.0f?255:(B<0?0:(BYTE)B));\
+}
+
+
 CEasyString GetMediaTypeName(const CLSID& MainType,const CLSID& SubType)
 {
 	HRESULT   hr = E_FAIL;
@@ -144,6 +167,14 @@ LPCTSTR GetVideoFormatName(const GUID& TypeID)
 	{
 		return "MEDIASUBTYPE_Y211";
 	}
+	else if(IsEqualGUID( TypeID, MEDIASUBTYPE_YV12))
+	{
+		return "MEDIASUBTYPE_YV12";
+	}	
+	else if(IsEqualGUID( TypeID, MEDIASUBTYPE_I420))
+	{
+		return "MEDIASUBTYPE_I420";
+	}	
 	else if(IsEqualGUID( TypeID, MEDIASUBTYPE_CLJR))
 	{
 		return "MEDIASUBTYPE_CLJR";
@@ -309,7 +340,13 @@ HRESULT CFilterRenderOnTexture::CheckMediaType(const CMediaType *pmt)
 	HRESULT   hr = E_FAIL;
 	VIDEOINFO *pvi=0;
 
+	
+
 	CheckPointer(pmt,E_POINTER);
+
+	//CEasyString MediaTypeName=GetMediaTypeName(*pmt->Type(),*pmt->Subtype());
+	//PrintSystemLog(0,"MediaType=%s",
+	//	(LPCTSTR)MediaTypeName);
 
 
 	// Reject the connection if this is not a video type
@@ -318,13 +355,9 @@ HRESULT CFilterRenderOnTexture::CheckMediaType(const CMediaType *pmt)
 		return E_INVALIDARG;
 	}
 
-	//PrintSystemLog(0,"收到媒体类型%s",GetVideoFormatName(*pmt->Subtype()));
-	// Only accept RGB24 video
-	//pvi = (VIDEOINFO *)pmt->Format();
+	PrintSystemLog(0,"收到媒体类型%s",GetVideoFormatName(*pmt->Subtype()));
 
-	//MEDIASUBTYPE_YUY2
-	//MEDIASUBTYPE_UYVY
-	//MEDIASUBTYPE_RGB24
+
 	if((m_SupportTextureFormat&SUPPORT_D3DFMT_YUY2)||(m_SupportTextureFormat&SUPPORT_D3DFMT_YUY2))
 	{	
 		if(IsEqualGUID( *pmt->Subtype(), MEDIASUBTYPE_YUY2)&&
@@ -344,12 +377,24 @@ HRESULT CFilterRenderOnTexture::CheckMediaType(const CMediaType *pmt)
 	}	
 	else if(m_SupportTextureFormat&SUPPORT_D3DFMT_X8R8G8B8)
 	{
-		if(IsEqualGUID( *pmt->Subtype(), MEDIASUBTYPE_RGB24))
+		if(IsEqualGUID( *pmt->Subtype(), MEDIASUBTYPE_RGB32))
+		{
+			m_SourceFormat=MSPF_X8R8G8B8;		
+			m_TextureFormat=D3DFMT_X8R8G8B8;				
+			hr = S_OK;
+		}
+		else if(IsEqualGUID( *pmt->Subtype(), MEDIASUBTYPE_RGB24))
 		{
 			m_SourceFormat=MSPF_R8G8B8;		
 			m_TextureFormat=D3DFMT_X8R8G8B8;				
 			hr = S_OK;
 		}
+		//else if(IsEqualGUID( *pmt->Subtype(), MEDIASUBTYPE_YUY2))
+		//{
+		//	m_SourceFormat=MSPF_YUY2;		
+		//	m_TextureFormat=D3DFMT_X8R8G8B8;				
+		//	hr = S_OK;
+		//}
 	}
 	else if(m_SupportTextureFormat&SUPPORT_D3DFMT_R5G6B5)
 	{
@@ -606,6 +651,39 @@ void CFilterRenderOnTexture::TranslatePixelFormat(DWORD SourcePixelFormat,int So
 			//pBmpBuffer  += m_lVidPitch;
 			//pTxtBuffer += lTxtPitch;
 		}// for rows
+	}
+	else if(SourcePixelFormat==MSPF_YUY2&&TargetPixelFormat==D3DFMT_X8R8G8B8)
+	{
+		for(int y = 0; y < SourceHeight; y++ ) 
+		{
+			BYTE * pYData=pSourceBuffer;
+			BYTE * pUData=pSourceBuffer+1;
+			BYTE * pVData=pSourceBuffer+3;
+			BYTE * pBData=pTargetBuffer;
+			BYTE * pGData=pTargetBuffer+1;
+			BYTE * pRData=pTargetBuffer+2;
+			BYTE * pXData=pTargetBuffer+3;
+
+			for(int x =0 ; x < SourceWidth; x++ )
+			{
+				YUV2RGB(*pYData,*pUData,*pVData,*pRData,*pGData,*pBData);
+
+				//*pRData=*pYData;
+				//*pGData=*pYData;
+				//*pBData=*pYData;
+
+				*pXData=0xff;
+				pYData+=2;
+				pUData+=4*(x%2);
+				pVData+=4*(x%2);
+				pBData+=4;
+				pGData+=4;
+				pRData+=4;
+				pXData+=4;
+			}
+			pSourceBuffer = pSourceBuffer + SourcePitch;
+			pTargetBuffer = pTargetBuffer + TargetPitch;
+		}
 	}
 }
 

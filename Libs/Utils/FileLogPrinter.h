@@ -35,8 +35,11 @@ protected:
 
 	CEasyCriticalSection	m_EasyCriticalSection;
 public:
+	CFileLogPrinter();
 	CFileLogPrinter(LPCTSTR FileName,DWORD Flag);
 	~CFileLogPrinter(void);
+
+	bool Create(LPCTSTR FileName,DWORD Flag);
 
 	virtual void PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list vl);
 };

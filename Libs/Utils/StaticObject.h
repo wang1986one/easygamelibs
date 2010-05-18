@@ -39,21 +39,24 @@ public:
 		if( m_pInstance == NULL )
 		{
 			CAutoLock Lock(m_InstanceCriticalSection);
-			char ThisEnvVarName[260];
-			sprintf_s(ThisEnvVarName,260,"%s_%u",
-				EnvVarName,GetCurProcessID());
-			char InstanceAddrStr[32];
-			InstanceAddrStr[0]=0;			
-			GetEnvVar(ThisEnvVarName,InstanceAddrStr,32);
-			m_pInstance=(T *)_atoi64(InstanceAddrStr);
-			if(m_pInstance==NULL)
+			if( m_pInstance == NULL )
 			{
-				m_pInstance = new T;
-				sprintf_s(InstanceAddrStr,32,"%llu",(LONGLONG)m_pInstance);
-				InstanceAddrStr[31]=0;
-				SetEnvVar(ThisEnvVarName,InstanceAddrStr);
-				//atexit(ReleaseInstance);
-			}			
+				char ThisEnvVarName[260];
+				sprintf_s(ThisEnvVarName,260,"%s_%u",
+					EnvVarName,GetCurProcessID());
+				char InstanceAddrStr[32];
+				InstanceAddrStr[0]=0;			
+				GetEnvVar(ThisEnvVarName,InstanceAddrStr,32);
+				m_pInstance=(T *)_atoi64(InstanceAddrStr);
+				if(m_pInstance==NULL)
+				{
+					m_pInstance = new T;
+					sprintf_s(InstanceAddrStr,32,"%llu",(LONGLONG)m_pInstance);
+					InstanceAddrStr[31]=0;
+					SetEnvVar(ThisEnvVarName,InstanceAddrStr);
+					//atexit(ReleaseInstance);
+				}		
+			}
 		}
 		return m_pInstance;
 	}

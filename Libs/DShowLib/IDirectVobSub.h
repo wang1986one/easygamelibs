@@ -23,6 +23,9 @@
 
 //#include "..\..\..\subtitles\STS.h"
 
+const GUID  CLSID_DirectVobSub = 
+	{ 0x9852A670, 0xF845, 0x491B, { 0x9B, 0xE6,  0xEB,  0xD8,  0x41,  0xB8,  0xA6,  0x13 } };
+
 #ifdef __cplusplus
 extern "C" {
 #endif

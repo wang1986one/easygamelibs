@@ -214,7 +214,7 @@ BOOL CServerThread::OnRun()
 	if(m_CountTimer.IsTimeOut(SERVER_INFO_COUNT_TIME))
 	{			
 		SERVER_INFO ServerInfo;
-		ServerInfo.ClientCount=GetClientCount();
+		int ClientCount=GetClientCount();
 		ServerInfo.CycleTime=(double)SERVER_INFO_COUNT_TIME/m_CycleCount;
 		ServerInfo.TCPRecvFlow=(double)m_TCPRecvBytes*1000/1024/SERVER_INFO_COUNT_TIME;
 		ServerInfo.TCPSendFlow=(double)m_TCPSendBytes*1000/1024/SERVER_INFO_COUNT_TIME;
@@ -240,9 +240,9 @@ BOOL CServerThread::OnRun()
 			ServerInfo.TCPSendCount,
 			ServerInfo.UDPRecvCount,
 			ServerInfo.UDPSendCount,
-			ServerInfo.ClientCount);
+			ClientCount);
 		
-		SetServerStatus(SC_SST_SS_CLIENT_COUNT,CSmartValue(ServerInfo.ClientCount));
+		SetServerStatus(SC_SST_SS_CLIENT_COUNT,CSmartValue(ClientCount));
 		SetServerStatus(SC_SST_SS_CYCLE_TIME,CSmartValue(ServerInfo.CycleTime));
 		SetServerStatus(SC_SST_SS_TCP_RECV_FLOW,CSmartValue(ServerInfo.TCPRecvFlow));
 		SetServerStatus(SC_SST_SS_TCP_SEND_FLOW,CSmartValue(ServerInfo.TCPSendFlow));

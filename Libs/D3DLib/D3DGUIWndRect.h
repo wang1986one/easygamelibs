@@ -20,7 +20,7 @@ protected:
 	CD3DSubMesh		m_SubMesh;	
 	FLOAT_RECT		m_Rect;
 	FLOAT_RECT		m_TextureUV;
-	RECTVERTEX 		m_Vertexs[6];
+	RECTVERTEX 		m_Vertexs[4];
 
 
 	DWORD			m_VertexColor;

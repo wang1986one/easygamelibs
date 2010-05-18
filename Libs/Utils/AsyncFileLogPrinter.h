@@ -31,6 +31,10 @@ public:
 	{
 		return m_LogLevel;
 	}
+	void SetLogLevel(int Level)
+	{
+		m_LogLevel=Level;
+	}
 	LPCTSTR GetLogFileName()
 	{
 		return m_LogFileName;

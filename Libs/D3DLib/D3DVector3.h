@@ -26,6 +26,8 @@ public:
 
 	~CD3DVector3(void){}
 
+	void SetValue(FLOAT vx, FLOAT vy, FLOAT vz);
+
 	//±ê×¼»¯
 	void Normalize();
 	CD3DVector3 GetNormalize();
@@ -62,6 +64,14 @@ inline CD3DVector3::CD3DVector3(FLOAT Value)
 	x=Value;
 	y=Value;
 	z=Value;
+}
+
+
+inline void CD3DVector3::SetValue(FLOAT vx, FLOAT vy, FLOAT vz)
+{
+	x=vx;
+	y=vy;
+	z=vz;
 }
 
 inline void CD3DVector3::Normalize()

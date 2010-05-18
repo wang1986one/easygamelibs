@@ -16,9 +16,9 @@ class CDOSObjectProxyService :
 	public CNetService,public CEasyThread
 {
 protected:
-	CIDStorage<CDOSProxyConnection>			m_ConnectionPool;
-	CThreadSafeList<CDOSMessagePacket *>	m_MsgQueue;
-	CStaticMap<WORD,OBJECT_ID>				m_MessageMap;
+	CIDStorage<CDOSProxyConnection>				m_ConnectionPool;
+	CThreadSafeIDStorage<CDOSMessagePacket *>	m_MsgQueue;
+	CStaticMap<WORD,OBJECT_ID>					m_MessageMap;
 	
 
 	DECLARE_CLASS_INFO(CDOSObjectProxyService);

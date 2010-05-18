@@ -11,7 +11,21 @@
 /****************************************************************************/
 #include "StdAfx.h"
 
+CFileLogPrinter::CFileLogPrinter()
+{
+	m_Flag=0;
+	m_pFileAccessor=NULL;
+	m_FileOpenMode=0;
+	m_LogLevel=0;
+	
+}
+
 CFileLogPrinter::CFileLogPrinter(LPCTSTR FileName,DWORD Flag)
+{
+	Create(FileName,Flag);
+}
+
+bool CFileLogPrinter::Create(LPCTSTR FileName,DWORD Flag)
 {
 	CEasyString LogFileName;
 
@@ -48,12 +62,11 @@ CFileLogPrinter::CFileLogPrinter(LPCTSTR FileName,DWORD Flag)
 	m_LogLevel=ILogPrinter::LOG_LEVEL_NORMAL;
 #endif
 	
-
+	return true;
 }
 
 CFileLogPrinter::~CFileLogPrinter(void)
 {
-	m_pFileAccessor->Close();
 	SAFE_RELEASE(m_pFileAccessor);
 }
 

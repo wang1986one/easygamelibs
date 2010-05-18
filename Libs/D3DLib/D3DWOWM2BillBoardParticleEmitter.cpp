@@ -88,6 +88,11 @@ CD3DBoundingSphere * CD3DWOWM2BillBoardParticleEmitter::GetBoundingSphere()
 	return NULL;
 }
 
+bool CD3DWOWM2BillBoardParticleEmitter::CanDoSubMeshViewCull()
+{
+	return false;
+}
+
 bool CD3DWOWM2BillBoardParticleEmitter::CloneFrom(CNameObject * pObject,UINT Param)
 {
 	if(!pObject->IsKindOf(GET_CLASS_INFO(CD3DWOWM2BillBoardParticleEmitter)))
