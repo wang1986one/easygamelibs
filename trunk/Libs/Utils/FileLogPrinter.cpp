@@ -31,6 +31,12 @@ bool CFileLogPrinter::Create(LPCTSTR FileName,DWORD Flag)
 
 	m_pFileAccessor=CFileSystemManager::GetInstance()->CreateFileAccessor(FILE_CHANNEL_NORMAL1);
 
+#ifdef _DEBUG
+	m_LogLevel=ILogPrinter::LOG_LEVEL_DEBUG|ILogPrinter::LOG_LEVEL_NORMAL;
+#else
+	m_LogLevel=ILogPrinter::LOG_LEVEL_NORMAL;
+#endif
+
 	m_Flag=Flag;
 	m_LogFileName=FileName;
 	if(m_Flag&FILE_LOG_SPLIT_BY_DAY)
@@ -48,21 +54,13 @@ bool CFileLogPrinter::Create(LPCTSTR FileName,DWORD Flag)
 			(LPCTSTR)m_LogFileName);
 	}
 	if(m_Flag&FILE_LOG_APPEND)
-		m_FileOpenMode=IFileAccessor::modeAppend;
+		m_FileOpenMode=IFileAccessor::modeOpenAlways|IFileAccessor::modeAppend;
 	else
-		m_FileOpenMode=IFileAccessor::modeTruncate;
+		m_FileOpenMode=IFileAccessor::modeCreateAlways|IFileAccessor::modeTruncate;
 	m_FileOpenMode|=IFileAccessor::modeWrite|IFileAccessor::shareShareRead;
 	if(m_Flag&FILE_LOG_SAFE_WRITE)
 		m_FileOpenMode|=IFileAccessor::osWriteThrough;
-	m_pFileAccessor->Open(LogFileName,m_FileOpenMode);
-
-#ifdef _DEBUG
-	m_LogLevel=ILogPrinter::LOG_LEVEL_DEBUG|ILogPrinter::LOG_LEVEL_NORMAL;
-#else
-	m_LogLevel=ILogPrinter::LOG_LEVEL_NORMAL;
-#endif
-	
-	return true;
+	return m_pFileAccessor->Open(LogFileName,m_FileOpenMode);
 }
 
 CFileLogPrinter::~CFileLogPrinter(void)

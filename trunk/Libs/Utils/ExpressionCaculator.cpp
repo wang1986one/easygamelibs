@@ -76,7 +76,7 @@ int NumToStrFN(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* p
 {
 	pResult->ValueType=VALUE_TYPE_STRING;
 	pResult->level=0;
-	pResult->StrValue.Format("%0.2f",pParams[0].value);
+	pResult->StrValue.Format("%g",pParams[0].value);
 	return 0;
 }
 
@@ -577,7 +577,7 @@ CExpressionCaculator::CExpressionCaculator(int MaxVariableCount,int MaxFactionCo
 	AddFaction("COS",1,0,CosFN);
 	AddFaction("ROUND",2,0,RoundFN);
 	AddFaction("STRCMP",2,0,StrCmpFN);
-	AddFaction("NumToStr",2,0,NumToStrFN);	
+	AddFaction("NumToStr",1,0,NumToStrFN);	
 	AddFaction("Random",1,0,RandomFN);	
 
 	AddVariable("PI",VALUE_TYPE_NUMBER,3.141592653589793238462643383280,NULL);
@@ -1078,7 +1078,7 @@ int CExpressionCaculator::CaculateExpression(const char * ExpStr,CBolan & result
 	return CaculateBolanExpression(Bolans,result,pos,-1);
 
 }
-int CExpressionCaculator::DealVariableDefine(int start,CBolanStack& ScriptList,bool EndWhileEnd)
+int CExpressionCaculator::DealVariableDefine(int start,CBolanStack& ScriptList)
 {
 	int pos=start;	
 	CVariable * pVar;
@@ -1115,10 +1115,7 @@ int CExpressionCaculator::DealVariableDefine(int start,CBolanStack& ScriptList,b
 				if(pVar==NULL)
 					AddVariable(ScriptList.GetAt(pos)->StrValue,VALUE_TYPE_STRING,0,NULL);						
 				pos++;
-				break;
-			case KW_END:
-				if(EndWhileEnd)
-					return 0;
+				break;			
 			default:
 				pos++;
 			}
@@ -1142,7 +1139,7 @@ int CExpressionCaculator::ExecScript(CBolanStack& ScriptList,CBolan& ExpResult,i
 
 	if(AutoDeclareVariable)
 	{
-		ReturnCode=DealVariableDefine(pos,ScriptList,true);
+		ReturnCode=DealVariableDefine(pos,ScriptList);
 		if(ReturnCode)
 			return ReturnCode;
 	}
@@ -1478,7 +1475,7 @@ int CExpressionCaculator::IsTypecompatible(CBolan * b1,CBolan * b2)
 	default:
 		type1=-1;
 	}
-	switch(b2->type)
+	switch(b2->ValueType)
 	{
 	case VALUE_TYPE_NUMBER:
 		type2=VALUE_TYPE_NUMBER;

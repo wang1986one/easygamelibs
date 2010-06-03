@@ -48,7 +48,7 @@ void CServerApp::Run(DWORD argc, LPTSTR * argv)
 
 
 	//CExceptionParser::GetInstance()->Init(0);
-	CExceptionParser::GetInstance()->Init(EXCEPTION_SET_DEFAULT_HANDLER);
+	
 
 	GetProgamVersion();
 

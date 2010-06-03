@@ -884,7 +884,7 @@ public:
 		}		
 		return pEmptyStr;
 	}
-
+	
 	void operator=(const CSmartValue& Value)
 	{
 		m_pData=NULL;
@@ -892,6 +892,50 @@ public:
 		m_IsSelfData=true;
 		m_AllowChange=true;
 		Attach(Value.GetData(),Value.GetDataLen(),VT_UNKNOWN);
+	}
+	void SetValue(const CSmartValue& Value)
+	{
+		if(m_pData==NULL)
+			return;
+		switch(Value.GetType())
+		{		
+		case VT_CHAR:
+			*this=(char)Value;
+			break;
+		case VT_UCHAR:
+			*this=(unsigned char)Value;
+			break;
+		case VT_SHORT:
+			*this=(short)Value;
+			break;
+		case VT_USHORT:
+			*this=(unsigned short)Value;
+			break;
+		case VT_INT:
+			*this=(int)Value;
+			break;
+		case VT_UINT:
+			*this=(unsigned int)Value;
+			break;
+		case VT_BIGINT:
+			*this=(__int64)Value;
+			break;
+		case VT_UBIGINT:
+			*this=(unsigned __int64)Value;
+			break;
+		case VT_FLOAT:
+			*this=(float)Value;
+			break;
+		case VT_DOUBLE:
+			*this=(double)Value;
+			break;
+		case VT_STRING:
+			*this=(LPCTSTR)Value;
+			break;
+		case VT_USTRING:
+			*this=(LPCWSTR)Value;
+			break;
+		}
 	}
 	void operator=(char Value)
 	{

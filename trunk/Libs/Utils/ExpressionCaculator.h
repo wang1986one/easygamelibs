@@ -350,7 +350,7 @@ public:
 	CEasyString BolanToString(CBolan bolan);
 	int CheckInterruptTimeOut(DWORD TimeOut);
 
-	int DealVariableDefine(int start,CBolanStack& ScriptList,bool EndWhileEnd);
+	int DealVariableDefine(int start,CBolanStack& ScriptList);
 
 protected:
 	int FindKeyWord(CBolanStack& ScriptList,int KeyWord,int StartPos,int StopKeyWord);

@@ -45,15 +45,15 @@ public:
 	LPVOID GetBuffer();
 	LPVOID GetFreeBuffer();
 
-	BOOL PushFront(LPVOID pData,UINT Size);
-	BOOL PushFront(UINT Data,UINT Size);
-	BOOL PushBack(LPVOID pData,UINT Size);
+	//BOOL PushFront(LPCVOID pData,UINT Size);
+	//BOOL PushFront(UINT Data,UINT Size);
+	BOOL PushBack(LPCVOID pData,UINT Size);
 	BOOL PushBack(UINT Data,UINT Size);
 
 	BOOL PopFront(LPVOID pData,UINT Size);
 	BOOL PopFront(UINT Data,UINT Size);
-	BOOL PopBack(LPVOID pData,UINT Size);
-	BOOL PopBack(UINT Data,UINT Size);
+	//BOOL PopBack(LPVOID pData,UINT Size);
+	//BOOL PopBack(UINT Data,UINT Size);
 
 	void Clear();
 
@@ -131,7 +131,7 @@ inline LPVOID CCycleBufferEx::GetFreeBuffer()
 	return m_pBuffer+m_BufferTail;
 }
 
-inline BOOL CCycleBufferEx::PushBack(LPVOID pData,UINT Size)
+inline BOOL CCycleBufferEx::PushBack(LPCVOID pData,UINT Size)
 {
 	if(GetUsedSize()+Size<=GetBufferSize()&&Size<=GetSmoothSize())
 	{

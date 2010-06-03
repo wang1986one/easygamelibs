@@ -47,6 +47,7 @@ public:
 	virtual void ExecCommand(LPCTSTR szCommand);
 
 	virtual BOOL SetServerStatus(WORD StatusID,const CSmartValue& Value);
+	virtual void SetServerStatusName(WORD StatusID,LPCTSTR szStatusName);
 	virtual CSmartValue GetServerStatus(WORD StatusID)
 	{
 		return m_ServerStatus.GetMember(StatusID);
@@ -74,7 +75,7 @@ protected:
 	virtual int GetClientCount();
 	virtual LPCTSTR GetConfigFileName();
 	
-	
+	virtual void DoServerStat();
 
 
 	CSystemNetLinkManager * GetSysNetLinkManager()

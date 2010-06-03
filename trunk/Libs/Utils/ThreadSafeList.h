@@ -50,7 +50,7 @@ public:
 		return CStaticList::PushFront();
 	}
 
-	LPVOID PushFront(T& Object)
+	LPVOID PushFront(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CStaticList::PushFront(Object);
@@ -62,7 +62,7 @@ public:
 		return CStaticList::PushBack();
 	}
 
-	LPVOID PushBack(T& Object)
+	LPVOID PushBack(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CStaticList::PushBack(Object);

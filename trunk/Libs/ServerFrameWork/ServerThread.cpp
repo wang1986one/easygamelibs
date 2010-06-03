@@ -104,13 +104,13 @@ BOOL CServerThread::OnStart()
 
 	
 
-	LogFileName.Format("%s/Log/NetLib",(LPCTSTR)ModulePath);
+	LogFileName.Format("%s/Log/%s.NetLib",(LPCTSTR)ModulePath,g_ProgramName);
 	pLog=new CServerLogPrinter(this,CServerLogPrinter::LOM_FILE,
 		CSystemConfig::GetInstance()->GetLogLevel(),LogFileName);
 	CLogManager::GetInstance()->AddChannel(LOG_NET_CHANNEL,pLog);
 	SAFE_RELEASE(pLog);
 
-	LogFileName.Format("%s/Log/DBLib",(LPCTSTR)ModulePath);
+	LogFileName.Format("%s/Log/%s.DBLib",(LPCTSTR)ModulePath,g_ProgramName);
 	pLog=new CServerLogPrinter(this,CServerLogPrinter::LOM_FILE,
 		CSystemConfig::GetInstance()->GetLogLevel(),LogFileName);
 	CLogManager::GetInstance()->AddChannel(LOG_DB_ERROR_CHANNEL,pLog);
@@ -180,6 +180,17 @@ BOOL CServerThread::OnStart()
 	memcpy(Version.Words,g_ProgramVersion,sizeof(ULONG64_CONVERTER));
 
 	SetServerStatus(SC_SST_SS_PROGRAM_VERSION,CSmartValue(Version.QuadPart));
+	SetServerStatusName(SC_SST_SS_CLIENT_COUNT,"客户端数量");
+	SetServerStatusName(SC_SST_SS_CYCLE_TIME,"循环时间(毫秒)");
+	SetServerStatusName(SC_SST_SS_TCP_RECV_FLOW,"TCP接收流量(Byte/S)");
+	SetServerStatusName(SC_SST_SS_TCP_SEND_FLOW,"TCP发送流量(Byte/S)");
+	SetServerStatusName(SC_SST_SS_UDP_RECV_FLOW,"UDP接收流量(Byte/S)");
+	SetServerStatusName(SC_SST_SS_UDP_SEND_FLOW,"UDP发送流量(Byte/S)");
+	SetServerStatusName(SC_SST_SS_TCP_RECV_COUNT,"TCP接收次数(次/S)");
+	SetServerStatusName(SC_SST_SS_TCP_SEND_COUNT,"TCP发送次数(次/S)");
+	SetServerStatusName(SC_SST_SS_UDP_RECV_COUNT,"UDP接收次数(次/S)");
+	SetServerStatusName(SC_SST_SS_UDP_SEND_COUNT,"UDP发送次数(次/S)");
+	SetServerStatusName(SC_SST_SS_PROGRAM_VERSION,"服务器版本");
 
 	Log("服务器成功启动");
 	
@@ -212,55 +223,9 @@ BOOL CServerThread::OnRun()
 	//计算服务器循环时间
 	m_CycleCount++;
 	if(m_CountTimer.IsTimeOut(SERVER_INFO_COUNT_TIME))
-	{			
-		SERVER_INFO ServerInfo;
-		int ClientCount=GetClientCount();
-		ServerInfo.CycleTime=(double)SERVER_INFO_COUNT_TIME/m_CycleCount;
-		ServerInfo.TCPRecvFlow=(double)m_TCPRecvBytes*1000/1024/SERVER_INFO_COUNT_TIME;
-		ServerInfo.TCPSendFlow=(double)m_TCPSendBytes*1000/1024/SERVER_INFO_COUNT_TIME;
-		ServerInfo.UDPRecvFlow=(double)m_UDPRecvBytes*1000/1024/SERVER_INFO_COUNT_TIME;
-		ServerInfo.UDPSendFlow=(double)m_UDPSendBytes*1000/1024/SERVER_INFO_COUNT_TIME;
-
-		ServerInfo.TCPRecvCount=(double)m_TCPRecvCount*1000/SERVER_INFO_COUNT_TIME;
-		ServerInfo.TCPSendCount=(double)m_TCPSendCount*1000/SERVER_INFO_COUNT_TIME;
-		ServerInfo.UDPRecvCount=(double)m_UDPRecvCount*1000/SERVER_INFO_COUNT_TIME;
-		ServerInfo.UDPSendCount=(double)m_UDPSendCount*1000/SERVER_INFO_COUNT_TIME;
-
-		CControlPanel::GetInstance()->SetServerInfo(ServerInfo);
-		LogServerInfo("CycleTime=%06.6g,"
-			"TCPRecvFlow=%06.6g,TCPSendFlow=%06.6g,UDPRecvFlow=%06.6g,UDPSendFlow=%06.6g,"
-			"TCPRecvCount=%06.6g,TCPSendCount=%06.6g,UDPRecvCount=%06.6g,UDPSendCount=%06.6g,"
-			"ClientCount=%04d",
-			ServerInfo.CycleTime,
-			ServerInfo.TCPRecvFlow,
-			ServerInfo.TCPSendFlow,
-			ServerInfo.UDPRecvFlow,
-			ServerInfo.UDPSendFlow,
-			ServerInfo.TCPRecvCount,
-			ServerInfo.TCPSendCount,
-			ServerInfo.UDPRecvCount,
-			ServerInfo.UDPSendCount,
-			ClientCount);
-		
-		SetServerStatus(SC_SST_SS_CLIENT_COUNT,CSmartValue(ClientCount));
-		SetServerStatus(SC_SST_SS_CYCLE_TIME,CSmartValue(ServerInfo.CycleTime));
-		SetServerStatus(SC_SST_SS_TCP_RECV_FLOW,CSmartValue(ServerInfo.TCPRecvFlow));
-		SetServerStatus(SC_SST_SS_TCP_SEND_FLOW,CSmartValue(ServerInfo.TCPSendFlow));
-		SetServerStatus(SC_SST_SS_UDP_RECV_FLOW,CSmartValue(ServerInfo.UDPRecvFlow));
-		SetServerStatus(SC_SST_SS_UDP_SEND_FLOW,CSmartValue(ServerInfo.UDPSendFlow));
-		SetServerStatus(SC_SST_SS_TCP_RECV_COUNT,CSmartValue(ServerInfo.TCPRecvCount));
-		SetServerStatus(SC_SST_SS_TCP_SEND_COUNT,CSmartValue(ServerInfo.TCPSendCount));
-		SetServerStatus(SC_SST_SS_UDP_RECV_COUNT,CSmartValue(ServerInfo.UDPRecvCount));
-		SetServerStatus(SC_SST_SS_UDP_SEND_COUNT,CSmartValue(ServerInfo.UDPSendCount));
-
+	{		
 		m_CountTimer.SaveTime();
-		m_CycleCount=0;
-		ResetFluxStat();
-
-		if(CSystemConfig::GetInstance()->IsLogServerObjectUse())
-		{
-			PrintObjectStatus();
-		}		
+		DoServerStat();
 	}
 
 	//执行控制台命令
@@ -341,16 +306,23 @@ void CServerThread::ExecCommand(LPCTSTR szCommand)
 BOOL CServerThread::SetServerStatus(WORD StatusID,const CSmartValue& Value)
 {
 	FUNCTION_BEGIN;
-	if(m_ServerStatus.IDToIndex(StatusID)==0xffffffff)
+	if(m_ServerStatus.IDToIndex(StatusID)==CSmartStruct::INVALID_MEMBER_ID)
 	{
 		m_ServerStatus.AddMember(StatusID,Value);
 	}
 	else
 	{
-		m_ServerStatus.GetMember(StatusID)=Value;
+		m_ServerStatus.GetMember(StatusID).SetValue(Value);
 	}
 	FUNCTION_END;
 	return FALSE;
+}
+
+void CServerThread::SetServerStatusName(WORD StatusID,LPCTSTR szStatusName)
+{
+	FUNCTION_BEGIN;
+	CControlPanel::GetInstance()->SetServerStatusName(StatusID,szStatusName);
+	FUNCTION_END;
 }
 
 int CServerThread::StartLog(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* pParams,int ParamCount)
@@ -525,4 +497,58 @@ int CServerThread::RebuildUDPControlPort(INT_PTR FnParam,CVariableList* pVarList
 	}
 	FUNCTION_END;
 	return 0;
+}
+
+void CServerThread::DoServerStat()
+{
+	FUNCTION_BEGIN;
+	int ClientCount=GetClientCount();
+	float CycleTime=(float)SERVER_INFO_COUNT_TIME/m_CycleCount;
+	float TCPRecvFlow=(float)m_TCPRecvBytes*1000/1024/SERVER_INFO_COUNT_TIME;
+	float TCPSendFlow=(float)m_TCPSendBytes*1000/1024/SERVER_INFO_COUNT_TIME;
+	float UDPRecvFlow=(float)m_UDPRecvBytes*1000/1024/SERVER_INFO_COUNT_TIME;
+	float UDPSendFlow=(float)m_UDPSendBytes*1000/1024/SERVER_INFO_COUNT_TIME;
+
+	float TCPRecvCount=(float)m_TCPRecvCount*1000/SERVER_INFO_COUNT_TIME;
+	float TCPSendCount=(float)m_TCPSendCount*1000/SERVER_INFO_COUNT_TIME;
+	float UDPRecvCount=(float)m_UDPRecvCount*1000/SERVER_INFO_COUNT_TIME;
+	float UDPSendCount=(float)m_UDPSendCount*1000/SERVER_INFO_COUNT_TIME;
+
+
+	LogServerInfo("CycleTime=%06.6g,"
+		"TCPRecvFlow=%06.6g,TCPSendFlow=%06.6g,UDPRecvFlow=%06.6g,UDPSendFlow=%06.6g,"
+		"TCPRecvCount=%06.6g,TCPSendCount=%06.6g,UDPRecvCount=%06.6g,UDPSendCount=%06.6g,"
+		"ClientCount=%04d",
+		CycleTime,
+		TCPRecvFlow,
+		TCPSendFlow,
+		UDPRecvFlow,
+		UDPSendFlow,
+		TCPRecvCount,
+		TCPSendCount,
+		UDPRecvCount,
+		UDPSendCount,
+		ClientCount);
+
+	SetServerStatus(SC_SST_SS_CLIENT_COUNT,CSmartValue(ClientCount));
+	SetServerStatus(SC_SST_SS_CYCLE_TIME,CSmartValue(CycleTime));
+	SetServerStatus(SC_SST_SS_TCP_RECV_FLOW,CSmartValue(TCPRecvFlow));
+	SetServerStatus(SC_SST_SS_TCP_SEND_FLOW,CSmartValue(TCPSendFlow));
+	SetServerStatus(SC_SST_SS_UDP_RECV_FLOW,CSmartValue(UDPRecvFlow));
+	SetServerStatus(SC_SST_SS_UDP_SEND_FLOW,CSmartValue(UDPSendFlow));
+	SetServerStatus(SC_SST_SS_TCP_RECV_COUNT,CSmartValue(TCPRecvCount));
+	SetServerStatus(SC_SST_SS_TCP_SEND_COUNT,CSmartValue(TCPSendCount));
+	SetServerStatus(SC_SST_SS_UDP_RECV_COUNT,CSmartValue(UDPRecvCount));
+	SetServerStatus(SC_SST_SS_UDP_SEND_COUNT,CSmartValue(UDPSendCount));
+
+	CControlPanel::GetInstance()->SetServerStatus(m_ServerStatus.GetData(),m_ServerStatus.GetDataLen());
+
+	m_CycleCount=0;
+	ResetFluxStat();
+
+	if(CSystemConfig::GetInstance()->IsLogServerObjectUse())
+	{
+		PrintObjectStatus();
+	}		
+	FUNCTION_END;
 }

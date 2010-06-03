@@ -35,9 +35,9 @@ public:
 	UINT GetBufferSize();
 	UINT GetUsedSize();	
 
-	BOOL PushFront(LPVOID pData,UINT Size);
+	BOOL PushFront(LPCVOID pData,UINT Size);
 	BOOL PushFront(UINT Data,UINT Size);
-	BOOL PushBack(LPVOID pData,UINT Size);
+	BOOL PushBack(LPCVOID pData,UINT Size);
 	BOOL PushBack(UINT Data,UINT Size);
 
 	BOOL PopFront(LPVOID pData,UINT Size);
@@ -61,7 +61,7 @@ inline UINT CCycleBuffer::GetUsedSize()
 }
 
 
-inline BOOL CCycleBuffer::PushFront(LPVOID pData,UINT Size)
+inline BOOL CCycleBuffer::PushFront(LPCVOID pData,UINT Size)
 {
 	if(GetUsedSize()+Size<=GetBufferSize())
 	{
@@ -89,7 +89,7 @@ inline BOOL CCycleBuffer::PushFront(UINT Data,UINT Size)
 {
 	return PushFront(&Data,Size);
 }
-inline BOOL CCycleBuffer::PushBack(LPVOID pData,UINT Size)
+inline BOOL CCycleBuffer::PushBack(LPCVOID pData,UINT Size)
 {
 	if(GetUsedSize()+Size<=GetBufferSize())
 	{

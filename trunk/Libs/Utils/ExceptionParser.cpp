@@ -94,11 +94,11 @@ CExceptionParser::~CExceptionParser(void)
 		SymCleanup(m_hProcess);
 }
 
-void CExceptionParser::Init(UINT HandleMode)
+void CExceptionParser::Init(UINT Flag)
 {
-	
+	m_Flag=Flag;
 
-	if(HandleMode&EXCEPTION_SET_DEFAULT_HANDLER)
+	if(m_Flag&EXCEPTION_SET_DEFAULT_HANDLER)
 	{
 		SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)ExceptionHander);
 
@@ -109,11 +109,11 @@ void CExceptionParser::Init(UINT HandleMode)
 		_set_invalid_parameter_handler(InvalidParameterHandler);
 
 	}
-	if(HandleMode&EXCEPTION_USE_API_HOOK)
+	if(m_Flag&EXCEPTION_USE_API_HOOK)
 	{
 		DisableSetUnhandledExceptionFilter();
 	}
-	if(HandleMode&EXCEPTION_SET_TRANSLATOR)
+	if(m_Flag&EXCEPTION_SET_TRANSLATOR)
 		_set_se_translator(ExceptionTranslator);
 }
 
@@ -133,7 +133,7 @@ void CExceptionParser::ParseException(LPEXCEPTION_POINTERS pException)
 	WriteDump(pException);
 
 
-	CEasyString ModulePath=GetModulePath(NULL);
+	CEasyString ModulePath=GetModuleFilePath(NULL);
 	CEasyString ExceptionLogFileName;
 	CEasyTime CurTime;
 
@@ -267,7 +267,7 @@ BOOL CExceptionParser::WriteDump(LPEXCEPTION_POINTERS pException)
 {
 	CWinFileAccessor DumpFile;
 
-	CEasyString ModulePath=GetModulePath(NULL);
+	CEasyString ModulePath=GetModuleFilePath(NULL);
 	CEasyString DumpFileName;
 	CEasyTime CurTime;
 
@@ -302,7 +302,8 @@ BOOL CExceptionParser::WriteDump(LPEXCEPTION_POINTERS pException)
 		
 
 		if(MiniDumpWriteDump(m_hProcess,ProcessID,DumpFile.GetFileHandle(),
-			MiniDumpNormal,pExceptionInfo,NULL,NULL))
+			m_Flag&EXCEPTION_MAKE_FULL_DUMP?MiniDumpWithFullMemory:MiniDumpNormal,
+			pExceptionInfo,NULL,NULL))
 		{
 			PrintImportantLog(0xff,"写入Dump文件成功%s",(LPCTSTR)DumpFileName);
 			DumpFile.Close();

@@ -63,7 +63,7 @@ public:
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::InsertAfter(Pos);
 	}
-	LPVOID InsertAfter(T& Object,LPVOID Pos)
+	LPVOID InsertAfter(const T& Object,LPVOID Pos)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::InsertAfter(Object,Pos);
@@ -73,12 +73,17 @@ public:
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::InsertBefore(Pos);
 	}
-	LPVOID InsertBefore(T& Object,LPVOID Pos)
+	LPVOID InsertBefore(const T& Object,LPVOID Pos)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::InsertBefore(Object,Pos);
 	}
-	UINT AddObject(T& Object)
+	LPVOID InsertSorted(const T& Object)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::InsertSorted(Object);
+	}
+	UINT AddObject(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::AddObject(Object);
@@ -135,7 +140,7 @@ public:
 		return CIDStorage::PushFront();
 	}
 
-	LPVOID PushFront(T& Object)
+	LPVOID PushFront(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::PushFront(Object);
@@ -147,7 +152,7 @@ public:
 		return CIDStorage::PushBack();
 	}
 
-	LPVOID PushBack(T& Object)
+	LPVOID PushBack(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::PushBack(Object);

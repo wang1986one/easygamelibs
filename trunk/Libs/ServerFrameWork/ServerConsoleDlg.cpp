@@ -90,7 +90,8 @@ BOOL CServerConsoleDlg::OnInitDialog()
 	//初始化版本信息
 	ShowVersion();
 	
-	
+	m_ServerStatus.Create(SERVER_STATUS_BLOCK_SIZE);
+	m_DlgServerStatus.Create(m_DlgServerStatus.IDD,this);
 
 	CControlPanel::GetInstance()->SetHwnd(GetSafeHwnd());
 	
@@ -244,18 +245,21 @@ void CServerConsoleDlg::OnTimer(UINT nIDEvent)
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	if(nIDEvent==PANEL_TIMER_ID&&IsWindowVisible())
 	{
-		SERVER_INFO ServerInfo;
-		CControlPanel::GetInstance()->GetServerInfo(ServerInfo);
+		UINT Size=CControlPanel::GetInstance()->GetServerStatus((LPVOID)m_ServerStatus.GetBuffer(),m_ServerStatus.GetBufferSize());
+		CSmartStruct StatusPacket(m_ServerStatus.GetBuffer(),Size,false);
 		UpdateData(true);		
 		static char buff[128];
-		sprintf_s(buff,128,"%.2f",ServerInfo.CycleTime);
+		sprintf_s(buff,128,"%.2f",
+			(float)StatusPacket.GetMember(SC_SST_SS_CYCLE_TIME));
 		m_CycleTime=buff;
-		m_TCPRecv=FormatNumberWordsFloat(ServerInfo.TCPRecvFlow,true);
-		m_TCPSend=FormatNumberWordsFloat(ServerInfo.TCPSendFlow,true);
-		m_UDPRecv=FormatNumberWordsFloat(ServerInfo.UDPRecvFlow,true);
-		m_UCPSend=FormatNumberWordsFloat(ServerInfo.UDPSendFlow,true);
+		m_TCPRecv=FormatNumberWordsFloat(StatusPacket.GetMember(SC_SST_SS_TCP_RECV_FLOW),true);
+		m_TCPSend=FormatNumberWordsFloat(StatusPacket.GetMember(SC_SST_SS_TCP_SEND_FLOW),true);
+		m_UDPRecv=FormatNumberWordsFloat(StatusPacket.GetMember(SC_SST_SS_UDP_RECV_FLOW),true);
+		m_UCPSend=FormatNumberWordsFloat(StatusPacket.GetMember(SC_SST_SS_UDP_SEND_FLOW),true);
 
 		UpdateData(false);
+
+		m_DlgServerStatus.FlushStatus(StatusPacket);
 	}
 
 	CDialog::OnTimer(nIDEvent);
@@ -344,4 +348,5 @@ void CServerConsoleDlg::OnBnClickedCloseServer()
 void CServerConsoleDlg::OnBnClickedShowServerStatus()
 {
 	// TODO: 在此添加控件通知处理程序代码
+	m_DlgServerStatus.ShowWindow(SW_SHOW);
 }

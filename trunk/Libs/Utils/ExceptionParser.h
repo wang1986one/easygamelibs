@@ -19,6 +19,7 @@ enum EXCEPTION_HANDLE_MODE
 	EXCEPTION_SET_DEFAULT_HANDLER=1,
 	EXCEPTION_SET_TRANSLATOR=(1<<1),
 	EXCEPTION_USE_API_HOOK=(1<<2),
+	EXCEPTION_MAKE_FULL_DUMP=(1<<3),
 };
 
 class CExceptionParser :
@@ -57,11 +58,12 @@ protected:
 	HANDLE					m_hProcess;
 	int						m_ExceptionCount;
 	CFileLogPrinter			m_ExceptionLog;
+	UINT					m_Flag;
 public:
 	CExceptionParser(void);
 	~CExceptionParser(void);
 
-	void Init(UINT HandleMode);
+	void Init(UINT Flag);
 
 	void ParseException(LPEXCEPTION_POINTERS pException);
 

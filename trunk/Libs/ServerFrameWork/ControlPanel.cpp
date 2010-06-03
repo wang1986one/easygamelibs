@@ -15,7 +15,7 @@ CControlPanel::CControlPanel(void)
 {
 	m_MsgPool.Create(1024);
 	m_CommandPool.Create(1024);
-	ZeroMemory(&m_ServerInfo,sizeof(m_ServerInfo));
+	m_ServerStatus.Create(SERVER_STATUS_BLOCK_SIZE);
 #ifdef WIN32
 	m_hWnd=NULL;
 #endif
@@ -138,13 +138,36 @@ BOOL CControlPanel::ReleaseCommand(UINT ID)
 	return FALSE;
 }
 
-void CControlPanel::SetServerInfo(SERVER_INFO& ServerInfo)
+void CControlPanel::SetServerStatus(LPCVOID pData,UINT DataSize)
 {
 	CAutoLock AutoLock(m_CriticalSection);
-	m_ServerInfo=ServerInfo;
+	m_ServerStatus.SetUsedSize(0);
+	m_ServerStatus.PushBack(pData,DataSize);
 }
-void CControlPanel::GetServerInfo(SERVER_INFO& ServerInfo)
+UINT CControlPanel::GetServerStatus(LPVOID pBuffer,UINT BufferSize)
 {
 	CAutoLock AutoLock(m_CriticalSection);
-	ServerInfo=m_ServerInfo;
+	if(BufferSize>=m_ServerStatus.GetUsedSize())
+	{
+		UINT Pos=0;
+		m_ServerStatus.Peek(Pos,pBuffer,m_ServerStatus.GetUsedSize());
+	}
+	return m_ServerStatus.GetUsedSize();
+}
+void CControlPanel::SetServerStatusName(WORD StatusID,LPCTSTR szStatusName)
+{
+	CAutoLock AutoLock(m_CriticalSection);
+
+	SERVER_STATUS_NAME Name;
+	strncpy_0(Name.szName,MAX_SERVER_STATUS_NAME_LEN,szStatusName,MAX_SERVER_STATUS_NAME_LEN);
+	m_ServerStatusName.Insert(StatusID,Name);
+}
+LPCTSTR CControlPanel::GetServerStatusName(WORD StatusID)
+{
+	SERVER_STATUS_NAME *pName=m_ServerStatusName.Find(StatusID);
+	if(pName)
+	{
+		return pName->szName;
+	}
+	return NULL;
 }

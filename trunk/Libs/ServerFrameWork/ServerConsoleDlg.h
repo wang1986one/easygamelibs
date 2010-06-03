@@ -71,6 +71,9 @@ protected:
 	CString m_UDPRecv;
 	CString m_UCPSend;
 	CString	m_Command;
+
+	CEasyBuffer m_ServerStatus;
+	CDlgServerStatus m_DlgServerStatus;
 	
 public:
 	afx_msg void OnBnClickedShowServerStatus();

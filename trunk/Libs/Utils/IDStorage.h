@@ -260,7 +260,7 @@ public:
 		return NULL;
 	}	
 
-	UINT AddObject(T& Object)
+	UINT AddObject(const T& Object)
 	{
 		UINT ID;
 		T * pObject;
@@ -282,7 +282,7 @@ public:
 		}
 		return NULL;
 	}
-	LPVOID InsertAfter(T& Object,LPVOID Pos)
+	LPVOID InsertAfter(const T& Object,LPVOID Pos)
 	{
 		StorageNode * pNode=(StorageNode *)InsertAfter(Pos);
 		if(pNode)
@@ -302,7 +302,7 @@ public:
 		}
 		return NULL;
 	}
-	LPVOID InsertBefore(T& Object,LPVOID Pos)
+	LPVOID InsertBefore(const T& Object,LPVOID Pos)
 	{
 		StorageNode * pNode=(StorageNode *)InsertNodeBefore(Pos);
 		if(pNode)
@@ -312,12 +312,13 @@ public:
 		}
 		return NULL;
 	}
-	LPVOID InsertSorted(T& Object)
+	LPVOID InsertSorted(const T& Object)
 	{
 		StorageNode * pNode=NewNode();
 		if(pNode)
 		{	
-			StorageNode * pHead=GetFirstObjectPos();
+			pNode->GetObjectRef()=Object;
+			StorageNode * pHead=m_pObjectListHead;
 			while(pHead&&pHead->GetObjectRef()<Object)
 			{
 				pHead=pHead->pNext;
@@ -448,7 +449,7 @@ public:
 		return NULL;
 	}
 
-	LPVOID PushFront(T& Object)
+	LPVOID PushFront(const T& Object)
 	{
 		StorageNode * pNode=(StorageNode *)PushFront();
 		if(pNode)
@@ -470,7 +471,7 @@ public:
 		return NULL;
 	}
 
-	LPVOID PushBack(T& Object)
+	LPVOID PushBack(const T& Object)
 	{
 		StorageNode * pNode=(StorageNode *)PushBack();
 		if(pNode)
