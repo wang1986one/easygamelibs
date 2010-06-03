@@ -59,21 +59,24 @@ BOOL CNetConnection::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObje
 				else
 				{			
 					GetServer()->AddTCPRecvBytes(pOverLappedObject->GetDataBuff()->GetUsedSize());
-					if(!QueryRecv())
+					
+					if(m_DataQueue.PushBack(pOverLappedObject))
 					{
-						PrintNetLog(0xffffffff,"无法发出更多的Recv请求,连接关闭！");
-						QueryDisconnect();					
-					}
-					else
-					{										
-						if(m_DataQueue.PushBack(pOverLappedObject))
+						if(!QueryRecv())
+						{
+							PrintNetLog(0xffffffff,"无法发出更多的Recv请求,连接关闭！");
+							QueryDisconnect();	
+							return FALSE;
+						}
+						else
 						{
 							return TRUE;
 						}
-						else
-							PrintNetLog(0xffffffff,"Recv数据队列已满！");
+						
 					}
-				}
+					else
+						PrintNetLog(0xffffffff,"Recv数据队列已满！");
+			}
 			}
 			else
 				PrintNetLog(0xffffffff,"Connection收到非法IOCP包！");

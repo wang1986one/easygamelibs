@@ -86,7 +86,7 @@ public:
 		Pos=pNode->pNext;
 		return pNode->Object;
 	}	
-	void InsertBefore(T& Object,LPVOID Pos=NULL)
+	void InsertBefore(const T& Object,LPVOID Pos=NULL)
 	{
 		OBJ_NODE * pNode=new OBJ_NODE;		
 		pNode->Object=Object;
@@ -98,7 +98,7 @@ public:
 		InsertBefore(pNode,Pos);
 		return pNode->Object;
 	}
-	void InsertAfter(T& Object,LPVOID Pos=NULL)
+	void InsertAfter(const T& Object,LPVOID Pos=NULL)
 	{
 		OBJ_NODE * pNode=new OBJ_NODE;		
 		pNode->Object=Object;
@@ -134,7 +134,7 @@ public:
 			InsertAfter(pNode,Target);
 		}
 	}
-	LPVOID Find(T& Object)
+	LPVOID Find(const T& Object)
 	{
 		OBJ_NODE * pNode=m_pHead;
 		while(pNode)

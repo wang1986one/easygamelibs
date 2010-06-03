@@ -225,7 +225,7 @@ public:
 		return NULL;
 	}
 
-	LPVOID PushFront(T& Object)
+	LPVOID PushFront(const T& Object)
 	{
 		StorageNode * pNode=(StorageNode *)PushFront();
 		if(pNode)
@@ -261,7 +261,7 @@ public:
 		return NULL;
 	}
 
-	LPVOID PushBack(T& Object)
+	LPVOID PushBack(const T& Object)
 	{
 		StorageNode * pNode=(StorageNode *)PushBack();
 		if(pNode)

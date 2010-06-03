@@ -19,6 +19,8 @@
 #endif
 
 #define MAX_CONSOLE_MSG_LEN			1024
+#define MAX_SERVER_STATUS_NAME_LEN	128
+
 
 enum CONSOLE_MSG_TYPE
 {
@@ -32,18 +34,6 @@ struct PANEL_MSG
 	char	Msg[MAX_CONSOLE_MSG_LEN];
 };
 
-struct SERVER_INFO
-{
-	float	CycleTime;
-	float	TCPRecvFlow;
-	float	TCPSendFlow;
-	float	UDPRecvFlow;
-	float	UDPSendFlow;
-	float	TCPRecvCount;
-	float	TCPSendCount;
-	float	UDPRecvCount;
-	float	UDPSendCount;
-};
 
 class CControlPanel :
 	public CStaticObject<CControlPanel>
@@ -59,10 +49,16 @@ public:
 #endif
 
 protected:
+	struct SERVER_STATUS_NAME
+	{
+		char szName[MAX_SERVER_STATUS_NAME_LEN];
+	};
+
 	CThreadSafeIDStorage<PANEL_MSG>		m_MsgPool;
 	CThreadSafeIDStorage<PANEL_MSG>		m_CommandPool;
-	SERVER_INFO							m_ServerInfo;
+	CEasyBuffer							m_ServerStatus;
 	CEasyCriticalSection				m_CriticalSection;
+	CEasyMap<WORD,SERVER_STATUS_NAME>	m_ServerStatusName;
 	
 public:
 	CControlPanel(void);
@@ -80,6 +76,8 @@ public:
 	PANEL_MSG * GetCommand();
 	BOOL ReleaseCommand(UINT ID);
 
-	void SetServerInfo(SERVER_INFO& ServerInfo);
-	void GetServerInfo(SERVER_INFO& ServerInfo);
+	void SetServerStatus(LPCVOID pData,UINT DataSize);
+	UINT GetServerStatus(LPVOID pBuffer,UINT BufferSize);
+	void SetServerStatusName(WORD StatusID,LPCTSTR szStatusName);
+	LPCTSTR GetServerStatusName(WORD StatusID);
 };

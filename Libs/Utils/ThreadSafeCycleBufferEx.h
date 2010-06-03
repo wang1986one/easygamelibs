@@ -34,15 +34,15 @@ public:
 
 	void SetLockMode(bool IsLockFront,bool IsLockBack);
 
-	BOOL PushFront(LPVOID pData,UINT Size);
-	BOOL PushFront(UINT Data,UINT Size);
-	BOOL PushBack(LPVOID pData,UINT Size);
+	//BOOL PushFront(LPVOID pData,UINT Size);
+	//BOOL PushFront(UINT Data,UINT Size);
+	BOOL PushBack(LPCVOID pData,UINT Size);
 	BOOL PushBack(UINT Data,UINT Size);
 
 	BOOL PopFront(LPVOID pData,UINT Size);
 	BOOL PopFront(UINT Data,UINT Size);
-	BOOL PopBack(LPVOID pData,UINT Size);
-	BOOL PopBack(UINT Data,UINT Size);
+	//BOOL PopBack(LPVOID pData,UINT Size);
+	//BOOL PopBack(UINT Data,UINT Size);
 
 	void Clear();
 
@@ -54,7 +54,7 @@ inline void CThreadSafeCycleBufferEx::SetLockMode(bool IsLockFront,bool IsLockBa
 	m_IsLockBack=IsLockBack;
 }
 
-inline BOOL CThreadSafeCycleBufferEx::PushBack(LPVOID pData,UINT Size)
+inline BOOL CThreadSafeCycleBufferEx::PushBack(LPCVOID pData,UINT Size)
 {
 	CAutoLockEx Lock;
 	if(m_IsLockBack)

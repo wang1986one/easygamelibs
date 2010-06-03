@@ -217,6 +217,7 @@ CEasyNetLinkService * CEasyNetLinkManager::AddService(UINT ID,UINT ReportID,cons
 		pService->SetReportID(ReportID);
 		pService->EnableReallocConnectionID(NeedReallocConnectionID);
 		if(pService->Create(IPPROTO_TCP,DEFAULT_SERVER_ACCEPT_QUEUE,
+			DEFAULT_SERVER_RECV_DATA_QUEUE,DEFAULT_SERVER_SEND_DATA_QUEUE,
 			ParallelAcceptCount,DEFAULT_PARALLEL_RECV,IsUseListenThread))
 		{		
 			if(pService->StartListen(ListenAddress))

@@ -56,6 +56,7 @@ public:
 			CAutoLockEx Lock2(m_WriteLock);
 			m_LockLevel = LL_READ;
 			m_ReadCount ++;
+			ResetEvent(m_UnlockEvent);
 		}
 
 	}
@@ -87,6 +88,7 @@ public:
 				{
 					m_LockLevel = LL_READ;
 					m_ReadCount ++;
+					ResetEvent(m_UnlockEvent);
 					return TRUE;
 				}
 			}
@@ -102,6 +104,7 @@ public:
 		{
 			CAutoLockEx Lock2(m_WriteLock);
 			m_LockLevel = LL_WRITE;
+			ResetEvent(m_UnlockEvent);
 		}
 		else
 		{
@@ -123,6 +126,7 @@ public:
 				if(Lock2.TryLock(m_WriteLock))
 				{
 					m_LockLevel = LL_WRITE;
+					ResetEvent(m_UnlockEvent);
 					return TRUE;
 				}
 			}

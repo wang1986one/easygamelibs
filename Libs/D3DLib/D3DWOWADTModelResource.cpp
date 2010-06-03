@@ -271,25 +271,25 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 
 
 
-		CD3DSubMesh * pNormalSubMesh=new CD3DSubMesh;
+		//CD3DSubMesh * pNormalSubMesh=new CD3DSubMesh;
 
-		pNormalSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE;
-		pNormalSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_NORMAL_VERTEXT);
-		pNormalSubMesh->SetVertexCount(VertexCount*2);
-		pNormalSubMesh->SetPrimitiveCount(VertexCount);
-		pNormalSubMesh->SetPrimitiveType(D3DPT_LINELIST);
+		//pNormalSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE;
+		//pNormalSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_NORMAL_VERTEXT);
+		//pNormalSubMesh->SetVertexCount(VertexCount*2);
+		//pNormalSubMesh->SetPrimitiveCount(VertexCount);
+		//pNormalSubMesh->SetPrimitiveType(D3DPT_LINELIST);
 
-		pNormalSubMesh->AllocDXVertexBuffer(m_pManager->GetDevice());
+		//pNormalSubMesh->AllocDXVertexBuffer(m_pManager->GetDevice());
 
-		pNormalSubMesh->GetMaterial().SetFX(
-			m_pManager->GetDevice()->GetFXManager()->
-			LoadFXFromMemory("DEFAULT_NORMAL_FX_NT",(void *)DEFAULT_NORMAL_FX_NT,
-			(int)strlen(DEFAULT_NORMAL_FX_NT)));
+		//pNormalSubMesh->GetMaterial().SetFX(
+		//	m_pManager->GetDevice()->GetFXManager()->
+		//	LoadFXFromMemory("DEFAULT_NORMAL_FX_NT",(void *)DEFAULT_NORMAL_FX_NT,
+		//	(int)strlen(DEFAULT_NORMAL_FX_NT)));
 
 
 
-		MODEL_NORMAL_VERTEXT * pNormalVertices=NULL;
-		pNormalSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pNormalVertices,0);
+		//MODEL_NORMAL_VERTEXT * pNormalVertices=NULL;
+		//pNormalSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pNormalVertices,0);
 
 	
 
@@ -320,10 +320,10 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 					pModelVertices[VertexIndex].Tex.x=(x*2.0f+1.0f)/16.0f;
 					pModelVertices[VertexIndex].Tex.y=Line/16.0f;
 
-					pNormalVertices[VertexIndex*2].Pos=pModelVertices[VertexIndex].Pos;
-					pNormalVertices[VertexIndex*2].Color=0xFFFF0000;
-					pNormalVertices[VertexIndex*2+1].Pos=pModelVertices[VertexIndex].Pos+pModelVertices[VertexIndex].Normal*2;
-					pNormalVertices[VertexIndex*2+1].Color=0xFF0000FF;
+					//pNormalVertices[VertexIndex*2].Pos=pModelVertices[VertexIndex].Pos;
+					//pNormalVertices[VertexIndex*2].Color=0xFFFF0000;
+					//pNormalVertices[VertexIndex*2+1].Pos=pModelVertices[VertexIndex].Pos+pModelVertices[VertexIndex].Normal*2;
+					//pNormalVertices[VertexIndex*2+1].Color=0xFF0000FF;
 					
 
 					VertexIndex++;
@@ -352,10 +352,10 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 					pModelVertices[VertexIndex].Tex.y=Line/16.0f;
 
 
-					pNormalVertices[VertexIndex*2].Pos=pModelVertices[VertexIndex].Pos;
-					pNormalVertices[VertexIndex*2].Color=0xFFFF0000;
-					pNormalVertices[VertexIndex*2+1].Pos=pModelVertices[VertexIndex].Pos+pModelVertices[VertexIndex].Normal*2;
-					pNormalVertices[VertexIndex*2+1].Color=0xFF0000FF;
+					//pNormalVertices[VertexIndex*2].Pos=pModelVertices[VertexIndex].Pos;
+					//pNormalVertices[VertexIndex*2].Color=0xFFFF0000;
+					//pNormalVertices[VertexIndex*2+1].Pos=pModelVertices[VertexIndex].Pos+pModelVertices[VertexIndex].Normal*2;
+					//pNormalVertices[VertexIndex*2+1].Color=0xFF0000FF;
 	
 
 					VertexIndex++;
@@ -396,7 +396,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 			}
 		}
 
-		pNormalSubMesh->GetDXVertexBuffer()->Unlock();
+		//pNormalSubMesh->GetDXVertexBuffer()->Unlock();
 
 		pD3DSubMesh->SetIndexCount(IndexIndex);
 
@@ -411,7 +411,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName)
 
 		m_SubMeshList.Add(pD3DSubMesh);
 
-		m_SubMeshList.Add(pNormalSubMesh);
+		//m_SubMeshList.Add(pNormalSubMesh);
 
 
 		if(pMH2O)

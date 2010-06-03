@@ -66,6 +66,7 @@
 #ifdef WIN32
 
 #include "ServerFrameWorkResource.h"
+#include "DlgServerStatus.h"
 #include "ServerConsoleDlg.h"
 #include "NTService.h"
 #include "ServerAppWin.h"

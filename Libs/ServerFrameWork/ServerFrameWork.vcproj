@@ -179,6 +179,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DlgServerStatus.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DlgServerStatus.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ServerConsoleDlg.cpp"
 				>
 			</File>
