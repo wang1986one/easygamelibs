@@ -646,7 +646,7 @@ int CODBCConnection::DBLibTypeToODBCSQLType(int Type,UINT& Size)
 	case DB_TYPE_GUID:
 		return SQL_GUID;
 	case DB_TYPE_BINARY:
-		return SQL_BINARY;	
+		return SQL_VARBINARY;	
 	}
 	return Type;
 }
@@ -692,6 +692,8 @@ int CODBCConnection::ODBCSQLTypeTOODBCCType(int Type,UINT& Size)
 	case SQL_BINARY:
 	case SQL_VARBINARY:
 	case SQL_LONGVARBINARY:
+		if(Size==0)
+			Size=MAX_FEILD_LEN;
 		return SQL_C_BINARY;
 	case SQL_TYPE_DATE:
 		Size=sizeof(DATE_STRUCT);
@@ -837,6 +839,8 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 		return DBERR_PARAMCOUNTFAIL;
 	}
 
+	CEasyBuffer DataLenBuffer;
+
 	if(ParamNum>0)
 	{
 
@@ -844,8 +848,8 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 		{
 			return DBERR_NOTENOUGHPARAM;
 		}	
-		
-
+		DataLenBuffer.Create(sizeof(SQLINTEGER)*ParamNum);
+		SQLINTEGER * pDataLen=(SQLINTEGER*)DataLenBuffer.GetBuffer();
 		//°ó¶¨²ÎÊý
 		for(int i=0;i<ParamNum;i++)
 		{
@@ -854,11 +858,13 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 			int DigitalSize=pParamSet->GetParam(i).GetDigitalLength();
 			int ODBCSQLType=DBLibTypeToODBCSQLType(pParamSet->GetParamInfo(i)->Type,Size);
 			int ODBCCType=DBLibTypeToODBCCType(pParamSet->GetParamInfo(i)->Type,Size);
-			SQLINTEGER DataLen;
+			
 			if(pParamSet->GetParamInfo(i)->IsNull||pParamSet->GetParam(i).IsNull())
-				DataLen=SQL_NULL_DATA;
+				pDataLen[i]=SQL_NULL_DATA;
+			else if(ODBCSQLType==SQL_BINARY||ODBCSQLType==SQL_VARBINARY||ODBCSQLType==SQL_LONGVARBINARY)
+				pDataLen[i]=pParamSet->GetParam(i).GetLength();
 			else
-				DataLen=SQL_NTS;
+				pDataLen[i]=SQL_NTS;
 			int ColumnSize=0;
 			if(ODBCSQLType==SQL_CHAR||ODBCSQLType==SQL_VARCHAR||ODBCSQLType==SQL_LONGVARCHAR||
 				ODBCSQLType==SQL_BINARY||ODBCSQLType==SQL_VARBINARY||ODBCSQLType==SQL_LONGVARBINARY)
@@ -873,7 +879,7 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 			nResult=SQLBindParameter(m_hStmt,i+1,
 				ParamType,ODBCCType,ODBCSQLType,ColumnSize,DigitalSize,
 				(SQLPOINTER)((LPCVOID)pParamSet->GetParam(i)),
-				pParamSet->GetParam(i).GetLength(),&DataLen);
+				pParamSet->GetParam(i).GetLength(),pDataLen+i);
 
 
 			if ( nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO )

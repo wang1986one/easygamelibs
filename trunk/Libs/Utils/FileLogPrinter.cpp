@@ -54,9 +54,9 @@ bool CFileLogPrinter::Create(LPCTSTR FileName,DWORD Flag)
 			(LPCTSTR)m_LogFileName);
 	}
 	if(m_Flag&FILE_LOG_APPEND)
-		m_FileOpenMode=IFileAccessor::modeOpenAlways|IFileAccessor::modeAppend;
+		m_FileOpenMode=IFileAccessor::modeOpenAlways|IFileAccessor::modeAppend|IFileAccessor::modeWrite;
 	else
-		m_FileOpenMode=IFileAccessor::modeCreateAlways|IFileAccessor::modeTruncate;
+		m_FileOpenMode=IFileAccessor::modeCreateAlways|IFileAccessor::modeTruncate|IFileAccessor::modeWrite;
 	m_FileOpenMode|=IFileAccessor::modeWrite|IFileAccessor::shareShareRead;
 	if(m_Flag&FILE_LOG_SAFE_WRITE)
 		m_FileOpenMode|=IFileAccessor::osWriteThrough;
