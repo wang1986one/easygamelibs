@@ -77,16 +77,7 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 			if(Services.has_attribute("ReallocConnectionID"))
 				NeedReallocConnectionID=(bool)Services.attribute("ReallocConnectionID");
 
-			CClassifiedID ReportID;
-			if(Services.has_attribute("ReportID"))
-			{
-				ReportID=Services.attribute("ReportID").getvalue().c_str();
-			}
-			else
-			{
-				ReportID=ServerID;
-			}
-
+			
 			for(UINT j=0;j<Services.children();j++)
 			{
 				if(_strnicmp(Services.child(j).name(),"Service",7)==0)
@@ -95,6 +86,16 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 					if(Service.has_attribute("ID")&&
 						Service.has_attribute("Port"))
 					{
+						CClassifiedID ReportID;
+						if(Service.has_attribute("ReportID"))
+						{
+							ReportID=Service.attribute("ReportID").getvalue().c_str();
+						}
+						else
+						{
+							ReportID=ServerID;
+						}
+
 						CClassifiedID ID=Service.attribute("ID").getvalue().c_str();						
 						CIPAddress Address;
 						UINT MaxPacketSize=0;
@@ -145,15 +146,7 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 		{
 			xml_node Connections=Config.child(i);	
 
-			CClassifiedID ReportID;
-			if(Connections.has_attribute("ReportID"))
-			{
-				ReportID=Connections.attribute("ReportID").getvalue().c_str();
-			}
-			else
-			{
-				ReportID=ServerID;
-			}
+			
 
 			for(UINT j=0;j<Connections.children();j++)
 			{
@@ -162,7 +155,16 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 					xml_node Connection=Connections.child(j);
 					if(Connection.has_attribute("IP")&&
 						Connection.has_attribute("Port"))
-					{											
+					{		
+						CClassifiedID ReportID;
+						if(Connection.has_attribute("ReportID"))
+						{
+							ReportID=Connection.attribute("ReportID").getvalue().c_str();
+						}
+						else
+						{
+							ReportID=ServerID;
+						}
 						CIPAddress Address;
 						UINT MaxPacketSize=0;
 						Address.SetIP(Connection.attribute("IP").getvalue().c_str());
