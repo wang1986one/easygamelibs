@@ -751,7 +751,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 			{
 			case OPERATOR_EVA:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(t1->type!=BOLAN_TYPE_VARIABLE)
 					return 3001;
@@ -775,7 +777,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_ADD:
 				t2=stack->Pop();
-				t1=stack->GetTop();		
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -794,7 +798,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_SUB:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -806,7 +812,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_MUL:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -818,7 +826,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_DIV:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -830,7 +840,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_EQU:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -854,7 +866,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;			
 			case OPERATOR_DIFF:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -878,7 +892,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_LESS:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -902,7 +918,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_MORE:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -926,7 +944,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_LESS_EQU:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -950,7 +970,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_MORE_EQU:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -974,6 +996,8 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_NEG:
 				t1=stack->GetTop();
+				if(t1==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t1);
 				if(ValType<0)
 					return 3004;
@@ -985,7 +1009,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_AND:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -997,7 +1023,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				break;
 			case OPERATOR_OR:
 				t2=stack->Pop();
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL&&t2==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t2);
 				if(ValType<0)
 					return 3004;
@@ -1008,7 +1036,9 @@ int CExpressionCaculator::CaculateBolanExpression(CBolanStack& BolanExp,CBolan &
 				t1->ValueType=VALUE_TYPE_NUMBER;
 				break;
 			case OPERATOR_NOT:				
-				t1=stack->GetTop();				
+				t1=stack->GetTop();
+				if(t1==NULL)
+					return 4013;
 				ValType=IsTypecompatible(t1,t1);
 				if(ValType<0)
 					return 3004;
@@ -1583,7 +1613,9 @@ char * CExpressionCaculator::GetErrorMsg(int ErrCode)
 	case 4011:
 		return "定义变量错误";		
 	case 4012:
-		return "变量未定义";		
+		return "变量未定义";	
+	case 4013:
+		return "操作数不足";
 	case 5001:
 		return "中断不存在";
 	}

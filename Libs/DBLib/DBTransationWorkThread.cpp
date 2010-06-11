@@ -64,7 +64,7 @@ bool CDBTransationWorkThread::Init(IDBConnection * pConnection,LPCTSTR ConnectSt
 bool CDBTransationWorkThread::AddTransaction(CDBTransaction * pDBTansaction)
 {
 	if(pDBTansaction)
-		return m_TransQueue.PushBack(pDBTansaction);
+		return m_TransQueue.PushBack(pDBTansaction)!=NULL;
 	else
 		return false;
 }
