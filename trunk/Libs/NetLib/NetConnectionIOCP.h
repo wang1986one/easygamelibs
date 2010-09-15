@@ -26,7 +26,12 @@ protected:
 	CThreadSafeIDStorage<COverLappedObject *>	m_DataQueue;
 	CIOCPEventRouter *							m_pIOCPEventRouter;
 
-	volatile UINT								m_SendQueryCount;	
+	volatile UINT								m_SendQueryCount;
+
+	bool										m_UseSendBuffer;
+	CIDStorage<COverLappedObject *>				m_SendBuffer;
+
+	volatile bool								m_IsRecvPaused;
 	
 
 	DECLARE_CLASS_INFO_STATIC(CNetConnection);
@@ -37,13 +42,10 @@ public:
 	virtual BOOL OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObject);
 
 	virtual BOOL Create(UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE,
-		UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE);
+		UINT SendQueueSize=0);
 	virtual BOOL Create(SOCKET Socket,
-		UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE,
-		UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE);
+		UINT RecvQueueSize,UINT SendQueueSize);
 	virtual void Destory();
-
-	
 
 	BOOL Connect(const CIPAddress& Address,DWORD TimeOut=NO_CONNECTION_TIME_OUT);
 	void Disconnect();
@@ -55,8 +57,8 @@ public:
 	virtual void OnConnection(BOOL IsSucceed);
 	virtual void OnDisconnection();
 
-	BOOL QuerySend(LPCVOID pData,int Size);
-	
+	BOOL Send(LPCVOID pData,UINT Size);
+	BOOL SendDirect(LPCVOID pData,UINT Size);
 
 	virtual void OnRecvData(const CEasyBuffer& DataBuffer);
 
@@ -75,8 +77,14 @@ public:
 	UINT GetDataQueueSize();
 
 	virtual UINT GetCurSendQueryCount();
+
+	UINT GetSendBufferSize();
+	UINT GetUsedSendBufferSize();
+private:
+	BOOL QuerySend(LPCVOID pData,UINT Size);
 protected:
 	BOOL QueryRecv();
+	int DoBufferSend(int ProcessPacketLimit);
 
 };
 
@@ -92,3 +100,11 @@ inline CNetServer* CNetConnection::GetServer()
 	return m_pServer;
 }
 
+inline UINT CNetConnection::GetSendBufferSize()
+{
+	return m_SendBuffer.GetBufferSize();
+}
+inline UINT CNetConnection::GetUsedSendBufferSize()
+{
+	return m_SendBuffer.GetObjectCount();
+}

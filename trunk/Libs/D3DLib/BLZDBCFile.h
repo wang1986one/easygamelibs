@@ -20,6 +20,7 @@ public:
 	bool Load(BYTE * pData,UINT DataSize,UINT RecordSize,bool IsSelfRelease);
 	void Close();
 
+	UINT GetRecordSize();
 	UINT GetRecordCount();
 	UINT GetFieldCount();
 	int GetDataInt(UINT Record,UINT Field);

@@ -11,12 +11,6 @@
 /****************************************************************************/
 #pragma once
 
-#ifdef WIN32
-
-#define WM_USER_LOG_MSG				WM_USER+1001
-#define WM_USER_CLIENT_NUM			WM_USER+1002
-
-#endif
 
 #define MAX_CONSOLE_MSG_LEN			1024
 #define MAX_SERVER_STATUS_NAME_LEN	128
@@ -34,10 +28,22 @@ struct PANEL_MSG
 	char	Msg[MAX_CONSOLE_MSG_LEN];
 };
 
+enum SERVER_STATUS_FORMAT_TYPE
+{
+	SSFT_DEFAULT,
+	SSFT_FLOW,
+};
+struct SERVER_STATUS_FORMAT_INFO
+{
+	char	szName[MAX_SERVER_STATUS_NAME_LEN];
+	int		FormatType;
+};
 
 class CControlPanel :
 	public CStaticObject<CControlPanel>
 {
+public:
+	
 #ifdef WIN32
 protected:
 	HWND								m_hWnd;
@@ -49,16 +55,13 @@ public:
 #endif
 
 protected:
-	struct SERVER_STATUS_NAME
-	{
-		char szName[MAX_SERVER_STATUS_NAME_LEN];
-	};
+	
 
-	CThreadSafeIDStorage<PANEL_MSG>		m_MsgPool;
-	CThreadSafeIDStorage<PANEL_MSG>		m_CommandPool;
-	CEasyBuffer							m_ServerStatus;
-	CEasyCriticalSection				m_CriticalSection;
-	CEasyMap<WORD,SERVER_STATUS_NAME>	m_ServerStatusName;
+	CThreadSafeIDStorage<PANEL_MSG>				m_MsgPool;
+	CThreadSafeIDStorage<PANEL_MSG>				m_CommandPool;
+	CEasyBuffer									m_ServerStatus;
+	CEasyCriticalSection						m_CriticalSection;
+	CEasyMap<WORD,SERVER_STATUS_FORMAT_INFO>	m_ServerStatusFormats;
 	
 public:
 	CControlPanel(void);
@@ -78,6 +81,12 @@ public:
 
 	void SetServerStatus(LPCVOID pData,UINT DataSize);
 	UINT GetServerStatus(LPVOID pBuffer,UINT BufferSize);
-	void SetServerStatusName(WORD StatusID,LPCTSTR szStatusName);
-	LPCTSTR GetServerStatusName(WORD StatusID);
+	void SetServerStatusFormat(WORD StatusID,LPCTSTR szStatusName,int FormatType=SSFT_DEFAULT);
+	SERVER_STATUS_FORMAT_INFO * GetServerStatusFormat(WORD StatusID);
+	CEasyMap<WORD,SERVER_STATUS_FORMAT_INFO>& GetAllServerStatusFormat();
 };
+
+inline CEasyMap<WORD,SERVER_STATUS_FORMAT_INFO>& CControlPanel::GetAllServerStatusFormat()
+{
+	return m_ServerStatusFormats;
+}

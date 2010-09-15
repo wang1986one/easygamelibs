@@ -17,6 +17,11 @@ class CD3DWOWWMOModelResource :
 	public CD3DObjectResource
 {
 public:
+	enum SUB_MESH_PROPERTY:UINT64
+	{
+		SMP_INSIDE=(1<<4),
+		SMP_OUTSIDE=(1<<5),
+	};
 	struct DOODAD_INFO
 	{
 		CD3DWOWM2ModelResource *	pDoodadModel;
@@ -24,6 +29,7 @@ public:
 		CD3DQuaternion				Rotation;
 		FLOAT						Scaling;
 		D3DCOLOR					Color;
+		WORD						GroupIndex;
 	};
 
 	struct DOODAD_SET_INFO
@@ -33,6 +39,16 @@ public:
 		UINT			DoodadCount;
 	};
 
+	struct PORTAL_INFO
+	{
+		WORD						GroupIndex;
+		WORD						Filler;
+		CD3DVector3					Normal;
+		CD3DVector3					Center;
+		FLOAT						Factor;
+		CEasyArray<CD3DVector3>		Vertices;		
+	};
+
 	struct GROUP_INFO
 	{
 		UINT						Index;
@@ -40,7 +56,9 @@ public:
 		UINT						Flags;
 		CD3DBoundingBox				BoundingBox;
 		CEasyArray<CD3DSubMesh *>	GroupSubMeshList;
+		CEasyArray<PORTAL_INFO>		PortalList;
 	};
+	
 protected:
 	enum SST_MEMBER_ID
 	{
@@ -60,6 +78,7 @@ protected:
 		SST_DI_ROTATION,
 		SST_DI_SCALING,
 		SST_DI_COLOR,
+		SST_DI_GROUP_INDEX,
 	};
 	enum SST_DOODAD_SET_LIST
 	{
@@ -75,6 +94,15 @@ protected:
 	{
 		SST_GL_GROUP_INFO=1,
 	};
+	enum SST_PORTAL_LIST
+	{
+		SST_PL_GROUP_INDEX=1,
+		SST_PL_FILLER,
+		SST_PL_NORMAL,
+		SST_PL_CENTER,
+		SST_PL_FACTOR,
+		SST_PL_VERTICES,
+	};
 	enum SST_GROUP_INFO
 	{
 		SST_GI_INDEX=1,
@@ -82,6 +110,7 @@ protected:
 		SST_GI_FLAG,
 		SST_GI_BOUNDING_BOX,
 		SST_GI_SUB_MESH,
+		SST_GI_PORTAL_INFO,
 	};
 
 	struct MODEL_VERTEXT
@@ -127,6 +156,7 @@ public:
 	GROUP_INFO * GetGroupInfo(UINT Index);
 
 
+
 public:	
 
 	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
@@ -135,7 +165,7 @@ public:
 	virtual UINT GetSmartStructSize(UINT Param=0);
 
 protected:
-	bool LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileName,BLZ_CHUNK_MOMT * pMaterials,UINT MaterialCount,BLZ_CHUNK_MOTX * pTextureNames);
+	bool LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileName,BLZ_CHUNK_MOMT * pMaterials,UINT MaterialCount,BLZ_CHUNK_MOTX * pTextureNames,BLZ_CHUNK_MOGN * pGroupNames);
 
 	bool LoadDoodads(UINT DoodadCount,UINT DoodadSetCount,BLZ_CHUNK_MODS * pDoodadSets,BLZ_CHUNK_MODN * pDoodadFileNames,BLZ_CHUNK_MODD * pDoodads);
 	bool LoadGroups(LPCTSTR ModelFileName,UINT GroupCount,BLZ_CHUNK_MOGI * pGroups,BLZ_CHUNK_MOGN * pGroupNames,BLZ_CHUNK_MOMT * pMaterials,UINT MaterialCount,BLZ_CHUNK_MOTX * pTextureNames);

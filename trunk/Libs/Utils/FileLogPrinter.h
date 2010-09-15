@@ -41,5 +41,5 @@ public:
 
 	bool Create(LPCTSTR FileName,DWORD Flag);
 
-	virtual void PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list vl);
+	virtual void PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_list vl);
 };

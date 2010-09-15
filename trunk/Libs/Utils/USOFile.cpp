@@ -355,92 +355,16 @@ bool CUSOFile::DeleteObject(CNameObject * pObject)
 	return false;
 }
 
-//bool CUSOFile::GetObjectHead(CNameObject::STORAGE_STRUCT& Head)
-//{
-//	if(m_pFile==NULL)
-//		return false;
-//
-//	UINT SavedOffset=(UINT)m_pFile->GetCurPos();
-//
-//	m_pFile->Read(&Head,sizeof(Head));
-//	m_pFile->Seek(SavedOffset,IFileAccessor::seekBegin);
-//	return true;
-//}
 
-//bool CUSOFile::ReadResourceBlock(USO_BLOCK_HEAD& BlockHead)
-//{
-//	UINT ReadSize=sizeof(USO_BLOCK_HEAD);
-//	UINT StartOffset;
-//
-//	if(BlockHead.Type!=USO_BLOCK_RESOURCE)
-//		return false;
-//	if(m_pFile==NULL)
-//		return false;
-//	StartOffset=(UINT)m_pFile->GetCurPos();
-//	while(ReadSize<BlockHead.Size&&(!m_pFile->IsEOF()))
-//	{
-//		CNameObject::STORAGE_STRUCT ObjectHead;
-//
-//		UINT SavedOffset=(UINT)m_pFile->GetCurPos();
-//
-//		GetObjectHead(ObjectHead);
-//		CNameObject * pObject=CreateObject(ObjectHead.Type,ObjectHead.Name);
-//		if(pObject)
-//		{
-//			pObject->FromUSOFile(this,USO_SAVE_MODE_RESOURCE);
-//			m_Resources.Add(pObject);
-//		}
-//		else
-//		{
-//			//装入失败也插入一个NULL，保证顺序
-//			m_pFile->Seek(SavedOffset+ObjectHead.Size,IFileAccessor::seekBegin);
-//			m_Resources.AddForce(NULL);
-//		}
-//		ReadSize=(UINT)m_pFile->GetCurPos()-StartOffset+sizeof(USO_BLOCK_HEAD);
-//	}
-//	if(ReadSize>=BlockHead.Size)
-//		return true;
-//	return false;
-//}
-//
-//bool CUSOFile::ReadObjectBlock(USO_BLOCK_HEAD& BlockHead)
-//{
-//	UINT ReadSize=sizeof(USO_BLOCK_HEAD);
-//	UINT StartOffset;
-//
-//	if(BlockHead.Type!=USO_BLOCK_OBJECT)
-//		return false;
-//	if(m_pFile==NULL)
-//		return false;
-//	StartOffset=(UINT)m_pFile->GetCurPos();
-//	while(ReadSize<BlockHead.Size&&(!m_pFile->IsEOF()))
-//	{
-//		CNameObject::STORAGE_STRUCT ObjectHead;
-//
-//		UINT SavedOffset=(UINT)m_pFile->GetCurPos();
-//
-//		GetObjectHead(ObjectHead);
-//		CNameObject * pObject=CreateObject(ObjectHead.Type,ObjectHead.Name);
-//		if(pObject)
-//		{
-//			pObject->FromUSOFile(this,USO_SAVE_MODE_OBJECT);
-//			m_Objects.push_back(pObject);
-//		}
-//		else
-//		{
-//			m_pFile->Seek(SavedOffset+ObjectHead.Size,IFileAccessor::seekBegin);
-//		}
-//
-//		ReadSize=(UINT)m_pFile->GetCurPos()-StartOffset+sizeof(USO_BLOCK_HEAD);
-//	}
-//	if(ReadSize>=BlockHead.Size)
-//		return true;
-//	return false;
-//}
 
 bool CUSOFile::ReadResourceBlock(USO_BLOCK_HEAD& BlockHead)
 {
 	UINT ReadSize=sizeof(USO_BLOCK_HEAD);
+
+	CEasyTimer Timer;
+	Timer.SaveTime();
+	UINT FXLoadTime=0;
+	UINT TextureLoadTime=0;
 
 	if(BlockHead.Type!=USO_BLOCK_RESOURCE)
 		return false;
@@ -472,6 +396,8 @@ bool CUSOFile::ReadResourceBlock(USO_BLOCK_HEAD& BlockHead)
 		CNameObject * pObject=CreateObject(szType,szName);
 		if(pObject)
 		{
+			CEasyTimer ObjectTimer;
+			ObjectTimer.SaveTime();
 			if(pObject->FromSmartStruct(ObjectPacket,this,0))
 			{
 				m_Resources.Add(pObject);
@@ -481,6 +407,15 @@ bool CUSOFile::ReadResourceBlock(USO_BLOCK_HEAD& BlockHead)
 				PrintSystemLog(0,"CUSOFile::ReadResourceBlock:装载对象%s:%s失败",szType,szName);
 				m_Resources.AddForce(NULL);
 			}
+			if(pObject->IsKindOf("CD3DFX"))
+			{
+				FXLoadTime+=ObjectTimer.GetPastTime();
+			}
+			if(pObject->IsKindOf("CD3DTexture"))
+			{
+				TextureLoadTime+=ObjectTimer.GetPastTime();
+			}
+
 			
 		}
 		else
@@ -489,7 +424,9 @@ bool CUSOFile::ReadResourceBlock(USO_BLOCK_HEAD& BlockHead)
 			m_Resources.AddForce(NULL);
 		}
 		ReadSize+=ObjectPacket.GetDataLen();
-	}
+	}	
+	PrintSystemLog(0,"读取%u个资源对象,花费%u毫秒,其中读取FX花费%u毫秒,读取纹理花费%u毫秒",
+		m_Resources.GetObjectCount(),Timer.GetPastTime(),FXLoadTime,TextureLoadTime);
 	if(ReadSize>=BlockHead.Size)
 		return true;
 	return false;
@@ -497,6 +434,9 @@ bool CUSOFile::ReadResourceBlock(USO_BLOCK_HEAD& BlockHead)
 
 bool CUSOFile::ReadObjectBlock(USO_BLOCK_HEAD& BlockHead)
 {
+	CEasyTimer Timer;
+	Timer.SaveTime();
+
 	UINT ReadSize=sizeof(USO_BLOCK_HEAD);
 	if(BlockHead.Type!=USO_BLOCK_OBJECT)
 		return false;
@@ -543,6 +483,8 @@ bool CUSOFile::ReadObjectBlock(USO_BLOCK_HEAD& BlockHead)
 
 		ReadSize+=ObjectPacket.GetDataLen();
 	}
+	PrintSystemLog(0,"读取%u个对象,花费%u毫秒",
+		m_Objects.size(),Timer.GetPastTime());
 	if(ReadSize>=BlockHead.Size)
 		return true;
 	return false;

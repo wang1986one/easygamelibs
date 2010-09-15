@@ -75,7 +75,7 @@ bool CD3DBonedDynamicModel::Restore()
 	return Ret&&CD3DBaseDynamicModel::Restore();
 }
 
-void CD3DBonedDynamicModel::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera)
+void CD3DBonedDynamicModel::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
 	if(pSubMesh&&pMaterial)
 	{	
@@ -83,10 +83,10 @@ void CD3DBonedDynamicModel::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSu
 		if(pMaterial->GetFX())
 		{
 			//ÉèÖÃµÆ¹â
-			if(pLight[0])
+			if(LightList.GetCount())
 			{			
 				D3DLIGHT9 Light;
-				pLight[0]->GetCurLight(Light);
+				LightList[0]->GetCurLight(Light);
 				pMaterial->GetFX()->SetVector("LightDir",CD3DVector4(Light.Direction));
 				pMaterial->GetFX()->SetColor("LightAmbient",Light.Ambient);
 				pMaterial->GetFX()->SetColor("LightDiffuse",Light.Diffuse);
@@ -496,7 +496,7 @@ int CD3DBonedDynamicModel::GetSubMeshCount()
 {
 	return (int)m_SkinParts.GetCount();
 }
-CD3DSubMesh * CD3DBonedDynamicModel::GetSubMesh(int index)
+CD3DSubMesh * CD3DBonedDynamicModel::GetSubMesh(UINT index)
 {	
 	if(index>=0&&index<(int)m_SkinParts.GetCount())
 		return m_SkinParts[index].pSubMesh;
@@ -852,11 +852,10 @@ bool CD3DBonedDynamicModel::CloneFrom(CNameObject * pObject,UINT Param)
 	m_pD3DDevice=pSource->GetDevice();
 	m_pRender=pSource->GetRender();	
 	m_Layer=pSource->GetLayer();
-	m_IsVisible=pSource->IsVisible();
 	//SetParent(pSource->GetParent());
 	m_LocalMatrix=pSource->GetLocalMatrix();
 	m_WorldMatrix=pSource->GetWorldMatrix();		
-	m_IsCulled=pSource->IsCulled();	
+	m_Flag=pSource->m_Flag;	
 	//ClearAllChild();
 	if((Param&OBJECT_CLONE_WITHOUT_CHILD)==0)
 	{	

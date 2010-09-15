@@ -18,7 +18,9 @@ IMPLEMENT_CLASS_INFO(CD3DCamera,CD3DObject);
 CD3DCamera::CD3DCamera():CD3DObject()
 {	
 	m_ProjectMatrix.SetIdentity();
-	m_ViewMatrix.SetIdentity();		
+	m_ViewMatrix.SetIdentity();	
+	m_Near=0.0f;
+	m_Far=1.0f;
 }
 
 CD3DCamera::~CD3DCamera(void)

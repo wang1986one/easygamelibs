@@ -40,13 +40,7 @@ END_MESSAGE_MAP()
 // CRemoteConsoleView 构造/析构
 
 CRemoteConsoleView::CRemoteConsoleView()
-	: CFormView(CRemoteConsoleView::IDD)
-	, m_STClientCount(0)
-	, m_STCycleTime(0)
-	, m_STTCPRecvFlow(0)
-	, m_STTCPSendFlow(0)
-	, m_STUDPRecvFlow(0)
-	, m_STUDPSendFlow(0)
+	: CFormView(CRemoteConsoleView::IDD)	
 {
 	// TODO: 在此处添加构造代码
 	m_pNetLink=NULL;
@@ -64,13 +58,8 @@ void CRemoteConsoleView::DoDataExchange(CDataExchange* pDX)
 {
 	CFormView::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EDIT_COMMAND, m_edCommand);
-	DDX_Control(pDX, IDC_EDIT_LOG, m_edLog);
-	DDX_Text(pDX, IDC_ST_CLIENT_COUNT, m_STClientCount);
-	DDX_Text(pDX, IDC_ST_CYCLE_TIME, m_STCycleTime);
-	DDX_Text(pDX, IDC_ST_TCP_RECV, m_STTCPRecvFlow);
-	DDX_Text(pDX, IDC_ST_TCP_SEND, m_STTCPSendFlow);
-	DDX_Text(pDX, IDC_ST_UDP_RECV, m_STUDPRecvFlow);
-	DDX_Text(pDX, IDC_ST_UDP_SEND, m_STUDPSendFlow);
+	DDX_Control(pDX, IDC_EDIT_LOG, m_edLog);	
+	DDX_Control(pDX, IDC_LIST_SERVER_STATUS, m_lvServerStatus);
 }
 
 BOOL CRemoteConsoleView::PreCreateWindow(CREATESTRUCT& cs)
@@ -101,14 +90,14 @@ void CRemoteConsoleView::OnInitialUpdate()
 		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
 		CDialogItemSorter::ALIGN_TOP|
 		CDialogItemSorter::PARAM_ALIGN_SPACE,
-		5,0,CRect(0,0,200,0));
+		5,IDC_LIST_SERVER_STATUS,CRect(0,0,500,0));
 
 
 	m_ItemSorter.AddDialogItem(1,11,
 		CDialogItemSorter::SORT_HORIZONTAL|		
 		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
 		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT,
-		0,IDC_EDIT_LOG,CRect(0,0,0,00));
+		0,IDC_EDIT_LOG,CRect(0,0,0,0));
 
 	m_ItemSorter.AddDialogItem(1,12,
 		CDialogItemSorter::SORT_HORIZONTAL|		
@@ -126,164 +115,7 @@ void CRemoteConsoleView::OnInitialUpdate()
 		CDialogItemSorter::ALIGN_CENTER,
 		0,IDC_BUTTON_SEND_COMMAND,CRect(0,0,0,0));
 
-
-
-	m_ItemSorter.AddDialogItem(2,21,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|		
-		CDialogItemSorter::PARAM_ALIGN_SPACE,
-		5,0,CRect(0,0,0,20));
-	m_ItemSorter.AddDialogItem(2,22,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::PARAM_ALIGN_SPACE,
-		5,0,CRect(0,0,0,20));
-	m_ItemSorter.AddDialogItem(2,23,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::PARAM_ALIGN_SPACE,
-		5,0,CRect(0,0,0,20));
-	m_ItemSorter.AddDialogItem(2,24,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::PARAM_ALIGN_SPACE,
-		5,0,CRect(0,0,0,20));
-	m_ItemSorter.AddDialogItem(2,25,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::PARAM_ALIGN_SPACE,
-		5,0,CRect(0,0,0,20));
-	m_ItemSorter.AddDialogItem(2,26,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::PARAM_ALIGN_SPACE,
-		5,0,CRect(0,0,0,20));
-
-	m_ItemSorter.AddDialogItem(21,211,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-	m_ItemSorter.AddDialogItem(21,212,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(211,2111,
-		0,
-		0,IDC_ST_CLIENT_COUNT_TITLE,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(212,2121,
-		0,
-		0,IDC_ST_CLIENT_COUNT,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(22,221,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-	m_ItemSorter.AddDialogItem(22,222,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(221,2211,
-		0,
-		0,IDC_ST_CYCLE_TIME_TITLE,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(222,2221,
-		0,
-		0,IDC_ST_CYCLE_TIME,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(23,231,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-	m_ItemSorter.AddDialogItem(23,232,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(231,2311,
-		0,
-		0,IDC_ST_TCP_RECV_TITLE,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(232,2321,
-		0,
-		0,IDC_ST_TCP_RECV,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(24,241,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-	m_ItemSorter.AddDialogItem(24,242,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(241,2411,
-		0,
-		0,IDC_ST_TCP_SEND_TITLE,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(242,2421,
-		0,
-		0,IDC_ST_TCP_SEND,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(25,251,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-	m_ItemSorter.AddDialogItem(25,252,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(251,2511,
-		0,
-		0,IDC_ST_UDP_RECV_TITLE,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(252,2521,
-		0,
-		0,IDC_ST_UDP_RECV,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(26,261,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-	m_ItemSorter.AddDialogItem(26,262,
-		CDialogItemSorter::SORT_HORIZONTAL|		
-		CDialogItemSorter::RESIZE_FIT_PARENT_WIDTH|
-		CDialogItemSorter::RESIZE_FIT_PARENT_HEIGHT|
-		CDialogItemSorter::ALIGN_LEFT,
-		0,0,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(261,2611,
-		0,
-		0,IDC_ST_UDP_SEND_TITLE,CRect(0,0,0,0));
-
-	m_ItemSorter.AddDialogItem(262,2621,
-		0,
-		0,IDC_ST_UDP_SEND,CRect(0,0,0,0));
+	
 
 	m_ItemSorter.DoSort();
 
@@ -293,7 +125,10 @@ void CRemoteConsoleView::OnInitialUpdate()
 
 	SetScrollSizes(MM_TEXT,CSize(0,0));
 
-	
+	m_lvServerStatus.SetExtendedStyle(LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
+
+	m_lvServerStatus.InsertColumn(0,"项",LVCFMT_LEFT,150);
+	m_lvServerStatus.InsertColumn(1,"值",LVCFMT_LEFT,100);
 	
 }
 
@@ -421,11 +256,16 @@ void CRemoteConsoleView::PrintLogMsg(LPCTSTR szMsg)
 	else
 		m_edLog.SetSel(sm1,sm2);
 
-	m_pFileLog->OutputLogString(ILogPrinter::LOG_LEVEL_NORMAL,0,szMsg);
-
+	PrintFileLog("%s",szMsg);
 }
 
-
+void CRemoteConsoleView::PrintFileLog(LPCTSTR szFormat,...)
+{
+	va_list	vl;
+	va_start(vl,szFormat);
+	m_pFileLog->PrintLogVL(ILogPrinter::LOG_LEVEL_NORMAL,0,szFormat,vl);
+	va_end( vl);
+}
 
 void CRemoteConsoleView::OnTimer(UINT nIDEvent)
 {
@@ -434,18 +274,11 @@ void CRemoteConsoleView::OnTimer(UINT nIDEvent)
 	{
 		if(m_pNetLink)
 		{
-			CSmartStruct QueryInfo(1024);
-
-
-			QueryInfo.AddMember(SC_SST_QSS_STATUS_ID,SC_SST_SS_CLIENT_COUNT);
-			QueryInfo.AddMember(SC_SST_QSS_STATUS_ID,SC_SST_SS_CYCLE_TIME);
-			QueryInfo.AddMember(SC_SST_QSS_STATUS_ID,SC_SST_SS_TCP_RECV_FLOW);
-			QueryInfo.AddMember(SC_SST_QSS_STATUS_ID,SC_SST_SS_TCP_SEND_FLOW);
-			QueryInfo.AddMember(SC_SST_QSS_STATUS_ID,SC_SST_SS_UDP_RECV_FLOW);
-			QueryInfo.AddMember(SC_SST_QSS_STATUS_ID,SC_SST_SS_UDP_SEND_FLOW);			
-			
-			m_pNetLink->SendMsg(SC_MSG_QUERY_SERVER_STATUS,
-				QueryInfo.GetData(),QueryInfo.GetDataLen());
+			if(m_ServerStatusFormats.GetObjectCount()==0)
+			{
+				m_pNetLink->SendMsg(SC_MSG_GET_SERVER_STATUS_FORMAT_INFO);
+			}
+			m_pNetLink->SendMsg(SC_MSG_QUERY_ALL_SERVER_STATUS);
 		}
 	}
 	CFormView::OnTimer(nIDEvent);
@@ -454,11 +287,110 @@ void CRemoteConsoleView::OnTimer(UINT nIDEvent)
 
 void CRemoteConsoleView::SetServerStatus(CSmartStruct& ServerStatus)
 {
-	m_STClientCount=ServerStatus.GetMember(SC_SST_SS_CLIENT_COUNT);
-	m_STCycleTime=ServerStatus.GetMember(SC_SST_SS_CYCLE_TIME);
-	m_STTCPRecvFlow=ServerStatus.GetMember(SC_SST_SS_TCP_RECV_FLOW);
-	m_STTCPSendFlow=ServerStatus.GetMember(SC_SST_SS_TCP_SEND_FLOW);
-	m_STUDPRecvFlow=ServerStatus.GetMember(SC_SST_SS_UDP_RECV_FLOW);
-	m_STUDPSendFlow=ServerStatus.GetMember(SC_SST_SS_UDP_SEND_FLOW);
-	UpdateData(false);
+	m_lvServerStatus.DeleteAllItems();
+	LPVOID Pos=ServerStatus.GetFirstMemberPosition();
+	while(Pos)
+	{
+		WORD MemberID;
+		CSmartValue Value=ServerStatus.GetNextMember(Pos,MemberID);
+		CEasyString MemberIDStr("未知属性");
+		int FormatType=SSFT_DEFAULT;
+		SERVER_STATUS_FORMAT_INFO * pFormatInfo=m_ServerStatusFormats.Find(MemberID);
+		if(pFormatInfo)
+		{
+			MemberIDStr=pFormatInfo->szName;
+			FormatType=pFormatInfo->FormatType;
+		}
+		CEasyString ValueStr;
+		switch(Value.GetType())
+		{
+		case CSmartValue::VT_CHAR:
+			ValueStr.Format("%d",(char)Value);
+			break;
+		case CSmartValue::VT_UCHAR:
+			ValueStr.Format("%u",(BYTE)Value);
+			break;
+		case CSmartValue::VT_SHORT:
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((short)Value,true);
+			else
+				ValueStr.Format("%d",(short)Value);
+			break;
+		case CSmartValue::VT_USHORT:
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((WORD)Value,true);
+			else
+				ValueStr.Format("%u",(WORD)Value);
+			break;
+		case CSmartValue::VT_INT:
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((int)Value,true);
+			else
+				ValueStr.Format("%d",(int)Value);
+			break;
+		case CSmartValue::VT_UINT:
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((UINT)Value,true);
+			else
+				ValueStr.Format("%u",(UINT)Value);
+			break;
+		case CSmartValue::VT_BIGINT:
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((INT64)Value,true);
+			else
+				ValueStr.Format("%lld",(INT64)Value);
+			break;
+		case CSmartValue::VT_UBIGINT:
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((UINT64)Value,true);
+			else
+				ValueStr.Format("%llu",(UINT64)Value);
+			break;
+		case CSmartValue::VT_FLOAT:
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWordsFloat((float)Value,true);
+			else
+				ValueStr.Format("%g",(float)Value);
+			break;
+		case CSmartValue::VT_DOUBLE:
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWordsFloat((double)Value,true);
+			else
+				ValueStr.Format("%g",(double)Value);
+			break;
+		case CSmartValue::VT_STRING:
+			ValueStr=(LPCTSTR)Value;
+			break;
+		case CSmartValue::VT_USTRING:
+			ValueStr=(LPCWSTR)Value;
+			break;
+		default:
+			ValueStr="未知格式数据";
+		}
+		int Item=m_lvServerStatus.InsertItem(m_lvServerStatus.GetItemCount(),MemberIDStr);
+		m_lvServerStatus.SetItemText(Item,1,ValueStr);
+	}
+	
 }
+
+void CRemoteConsoleView::SetServerStatusFormats(CSmartStruct& ServerStatusFormats)
+{
+	m_ServerStatusFormats.Clear();
+	void * Pos=ServerStatusFormats.GetFirstMemberPosition();
+	while(Pos)
+	{
+		WORD MemberID;
+		CSmartStruct FormatInfo=ServerStatusFormats.GetNextMember(Pos,MemberID);
+		if(MemberID==SC_SST_SSFIL_SERVER_STATUS_FORMAT_INFO)
+		{
+			WORD StatusID=FormatInfo.GetMember(SC_SST_SSFI_STATUS_ID);
+			SERVER_STATUS_FORMAT_INFO * pInfo=m_ServerStatusFormats.New(StatusID);
+			if(pInfo)
+			{
+				pInfo->FormatType=FormatInfo.GetMember(SC_SST_SSFI_FORMAT_TYPE);
+				strncpy_0(pInfo->szName,MAX_SERVER_STATUS_NAME_LEN,
+					FormatInfo.GetMember(SC_SST_SSFI_NAME),MAX_SERVER_STATUS_NAME_LEN);
+			}
+		}
+	}
+}	

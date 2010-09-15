@@ -22,6 +22,9 @@ CD3DWOWM2RibbonEmitter::CD3DWOWM2RibbonEmitter(void)
 	m_pRibbonVertexBuffer=NULL;
 	m_RibbonCount=0;
 	m_StartTime=-1;
+	m_RecentCreateTime=0;
+	m_RecentClipTime=0;
+
 }
 
 CD3DWOWM2RibbonEmitter::~CD3DWOWM2RibbonEmitter(void)
@@ -36,6 +39,8 @@ void CD3DWOWM2RibbonEmitter::Destory()
 	m_MaxRibbonCount=0;
 	m_RibbonCount=0;
 	m_StartTime=-1;
+	m_RecentCreateTime=0;
+	m_RecentClipTime=0;
 	SAFE_DELETE_ARRAY(m_pRibbonVertexBuffer);
 	m_SubMesh.Destory();
 	CD3DObject::Destory();
@@ -54,7 +59,7 @@ int CD3DWOWM2RibbonEmitter::GetSubMeshCount()
 {
 	return 1;
 }
-CD3DSubMesh * CD3DWOWM2RibbonEmitter::GetSubMesh(int index)
+CD3DSubMesh * CD3DWOWM2RibbonEmitter::GetSubMesh(UINT index)
 {
 	return &m_SubMesh;
 }
@@ -109,22 +114,56 @@ bool CD3DWOWM2RibbonEmitter::CloneFrom(CNameObject * pObject,UINT Param)
 	return true;
 }
 
-void CD3DWOWM2RibbonEmitter::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera)
+void CD3DWOWM2RibbonEmitter::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
 	if(pSubMesh&&pMaterial)
 	{	
 		if(pMaterial->GetFX())
 		{
 			//设置灯光
-			if(pLight[0])
-			{			
-				D3DLIGHT9 Light;
-				pLight[0]->GetCurLight(Light);
-				pMaterial->GetFX()->SetVector("LightDir",CD3DVector4(Light.Direction));
-				pMaterial->GetFX()->SetColor("LightAmbient",Light.Ambient);
-				pMaterial->GetFX()->SetColor("LightDiffuse",Light.Diffuse);
-				pMaterial->GetFX()->SetColor("LightSpecular",Light.Specular);
+			if(LightList.GetCount())
+			{		
+				D3DLIGHT9	Light;
+				char		szParamName[32];
+				pMaterial->GetFX()->SetInt("LightCount",LightList.GetCount());
+				for(UINT i=0;i<LightList.GetCount();i++)
+				{
+					LightList[i]->GetCurLight(Light);
+					sprintf_s(szParamName,32,"LightType[%d]",i);
+					pMaterial->GetFX()->SetInt(szParamName,Light.Type);
+					sprintf_s(szParamName,32,"LightPos[%d]",i);
+					pMaterial->GetFX()->SetVector(szParamName,CD3DVector3(Light.Position));
+					sprintf_s(szParamName,32,"LightDir[%d]",i);
+					pMaterial->GetFX()->SetVector(szParamName,CD3DVector3(Light.Direction));
+					sprintf_s(szParamName,32,"LightAmbient[%d]",i);
+					pMaterial->GetFX()->SetColor(szParamName,Light.Ambient);
+					sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
+					pMaterial->GetFX()->SetColor(szParamName,Light.Diffuse);
+					sprintf_s(szParamName,32,"LightSpecular[%d]",i);
+					pMaterial->GetFX()->SetColor(szParamName,Light.Specular);
+					sprintf_s(szParamName,32,"LightRange[%d]",i);
+					pMaterial->GetFX()->SetFloat(szParamName,Light.Range);
+					sprintf_s(szParamName,32,"LightAtn0[%d]",i);
+					pMaterial->GetFX()->SetFloat(szParamName,Light.Attenuation0);
+					sprintf_s(szParamName,32,"LightAtn1[%d]",i);
+					pMaterial->GetFX()->SetFloat(szParamName,Light.Attenuation1);
+					sprintf_s(szParamName,32,"LightAtn2[%d]",i);
+					pMaterial->GetFX()->SetFloat(szParamName,Light.Attenuation2);
+					//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
+					//pMaterial->GetFX()->SetFloat(szParamName,Light.Falloff);
+					//sprintf_s(szParamName,32,"LightTheta[%d]",i);
+					//pMaterial->GetFX()->SetFloat(szParamName,Light.Theta);
+					//sprintf_s(szParamName,32,"LightPhi[%d]",i);
+					//pMaterial->GetFX()->SetFloat(szParamName,Light.Phi);
+
+				}
+
 			}
+			//设置雾
+			pMaterial->GetFX()->SetColor("FogColor",GetRender()->GetFogColor());
+			pMaterial->GetFX()->SetFloat("FogNear",GetRender()->GetFogNear());
+			pMaterial->GetFX()->SetFloat("FogFar",GetRender()->GetFogFar());
+
 			//设置材质
 			D3DMATERIAL9 * pD3DMaterial;
 			if(pSubMesh->IsSelected())
@@ -178,6 +217,7 @@ void CD3DWOWM2RibbonEmitter::Update(FLOAT Time)
 			if(m_pModelResource->MakeRibbonParam(m_EmitterIndex,0,Param))
 			{
 				BuildRibbon(pRibbonEmitterInfo,&Param);
+				m_RecentCreateTime=Time;
 				CreateCount++;
 			}
 		}
@@ -194,9 +234,21 @@ void CD3DWOWM2RibbonEmitter::Update(FLOAT Time)
 			if(m_pModelResource->MakeRibbonParam(m_EmitterIndex,CurTime,Param))
 			{
 				BuildRibbon(pRibbonEmitterInfo,&Param);
+				m_RecentClipTime=Time-m_RecentCreateTime;
+				m_RecentCreateTime=Time;				
+				CreateCount++;
+			}			
+		}	
+		else
+		{
+			FLOAT ClipTime=Time-m_RecentCreateTime;
+			if(ClipTime>=m_RecentClipTime)
+			{
+				DelRibbon();
+				m_RecentCreateTime=Time;				
 				CreateCount++;
 			}
-		}	
+		}
 		
 	}
 	
@@ -233,14 +285,23 @@ bool CD3DWOWM2RibbonEmitter::Init(CD3DWOWM2ModelResource * pModelResource,UINT E
 	m_pRibbonVertexBuffer=new RIBBON_PAIR[m_MaxRibbonCount];
 	
 
-	
+	D3DCOLORVALUE WhiteColor={1.0f,1.0f,1.0f,1.0f};
+	D3DCOLORVALUE GrayColor={0.8f,0.8f,0.8f,1.0f};
+	D3DCOLORVALUE BlackColor={0.0f,0.0f,0.0f,1.0f};
+
+	m_SubMesh.GetMaterial().GetMaterial().Ambient=WhiteColor;
+	m_SubMesh.GetMaterial().GetMaterial().Diffuse=WhiteColor;
+	m_SubMesh.GetMaterial().GetMaterial().Specular=WhiteColor;
+	m_SubMesh.GetMaterial().GetMaterial().Emissive=BlackColor;
+	m_SubMesh.GetMaterial().GetMaterial().Power=40.0f;
 
 
 	m_SubMesh.GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1;
 	m_SubMesh.GetVertexFormat().VertexSize=sizeof(RIBBON_VERTEX);
 	m_SubMesh.GetVertexFormat().IndexSize=0;
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
-	m_SubMesh.SetVertexs((BYTE *)m_pRibbonVertexBuffer);
+	m_SubMesh.SetVertices((BYTE *)m_pRibbonVertexBuffer);
+	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	
 	for(UINT i=0;i<m_MaxRibbonCount;i++)
 	{
@@ -268,9 +329,7 @@ bool CD3DWOWM2RibbonEmitter::Init(CD3DWOWM2ModelResource * pModelResource,UINT E
 }
 
 void CD3DWOWM2RibbonEmitter::BuildRibbon(CD3DWOWM2ModelResource::RIBBON_EMITTER_INFO * pRibbonEmitterInfo,CD3DWOWM2ModelResource::RIBBON_PARAM * pParam)
-{	
-	
-	
+{		
 	if(m_RibbonCount>=m_MaxRibbonCount)//||RibbonLen>=m_ClipLength*pRibbonEmitterInfo->Resolution)
 	{
 		for(UINT i=0;i<m_RibbonCount-1;i++)
@@ -295,15 +354,36 @@ void CD3DWOWM2RibbonEmitter::BuildRibbon(CD3DWOWM2ModelResource::RIBBON_EMITTER_
 		
 	}
 
-	m_pRibbonVertexBuffer[0].Vertex[0].Tex.x=0.0f;
-	m_pRibbonVertexBuffer[0].Vertex[1].Tex.x=0.0f;
 
-	for(UINT i=1;i<m_RibbonCount;i++)
+	for(UINT i=0;i<m_RibbonCount;i++)
 	{
 		m_pRibbonVertexBuffer[i].Vertex[0].Tex.x=i*1.0f/(m_RibbonCount-1);
 		m_pRibbonVertexBuffer[i].Vertex[1].Tex.x=i*1.0f/(m_RibbonCount-1);
 	}
 	
+}
+
+
+void CD3DWOWM2RibbonEmitter::DelRibbon()
+{		
+	if(m_RibbonCount)
+	{
+		m_RibbonCount--;
+
+		for(UINT i=0;i<m_RibbonCount;i++)
+		{
+			m_pRibbonVertexBuffer[i].Vertex[0]=m_pRibbonVertexBuffer[i+1].Vertex[0];
+			m_pRibbonVertexBuffer[i].Vertex[1]=m_pRibbonVertexBuffer[i+1].Vertex[1];
+		}
+
+
+		for(UINT i=0;i<m_RibbonCount;i++)
+		{
+			m_pRibbonVertexBuffer[i].Vertex[0].Tex.x=i*1.0f/(m_RibbonCount-1);
+			m_pRibbonVertexBuffer[i].Vertex[1].Tex.x=i*1.0f/(m_RibbonCount-1);
+		}
+	}
+
 }
 
 }

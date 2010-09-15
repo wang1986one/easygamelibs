@@ -39,6 +39,13 @@ void CD3DWOWWMOModelResource::Destory()
 	}
 	m_DoodadInfos.Clear();
 	m_DoodadSets.Clear();
+	for(UINT i=0;i<m_Groups.GetCount();i++)
+	{
+		for(UINT j=0;j<m_Groups[i].GroupSubMeshList.GetCount();j++)
+		{
+			SAFE_RELEASE(m_Groups[i].GroupSubMeshList[j]);
+		}
+	}
 	m_Groups.Clear();
 	CD3DObjectResource::Destory();
 }
@@ -148,6 +155,48 @@ bool CD3DWOWWMOModelResource::LoadFromFile(LPCTSTR ModelFileName)
 	if(!LoadGroups(ModelFileName,pHeader->GroupCount,pGroups,pGroupNames,pMaterials,pHeader->MaterialCount,pTextureNames))
 		return false;
 
+	UINT GroupPortalCount=pPortalRelationship->ChunkSize/sizeof(WMOPortalRelationship);
+	UINT PortalCount=pPortalInfos->ChunkSize/sizeof(WMOPortalInfo);
+	if(pHeader->PortalCount!=PortalCount)
+	{
+		PrintD3DLog(0,"Portal数量有异常");
+	}
+
+	for(UINT i=0;i<GroupPortalCount;i++)
+	{
+		PORTAL_INFO PortalInfo;
+		PortalInfo.GroupIndex=pPortalRelationship->PortalRelationship[i].GroupIndex;
+		PortalInfo.Filler=pPortalRelationship->PortalRelationship[i].Filler;
+		UINT Index=pPortalRelationship->PortalRelationship[i].PortalIndex;
+		if(Index<PortalCount)
+		{
+			PortalInfo.Normal=BLZTranslationToD3D(pPortalInfos->PortalInfo[Index].Normal)*pPortalRelationship->PortalRelationship[i].Side;
+			PortalInfo.Factor=pPortalInfos->PortalInfo[Index].Unknown;
+			for(UINT j=0;j<pPortalInfos->PortalInfo[Index].VertexCount;j++)
+			{
+				UINT VertexIndex=j+pPortalInfos->PortalInfo[Index].VertexIndex;
+				PortalInfo.Vertices.Add(BLZTranslationToD3D(pPortalVertices->PortalVertices[VertexIndex]));
+			}
+			if(PortalInfo.Vertices.GetCount()>=4)
+			{
+				PortalInfo.Center=(PortalInfo.Vertices[0]+PortalInfo.Vertices[2])/2;
+			}
+			GROUP_INFO * pGroup=GetGroupInfo(PortalInfo.GroupIndex);
+			if(pGroup)
+			{
+				pGroup->PortalList.Add(PortalInfo);
+			}
+			else
+			{
+				PrintD3DLog(0,"Portal(%d)找不到对应Group(%d)",i,PortalInfo.GroupIndex);
+			}
+		}
+		else
+		{
+			PrintD3DLog(0,"Portal(%d)找不到",Index);
+		}
+	}
+
 	return true;
 }
 
@@ -190,6 +239,13 @@ void CD3DWOWWMOModelResource::PickResource(CNameObjectSet * pObjectSet,UINT Para
 			pObjectSet->Add(m_DoodadInfos[i].pDoodadModel);
 		}
 	}
+	for(UINT i=0;i<m_Groups.GetCount();i++)
+	{
+		for(UINT j=0;j<m_Groups[i].GroupSubMeshList.GetCount();j++)
+		{
+			m_Groups[i].GroupSubMeshList[j]->PickResource(pObjectSet,Param);
+		}
+	}
 }
 
 bool CD3DWOWWMOModelResource::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
@@ -214,6 +270,7 @@ bool CD3DWOWWMOModelResource::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSO
 			CHECK_SMART_STRUCT_ADD_AND_RETURN(DoodadInfo.AddMember(SST_DI_SCALING,
 				(LPCTSTR)(&m_DoodadInfos[i].Scaling),sizeof(m_DoodadInfos[i].Scaling)));
 			CHECK_SMART_STRUCT_ADD_AND_RETURN(DoodadInfo.AddMember(SST_DI_COLOR,m_DoodadInfos[i].Color));
+			CHECK_SMART_STRUCT_ADD_AND_RETURN(DoodadInfo.AddMember(SST_DI_GROUP_INDEX,m_DoodadInfos[i].GroupIndex));
 			if(!DoodadInfoList.FinishMember(SST_DIL_DOODAD_INFO,DoodadInfo.GetDataLen()))
 				return false;
 		}
@@ -254,10 +311,34 @@ bool CD3DWOWWMOModelResource::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSO
 				(LPCTSTR)(&m_Groups[i].BoundingBox),sizeof(m_Groups[i].BoundingBox)));
 			for(UINT j=0;j<m_Groups[i].GroupSubMeshList.GetCount();j++)
 			{
-				int ResourceID=pUSOFile->ResourceObjectToIndex(m_Groups[i].GroupSubMeshList[j]);
-				CHECK_SMART_STRUCT_ADD_AND_RETURN(GroupInfo.AddMember(SST_GI_SUB_MESH,ResourceID));
+				pBuffer=GroupInfo.PrepareMember(BufferSize);
+				CSmartStruct SubMeshInfo(pBuffer,BufferSize,true);
+				if(!m_Groups[i].GroupSubMeshList[j]->ToSmartStruct(SubMeshInfo,pUSOFile,Param))
+					return false;
+				if(!GroupInfo.FinishMember(SST_GI_SUB_MESH,SubMeshInfo.GetDataLen()))
+					return false;
 			}
-			
+			for(UINT j=0;j<m_Groups[i].PortalList.GetCount();j++)
+			{				
+				pBuffer=GroupInfo.PrepareMember(BufferSize);
+				CSmartStruct PortalInfo(pBuffer,BufferSize,true);
+
+				CHECK_SMART_STRUCT_ADD_AND_RETURN(PortalInfo.AddMember(SST_PL_GROUP_INDEX,m_Groups[i].PortalList[j].GroupIndex));
+				CHECK_SMART_STRUCT_ADD_AND_RETURN(PortalInfo.AddMember(SST_PL_FILLER,m_Groups[i].PortalList[j].Filler));
+				CHECK_SMART_STRUCT_ADD_AND_RETURN(PortalInfo.AddMember(SST_PL_NORMAL,
+					(LPCTSTR)(&m_Groups[i].PortalList[j].Normal),sizeof(m_Groups[i].PortalList[j].Normal)));
+				CHECK_SMART_STRUCT_ADD_AND_RETURN(PortalInfo.AddMember(SST_PL_CENTER,
+					(LPCTSTR)(&m_Groups[i].PortalList[j].Center),sizeof(m_Groups[i].PortalList[j].Center)));
+				CHECK_SMART_STRUCT_ADD_AND_RETURN(PortalInfo.AddMember(SST_PL_FACTOR,m_Groups[i].PortalList[j].Factor));
+				
+				CHECK_SMART_STRUCT_ADD_AND_RETURN(PortalInfo.AddMember(SST_PL_VERTICES,
+					(LPCTSTR)(m_Groups[i].PortalList[j].Vertices.GetBuffer()),
+					sizeof(CD3DVector3)*m_Groups[i].PortalList[j].Vertices.GetCount()));
+				
+
+				if(!GroupInfo.FinishMember(SST_GI_PORTAL_INFO,PortalInfo.GetDataLen()))
+					return false;
+			}
 			if(!GroupList.FinishMember(SST_GL_GROUP_INFO,GroupInfo.GetDataLen()))
 				return false;
 		}
@@ -313,6 +394,53 @@ bool CD3DWOWWMOModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pU
 		WORD MemberID;
 		CSmartStruct SubPacket=Packet.GetNextMember(Pos,MemberID);
 		switch(MemberID)
+		{		
+		case SST_D3DWWMR_GROUP_LIST:
+			{
+				void * SubPos=SubPacket.GetFirstMemberPosition();
+				while(SubPos)
+				{
+					WORD SubMemberID;
+					CSmartStruct GroupInfo=Packet.GetNextMember(SubPos,SubMemberID);
+					if(SubMemberID==SST_GL_GROUP_INFO)
+					{
+						UINT SubMeshCount=0;
+						UINT PortalCount=0;						
+						void * GroupPos=GroupInfo.GetFirstMemberPosition();
+						while(GroupPos)
+						{
+							WORD GroupMemberID;
+							CSmartValue Value=GroupInfo.GetNextMember(GroupPos,GroupMemberID);
+							switch(GroupMemberID)
+							{		
+							case SST_GI_SUB_MESH:
+								SubMeshCount++;
+								break;
+							case SST_GI_PORTAL_INFO:
+								PortalCount++;
+								break;
+							}
+						}
+						m_Groups[GroupCount].GroupSubMeshList.Resize(SubMeshCount);
+						m_Groups[GroupCount].PortalList.Resize(PortalCount);
+						GroupCount++;
+					}
+				}
+			}
+			break;
+		}
+	}
+
+	DoodadInfoCount=0;
+	DoodadSetCount=0;
+	GroupCount=0;
+
+	Pos=Packet.GetFirstMemberPosition();
+	while(Pos)
+	{
+		WORD MemberID;
+		CSmartStruct SubPacket=Packet.GetNextMember(Pos,MemberID);
+		switch(MemberID)
 		{	
 		case SST_D3DWWMR_DOODAD_INFO_LIST:
 			{
@@ -334,6 +462,7 @@ bool CD3DWOWWMOModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pU
 						memcpy(&(m_DoodadInfos[DoodadInfoCount].Scaling),(LPCTSTR)DoodadInfo.GetMember(SST_DI_SCALING),
 							sizeof(m_DoodadInfos[DoodadInfoCount].Scaling));
 						m_DoodadInfos[DoodadInfoCount].Color=DoodadInfo.GetMember(SST_DI_COLOR);
+						m_DoodadInfos[DoodadInfoCount].GroupIndex=DoodadInfo.GetMember(SST_DI_GROUP_INDEX);
 						DoodadInfoCount++;
 					}
 				}
@@ -365,6 +494,8 @@ bool CD3DWOWWMOModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pU
 					CSmartStruct GroupInfo=Packet.GetNextMember(SubPos,SubMemberID);
 					if(SubMemberID==SST_GL_GROUP_INFO)
 					{
+						UINT SubMeshCount=0;
+						UINT PortalCount=0;
 						void * GroupPos=GroupInfo.GetFirstMemberPosition();
 						while(GroupPos)
 						{
@@ -386,14 +517,64 @@ bool CD3DWOWWMOModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pU
 								break;
 							case SST_GI_SUB_MESH:
 								{
-									int ResourceID=Value;
-									CD3DSubMesh * pSubMesh=(CD3DSubMesh *)pUSOFile->ResourceIndexToObject(ResourceID,GET_CLASS_INFO(CD3DSubMesh));
-									if(pSubMesh)
+									CSmartStruct SubMeshInfo=Value;
+									LPCTSTR ClassName=SubMeshInfo.GetMember(SST_NO_CLASS_NAME);
+									LPCTSTR ObjectName=SubMeshInfo.GetMember(SST_NO_OBJECT_NAME);
+									CD3DSubMesh * pSubMesh=(CD3DSubMesh *)pUSOFile->CreateObject(ClassName,ObjectName);
+									if(pSubMesh==NULL)
+										return false;
+									if(!pSubMesh->IsKindOf(GET_CLASS_INFO(CD3DSubMesh)))
 									{
-										pSubMesh->AddUseRef();
-										m_Groups[GroupCount].GroupSubMeshList.Add(pSubMesh);
+										SAFE_RELEASE(pSubMesh);
+										return false;
 									}
+									if(!pSubMesh->FromSmartStruct(SubMeshInfo,pUSOFile,(UINT)(m_pManager->GetDevice())))
+										return false;
 									
+									m_Groups[GroupCount].GroupSubMeshList[SubMeshCount]=pSubMesh;
+									
+									SubMeshCount++;
+									
+								}
+								break;
+							case SST_GI_PORTAL_INFO:
+								{
+									CSmartStruct PortalInfo=Value;
+									void * PortalPos=PortalInfo.GetFirstMemberPosition();
+									while(PortalPos)
+									{
+										WORD PortalMember;
+										CSmartValue SubValue=PortalInfo.GetNextMember(PortalPos,PortalMember);
+										switch(PortalMember)
+										{
+										case SST_PL_GROUP_INDEX:
+											m_Groups[GroupCount].PortalList[PortalCount].GroupIndex=SubValue;
+											break;
+										case SST_PL_FILLER:
+											m_Groups[GroupCount].PortalList[PortalCount].Filler=SubValue;
+											break;
+										case SST_PL_NORMAL:
+											memcpy(&m_Groups[GroupCount].PortalList[PortalCount].Normal,
+												(LPCTSTR)SubValue,sizeof(m_Groups[GroupCount].PortalList[PortalCount].Normal));
+											break;
+										case SST_PL_CENTER:
+											memcpy(&m_Groups[GroupCount].PortalList[PortalCount].Center,
+												(LPCTSTR)SubValue,sizeof(m_Groups[GroupCount].PortalList[PortalCount].Center));
+											break;
+										case SST_PL_FACTOR:
+											m_Groups[GroupCount].PortalList[PortalCount].Factor=SubValue;
+											break;
+										case SST_PL_VERTICES:
+											{
+												UINT Count=SubValue.GetLength()/sizeof(CD3DVector3);
+												m_Groups[GroupCount].PortalList[PortalCount].Vertices.Resize(Count);
+												memcpy(m_Groups[GroupCount].PortalList[PortalCount].Vertices.GetBuffer(),
+													(LPCTSTR)SubValue,sizeof(CD3DVector3)*Count);
+											}
+											break;
+										}
+									}
+									PortalCount++;
 								}
 								break;
 							}
@@ -419,6 +600,7 @@ UINT CD3DWOWWMOModelResource::GetSmartStructSize(UINT Param)
 		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_DoodadInfos[i].Rotation));
 		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_DoodadInfos[i].Scaling));
 		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_DoodadInfos[i].Color));
+		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_DoodadInfos[i].GroupIndex));
 		Size+=SMART_STRUCT_STRUCT_MEMBER_SIZE(0);
 	}
 	Size+=SMART_STRUCT_STRUCT_MEMBER_SIZE(0);
@@ -438,14 +620,24 @@ UINT CD3DWOWWMOModelResource::GetSmartStructSize(UINT Param)
 		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_Groups[i].BoundingBox));
 		for(UINT j=0;j<m_Groups[i].GroupSubMeshList.GetCount();j++)
 		{
-			Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(int));			
+			Size+=SMART_STRUCT_STRUCT_MEMBER_SIZE(m_Groups[i].GroupSubMeshList[j]->GetSmartStructSize(Param));
+		}
+		for(UINT j=0;j<m_Groups[i].PortalList.GetCount();j++)
+		{
+			Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_Groups[i].PortalList[j].GroupIndex));
+			Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_Groups[i].PortalList[j].Filler));
+			Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_Groups[i].PortalList[j].Normal));
+			Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_Groups[i].PortalList[j].Center));
+			Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_Groups[i].PortalList[j].Factor));
+			Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(CD3DVector3)*m_Groups[i].PortalList[j].Vertices.GetCount());
+			Size+=SMART_STRUCT_STRUCT_MEMBER_SIZE(0);
 		}
 		Size+=SMART_STRUCT_STRUCT_MEMBER_SIZE(0);
 	}
 	return Size;
 }
 
-bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileName,BLZ_CHUNK_MOMT * pMaterials,UINT MaterialCount,BLZ_CHUNK_MOTX * pTextureNames)
+bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileName,BLZ_CHUNK_MOMT * pMaterials,UINT MaterialCount,BLZ_CHUNK_MOTX * pTextureNames,BLZ_CHUNK_MOGN * pGroupNames)
 {
 	IFileAccessor * pFile;
 
@@ -470,6 +662,12 @@ bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileN
 	BLZ_CHUNK_MOGP * pGroup=(BLZ_CHUNK_MOGP *)WMOChunk.GetFirstChunk(CHUNK_ID_WMO_MOGP);
 	if(pGroup==NULL)
 		return false;
+
+	if(pGroup->Name>=0&&pGroup->Name<(int)pGroupNames->ChunkSize)
+	{
+		GroupInfo.Name=pGroupNames->GroupFileNames+pGroup->Name;
+	}
+	GroupInfo.Flags=pGroup->Flags;
 
 	CBLZChunkFile SubChunk;
 
@@ -533,6 +731,19 @@ bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileN
 	if(RenderBatchCount<TotalBatchCount)
 		return false;
 
+	if(pDoodadRefrences)
+	{
+		UINT DoodadCount=pDoodadRefrences->ChunkSize/sizeof(UINT16);
+		for(UINT i=0;i<DoodadCount;i++)
+		{
+			WORD Index=pDoodadRefrences->DoodadIndices[i];
+			if(Index<m_DoodadInfos.GetCount())
+			{
+				m_DoodadInfos[Index].GroupIndex=GroupInfo.Index;
+			}
+		}
+	}
+
 	for(UINT i=StartBatch;i<TotalBatchCount;i++)
 	{
 		CD3DSubMesh * pD3DSubMesh=new CD3DSubMesh;
@@ -578,7 +789,7 @@ bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileN
 		}
 		pD3DSubMesh->GetDXIndexBuffer()->Unlock();
 
-		if(pD3DSubMesh->GetVertexCount()==VertexIndexList.GetCount())
+		if(pD3DSubMesh->GetVertexCount()>=VertexIndexList.GetCount())
 		{
 			pD3DSubMesh->AllocDXVertexBuffer(m_pManager->GetDevice());
 
@@ -599,22 +810,33 @@ bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileN
 		}
 		else
 		{
-			PrintSystemLog(0,"Error VertexCount");
+			PrintD3DLog(0,"Error VertexCount,Origin=%u,Now=%u",
+				pD3DSubMesh->GetVertexCount(),VertexIndexList.GetCount());
 		}
 
 		if(!MakeMaterial(pD3DSubMesh->GetMaterial(),pMaterials->Materials[MaterialIndex],pTextureNames))
 			return false;
 
+		UINT64 SubMeshProperty=pD3DSubMesh->GetProperty();
+		if(GroupInfo.Flags&WMOGF_OUTDOOR)
+		{
+			SubMeshProperty|=SMP_OUTSIDE;
+		}
+		if(GroupInfo.Flags&WMOGF_INDOOR)
+		{
+			SubMeshProperty|=SMP_INSIDE;
+		}
 		
 		pD3DSubMesh->CreateBounding();
 
 		pD3DSubMesh->SetID(GroupInfo.Index*1000+i);
 		CEasyString SubMeshName;
-		SubMeshName.Format("%03d-%03d",GroupInfo.Index,i);
+		SubMeshName.Format("%s-%03d-%03d",
+			(LPCTSTR)GroupInfo.Name,GroupInfo.Index,i);
 		pD3DSubMesh->SetName(SubMeshName);
 
 		GroupInfo.GroupSubMeshList.Add(pD3DSubMesh);
-		m_SubMeshList.Add(pD3DSubMesh);
+		//m_SubMeshList.Add(pD3DSubMesh);
 	}
 
 	return true;
@@ -624,6 +846,12 @@ bool CD3DWOWWMOModelResource::LoadDoodads(UINT DoodadCount,UINT DoodadSetCount,B
 {
 	if(DoodadCount)
 	{
+		UINT RealDoodadCount=pDoodads->ChunkSize/sizeof(SMODoodadInfo);
+		if(DoodadCount>RealDoodadCount)
+		{
+			PrintSystemLog(0,"CD3DWOWWMOModelResource::LoadDoodads:DoodadCount有误");
+			DoodadCount=RealDoodadCount;
+		}
 		m_DoodadInfos.Resize(DoodadCount);
 		for(UINT i=0;i<DoodadCount;i++)
 		{
@@ -648,7 +876,7 @@ bool CD3DWOWWMOModelResource::LoadDoodads(UINT DoodadCount,UINT DoodadSetCount,B
 						pResource=new CD3DWOWM2ModelResource(m_pManager);
 						if(pResource->LoadFromFile(ModelFileName,SkinFileName))
 						{
-							PrintSystemLog(0,"加载了[%s]",(LPCTSTR)ModelFileName);
+							//PrintSystemLog(0,"加载了[%s]",(LPCTSTR)ModelFileName);
 							if(!m_pManager->AddResource(pResource,ObjectName))
 							{
 								pResource->Release();
@@ -672,6 +900,7 @@ bool CD3DWOWWMOModelResource::LoadDoodads(UINT DoodadCount,UINT DoodadSetCount,B
 				m_DoodadInfos[i].Rotation=BLZRotationToD3D(pDoodads->Doodads[i].Rotation);
 				m_DoodadInfos[i].Scaling=pDoodads->Doodads[i].Scaling;
 				m_DoodadInfos[i].Color=pDoodads->Doodads[i].Color;
+				m_DoodadInfos[i].GroupIndex=0xffff;
 			}			
 		}
 		if(DoodadSetCount)
@@ -712,11 +941,11 @@ bool CD3DWOWWMOModelResource::LoadGroups(LPCTSTR ModelFileName,UINT GroupCount,B
 			m_Groups[i].Flags=pGroups->Group[i].Flags;
 			m_Groups[i].BoundingBox.m_Min=BLZTranslationToD3D(pGroups->Group[i].BoundingBox[0]);
 			m_Groups[i].BoundingBox.m_Max=BLZTranslationToD3D(pGroups->Group[i].BoundingBox[1]);
-			m_Groups[i].BoundingBox.Rebuild();
+			//m_Groups[i].BoundingBox.Rebuild();
 			CEasyString FileName;
 			FileName.Format("%s_%03d%s",
 				(LPCTSTR)GroupFileName,i,(LPCTSTR)GroupFileExt);
-			if(!LoadGroup(m_Groups[i],FileName,pMaterials,MaterialCount,pTextureNames))
+			if(!LoadGroup(m_Groups[i],FileName,pMaterials,MaterialCount,pTextureNames,pGroupNames))
 				return false;
 		}
 	}
@@ -774,8 +1003,6 @@ bool CD3DWOWWMOModelResource::MakeMaterial(CD3DSubMeshMaterial& SubMeshMaterial,
 CD3DFX * CD3DWOWWMOModelResource::BuildFX(UINT BlendMode,UINT TextureFlag)
 {
 	CEasyString FXName;
-	CEasyString PSDiffuseFunction;
-	CEasyString VSDiffuseFunction;
 	CEasyString EnableZWrite;
 	CEasyString EnableFog;
 	CEasyString CullMode;
@@ -784,15 +1011,11 @@ CD3DFX * CD3DWOWWMOModelResource::BuildFX(UINT BlendMode,UINT TextureFlag)
 	CEasyString SrcBlend;
 	CEasyString DestBlend;
 	CEasyString EnableAlphaTest;
-	CEasyString Texture2PSOp;
-	CEasyString PShader;
 	
 	FXName.Format("WMOModel_0x%X_0x%X",
 		BlendMode,
 		TextureFlag);
 	
-	PSDiffuseFunction=" * Diffuse";	
-	VSDiffuseFunction="CaculateDiffuse(Normal)";
 
 	EnableFog="False";
 	
@@ -822,8 +1045,6 @@ CD3DFX * CD3DWOWWMOModelResource::BuildFX(UINT BlendMode,UINT TextureFlag)
 		break;	
 	}	
 
-	PShader="PShaderWithNormal";
-
 	IFileAccessor * pFile;
 
 	CEasyString FxContent;
@@ -842,8 +1063,6 @@ CD3DFX * CD3DWOWWMOModelResource::BuildFX(UINT BlendMode,UINT TextureFlag)
 	pFile->Read((LPVOID)FxContent.GetBuffer(),FileSize);	
 	FxContent.SetLength(FileSize);
 	pFile->Release();
-	FxContent.Replace("<PSDiffuseFunction>",PSDiffuseFunction);
-	FxContent.Replace("<VSDiffuseFunction>",VSDiffuseFunction);
 	FxContent.Replace("<EnableZWrite>",EnableZWrite);
 	FxContent.Replace("<EnableFog>",EnableFog);
 	FxContent.Replace("<CullMode>",CullMode);
@@ -852,8 +1071,6 @@ CD3DFX * CD3DWOWWMOModelResource::BuildFX(UINT BlendMode,UINT TextureFlag)
 	FxContent.Replace("<SrcBlend>",SrcBlend);
 	FxContent.Replace("<DestBlend>",DestBlend);
 	FxContent.Replace("<EnableAlphaTest>",EnableAlphaTest);
-	FxContent.Replace("<Texture2PSOp>",Texture2PSOp);
-	FxContent.Replace("<PShader>",PShader);
 
 	CD3DFX * pFX=m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory(FXName,FxContent.GetBuffer(),FxContent.GetLength());	
 	return pFX;

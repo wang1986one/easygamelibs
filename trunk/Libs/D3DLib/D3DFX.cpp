@@ -23,8 +23,6 @@ CD3DFX::CD3DFX():CNameObject()
 	m_pManager=NULL;
 	m_pEffect=NULL;
 	m_hActiveTech=NULL;
-	m_pEffectData=NULL;
-	m_EffectDataSize=0;
 }
 
 CD3DFX::CD3DFX(CD3DFXManager * pD3DFXManager):CNameObject()
@@ -32,8 +30,6 @@ CD3DFX::CD3DFX(CD3DFXManager * pD3DFXManager):CNameObject()
 	m_pManager=pD3DFXManager;
 	m_pEffect=NULL;
 	m_hActiveTech=NULL;
-	m_pEffectData=NULL;
-	m_EffectDataSize=0;
 }
 
 CD3DFX::~CD3DFX(void)
@@ -46,9 +42,7 @@ CD3DFX::~CD3DFX(void)
 void CD3DFX::Destory()
 {
 	SAFE_RELEASE(m_pEffect);
-	SAFE_DELETE_ARRAY(m_pEffectData);
 	m_hActiveTech=NULL;
-	m_EffectDataSize=0;	
 	CNameObject::Destory();
 }
 
@@ -60,8 +54,8 @@ bool CD3DFX::Reset()
 
 bool CD3DFX::Restore()
 {
-	if(m_pEffectData)
-		return LoadFXDirect(m_pEffectData,m_EffectDataSize);
+	if(m_CompiledEffectData.GetUsedSize())
+		return LoadFXDirect(m_CompiledEffectData.GetBuffer(),m_CompiledEffectData.GetUsedSize());
 	return true;
 }
 
@@ -84,32 +78,29 @@ bool CD3DFX::LoadFromFile(LPCTSTR FileName)
 	if(pFile==NULL)
 		return false;
 
-#ifdef _DEBUG
-	PrintSystemLog(0,"装载FX<%s>.....",(LPCTSTR)FxFileName);
-#endif
+	PrintD3DDebugLog(0,"装载FX<%s>.....",(LPCTSTR)FxFileName);
 	if(pFile->Open(FileName,IFileAccessor::modeRead))
 	{
-		int Size=(int)pFile->GetSize();
+		UINT64 Size=pFile->GetSize();
 
-		SAFE_DELETE_ARRAY(m_pEffectData);
-		m_pEffectData=new char[Size+1];
-		m_EffectDataSize=Size;
+		m_EffectData.Create(Size+1);		
 
-		pFile->Read(m_pEffectData,Size);
-		m_pEffectData[Size]=0;
+		Size=pFile->Read(m_EffectData.GetBuffer(),Size);
+		m_EffectData.SetUsedSize(Size);
+		m_EffectData.PushConstBack(0,1);
 		
 		pFile->Release();
 		
-		if(LoadFXDirect(m_pEffectData,m_EffectDataSize))
+		if(LoadFromMemory(NULL,0))
 			return true;
 	}
 	else
 		pFile->Release();
-#ifdef _DEBUG	
-	PrintSystemLog(0,"装载FX<%s>失败",FileName);
-#endif
+	PrintD3DLog(0,"装载FX<%s>失败",FileName);
 	return false;
 }
+
+#ifdef D3D_DEBUG_INFO
 
 bool CD3DFX::LoadFromFileDirect(LPCTSTR FileName)
 {
@@ -124,11 +115,7 @@ bool CD3DFX::LoadFromFileDirect(LPCTSTR FileName)
 		FxFileName,
 		NULL,
 		NULL,
-#ifdef D3D_DEBUG_INFO
 		D3DXSHADER_DEBUG|D3DXSHADER_FORCE_VS_SOFTWARE_NOOPT,
-#else
-		D3DXSHADER_SKIPVALIDATION,
-#endif
 		NULL,
 		&m_pEffect,
 		&pErrors);
@@ -143,19 +130,77 @@ bool CD3DFX::LoadFromFileDirect(LPCTSTR FileName)
 		SAFE_RELEASE(pErrors);
 		return false;
 	}
+
+	m_hActiveTech=m_pEffect->GetTechnique(0);
+
 	return true;
 }
 
+#endif
+
 bool CD3DFX::LoadFromMemory(const void * pData,int DataSize)
 {	
-	SAFE_DELETE_ARRAY(m_pEffectData);
-	m_pEffectData=new char[DataSize+1];
-	m_EffectDataSize=DataSize;
+	if(pData)
+	{
+		m_EffectData.Create(DataSize+1);
+		m_EffectData.PushBack(pData,DataSize);
+		m_EffectData.PushConstBack(0,1);
+	}
+
+
+	LPD3DXEFFECTCOMPILER pCompiler=NULL;
+	LPD3DXBUFFER pErrors=NULL;
+	if(D3DXCreateEffectCompiler((LPCTSTR)m_EffectData.GetBuffer(),m_EffectData.GetUsedSize(),
+		NULL,NULL,
+		0,
+		&pCompiler,
+		&pErrors)==D3D_OK)
+	{
+		LPD3DXBUFFER pCompiledData;
+		if(pCompiler->CompileEffect(0,&pCompiledData,&pErrors)==D3D_OK)
+		{
+			m_CompiledEffectData.Create(pCompiledData->GetBufferSize());
+			m_CompiledEffectData.PushBack(pCompiledData->GetBufferPointer(),
+				pCompiledData->GetBufferSize());
+			SAFE_RELEASE(pCompiledData);
+
+			return LoadFXDirect(m_CompiledEffectData.GetBuffer(),m_CompiledEffectData.GetUsedSize());
+		}
+		else
+		{
+			if(pErrors)
+				PrintD3DLog(0,"无法编译FX,Err=(%s)",(char*)(pErrors->GetBufferPointer()));
+			else
+				PrintD3DLog(0,"无法编译FX");
+			SAFE_RELEASE(pErrors);
+		}
+		SAFE_RELEASE(pCompiler);
+		return false;
+	}
+	else
+	{
+		if(pErrors)
+			PrintD3DLog(0,"无法创建FX编译器,Err=(%s)",(char*)(pErrors->GetBufferPointer()));
+		else
+			PrintD3DLog(0,"无法创建FX编译");
+		SAFE_RELEASE(pErrors);
+		return false;
+	}
 	
-	memcpy(m_pEffectData,pData,DataSize);
-	m_pEffectData[DataSize]=0;
 	
-	return LoadFXDirect(pData,DataSize);
+}
+
+bool CD3DFX::LoadCompiledFromMemory(const void * pData,int DataSize,const void * pSrcData,int SrcDataSize)
+{
+	m_CompiledEffectData.Create(DataSize);
+	m_CompiledEffectData.PushBack(pData,DataSize);
+
+	m_EffectData.Create(SrcDataSize+1);
+	m_EffectData.PushBack(pSrcData,SrcDataSize);
+	m_EffectData.PushConstBack(0,1);
+
+
+	return LoadFXDirect(m_CompiledEffectData.GetBuffer(),m_CompiledEffectData.GetUsedSize());
 }
 
 
@@ -178,11 +223,11 @@ bool CD3DFX::SetActiveTechnique(int Index)
 	return true;
 }
 
-bool CD3DFX::SetActiveTechnique(LPCTSTR TecName)
+bool CD3DFX::SetActiveTechnique(LPCTSTR TechName)
 {
 	if(m_pEffect)
 	{
-		D3DXHANDLE  hTech = m_pEffect->GetTechniqueByName(TecName);
+		D3DXHANDLE  hTech = m_pEffect->GetTechniqueByName(TechName);
 		if(hTech == NULL)
 			return false;
 		if(FAILED(m_pEffect->ValidateTechnique(hTech)))
@@ -203,6 +248,24 @@ bool CD3DFX::UseActiveTechnique()
 			return false;
 	}
 	return false;
+}
+
+bool CD3DFX::UseTechnique(LPCTSTR TechName)
+{
+	if(m_pEffect)
+	{
+		D3DXHANDLE  hTech = m_pEffect->GetTechniqueByName(TechName);
+		if(hTech == NULL)
+			return false;
+		if(FAILED(m_pEffect->ValidateTechnique(hTech)))
+			return false;		
+
+		if(FAILED(m_pEffect->SetTechnique(hTech)))
+			return false;
+	}
+	else
+		return false;
+	return true;
 }
 
 int CD3DFX::Begin()
@@ -345,6 +408,16 @@ bool CD3DFX::SetColor(LPCTSTR ParamName,const D3DCOLORVALUE& Color)
 	return false;
 }
 
+bool CD3DFX::SetColor(LPCTSTR ParamName,D3DCOLOR Color)
+{
+	D3DCOLORVALUE ColorValue;
+	ColorValue.a=((FLOAT)((Color>>24)&0xFF))/255.0f;
+	ColorValue.r=((FLOAT)((Color>>16)&0xFF))/255.0f;
+	ColorValue.g=((FLOAT)((Color>>8)&0xFF))/255.0f;
+	ColorValue.b=((FLOAT)((Color)&0xFF))/255.0f;
+	return SetColor(ParamName,ColorValue);
+}
+
 bool CD3DFX::SetInt(LPCTSTR ParamName,int Value)
 {
 	HRESULT	hr;
@@ -446,90 +519,32 @@ bool CD3DFX::LoadFXDirect(const void * pData,int DataSize)
 	if(m_pEffect==NULL)
 	{
 		if(pErrors)
-			PrintSystemLog(0,"无法加载FX,Err=(%s)",(char*)(pErrors->GetBufferPointer()));
+			PrintD3DLog(0,"无法加载FX,Err=(%s)",(char*)(pErrors->GetBufferPointer()));
 		else
-			PrintSystemLog(0,"无法加载FX");
+			PrintD3DLog(0,"无法加载FX");
 		SAFE_RELEASE(pErrors);
 		return false;
 	}
+
+	m_hActiveTech=m_pEffect->GetTechnique(0);
 
 	return true;
 }
 
 
 
-//bool CD3DFX::ToUSOFile(CUSOFile * pUSOFile,UINT Param)
-//{	
-//
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//	
-//
-//	STORAGE_STRUCT Data;
-//
-//	strncpy_0(Data.ObjectHead.Type,USO_FILE_MAX_TYPE_LEN,GetClassInfo().ClassName,USO_FILE_MAX_TYPE_LEN);		
-//	strncpy_0(Data.ObjectHead.Name,USO_FILE_MAX_OBJECT_NAME,GetName(),USO_FILE_MAX_OBJECT_NAME);
-//	Data.ObjectHead.Size=sizeof(STORAGE_STRUCT)+(UINT)m_EffectDataSize;
-//
-//	
-//	Data.DataSize=(UINT)m_EffectDataSize;
-//
-//	pFile->Write(&Data,sizeof(STORAGE_STRUCT));
-//	pFile->Write(m_pEffectData,Data.DataSize);
-//
-//
-//	return true;
-//}
-//
-//bool CD3DFX::FromUSOFile(CUSOFile * pUSOFile,UINT Param)
-//{
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//	STORAGE_STRUCT * pData;
-//	BYTE * pBuff;
-//	UINT Size;
-//
-//	pFile->Read(&Size,sizeof(UINT));
-//	pBuff=new BYTE[Size];
-//	pFile->Read(pBuff+sizeof(UINT),Size-sizeof(UINT));
-//	pData=(STORAGE_STRUCT *)pBuff;
-//	pData->ObjectHead.Size=Size;
-//	
-//
-//	if((!GetClassInfo().IsKindOf(pData->ObjectHead.Type))||
-//		pData->ObjectHead.Size<sizeof(STORAGE_STRUCT))
-//	{	
-//		delete[] pBuff;
-//		return false;
-//	}
-//	pData->ObjectHead.Name[USO_FILE_MAX_OBJECT_NAME-1]=0;
-//	SetName(pData->ObjectHead.Name);
-//	if(m_pManager)
-//		m_pManager->AddFX(this,GetName());
-//
-//	bool ret=LoadFromMemory(pBuff+sizeof(STORAGE_STRUCT),pData->DataSize);
-//	
-//	delete[] pBuff;
-//	return ret;
-//
-//}
-
 bool CD3DFX::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
 {
 	if(!CNameObject::ToSmartStruct(Packet,pUSOFile,Param))
 		return false;	
-	if(m_pEffectData)
+	if(m_EffectData.GetUsedSize())
 	{
-		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DFX_EFFECT_DATA,m_pEffectData,m_EffectDataSize));
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DFX_EFFECT_DATA,(LPCTSTR)m_EffectData.GetBuffer(),m_EffectData.GetUsedSize()));
+	}
+
+	if(m_CompiledEffectData.GetUsedSize())
+	{
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DFX_COMPILED_EFFECT_DATA,(LPCTSTR)m_CompiledEffectData.GetBuffer(),m_CompiledEffectData.GetUsedSize()));
 	}
 	
 	return true;
@@ -540,9 +555,19 @@ bool CD3DFX::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param
 		return false;
 
 	CSmartValue EffectData=Packet.GetMember(SST_D3DFX_EFFECT_DATA);
+	CSmartValue CompiledEffectData=Packet.GetMember(SST_D3DFX_COMPILED_EFFECT_DATA);
 
-	if(!LoadFromMemory((LPCTSTR)EffectData,EffectData.GetLength()))
-		return false;
+	if(CompiledEffectData.GetLength())
+	{
+		if(!LoadCompiledFromMemory((LPCTSTR)CompiledEffectData,CompiledEffectData.GetLength(),
+			(LPCTSTR)EffectData,EffectData.GetLength()))
+			return false;
+	}
+	else
+	{
+		if(!LoadFromMemory((LPCTSTR)EffectData,EffectData.GetLength()))
+			return false;
+	}
 
 	if(m_pManager)
 		m_pManager->AddFX(this,GetName());
@@ -553,88 +578,11 @@ bool CD3DFX::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param
 UINT CD3DFX::GetSmartStructSize(UINT Param)
 {
 	UINT Size=CNameObject::GetSmartStructSize(Param);	
-	Size+=SMART_STRUCT_STRING_MEMBER_SIZE(m_EffectDataSize);
+	Size+=SMART_STRUCT_STRING_MEMBER_SIZE(m_EffectData.GetUsedSize());
+	Size+=SMART_STRUCT_STRING_MEMBER_SIZE(m_CompiledEffectData.GetUsedSize());
 	return Size;
 }
 
-//CNameObject::STORAGE_STRUCT * CD3DFX::USOCreateHead(UINT Param)
-//{
-//	STORAGE_STRUCT * pHead=new STORAGE_STRUCT;
-//	ZeroMemory(pHead,sizeof(STORAGE_STRUCT));
-//	pHead->Size=sizeof(STORAGE_STRUCT);
-//	return pHead;
-//}
-//
-//int CD3DFX::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{
-//	int HeadSize=CNameObject::USOWriteHead(pHead,pUSOFile,Param);
-//	if(HeadSize<0)
-//		return -1;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//
-//	pLocalHead->Size+=(UINT)m_EffectDataSize;
-//	pLocalHead->DataSize=(UINT)m_EffectDataSize;
-//
-//	return sizeof(STORAGE_STRUCT);
-//}
-//
-//bool CD3DFX::USOWriteData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{
-//	if(!CNameObject::USOWriteData(pHead,pUSOFile,Param))
-//		return false;
-//
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//	if(m_EffectDataSize)
-//	{
-//		if(pFile->Write(m_pEffectData,m_EffectDataSize)<m_EffectDataSize)
-//			return false;
-//	}
-//	return true;
-//}
-//
-//int CD3DFX::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{	
-//	int ReadSize=CNameObject::USOReadHead(pHead,pUSOFile,Param);
-//	if(ReadSize<0)
-//		return -1;	
-//
-//	return sizeof(STORAGE_STRUCT);
-//}
-//
-//int CD3DFX::USOReadData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,BYTE * pData,int DataSize,UINT Param)
-//{
-//	int ReadSize=CNameObject::USOReadData(pHead,pUSOFile,pData,DataSize,Param);
-//
-//	pData+=ReadSize;
-//	DataSize-=ReadSize;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//
-//	if(pLocalHead->DataSize)
-//	{
-//		if(!LoadFromMemory(pData,pLocalHead->DataSize))
-//			return -1;
-//
-//		ReadSize+=pLocalHead->DataSize;
-//	}
-//	return ReadSize;
-//}
-//
-//bool CD3DFX::USOReadFinish(CNameObject::STORAGE_STRUCT * pHead,UINT Param)
-//{
-//	if(!CNameObject::USOReadFinish(pHead,Param))
-//		return false;
-//
-//	if(m_pManager)
-//		m_pManager->AddFX(this,GetName());
-//	return true;
-//}
+
 
 }

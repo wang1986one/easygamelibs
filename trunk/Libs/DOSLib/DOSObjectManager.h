@@ -36,6 +36,8 @@ public:
 
 	void SetServer(CDOSServer * pServer);
 	CDOSServer * GetServer();
+
+	UINT GetObejctCount();
 	
 	BOOL PushMessage(OBJECT_ID ObjectID,CDOSMessagePacket * pPacket);
 
@@ -54,3 +56,12 @@ inline CDOSServer * CDOSObjectManager::GetServer()
 	return m_pServer;
 }
 
+inline UINT CDOSObjectManager::GetObejctCount()
+{
+	UINT Count=0;
+	for(UINT i=0;i<m_ObjectGroups.GetCount();i++)
+	{
+		Count+=m_ObjectGroups[i]->GetObjectCount();
+	}
+	return Count;
+}

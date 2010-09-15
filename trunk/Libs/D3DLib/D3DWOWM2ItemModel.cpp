@@ -18,7 +18,7 @@ IMPLEMENT_CLASS_INFO(CD3DWOWM2ItemModel,CD3DWOWM2Model);
 
 CD3DWOWM2ItemModel::CD3DWOWM2ItemModel(void)
 {
-	m_ItemID=0;
+	m_ItemDisplayID=0;
 	m_ItemHandType=IHT_LEFT;	
 }
 
@@ -29,42 +29,38 @@ CD3DWOWM2ItemModel::~CD3DWOWM2ItemModel(void)
 
 bool CD3DWOWM2ItemModel::BuildModel()
 {
-	CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData = CBLZWOWDatabase::GetInstance()->GetItemData(m_ItemID);
-	if(pItemData)
+	
+	CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pDisplayInfo=CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_ItemDisplayID);
+	if(pDisplayInfo)
 	{
-		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pDisplayInfo=CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-		if(pDisplayInfo)
+		CEasyString TexturePath=GetPathDirectory(GetName());
+		if(m_ItemHandType==IHT_LEFT)
+			TexturePath+=pDisplayInfo->LeftModelTexture+".blp";
+		else
+			TexturePath+=pDisplayInfo->RightModelTexture+".blp";
+		CD3DTexture * pTexture=GetDevice()->GetTextureManager()->LoadTexture(TexturePath);
+		if(pTexture)
 		{
-			CEasyString TexturePath=GetPathDirectory(GetName());
-			if(m_ItemHandType==IHT_LEFT)
-				TexturePath+=pDisplayInfo->LeftModelTexture+".blp";
-			else
-				TexturePath+=pDisplayInfo->RightModelTexture+".blp";
-			CD3DTexture * pTexture=GetDevice()->GetTextureManager()->LoadTexture(TexturePath);
-			if(pTexture)
+			for(int i=0;i<GetSubMeshCount();i++)
 			{
-				for(int i=0;i<GetSubMeshCount();i++)
+				CD3DSubMesh  * pSubMesh=GetSubMesh(i);
+				if(pSubMesh)
 				{
-					CD3DSubMesh  * pSubMesh=GetSubMesh(i);
-					if(pSubMesh)
+					for(UINT i=0;i<pSubMesh->GetMaterial().GetTextureLayerCount();i++)
 					{
-						for(UINT i=0;i<pSubMesh->GetMaterial().GetTextureLayerCount();i++)
+						UINT TextureType=pSubMesh->GetMaterial().GetTextureProperty(i)&CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE;
+						if(TextureType!=CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_DIRECT)
 						{
-							UINT TextureType=pSubMesh->GetMaterial().GetTextureProperty(i)&CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE;
-							if(TextureType!=CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_DIRECT)
-							{
-								pSubMesh->GetMaterial().SetTexture(i,pTexture);
-								pTexture->AddUseRef();
-							}
+							pSubMesh->GetMaterial().SetTexture(i,pTexture);
+							pTexture->AddUseRef();
 						}
-
 					}
+
 				}
-				SAFE_RELEASE(pTexture);			
 			}
+			SAFE_RELEASE(pTexture);			
 		}
 	}
-
 	
 	return true;
 }
@@ -79,7 +75,7 @@ bool CD3DWOWM2ItemModel::CloneFrom(CNameObject * pObject,UINT Param)
 
 	CD3DWOWM2ItemModel * pSrcObject=(CD3DWOWM2ItemModel *)pObject;
 
-	m_ItemID=pSrcObject->m_ItemID;
+	m_ItemDisplayID=pSrcObject->m_ItemDisplayID;
 	m_ItemHandType=pSrcObject->m_ItemHandType;	
 	return true;
 }
@@ -91,7 +87,7 @@ bool CD3DWOWM2ItemModel::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,
 	if(!CD3DWOWM2Model::ToSmartStruct(Packet,pUSOFile,Param))
 		return false;
 
-	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMIM_ITEM_ID,m_ItemID));
+	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMIM_ITEM_DISPLAY_ID,m_ItemDisplayID));
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMIM_ITEM_HAND_TYPE,m_ItemHandType));
 
 	return true;
@@ -101,14 +97,14 @@ bool CD3DWOWM2ItemModel::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFil
 	if(!CD3DWOWM2Model::FromSmartStruct(Packet,pUSOFile,Param))
 		return false;
 
-	m_ItemID=Packet.GetMember(SST_D3DWMIM_ITEM_ID);
+	m_ItemDisplayID=Packet.GetMember(SST_D3DWMIM_ITEM_DISPLAY_ID);
 	m_ItemHandType=Packet.GetMember(SST_D3DWMIM_ITEM_HAND_TYPE);
 	return true;
 }
 UINT CD3DWOWM2ItemModel::GetSmartStructSize(UINT Param)
 {
 	UINT Size=CD3DWOWM2Model::GetSmartStructSize(Param);
-	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_ItemID));
+	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_ItemDisplayID));
 	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_ItemHandType));
 
 	return Size;

@@ -1,14 +1,3 @@
-/****************************************************************************/
-/*                                                                          */
-/*      文件名:    resource.h                                               */
-/*      创建日期:  2009年02月09日                                           */
-/*      作者:      Sagasarate                                               */
-/*                                                                          */
-/*      本软件版权归Sagasarate(sagasarate@sina.com)所有                     */
-/*      你可以将本软件用于任何商业和非商业软件开发，但                      */
-/*      必须保留此版权声明                                                  */
-/*                                                                          */
-/****************************************************************************/
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
 // Used by RemoteConsole.rc
@@ -35,6 +24,7 @@
 #define IDC_EDIT_ADDRESS                1013
 #define IDC_LIST1                       1016
 #define IDC_LIST_LINKS                  1016
+#define IDC_LIST_SERVER_STATUS          1016
 #define IDC_ST_CLIENT_COUNT             21006
 #define IDC_ST_CYCLE_TIME               21007
 #define IDC_ST_TCP_SEND                 21008

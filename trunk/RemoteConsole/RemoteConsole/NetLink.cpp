@@ -130,6 +130,12 @@ void CNetLink::OnData(const CEasyBuffer& DataBuffer)
 			m_pView->SetServerStatus(ServerStatus);
 		}
 		break;
+	case SC_MSG_GET_SERVER_STATUS_FORMAT_INFO_RESULT:
+		if(m_pView)
+		{
+			CSmartStruct ServerStatusFormats(pMsg->Data,DataSize,false);
+			m_pView->SetServerStatusFormats(ServerStatusFormats);
+		}
 	}
 
 	FUNCTION_END;

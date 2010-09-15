@@ -58,7 +58,7 @@ public:
 	{
 		return 1;
 	}
-	virtual CD3DSubMesh * GetSubMesh(int index)
+	virtual CD3DSubMesh * GetSubMesh(UINT index)
 	{
 		return &m_SubMesh;
 	}	

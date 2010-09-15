@@ -34,11 +34,8 @@ public:
 	BOOL IsConnected();
 	BOOL IsDisconnected();
 
-	virtual BOOL Create(UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE,
-		UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE)=0;
-	virtual BOOL Create(SOCKET Socket,
-		UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE,
-		UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE)=0;
+	virtual BOOL Create(UINT RecvQueueSize,UINT SendQueueSize)=0;
+	virtual BOOL Create(SOCKET Socket,UINT RecvQueueSize,UINT SendQueueSize)=0;
 
 	virtual BOOL StartWork()=0;
 

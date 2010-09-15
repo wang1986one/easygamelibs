@@ -22,9 +22,11 @@
 
 
 #define PANEL_TIMER_ID		87832
+#define LOG_MSG_FETCH_TIMER	84759
 
+#define LOG_MSG_FETCH_TIME	200
 
-
+#define LOG_MSG_FETCH_COUNT	50
 
 // CServerConsoleDlg 对话框
 
@@ -62,7 +64,6 @@ BEGIN_MESSAGE_MAP(CServerConsoleDlg, CDialog)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_MESSAGE(WM_USER_LOG_MSG, OnConsoleMsg)
 	ON_MESSAGE(WM_TRAY_ICON_NOTIFY, OnTryIconNotify)
 	//}}AFX_MSG_MA
 	ON_WM_TIMER()
@@ -97,6 +98,7 @@ BOOL CServerConsoleDlg::OnInitDialog()
 	
 
 	SetTimer(PANEL_TIMER_ID,SERVER_INFO_COUNT_TIME,NULL);
+	SetTimer(LOG_MSG_FETCH_TIMER,LOG_MSG_FETCH_TIME,NULL);
 	
 	return TRUE;  // 除非设置了控件的焦点，否则返回 TRUE
 }
@@ -169,17 +171,24 @@ void CServerConsoleDlg::ShowVersion()
 	SetWindowText(Caption);	
 }
 
-LRESULT CServerConsoleDlg::OnConsoleMsg(WPARAM wParam, LPARAM lParam)
+int CServerConsoleDlg::FetchConsoleMsg(int ProcessLimit)
 {
-	
-	PANEL_MSG * pMsg=(PANEL_MSG *)lParam;
+	int ProcessCount=0;
+	PANEL_MSG * pMsg=CControlPanel::GetInstance()->GetMsg();
+	while(pMsg)
+	{
+		if(IsWindowVisible())
+			OnConsoleMsg(pMsg);
 
-	if(IsWindowVisible())
-		OnConsoleMsg(pMsg);
+		CControlPanel::GetInstance()->ReleaseMsg(pMsg->ID);
 
-	CControlPanel::GetInstance()->ReleaseMsg(pMsg->ID);
+		ProcessCount++;
+		if(ProcessCount>ProcessLimit)
+			break;
+		pMsg=CControlPanel::GetInstance()->GetMsg();
+	}
 
-	return 0;
+	return ProcessCount;
 }
 
 void CServerConsoleDlg::OnConsoleMsg(PANEL_MSG * pMsg)
@@ -260,6 +269,10 @@ void CServerConsoleDlg::OnTimer(UINT nIDEvent)
 		UpdateData(false);
 
 		m_DlgServerStatus.FlushStatus(StatusPacket);
+	}
+	if(nIDEvent==LOG_MSG_FETCH_TIMER)
+	{
+		FetchConsoleMsg(LOG_MSG_FETCH_COUNT);
 	}
 
 	CDialog::OnTimer(nIDEvent);

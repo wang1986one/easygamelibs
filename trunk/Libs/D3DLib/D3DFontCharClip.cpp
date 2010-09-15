@@ -21,7 +21,8 @@ CD3DFontCharClip::CD3DFontCharClip(void):CD3DObject()
 	m_SubMesh.GetVertexFormat().FVF=D3DFVF_RECTVERTEX;
 	m_SubMesh.GetVertexFormat().VertexSize=sizeof(RECTVERTEX);
 	m_SubMesh.GetVertexFormat().IndexSize=sizeof(WORD);
-	m_SubMesh.SetVertexs((BYTE *)m_Vertexs);
+	m_SubMesh.SetVertices((BYTE *)m_Vertexs);
+	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	m_SubMesh.SetVertexCount(4);
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
 	m_SubMesh.SetPrimitiveCount(2);	
@@ -34,7 +35,7 @@ CD3DFontCharClip::CD3DFontCharClip(void):CD3DObject()
 	m_TextureRect.top=0;
 	m_TextureRect.right=100;
 	m_TextureRect.bottom=100;
-	m_IsVisible=true;
+	
 
 	m_VertexColor=D3DCOLOR_XRGB(255, 255, 255);	
 }

@@ -43,9 +43,8 @@ BOOL CServerManagerService::Init(CNetServer * pServer)
 		return FALSE;
 	}
 	SERVICE_INFO SelfInfo;
-	strcpy_s(SelfInfo.Name,MAX_PATH,"ServerManager");
-	GetModuleFileName(NULL,SelfInfo.ImageFilePath,MAX_PATH);
-	strncpy_0(SelfInfo.WorkDir,MAX_PATH,GetModulePath(NULL),MAX_PATH);
+	SelfInfo.Type=SERVICE_TYPE_WIN_SERVICE;
+	strcpy_s(SelfInfo.Name,MAX_PATH,"ServerManager");	
 	m_ServiceInfoList.Add(SelfInfo);
 
 	for(UINT i=0;i<CMainConfig::GetInstance()->GetServiceInfoList().GetCount();i++)
@@ -149,6 +148,7 @@ int CServerManagerService::Update(int ProcessPacketLimit)
 	if(m_ProcessInfoFetchTimer.IsTimeOut(CMainConfig::GetInstance()->GetProcessInfoFetchTime()))
 	{
 		m_ProcessInfoFetchTimer.SaveTime();
+		FetchWinServiceInfo();
 		FetchProcessInfo();
 	}
 
@@ -161,9 +161,16 @@ bool CServerManagerService::StartupService(UINT ServiceIndex)
 {
 	if(ServiceIndex>0&&ServiceIndex<m_ServiceInfoList.GetCount())
 	{
-		if(m_ServiceInfoList[ServiceIndex].Status==SS_STOP)
+		if(m_ServiceInfoList[ServiceIndex].Type==SERVICE_TYPE_NORMAL)
 		{
-			return StartupProcess(m_ServiceInfoList[ServiceIndex]);
+			if(m_ServiceInfoList[ServiceIndex].Status==SS_STOP)
+			{
+				return StartupProcess(m_ServiceInfoList[ServiceIndex]);
+			}
+		}
+		else
+		{
+			return StartupWinService(m_ServiceInfoList[ServiceIndex].Name);
 		}
 	}
 	return false;
@@ -173,9 +180,16 @@ bool CServerManagerService::ShutdownService(UINT ServiceIndex)
 {
 	if(ServiceIndex>0&&ServiceIndex<m_ServiceInfoList.GetCount())
 	{
-		if(m_ServiceInfoList[ServiceIndex].Status==SS_RUNING)
+		if(m_ServiceInfoList[ServiceIndex].Type==SERVICE_TYPE_NORMAL)
 		{
-			return ShutdownProcess(m_ServiceInfoList[ServiceIndex]);
+			if(m_ServiceInfoList[ServiceIndex].Status==SS_RUNING)
+			{
+				return ShutdownProcess(m_ServiceInfoList[ServiceIndex]);
+			}
+		}
+		else
+		{
+			return ShutdownWinService(m_ServiceInfoList[ServiceIndex].Name);
 		}
 	}
 	return false;
@@ -274,12 +288,15 @@ void CServerManagerService::FetchProcessInfo()
 		m_ServiceInfoList[j].VirtualMemoryUsed=0;
 		for(UINT i=0;i<m_ProcessInfoList.GetCount();i++)
 		{
-			if(_strnicmp(m_ServiceInfoList[j].ImageFilePath,m_ProcessInfoList[i].ImageFilePath,MAX_PATH)==0)
+			if(m_ServiceInfoList[j].ImageFilePath[0])
 			{
-				m_ServiceInfoList[j].ProcessID=m_ProcessInfoList[i].ProcessID;
-				m_ServiceInfoList[j].CPUUsed=m_ProcessInfoList[i].CPUUsed;
-				m_ServiceInfoList[j].MemoryUsed=m_ProcessInfoList[i].MemoryUsed;
-				m_ServiceInfoList[j].VirtualMemoryUsed=m_ProcessInfoList[i].VirtualMemoryUsed;
+				if(_strnicmp(m_ServiceInfoList[j].ImageFilePath,m_ProcessInfoList[i].ImageFilePath,MAX_PATH)==0)
+				{
+					m_ServiceInfoList[j].ProcessID=m_ProcessInfoList[i].ProcessID;
+					m_ServiceInfoList[j].CPUUsed=m_ProcessInfoList[i].CPUUsed;
+					m_ServiceInfoList[j].MemoryUsed=m_ProcessInfoList[i].MemoryUsed;
+					m_ServiceInfoList[j].VirtualMemoryUsed=m_ProcessInfoList[i].VirtualMemoryUsed;
+				}
 			}
 		}
 		if(m_ServiceInfoList[j].ProcessID==0)
@@ -304,6 +321,28 @@ void CServerManagerService::FetchProcessInfo()
 
 	UpdateNetAdapterInfo(SystemUseTime);
 	
+}
+
+void CServerManagerService::FetchWinServiceInfo()
+{
+	for(UINT i=0;i<m_ServiceInfoList.GetCount();i++)
+	{
+		if(m_ServiceInfoList[i].Type==SERVICE_TYPE_WIN_SERVICE)
+		{
+			CWinServiceController ServiceController;
+			if(ServiceController.OpenService(m_ServiceInfoList[i].Name))
+			{
+				ServiceController.GetServiceImageFilePath(m_ServiceInfoList[i].ImageFilePath,sizeof(m_ServiceInfoList[i].ImageFilePath));
+				strncpy_0(m_ServiceInfoList[i].WorkDir,MAX_PATH,m_ServiceInfoList[i].ImageFilePath,MAX_PATH);
+				char Dir[MAX_PATH];				
+				_tsplitpath_s(m_ServiceInfoList[i].ImageFilePath,
+					m_ServiceInfoList[i].WorkDir,MAX_PATH,
+					Dir,MAX_PATH,NULL,0,NULL,0);
+				strcat_s(m_ServiceInfoList[i].WorkDir,MAX_PATH,Dir);
+				ServiceController.CloseService();
+			}
+		}
+	}
 }
 
 bool CServerManagerService::StartupProcess(SERVICE_INFO& ServiceInfo)
@@ -433,4 +472,25 @@ void CServerManagerService::UpdateNetAdapterInfo(UINT64 TimeSpan)
 			}
 		}
 	}
+}
+
+bool CServerManagerService::StartupWinService(LPCTSTR szServiceName)
+{
+	CWinServiceController ServiceController;
+	if(ServiceController.OpenService(szServiceName))
+	{
+		return ServiceController.StartupService(NULL,0);
+		ServiceController.CloseService();
+	}
+	return false;
+}
+bool CServerManagerService::ShutdownWinService(LPCTSTR szServiceName)
+{
+	CWinServiceController ServiceController;
+	if(ServiceController.OpenService(szServiceName))
+	{
+		return ServiceController.ShutdownService();
+		ServiceController.CloseService();
+	}
+	return false;
 }

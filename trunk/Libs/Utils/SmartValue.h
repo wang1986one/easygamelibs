@@ -309,110 +309,64 @@ public:
 		{
 			DataType=GetType();
 			BinaryDataLen=GetLength();
+
+			switch(DataType)
+			{
+			case VT_CHAR:
+			case VT_UCHAR:
+				m_DataLen=sizeof(char)+sizeof(BYTE);
+				break;
+			case VT_SHORT:
+			case VT_USHORT:
+				m_DataLen=sizeof(short)+sizeof(BYTE);
+				break;
+			case VT_INT:
+			case VT_UINT:
+				m_DataLen=sizeof(int)+sizeof(BYTE);
+				break;
+			case VT_BIGINT:
+			case VT_UBIGINT:
+				m_DataLen=sizeof(__int64)+sizeof(BYTE);
+				break;
+			case VT_FLOAT:
+				m_DataLen=sizeof(float)+sizeof(BYTE);
+				break;
+			case VT_DOUBLE:
+				m_DataLen=sizeof(double)+sizeof(BYTE);
+				break;
+			case VT_STRING:
+				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT)+sizeof(char);
+				break;
+			case VT_USTRING:
+				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT)+sizeof(wchar_t);
+				break;
+			case VT_STRUCT:
+				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT);
+				break;
+			case VT_STRING_TINY:
+				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD)+sizeof(char);
+				break;
+			case VT_USTRING_TINY:
+				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD)+sizeof(wchar_t);
+				break;
+			case VT_STRUCT_TINY:
+				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD);
+				break;
+			}
+		}
+		else
+		{
+			m_DataLen=DataLen;
 		}
 
-		switch(DataType)
-		{
-		case VT_CHAR:
-		case VT_UCHAR:
-			m_DataLen=sizeof(char)+sizeof(BYTE);
-			break;
-		case VT_SHORT:
-		case VT_USHORT:
-			m_DataLen=sizeof(short)+sizeof(BYTE);
-			break;
-		case VT_INT:
-		case VT_UINT:
-			m_DataLen=sizeof(int)+sizeof(BYTE);
-			break;
-		case VT_BIGINT:
-		case VT_UBIGINT:
-			m_DataLen=sizeof(__int64)+sizeof(BYTE);
-			break;
-		case VT_FLOAT:
-			m_DataLen=sizeof(float)+sizeof(BYTE);
-			break;
-		case VT_DOUBLE:
-			m_DataLen=sizeof(double)+sizeof(BYTE);
-			break;
-		case VT_STRING:
-			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT)+sizeof(char);
-			break;
-		case VT_USTRING:
-			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT)+sizeof(wchar_t);
-			break;
-		case VT_STRUCT:
-			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT);
-			break;
-		case VT_STRING_TINY:
-			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD)+sizeof(char);
-			break;
-		case VT_USTRING_TINY:
-			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD)+sizeof(wchar_t);
-			break;
-		case VT_STRUCT_TINY:
-			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD);
-			break;
-		}
+		
 
 		if(DataLen<m_DataLen)
 		{
 			Destory();
 			return false;
 		}
-
-
-		switch(ClearType)
-		{
-		case VT_CHAR:
-		case VT_UCHAR:
-			m_pData[0]=ClearType;
-			m_pData[1]=0;
-			break;
-		case VT_SHORT:
-		case VT_USHORT:
-			m_pData[0]=ClearType;
-			*((short *)(m_pData+1))=0;
-			break;
-		case VT_INT:
-		case VT_UINT:
-			m_pData[0]=ClearType;
-			*((int *)(m_pData+1))=0;
-			break;
-		case VT_BIGINT:
-		case VT_UBIGINT:
-			m_pData[0]=ClearType;
-			*((__int64 *)(m_pData+1))=0;
-			break;
-		case VT_FLOAT:
-			m_pData[0]=ClearType;
-			*((float *)(m_pData+1))=0;
-			break;
-		case VT_DOUBLE:
-			m_pData[0]=ClearType;
-			*((double *)(m_pData+1))=0;
-			break;
-		case VT_STRING:
-			m_pData[0]=ClearType;
-			*((UINT *)(m_pData+sizeof(BYTE)))=0;
-			*((char *)(m_pData+sizeof(BYTE)+sizeof(UINT)))=0;
-			break;
-		case VT_USTRING:
-			m_pData[0]=ClearType;
-			*((UINT *)(m_pData+sizeof(BYTE)))=0;
-			*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(UINT)))=0;
-			break;		
-		case VT_STRING_TINY:
-			m_pData[0]=ClearType;
-			*((WORD *)(m_pData+sizeof(BYTE)))=0;
-			*((char *)(m_pData+sizeof(BYTE)+sizeof(WORD)))=0;
-			break;
-		case VT_USTRING_TINY:
-			m_pData[0]=ClearType;
-			*((WORD *)(m_pData+sizeof(BYTE)))=0;
-			*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(WORD)))=0;
-			break;		
-		}
+		
 
 		if(ClearType==VT_UNKNOWN)
 		{
@@ -430,6 +384,60 @@ public:
 			case VT_USTRING_TINY:
 				*((wchar_t *)(m_pData+BinaryDataLen+sizeof(BYTE)+sizeof(WORD)))=0;
 				break;
+			}
+		}
+		else
+		{
+			switch(ClearType)
+			{
+			case VT_CHAR:
+			case VT_UCHAR:
+				m_pData[0]=ClearType;
+				m_pData[1]=0;
+				break;
+			case VT_SHORT:
+			case VT_USHORT:
+				m_pData[0]=ClearType;
+				*((short *)(m_pData+1))=0;
+				break;
+			case VT_INT:
+			case VT_UINT:
+				m_pData[0]=ClearType;
+				*((int *)(m_pData+1))=0;
+				break;
+			case VT_BIGINT:
+			case VT_UBIGINT:
+				m_pData[0]=ClearType;
+				*((__int64 *)(m_pData+1))=0;
+				break;
+			case VT_FLOAT:
+				m_pData[0]=ClearType;
+				*((float *)(m_pData+1))=0;
+				break;
+			case VT_DOUBLE:
+				m_pData[0]=ClearType;
+				*((double *)(m_pData+1))=0;
+				break;
+			case VT_STRING:
+				m_pData[0]=ClearType;
+				*((UINT *)(m_pData+sizeof(BYTE)))=0;
+				*((char *)(m_pData+sizeof(BYTE)+sizeof(UINT)))=0;
+				break;
+			case VT_USTRING:
+				m_pData[0]=ClearType;
+				*((UINT *)(m_pData+sizeof(BYTE)))=0;
+				*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(UINT)))=0;
+				break;		
+			case VT_STRING_TINY:
+				m_pData[0]=ClearType;
+				*((WORD *)(m_pData+sizeof(BYTE)))=0;
+				*((char *)(m_pData+sizeof(BYTE)+sizeof(WORD)))=0;
+				break;
+			case VT_USTRING_TINY:
+				m_pData[0]=ClearType;
+				*((WORD *)(m_pData+sizeof(BYTE)))=0;
+				*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(WORD)))=0;
+				break;		
 			}
 		}
 

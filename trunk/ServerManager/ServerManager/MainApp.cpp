@@ -41,6 +41,8 @@ CMainApp theApp;
 
 BOOL CMainApp::OnStartUp()
 {
+	CExceptionParser::GetInstance()->Init(EXCEPTION_SET_DEFAULT_HANDLER|EXCEPTION_USE_API_HOOK);
+
 	if(!CMainThread::GetInstance()->StartUp(MAX_EVENT_OBJECT,WORK_THREAD_NUM))
 		return FALSE;
 	return TRUE;

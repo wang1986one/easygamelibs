@@ -98,13 +98,11 @@ CD3DGUIWndRect::CD3DGUIWndRect():
 	m_SubMesh.GetVertexFormat().FVF=D3DFVF_RECTVERTEX;
 	m_SubMesh.GetVertexFormat().VertexSize=sizeof(RECTVERTEX);
 	m_SubMesh.GetVertexFormat().IndexSize=sizeof(WORD);
-	m_SubMesh.SetVertexs((BYTE *)m_Vertexs);
+	m_SubMesh.SetVertices((BYTE *)m_Vertexs);
+	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	m_SubMesh.SetVertexCount(4);
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
 	m_SubMesh.SetPrimitiveCount(2);	
-
-
-	m_IsVisible=true;
 
 	m_VertexColor=D3DCOLOR_XRGB(255, 255, 255);
 	Restore();
@@ -119,13 +117,12 @@ CD3DGUIWndRect::CD3DGUIWndRect(FLOAT_RECT& Rect):
 	m_SubMesh.GetVertexFormat().FVF=D3DFVF_RECTVERTEX;
 	m_SubMesh.GetVertexFormat().VertexSize=sizeof(RECTVERTEX);
 	m_SubMesh.GetVertexFormat().IndexSize=sizeof(WORD);
-	m_SubMesh.SetVertexs((BYTE *)m_Vertexs);
+	m_SubMesh.SetVertices((BYTE *)m_Vertexs);
+	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	m_SubMesh.SetVertexCount(4);
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
 	m_SubMesh.SetPrimitiveCount(2);	
 
-	
-	m_IsVisible=true;
 
 	m_VertexColor=D3DCOLOR_XRGB(255, 255, 255);
 	Restore();
@@ -288,7 +285,7 @@ void  CD3DGUIWndRect::Release()
 	CD3DObject::Release();
 }
 
-void CD3DGUIWndRect::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera)
+void CD3DGUIWndRect::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
 	if(pSubMesh&&pMaterial)
 	{	

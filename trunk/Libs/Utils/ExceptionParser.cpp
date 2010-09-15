@@ -382,7 +382,7 @@ void CExceptionParser::LogException(LPCTSTR Format,...)
 {
 	va_list	vl;
 	va_start(vl,Format);
-	m_ExceptionLog.PrintLog(ILogPrinter::LOG_LEVEL_NORMAL,0,Format,vl);
+	m_ExceptionLog.PrintLogVL(ILogPrinter::LOG_LEVEL_NORMAL,0,Format,vl);
 	va_end( vl);
 }
 

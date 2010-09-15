@@ -306,7 +306,15 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\..\Libs\ServerFrameWork\TrayIcon.ico"
+			>
+		</File>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="Resource.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

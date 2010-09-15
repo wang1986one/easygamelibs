@@ -81,9 +81,7 @@ CD3DTexture::CD3DTexture(CD3DTextureManager * pManager)
 
 CD3DTexture::~CD3DTexture()
 {
-	CD3DTexture::Destory();	
-	if(m_pManager)
-		m_pManager->DeleteTexture(GetID());
+	Destory();		
 }
 
 void CD3DTexture::Destory()
@@ -91,6 +89,10 @@ void CD3DTexture::Destory()
 	m_TextureOrgInfo.DataSize=0;
 	SAFE_RELEASE(m_pTexture);
 	SAFE_RELEASE(m_pTextureSaveData);
+	if(m_pManager)
+	{
+		m_pManager->DeleteTexture(GetID());
+	}
 	CNameObject::Destory();
 }
 
@@ -257,34 +259,12 @@ bool CD3DTexture::LoadTextureFromMemory(LPVOID pData,int DataSize,UINT MipLevels
 	return true;
 }
 
-
-
-
-
-
-
-//void CD3DTexture::Release()
-//{
-//	DecUseRef();
-//	if(GetUseRef()<=0)
-//	{
-//		m_pManager->DeleteTexture(GetID());
-//		delete this;
-//	}
-//}
-
-bool CD3DTexture::ApplyTexture(int stage)
+void CD3DTexture::Update(FLOAT Time)
 {
-	if(m_pManager&&m_pTexture)
-	{
-		if(m_pManager->GetDevice())
-		{			
-			if(SUCCEEDED(m_pManager->GetDevice()->GetD3DDevice()->SetTexture(stage,m_pTexture)))
-				return true;			
-		}
-	}
-	return false;
 }
+
+
+
 
 bool CD3DTexture::LockBits(UINT Level,D3DLOCKED_RECT* pLockedRect,const RECT* pRect,DWORD Flags)
 {

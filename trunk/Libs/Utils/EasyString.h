@@ -317,14 +317,14 @@ public:
 		SetString(Str.GetBuffer(),Str.GetLength());
 		return *this;
 	}
-	int Compare(const T* pStr)
+	int Compare(const T* pStr) const
 	{
 		if(m_pBuffer)
 			return CompareString(m_pBuffer,pStr);
 		else
 			return -1;
 	}
-	int CompareNoCase(const T * pStr)
+	int CompareNoCase(const T * pStr) const
 	{
 		if(m_pBuffer)
 			return CompareStringNoCase(m_pBuffer,pStr);

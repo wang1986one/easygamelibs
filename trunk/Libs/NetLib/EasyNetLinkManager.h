@@ -40,8 +40,12 @@ public:
 	BOOL Init(CNetServer * pServer);
 	virtual void Destory();
 
-	CEasyNetLinkService * AddService(UINT ID,UINT ReportID,const CIPAddress& ListenAddress,BOOL NeedReallocConnectionID,UINT MaxPacketSize=0,bool IsUseListenThread=true,int ParallelAcceptCount=DEFAULT_PARALLEL_ACCEPT);
-	BOOL AddConnection(UINT ReportID,const CIPAddress& ConnectionAddress,UINT MaxPacketSize=0);
+	CEasyNetLinkService * AddService(UINT ID,UINT ReportID,const CIPAddress& ListenAddress,
+		BOOL NeedReallocConnectionID,UINT MaxPacketSize=0,bool IsUseListenThread=true,
+		int ParallelAcceptCount=DEFAULT_PARALLEL_ACCEPT,UINT AcceptQueueSize=DEFAULT_SERVER_ACCEPT_QUEUE,
+		UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE,UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE);
+	BOOL AddConnection(UINT ReportID,const CIPAddress& ConnectionAddress,UINT MaxPacketSize=0,
+		UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE,UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE);
 
 	virtual int Update(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT);
 

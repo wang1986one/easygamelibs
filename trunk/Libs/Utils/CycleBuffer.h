@@ -44,6 +44,9 @@ public:
 	BOOL PopFront(UINT Data,UINT Size);
 	BOOL PopBack(LPVOID pData,UINT Size);
 	BOOL PopBack(UINT Data,UINT Size);
+
+	LPVOID GetUsedBuffer();
+	int GetSmoothUsedSize();
 };
 
 inline UINT CCycleBuffer::GetBufferSize()
@@ -173,4 +176,17 @@ inline BOOL CCycleBuffer::PopBack(LPVOID pData,UINT Size)
 inline BOOL CCycleBuffer::PopBack(UINT Data,UINT Size)
 {
 	return PopBack(&Data,Size);
+}
+
+inline LPVOID CCycleBuffer::GetUsedBuffer()
+{
+	return m_pBuffer+m_BufferHead;
+}
+
+inline int CCycleBuffer::GetSmoothUsedSize()
+{		
+	if(m_BufferTail>=m_BufferHead)
+		return m_BufferTail-m_BufferHead;
+	else
+		return m_BufferSize-m_BufferHead;
 }

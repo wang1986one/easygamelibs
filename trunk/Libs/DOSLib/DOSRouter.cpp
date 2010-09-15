@@ -17,6 +17,7 @@ CDOSRouter::CDOSRouter(void)
 {
 	FUNCTION_BEGIN;
 	m_pServer=NULL;
+	ResetStatData();
 	FUNCTION_END;
 }
 
@@ -56,6 +57,8 @@ BOOL CDOSRouter::OnStart()
 		PrintDOSLog(0xff0000,"路由连接配置文件[%s]格式错误！",(LPCTSTR)Config.RouterLinkConfigFileName);
 		return FALSE;
 	}
+
+	ResetStatData();
 
 	return CEasyNetLinkManager::Init(m_pServer,LinkConfig);
 	FUNCTION_END;
@@ -163,8 +166,10 @@ int CDOSRouter::DoMessageRoute(int ProcessPacketLimit)
 	int ProcessCount=0;
 	while(m_MsgQueue.PopFront(pPacket))
 	{
-		PrintDOSDebugLog(0,"路由了消息[%u]",pPacket->GetMessage().GetCmdID());
-		
+		//PrintDOSDebugLog(0,"路由了消息[%u]",pPacket->GetMessage().GetCmdID());
+
+		AtomicInc(&m_RouteInMsgCount);
+		AtomicAdd(&m_RouteInMsgFlow,pPacket->GetPacketLength());
 
 		WORD ReceiverIDCount=pPacket->GetTargetIDCount();
 		OBJECT_ID * pReceiverIDs=pPacket->GetTargetIDs();
@@ -175,10 +180,10 @@ int CDOSRouter::DoMessageRoute(int ProcessPacketLimit)
 		}
 		if((ReceiverIDCount==1||IsSameRouter(pReceiverIDs,ReceiverIDCount))
 			&&pReceiverIDs[0].RouterID!=0xFFFF)
-		{
+		{			
 			//只有一个接收对象，或者接受对象在同一个路由,路由广播除外
 			if(pReceiverIDs->RouterID==0||pReceiverIDs->RouterID==GetRouterID())
-			{
+			{				
 				//发给自己路由的消息，路由ID=0等同自己
 				DispatchMessage(pPacket,pReceiverIDs,ReceiverIDCount);
 			}
@@ -187,6 +192,8 @@ int CDOSRouter::DoMessageRoute(int ProcessPacketLimit)
 				CDOSRouterLink * pRouterLink=dynamic_cast<CDOSRouterLink *>(GetConnection(pReceiverIDs->RouterID));
 				if(pRouterLink)
 				{
+					AtomicInc(&m_RouteOutMsgCount);
+					AtomicAdd(&m_RouteOutMsgFlow,pPacket->GetPacketLength());
 					pRouterLink->SendData(pPacket->GetPacketBuffer(),pPacket->GetPacketLength());
 				}
 				else
@@ -207,7 +214,7 @@ int CDOSRouter::DoMessageRoute(int ProcessPacketLimit)
 			{
 				GroupCount=GetGroupCount(pReceiverIDGroup,ReceiverIDCount);
 				if(pReceiverIDGroup->RouterID==0||pReceiverIDGroup->RouterID==GetRouterID())
-				{
+				{					
 					//发给自己路由的消息，路由ID=0等同自己
 					DispatchMessage(pPacket,pReceiverIDGroup,GroupCount);
 				}
@@ -228,9 +235,11 @@ int CDOSRouter::DoMessageRoute(int ProcessPacketLimit)
 						CDOSRouterLink * pRouterLink=dynamic_cast<CDOSRouterLink *>(GetConnectionByIndex(i));
 						if(pRouterLink)
 						{
+							AtomicInc(&m_RouteOutMsgCount);
+							AtomicAdd(&m_RouteOutMsgFlow,pPacket->GetPacketLength());
 							pRouterLink->SendData(pPacket->GetPacketBuffer(),pPacket->GetPacketLength());
 						}
-					}
+					}					
 					//在本路由广播
 					DispatchMessage(pPacket,pReceiverIDs,GroupCount);
 				}
@@ -239,6 +248,9 @@ int CDOSRouter::DoMessageRoute(int ProcessPacketLimit)
 					CDOSRouterLink * pRouterLink=dynamic_cast<CDOSRouterLink *>(GetConnection(pReceiverIDGroup->RouterID));
 					if(pRouterLink)
 					{
+						AtomicInc(&m_RouteOutMsgCount);
+						AtomicAdd(&m_RouteOutMsgFlow,pPacket->GetPacketLength());
+
 						pPacket->SetTargetIDs(GroupCount,NULL);
 						if(pReceiverIDs!=pReceiverIDGroup)
 							memmove(pReceiverIDs,pReceiverIDGroup,GroupCount);
@@ -311,19 +323,30 @@ BOOL CDOSRouter::DispatchMessage(CDOSMessagePacket * pPacket,OBJECT_ID * pReceiv
 		{
 			if(pReceiverIDs[i].ObjectIndex==0)
 			{
+				AtomicInc(&m_RouteOutMsgCount);
+				AtomicAdd(&m_RouteOutMsgFlow,pPacket->GetPacketLength());
 				((CDOSServer *)GetServer())->GetObjectProxy()->PushMessage(pPacket);
 			}
 			else
 			{
 				CDOSProxyConnection * pProxy=((CDOSServer *)GetServer())->GetObjectProxy()->GetConnection(pReceiverIDs[i].ObjectIndex);
 				if(pProxy)
+				{
+					AtomicInc(&m_RouteOutMsgCount);
+					AtomicAdd(&m_RouteOutMsgFlow,pPacket->GetPacketLength());
 					pProxy->PushMessage(pPacket);
+				}
 			}			
 		}
 		else
 		{
 			pReceiverIDs[i].RouterID=RouterID;
-			if(!((CDOSServer *)GetServer())->GetObjectManager()->PushMessage(pReceiverIDs[i],pPacket))
+			if(((CDOSServer *)GetServer())->GetObjectManager()->PushMessage(pReceiverIDs[i],pPacket))
+			{
+				AtomicInc(&m_RouteOutMsgCount);
+				AtomicAdd(&m_RouteOutMsgFlow,pPacket->GetPacketLength());
+			}
+			else
 			{
 				PrintDOSLog(0,"CDOSRouter::DispatchMessage:将消息递送到对象[%llX]失败",
 					pReceiverIDs[i]);

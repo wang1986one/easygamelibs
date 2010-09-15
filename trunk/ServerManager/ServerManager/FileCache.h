@@ -45,8 +45,8 @@ class CFileCache:
 {
 protected:
 	CStaticMap<CEasyString,FILE_CACHE *>	m_FileCachePool;
-	CThreadSafeList<FILE_CACHE *>			m_QueryQueue;
-	CThreadSafeList<FILE_CACHE *>			m_FinishQueue;
+	CThreadSafeIDStorage<FILE_CACHE *>			m_QueryQueue;
+	CThreadSafeIDStorage<FILE_CACHE *>			m_FinishQueue;
 public:
 	CFileCache(void);
 	~CFileCache(void);

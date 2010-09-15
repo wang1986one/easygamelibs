@@ -27,14 +27,15 @@ protected:
 	enum SST_MEMEBER_ID
 	{
 		SST_D3DFX_EFFECT_DATA=SST_NO_MAX,
+		SST_D3DFX_COMPILED_EFFECT_DATA,
 		SST_D3DFX_MAX=SST_NO_MAX+50,
 	};
 
 	CD3DFXManager *	m_pManager;
 	LPD3DXEFFECT	m_pEffect;
 	D3DXHANDLE		m_hActiveTech;
-	char *			m_pEffectData;
-	int				m_EffectDataSize;
+	CEasyBuffer		m_EffectData;
+	CEasyBuffer		m_CompiledEffectData;
 
 	DECLARE_FILE_PATH_MANAGER
 	DECLARE_FILE_CHANNEL_MANAGER
@@ -57,14 +58,18 @@ public:
 	//virtual void Release();
 
 	bool LoadFromFile(LPCTSTR FileName);
+#ifdef D3D_DEBUG_INFO
 	bool LoadFromFileDirect(LPCTSTR FileName);
+#endif
 	bool LoadFromMemory(const void * pData,int DataSize);
+	bool LoadCompiledFromMemory(const void * pData,int DataSize,const void * pSrcData,int SrcDataSize);
 	bool LoadFXDirect(const void * pData,int DataSize);
 
 	bool SetActiveTechnique(int Index);
-	bool SetActiveTechnique(LPCTSTR TecName);
+	bool SetActiveTechnique(LPCTSTR TechName);
 
 	bool UseActiveTechnique();
+	bool UseTechnique(LPCTSTR TechName);
 
 	inline LPD3DXEFFECT GetEffect()
 	{
@@ -85,6 +90,7 @@ public:
 	bool SetVector(LPCTSTR ParamName,const CD3DVector4& Vec);
 	bool SetQuaternion(LPCTSTR ParamName,const CD3DQuaternion& Quat);
 	bool SetColor(LPCTSTR ParamName,const D3DCOLORVALUE& Color);
+	bool SetColor(LPCTSTR ParamName,D3DCOLOR Color);
 	bool SetInt(LPCTSTR ParamName,int Value);
 	bool SetIntArray(LPCTSTR ParamName,const int * pValues,int Count);
 	bool SetFloat(LPCTSTR ParamName,FLOAT Value);
@@ -135,7 +141,7 @@ inline CD3DFXManager * CD3DFX::GetManager()
 
 inline LPCTSTR CD3DFX::GetFXContent()
 {
-	return m_pEffectData;
+	return (LPCTSTR)m_EffectData.GetBuffer();
 }
 
 

@@ -66,6 +66,7 @@ protected:
 	virtual int FetchStaticResult(SQLHSTMT hStmt,CDBStaticRecordSet * pDBRecordset);
 	int ExecuteSQLDirect(LPCSTR SQLStr,int StrLen);
 	int ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterSet * pParamSet);
+	void SetConnectFlags(LPCTSTR szFlags);
 	
 };
 

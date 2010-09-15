@@ -31,6 +31,12 @@ public:
 		m_dwSavedTime=Timer.m_dwSavedTime;
 		m_dwTimeoutTime=Timer.m_dwTimeoutTime;
 	}
+	CEasyTimer& operator=(const CEasyTimer& Timer)
+	{
+		m_dwSavedTime=Timer.m_dwSavedTime;
+		m_dwTimeoutTime=Timer.m_dwTimeoutTime;
+		return *this;
+	}
 #ifdef WIN32
 	static inline DWORD	GetTime()
 	{

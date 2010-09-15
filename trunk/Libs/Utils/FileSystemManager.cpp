@@ -35,6 +35,7 @@ void CFileSystemManager::SetFileObjectCreator(int Channel,IFileObjectCreator * p
 		return;
 	SAFE_RELEASE(m_FileObjectCreators[Channel]);
 	m_FileObjectCreators[Channel]=pFileObjectCreator;
+	pFileObjectCreator->AddUseRef();
 }
 
 IFileAccessor * CFileSystemManager::CreateFileAccessor(int Channel)

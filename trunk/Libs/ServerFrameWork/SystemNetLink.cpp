@@ -120,6 +120,33 @@ void CSystemNetLink::OnData(const CEasyBuffer& DataBuffer)
 			m_pServer->ExecCommand(szCommand);
 		}
 		break;
+	case SC_MSG_GET_SERVER_STATUS_FORMAT_INFO:
+		{
+			CEasyMap<WORD,SERVER_STATUS_FORMAT_INFO>& ServerStatusFormats=CControlPanel::GetInstance()->GetAllServerStatusFormat();
+			CSmartStruct Packet(SERVER_STATUS_FORMAT_INFO_SIZE*ServerStatusFormats.GetObjectCount());
+
+			UINT BufferSize;
+			void * pBuffer;
+			void * Pos=ServerStatusFormats.GetSortedFirstObjectPos();
+			while(Pos)
+			{
+				WORD Key;
+				SERVER_STATUS_FORMAT_INFO * pInfo=ServerStatusFormats.GetNextObject(Pos,Key);
+				if(pInfo)
+				{
+					pBuffer=Packet.PrepareMember(BufferSize);
+					CSmartStruct FormatInfo(pBuffer,BufferSize,true);
+					FormatInfo.AddMember(SC_SST_SSFI_STATUS_ID,Key);
+					FormatInfo.AddMember(SC_SST_SSFI_FORMAT_TYPE,pInfo->FormatType);
+					FormatInfo.AddMember(SC_SST_SSFI_NAME,pInfo->szName);
+					Packet.FinishMember(SC_SST_SSFIL_SERVER_STATUS_FORMAT_INFO,FormatInfo.GetDataLen());
+				}
+			}
+
+			SendMsg(SC_MSG_GET_SERVER_STATUS_FORMAT_INFO_RESULT,
+				Packet.GetData(),Packet.GetDataLen());
+		}
+		break;
 	}
 
 	FUNCTION_END;

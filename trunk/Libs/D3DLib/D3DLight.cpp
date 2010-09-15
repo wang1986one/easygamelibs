@@ -55,11 +55,61 @@ CD3DLight::~CD3DLight(void)
 {
 }
 
+void CD3DLight::SetLight(const D3DLIGHT9& Light)
+{
+	m_LightData=Light;
+	CD3DVector3 EndVec=Light.Direction;
+	EndVec.Normalize();
+	CD3DVector3 StartVec(0,-1.0f,0);
+
+	CD3DVector3 RotateAix=StartVec.Cross(EndVec);
+	RotateAix.Normalize();
+
+	FLOAT RotateAngle=acosf(StartVec.Dot(EndVec));
+
+	CD3DQuaternion Rotation=CD3DQuaternion::FromRotationAxis(RotateAix,RotateAngle);
+	
+	CD3DMatrix Mat=CD3DMatrix::FromRotationQuaternion(Rotation);
+	Mat.SetTranslation(Light.Position);
+	SetLocalMatrix(Mat);
+
+	
+	Update(0);
+}
+
+D3DLIGHT9& CD3DLight::GetLight()
+{
+	return m_LightData;
+}
+
 void CD3DLight::GetCurLight(D3DLIGHT9& Light)
 {
 	Light=m_LightData;
-	Light.Position=CD3DVector3(Light.Position)+GetWorldMatrix().GetTranslation();
-	Light.Direction=CD3DVector3(Light.Direction)*GetWorldMatrix().GetRotation();
+}
+
+void CD3DLight::SetDirect(FLOAT x,FLOAT y,FLOAT z)
+{
+	CD3DVector3 EndVec(x,y,z);
+	EndVec.Normalize();
+	CD3DVector3 StartVec(0,-1.0f,0);
+
+	CD3DVector3 RotateAix=StartVec.Cross(EndVec);
+	RotateAix.Normalize();
+
+	FLOAT RotateAngle=acosf(StartVec.Dot(EndVec));
+
+	CD3DQuaternion Rotation=CD3DQuaternion::FromRotationAxis(RotateAix,RotateAngle);
+	
+	CD3DMatrix Mat=CD3DMatrix::FromRotationQuaternion(Rotation);
+	GetLocalMatrix().SetRotation(Mat);
+
+	Update(0);
+}
+
+void CD3DLight::SetPosition(FLOAT x,FLOAT y,FLOAT z)
+{
+	GetLocalMatrix().SetTranslation(x,y,z);
+	Update(0);
 }
 
 void CD3DLight::Apply(CD3DDevice * pDevice,int Index)
@@ -70,6 +120,13 @@ void CD3DLight::Apply(CD3DDevice * pDevice,int Index)
 		GetCurLight(Light);
 		pDevice->GetD3DDevice()->SetLight(Index,&Light);
 	}
+}
+
+void CD3DLight::Update(FLOAT Time)
+{
+	CD3DObject::Update(Time);
+	m_LightData.Position=GetWorldMatrix().GetTranslation();
+	m_LightData.Direction=CD3DVector3(0,-1.0f,0)*GetWorldMatrix().GetRotation();
 }
 
 }

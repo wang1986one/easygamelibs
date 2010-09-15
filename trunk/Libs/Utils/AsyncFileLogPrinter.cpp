@@ -45,7 +45,7 @@ void CAsyncFileLogPrinter::CloseLog()
 }
 
 
-void CAsyncFileLogPrinter::PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list vl)
+void CAsyncFileLogPrinter::PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_list vl)
 {
 	try
 	{

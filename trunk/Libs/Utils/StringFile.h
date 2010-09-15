@@ -28,6 +28,7 @@ public:
 	void Destroy();
 	void MakeDeflate();
 	BOOL LoadFile( const char * pszTextFile );
+	BOOL LoadFile( IFileAccessor * pFile );
 	BOOL LoadFromString(const char * pStr,int Len=-1);
 	char * operator[]( int line );
 	int	GetLineCount()

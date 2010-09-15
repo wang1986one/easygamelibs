@@ -22,7 +22,7 @@
 IMPLEMENT_DYNAMIC(CDlgConnect, CDialog)
 CDlgConnect::CDlgConnect(CWnd* pParent /*=NULL*/)
 	: CDialog(CDlgConnect::IDD, pParent)
-	, m_Address(_T("192.168.29.146"))
+	, m_Address(_T(""))
 	, m_Port(9200)
 {
 }

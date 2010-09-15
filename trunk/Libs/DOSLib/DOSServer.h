@@ -19,7 +19,7 @@ class CDOSServer :
 protected:
 	DOS_CONFIG					m_ServerConfig;
 	CDOSObjectProxyService *	m_pDOSObjectProxyService;
-	CDOSRouter*			m_pDOSRouterService;		
+	CDOSRouter*					m_pDOSRouterService;		
 	CDOSObjectManager *			m_pObjectManager;
 
 	CFastMemoryPool				m_MemoryPool;
@@ -75,11 +75,18 @@ inline CDOSMessagePacket * CDOSServer::NewMessagePacket(UINT Size)
 {	
 	WORD PacketLen=CDOSMessagePacket::CaculateRealPacketLength(Size);
 	CDOSMessagePacket * pPacket=(CDOSMessagePacket *)m_MemoryPool.Alloc(PacketLen);
-	pPacket->Init();	
-	UINT RefCount=pPacket->IncRefCount();
+	if(pPacket)
+	{
+		pPacket->Init();	
+		UINT RefCount=pPacket->IncRefCount();
 #ifdef LOG_MEM_CALL_STACK
-	m_MemoryPool.LogMemUse(pPacket,RefCount);
+		m_MemoryPool.LogMemUse(pPacket,RefCount);
 #endif
+	}
+	else
+	{
+		PrintDOSLog(0,"分配%u大小的消息包失败",Size);
+	}
 	return pPacket;
 }
 inline BOOL CDOSServer::ReleaseMessagePacket(CDOSMessagePacket * pPacket)

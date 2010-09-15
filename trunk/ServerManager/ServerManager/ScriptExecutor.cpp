@@ -13,7 +13,6 @@
 
 
 CScriptExecutor::CScriptExecutor(void)
-	:m_ScriptExecutor(64,32)
 {
 	m_pManager=NULL;
 	m_Param=0;
@@ -21,7 +20,13 @@ CScriptExecutor::CScriptExecutor(void)
 	m_TransferLeftSize=0;
 	m_OriginSize=0;
 
-	m_ScriptExecutor.AddFaction("DownloadFile",5,(INT_PTR)this,DownloadFileFN);
+	m_VarList.Create(128);
+	m_FnList.Create(128);
+	m_FnList.AddFaction("DownloadFile",5,this,(LPSCRIPT_FACTION)&CScriptExecutor::DownloadFileFN);
+
+	m_ESThread.SetVariableList(&m_VarList);
+	m_ESThread.SetFactionList(&m_FnList);
+	m_ESThread.SetScript(&m_CurScript);
 }
 
 CScriptExecutor::~CScriptExecutor(void)
@@ -43,12 +48,13 @@ BOOL CScriptExecutor::Init(UINT ID,CServerManagerClient * pManager)
 			return FALSE;
 		}
 	}
-	m_AssembleBuffer.SetUsedSize(0);	
-	m_ScriptExecutor.Reset();
+	m_AssembleBuffer.SetUsedSize(0);		
 	m_Param=0;
 	m_Status=ST_NONE;
 	m_TransferLeftSize=0;
 	m_OriginSize=0;
+
+	m_ESThread.ClearInterrupt();
 
 	
 	return TRUE;
@@ -176,7 +182,7 @@ void CScriptExecutor::OnMsg(CSmartStruct& Msg)
 void CScriptExecutor::SendMsg(CSmartStruct& Msg)
 {
 	FUNCTION_BEGIN;
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 	FUNCTION_END;
 }
 void CScriptExecutor::SendMsg(UINT MsgID)
@@ -186,7 +192,7 @@ void CScriptExecutor::SendMsg(UINT MsgID)
 	CSmartStruct Msg(SendBuffer,32,true);
 
 	Msg.AddMember(SSMM_MSG_TYPE_ID,MsgID);
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 	FUNCTION_END;
 }
 
@@ -195,42 +201,63 @@ bool CScriptExecutor::ExcuteScript(LPCTSTR szScript,LPCTSTR szWorkDir,UINT Param
 	m_WorkDir=szWorkDir;
 	m_Param=Param;
 	m_CurScript.Clear();
-	int ErrCode=m_CurScript.PushScript(szScript,m_ScriptExecutor.GetVariableList(),m_ScriptExecutor.GetFactionList());
-	if(ErrCode==0)
-	{
-		CBolan Result;
-		int StartPos=0;
-		ErrCode=m_ScriptExecutor.ExecScript(m_CurScript,Result,StartPos);
-		Log("执行脚本结果[%d:%s]",
-			ErrCode,m_ScriptExecutor.GetErrorMsg(ErrCode));
+	m_ESThread.PushScript(szScript);
+	if(m_ESThread.GetResultCode()==0)
+	{		
+		m_ScriptExecutor.ExecScript(m_ESThread);
+		if(m_ESThread.GetResultCode()==0)
+		{
+			Log("执行脚本结果[%s]",
+				BolanToString(m_ESThread.GetResult()));
+		}
+		else
+		{
+			Log("执行脚本失败[%s],在行%d附近",
+				ESGetErrorMsg(m_ESThread.GetResultCode()),
+				m_ESThread.GetLastLine());
+		}	
 		
 	}
 	else
 	{
-		Log("解析脚本失败[%d:%s]",
-			ErrCode,m_ScriptExecutor.GetErrorMsg(ErrCode));
+		Log("解析脚本失败[%s],在行%d附近",
+			ESGetErrorMsg(m_ESThread.GetResultCode()),
+			m_ESThread.GetLastLine());
 	}
 
-	if(ErrCode>=0)
+	if(!m_ESThread.IsInInterrupt())
 	{
-		m_pManager->OnScriptExcute(ErrCode,m_Param);
+		m_pManager->OnScriptExcute(m_ESThread.GetResultCode(),m_Param);
 	}
 	return true;
 }
 
 void CScriptExecutor::ContinueScriptInterrupt(int IPTType,int Result)
 {	
-	m_Status=ST_NONE;
-	CBolan IPTResult,SResult;
-	IPTResult.ValueType=VALUE_TYPE_NUMBER;
-	IPTResult.value=Result;
-	int ErrCode=m_ScriptExecutor.ContinueInterrupt(IPTType,m_CurScript,IPTResult,SResult);
-	Log("脚本中断继续执行结果[%d:%s]",
-		ErrCode,m_ScriptExecutor.GetErrorMsg(ErrCode));
-	if(ErrCode>=0)
+	if(m_ESThread.IsInInterrupt())
 	{
-		Disconnect();
-		m_pManager->OnScriptExcute(ErrCode,m_Param);
+		m_Status=ST_NONE;
+		ES_BOLAN IPTResult;
+		IPTResult=Result;
+		m_ESThread.SetResult(IPTResult);	
+		m_ScriptExecutor.ExecScript(m_ESThread);
+		if(m_ESThread.GetResultCode()==0)
+		{
+			Log("中断执行结果[%s]",
+				BolanToString(m_ESThread.GetResult()));
+		}
+		else
+		{
+			Log("中断执行失败[%s],在行%d附近",
+				ESGetErrorMsg(m_ESThread.GetResultCode()),
+				m_ESThread.GetLastLine());
+			Disconnect();
+			m_pManager->OnScriptExcute(m_ESThread.GetResultCode(),m_Param);
+		}		
+	}
+	else
+	{
+		Log("CScriptExecutor::ContinueScriptInterrupt:当前脚本未在中断中");
 	}
 }
 
@@ -247,7 +274,7 @@ void CScriptExecutor::QueryStartDownload(UINT ServiceIndex,LPCTSTR SourceFilePat
 	Msg.AddMember(SST_SMSDSF_SERVICE_INDEX,ServiceIndex);
 	Msg.AddMember(SST_SMSDSF_FILE_PATH,SourceFilePath);	
 
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 void CScriptExecutor::QueryDownloadData(UINT ServiceIndex)
@@ -257,7 +284,7 @@ void CScriptExecutor::QueryDownloadData(UINT ServiceIndex)
 
 	Msg.AddMember(SSMM_MSG_TYPE_ID,SM_MSG_QUERY_DOWNLOAD_SERVICE_FILE_DATA);
 	Msg.AddMember(SST_SMQDSFD_SERVICE_INDEX,ServiceIndex);
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 void CScriptExecutor::OnStartDownloadResult(int Result,UINT TotalSize,UINT OrgTotalSize,LPCVOID pPackProps,UINT PackPropSize,time_t LastWriteTime)
@@ -362,27 +389,25 @@ void CScriptExecutor::OnDownloadData(int Result,UINT TotalSize,UINT LeftSize,LPC
 	}
 }
 
-int CScriptExecutor::DownloadFileFN(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* pParams,int ParamCount)
+int CScriptExecutor::DownloadFileFN(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
-	CScriptExecutor * pExecutor=(CScriptExecutor *)FnParam;
 
-	CIPAddress Address(pParams[0].StrValue,pParams[1].value);
+	CIPAddress Address((LPCTSTR)pParams[0],(WORD)pParams[1]);
 
-	pExecutor->m_DownloadServiceIndex=pParams[2].value;
-	pExecutor->m_DownloadSourcePath=pParams[3].StrValue;	
-	pExecutor->m_DownloadTargetPath=MakeFullPath(pExecutor->m_WorkDir+"\\"+pParams[4].StrValue);
+	m_DownloadServiceIndex=pParams[2];
+	m_DownloadSourcePath=(LPCTSTR)pParams[3];	
+	m_DownloadTargetPath=MakeFullPath(m_WorkDir+"\\"+(LPCTSTR)pParams[4]);
 
-	pExecutor->m_Status=ST_DOWNLOAD;
+	m_Status=ST_DOWNLOAD;
 
-	if(pExecutor->Connect(Address,DOWNLOAD_CONNECT_TIME))
+	if(Connect(Address,DOWNLOAD_CONNECT_TIME))
 	{
 		return IPT_DOWNLOAD_FILE;
 	}
 	else
 	{
-		pExecutor->m_Status=ST_NONE;
-		pResult->ValueType=VALUE_TYPE_NUMBER;
-		pResult->value=-1;
+		m_Status=ST_NONE;
+		*pResult=-1;
 		return 0;
 	}
 

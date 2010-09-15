@@ -33,12 +33,12 @@ protected:
 
 	enum SST_MEMBER_ID
 	{
-		SST_D3DWMIM_ITEM_ID=SST_D3DWMM_MAX,
+		SST_D3DWMIM_ITEM_DISPLAY_ID=SST_D3DWMM_MAX,
 		SST_D3DWMIM_ITEM_HAND_TYPE,
 		SST_D3DWMIM_MAX=SST_D3DWMM_MAX+50,
 	};
 
-	UINT			m_ItemID;
+	UINT			m_ItemDisplayID;
 	int				m_ItemHandType;	
 
 	DECLARE_CLASS_INFO(CD3DWOWM2ItemModel)
@@ -46,8 +46,8 @@ public:
 	CD3DWOWM2ItemModel(void);
 	~CD3DWOWM2ItemModel(void);
 
-	void SetItemID(UINT ItemID);
-	UINT GetItemID();
+	void SetItemDisplayID(UINT ItemDisplayID);
+	UINT GetItemDisplayID();
 
 	void SetItemHandType(int Type);
 	int GetItemHandType();
@@ -70,14 +70,14 @@ protected:
 };
 
 
-inline void CD3DWOWM2ItemModel::SetItemID(UINT ItemID)
+inline void CD3DWOWM2ItemModel::SetItemDisplayID(UINT ItemDisplayID)
 {
-	m_ItemID=ItemID;
+	m_ItemDisplayID=ItemDisplayID;
 }
 
-inline UINT CD3DWOWM2ItemModel::GetItemID()
+inline UINT CD3DWOWM2ItemModel::GetItemDisplayID()
 {
-	return m_ItemID;
+	return m_ItemDisplayID;
 }
 
 inline void CD3DWOWM2ItemModel::SetItemHandType(int Type)

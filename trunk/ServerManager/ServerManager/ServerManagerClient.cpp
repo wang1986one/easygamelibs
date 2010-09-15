@@ -726,7 +726,7 @@ void CServerManagerClient::OnMsg(CSmartStruct& Msg)
 void CServerManagerClient::SendMsg(CSmartStruct& Msg)
 {
 	FUNCTION_BEGIN;
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 	FUNCTION_END;
 }
 void CServerManagerClient::SendMsg(UINT MsgID)
@@ -736,7 +736,7 @@ void CServerManagerClient::SendMsg(UINT MsgID)
 	CSmartStruct Msg(SendBuffer,32,true);
 
 	Msg.AddMember(SSMM_MSG_TYPE_ID,MsgID);
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 	FUNCTION_END;
 }
 

@@ -38,9 +38,7 @@ public:
 
 	virtual BOOL Create(UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE,
 		UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE);
-	virtual BOOL Create(SOCKET Socket,
-		UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE,
-		UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE);
+	virtual BOOL Create(SOCKET Socket,UINT RecvQueueSize,UINT SendQueueSize);
 	virtual void Destory();
 
 	

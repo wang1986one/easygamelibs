@@ -54,8 +54,11 @@ public:
 protected:
 	BOOL DoListen(CIPAddress& ListenAddress);
 	void FetchProcessInfo();
+	void FetchWinServiceInfo();
 	void InitNetAdapterInfo();
 	void UpdateNetAdapterInfo(UINT64 TimeSpan);
+	bool StartupWinService(LPCTSTR szServiceName);
+	bool ShutdownWinService(LPCTSTR szServiceName);
 	
 };
 

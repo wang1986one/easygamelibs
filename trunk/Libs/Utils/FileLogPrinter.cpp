@@ -30,6 +30,8 @@ bool CFileLogPrinter::Create(LPCTSTR FileName,DWORD Flag)
 	CEasyString LogFileName;
 
 	m_pFileAccessor=CFileSystemManager::GetInstance()->CreateFileAccessor(FILE_CHANNEL_NORMAL1);
+	if(m_pFileAccessor==NULL)
+		return false;
 
 #ifdef _DEBUG
 	m_LogLevel=ILogPrinter::LOG_LEVEL_DEBUG|ILogPrinter::LOG_LEVEL_NORMAL;
@@ -54,9 +56,9 @@ bool CFileLogPrinter::Create(LPCTSTR FileName,DWORD Flag)
 			(LPCTSTR)m_LogFileName);
 	}
 	if(m_Flag&FILE_LOG_APPEND)
-		m_FileOpenMode=IFileAccessor::modeOpenAlways|IFileAccessor::modeAppend|IFileAccessor::modeWrite;
+		m_FileOpenMode=IFileAccessor::modeOpenAlways|IFileAccessor::modeAppend;
 	else
-		m_FileOpenMode=IFileAccessor::modeCreateAlways|IFileAccessor::modeTruncate|IFileAccessor::modeWrite;
+		m_FileOpenMode=IFileAccessor::modeCreateAlways|IFileAccessor::modeTruncate;
 	m_FileOpenMode|=IFileAccessor::modeWrite|IFileAccessor::shareShareRead;
 	if(m_Flag&FILE_LOG_SAFE_WRITE)
 		m_FileOpenMode|=IFileAccessor::osWriteThrough;
@@ -68,11 +70,14 @@ CFileLogPrinter::~CFileLogPrinter(void)
 	SAFE_RELEASE(m_pFileAccessor);
 }
 
-void CFileLogPrinter::PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list vl)
+void CFileLogPrinter::PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_list vl)
 {
 	CAutoLock Lock(m_EasyCriticalSection);
 
 	if((m_LogLevel&Level)==0)
+		return;
+
+	if(m_pFileAccessor==NULL)
 		return;
 
 	CEasyTime CurTime;

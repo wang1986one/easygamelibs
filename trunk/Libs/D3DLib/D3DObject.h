@@ -34,30 +34,33 @@ class CD3DBoundingFrame;
 class CD3DObject :
 	public CTreeObject
 {	
-protected:
-	//struct STORAGE_STRUCT:public CNameObject::STORAGE_STRUCT
-	//{
-	//	CD3DMatrix		LocalMatrix;
-	//	bool			IsVisible;		
-	//	int				ChildCount;
-	//};
+public:
+	enum OBJECT_FLAG
+	{
+		OBJECT_FLAG_VISIBLE=1,
+		OBJECT_FLAG_CULLED=(1<<1),
+		OBJECT_FLAG_PREPARE_RENDERED=(1<<2),
+		OBJECT_FLAG_RENDERED=(1<<3),
+	};
+protected:	
 
 	enum SST_MEMBER_ID
 	{
 		SST_D3DO_LOCAL_MATIRX=SST_TO_MAX,
-		SST_D3DO_IS_VISIBLE,		
+		SST_D3DO_IS_FLAG,		
 		SST_D3DO_MAX=SST_TO_MAX+50,
 	};
 
 	CD3DDevice *				m_pD3DDevice;
 	CD3DRender *				m_pRender;		
-	int							m_Layer;
-	bool						m_IsVisible;
+	int							m_Layer;	
 	
 	CD3DMatrix					m_LocalMatrix;
 	CD3DMatrix					m_WorldMatrix;	
 	
-	bool						m_IsCulled;	
+	//bool						m_IsVisible;
+	//bool						m_IsCulled;	
+	UINT64						m_Flag;
 
 	CD3DBoundingFrame *			m_pBoundingFrame;
 
@@ -106,18 +109,16 @@ public:
 	void TransForm(const CD3DMatrix& Mat);
 
 	virtual int GetSubMeshCount();
-	virtual CD3DSubMesh * GetSubMesh(int index);
+	virtual CD3DSubMesh * GetSubMesh(UINT index);
 	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(int index);
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();
-	//virtual CD3DBoundingBox * GetWholeBoundingBox();
-	//virtual CD3DBoundingSphere * GetWholeBoundingSphere();
-
+	
 	virtual CD3DLight * GetLight(int Index);
 	virtual CD3DLight ** GetLights();
 
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera);
+	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 	
 
 	virtual void Update(FLOAT Time);
@@ -129,11 +130,16 @@ public:
 	virtual void SetVisibleRecursive(bool IsVisible);
 	virtual bool IsVisible();
 
-	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
-	virtual bool GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& y);
+	void AddFlag(UINT64 Flag);
+	void RemoveFlag(UINT64 Flag);
+	void AddFlagRecursive(UINT64 Flag);
+	void RemoveFlagRecursive(UINT64 Flag);
+	UINT64 GetFlag();
+	bool CheckFlag(UINT64 Flag);
 
-	void SetCull(bool IsCulled);
-	bool IsCulled();
+	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
+	//virtual bool GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& y);
+	virtual CD3DObject * PickObject(CD3DVector3 Point,CD3DVector3 Dir,FLOAT& Distance);
 
 	virtual void ShowBoundingFrame(int Operator);
 	virtual void UpdateBoundingFrame();
@@ -148,13 +154,7 @@ public:
 protected:
 	
 
-	//virtual CNameObject::STORAGE_STRUCT * USOCreateHead(UINT Param=0);
-	//virtual int USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);	
-	//virtual bool USOWriteChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);	
-
-	//virtual int USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);	
-	//virtual bool USOReadChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	
+		
 	
 	
 };
@@ -246,16 +246,37 @@ inline void CD3DObject::SetLayer(int Layer)
 	m_Layer=Layer;
 }
 
-inline void CD3DObject::SetCull(bool IsCulled)
+inline void CD3DObject::AddFlag(UINT64 Flag)
 {
-	m_IsCulled=IsCulled;
+	m_Flag|=Flag;
 }
-
-inline bool CD3DObject::IsCulled()
+inline void CD3DObject::RemoveFlag(UINT64 Flag)
 {
-	return m_IsCulled;
+	m_Flag&=~Flag;
 }
-
-
+inline void CD3DObject::AddFlagRecursive(UINT64 Flag)
+{
+	AddFlag(Flag);
+	for(UINT i=0;i<GetChildCount();i++)
+	{
+		GetChildByIndex(i)->AddFlagRecursive(Flag);
+	}
+}
+inline void CD3DObject::RemoveFlagRecursive(UINT64 Flag)
+{
+	RemoveFlag(Flag);
+	for(UINT i=0;i<GetChildCount();i++)
+	{
+		GetChildByIndex(i)->RemoveFlagRecursive(Flag);
+	}
+}
+inline UINT64 CD3DObject::GetFlag()
+{
+	return m_Flag;
+}
+inline bool CD3DObject::CheckFlag(UINT64 Flag)
+{
+	return (m_Flag&Flag)!=0;
+}
 
 }

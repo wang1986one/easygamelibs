@@ -18,6 +18,14 @@ class CD3DBoundingBox
 public:
 	CD3DVector3		m_Min;
 	CD3DVector3		m_Max;
+
+	enum RELATION_TYPE
+	{
+		RELATION_TYPE_OUT,					//分离
+		RELATION_TYPE_INCLUDE,				//包含
+		RELATION_TYPE_BE_INCLUDE,			//被包含
+		RELATION_TYPE_INTERSECT,			//相交
+	};
 public:
 	CD3DBoundingBox();
 	CD3DBoundingBox(const CD3DBoundingBox& Box);
@@ -39,6 +47,10 @@ public:
 
 	bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
 	void Rebuild();
+	int CheckRelation(const CD3DBoundingBox& BBox);
+	int CheckRelation(const CD3DVector3& Point);
+	void Merge(const CD3DBoundingBox& BBox);
+	bool IsValid();
 };
 
 inline CD3DBoundingBox::CD3DBoundingBox()
@@ -201,5 +213,65 @@ inline void CD3DBoundingBox::Rebuild()
 	ComputeFromVertex(Points,8,sizeof(CD3DVector3));
 }
 
+inline int CD3DBoundingBox::CheckRelation(const CD3DBoundingBox& BBox)
+{
+	if(m_Max.x<BBox.m_Min.x||
+		m_Max.y<BBox.m_Min.y||
+		m_Max.z<BBox.m_Min.z||
+		m_Min.x>BBox.m_Max.x||
+		m_Min.y>BBox.m_Max.y||
+		m_Min.z>BBox.m_Max.z)
+	{
+		return RELATION_TYPE_OUT;
+	}
+
+	if(m_Max.x>=BBox.m_Max.x&&
+		m_Max.y>=BBox.m_Max.y&&
+		m_Max.z>=BBox.m_Max.z&&
+		m_Min.x<=BBox.m_Min.x&&
+		m_Min.y<=BBox.m_Min.y&&
+		m_Min.z<=BBox.m_Min.z)
+	{
+		return RELATION_TYPE_INCLUDE;
+	}
+
+	if(m_Max.x<=BBox.m_Max.x&&
+		m_Max.y<=BBox.m_Max.y&&
+		m_Max.z<=BBox.m_Max.z&&
+		m_Min.x>=BBox.m_Min.x&&
+		m_Min.y>=BBox.m_Min.y&&
+		m_Min.z>=BBox.m_Min.z)
+	{
+		return RELATION_TYPE_BE_INCLUDE;
+	}
+
+	return RELATION_TYPE_INTERSECT;
+}
+
+inline int CD3DBoundingBox::CheckRelation(const CD3DVector3& Point)
+{
+	if(Point.x<=m_Max.x&&Point.x>=m_Min.x&&
+		Point.y<=m_Max.y&&Point.y>=m_Min.y&&
+		Point.z<=m_Max.z&&Point.z>=m_Min.z)
+	{
+		return RELATION_TYPE_INCLUDE;
+	}
+	return RELATION_TYPE_OUT;
+}
+
+inline void CD3DBoundingBox::Merge(const CD3DBoundingBox& BBox)
+{
+	m_Max.x=max(m_Max.x,BBox.m_Max.x);
+	m_Max.y=max(m_Max.y,BBox.m_Max.y);
+	m_Max.z=max(m_Max.z,BBox.m_Max.z);
+	m_Min.x=min(m_Min.x,BBox.m_Min.x);
+	m_Min.y=min(m_Min.y,BBox.m_Min.y);
+	m_Min.z=min(m_Min.z,BBox.m_Min.z);
+}
+
+inline bool CD3DBoundingBox::IsValid()
+{
+	return m_Max.IsValid()&&m_Min.IsValid();
+}
 
 }

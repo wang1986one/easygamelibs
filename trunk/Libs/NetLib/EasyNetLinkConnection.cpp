@@ -164,7 +164,8 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 	}
 	EASY_NET_LINK_MSG * pMsg=(EASY_NET_LINK_MSG *)m_AssembleBuffer.GetBuffer();
 	while(m_AssembleBuffer.GetUsedSize()>=(int)sizeof(EASY_NET_LINK_MSG_HEAD)&&
-		(UINT)m_AssembleBuffer.GetUsedSize()>=pMsg->Header.Size)
+		(UINT)m_AssembleBuffer.GetUsedSize()>=pMsg->Header.Size&&
+		m_pStealer==NULL)
 	{
 		if(pMsg->Header.Size<sizeof(EASY_NET_LINK_MSG_HEAD))
 		{
@@ -298,7 +299,7 @@ void CEasyNetLinkConnection::SendLinkMsg(WORD MsgID,LPCVOID pData,int DataSize)
 	{
 		m_SendBuffer.PushBack(pData,DataSize);
 	}
-	QuerySend(m_SendBuffer.GetBuffer(),m_SendBuffer.GetUsedSize());
+	Send(m_SendBuffer.GetBuffer(),m_SendBuffer.GetUsedSize());
 }
 
 

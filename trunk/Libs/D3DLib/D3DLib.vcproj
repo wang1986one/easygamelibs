@@ -302,6 +302,18 @@
 						>
 					</File>
 				</Filter>
+				<Filter
+					Name="场景渲染器"
+					>
+					<File
+						RelativePath=".\D3DSceneRender.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\D3DSceneRender.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="3D对象"
@@ -455,8 +467,16 @@
 					</Filter>
 				</Filter>
 				<Filter
-					Name="包围盒"
+					Name="辅助对象"
 					>
+					<File
+						RelativePath=".\D3DBoard.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\D3DBoard.h"
+						>
+					</File>
 					<File
 						RelativePath=".\D3DBoundingFrame.cpp"
 						>
@@ -514,18 +534,6 @@
 					Name="WOW模型"
 					>
 					<File
-						RelativePath=".\BLZFileDefines.h"
-						>
-					</File>
-					<File
-						RelativePath=".\BLZWOWDatabase.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\BLZWOWDatabase.h"
-						>
-					</File>
-					<File
 						RelativePath=".\D3DWOWADTModel.cpp"
 						>
 					</File>
@@ -539,6 +547,14 @@
 					</File>
 					<File
 						RelativePath=".\D3DWOWADTModelResource.h"
+						>
+					</File>
+					<File
+						RelativePath=".\D3DWOWDoodadModel.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\D3DWOWDoodadModel.h"
 						>
 					</File>
 					<File
@@ -590,6 +606,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\D3DWOWWMOGroupModel.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\D3DWOWWMOGroupModel.h"
+						>
+					</File>
+					<File
 						RelativePath=".\D3DWOWWMOModel.cpp"
 						>
 					</File>
@@ -626,6 +650,58 @@
 						</File>
 						<File
 							RelativePath=".\BLZDBCFile.h"
+							>
+						</File>
+						<File
+							RelativePath=".\BLZWOWDatabase.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\BLZWOWDatabase.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="Defines"
+						>
+						<File
+							RelativePath=".\BLZFileDefines.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="BLS"
+						>
+						<File
+							RelativePath=".\BLZBLSImporter.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\BLZBLSImporter.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="WDT"
+						>
+						<File
+							RelativePath=".\BLZWDTFile.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\BLZWDTFile.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="WDL"
+						>
+						<File
+							RelativePath=".\BLZWDLFile.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\BLZWDLFile.h"
 							>
 						</File>
 					</Filter>

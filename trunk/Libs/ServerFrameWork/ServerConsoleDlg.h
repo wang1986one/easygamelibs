@@ -46,7 +46,7 @@ protected:
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
-	afx_msg LRESULT OnConsoleMsg(WPARAM wParam, LPARAM lParam);
+	
 	afx_msg LRESULT OnTryIconNotify(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 
@@ -55,6 +55,7 @@ protected:
 	void OnCancel();
 	//ȡ�ð汾
 	void ShowVersion();
+	int FetchConsoleMsg(int ProcessLimit);
 
 protected:
 	virtual void OnCommand(LPCTSTR szCommand);

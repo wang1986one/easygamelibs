@@ -124,6 +124,11 @@ public:
 	{
 		return m_MsgHeader.MsgLen-sizeof(DOS_MESSAGE_HEAD);
 	}
+	void SetData(LPVOID pData,WORD Length)
+	{
+		SetDataLength(Length);
+		memcpy(m_DataBuffer,pData,Length);
+	}
 	WORD GetMsgLength() const
 	{
 		return m_MsgHeader.MsgLen;

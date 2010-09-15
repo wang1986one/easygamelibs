@@ -38,7 +38,7 @@ public:
 	UINT GetBufferSize();
 	UINT GetSmoothSize();
 	UINT GetUsedSize();
-	UINT GetSmoothUsedSize();
+	UINT GetSmoothUseSize();
 	UINT GetFreeSize();
 	UINT GetSmoothFreeSize();
 
@@ -78,7 +78,7 @@ inline UINT CCycleBufferEx::GetUsedSize()
 		return (m_BufferSize-m_BufferHead)+m_BufferTail;
 }
 
-inline UINT CCycleBufferEx::GetSmoothUsedSize()
+inline UINT CCycleBufferEx::GetSmoothUseSize()
 {
 	if(m_BufferTail>=m_BufferHead)
 	{

@@ -40,23 +40,7 @@ BOOL CControlPanel::PushMsg(LPCTSTR szMsg)
 BOOL CControlPanel::PushMsg(UINT Type,LPCVOID pData,int Len)
 {
 	FUNCTION_BEGIN;
-#ifdef WIN32
-	if(m_hWnd)
-	{
-		PANEL_MSG * pMsg;
-		UINT ID=m_MsgPool.NewObject(&pMsg);
-		if(ID)
-		{
-			pMsg->ID=ID;
-			pMsg->MsgType=Type;
-			if(Len>MAX_CONSOLE_MSG_LEN)
-				Len=MAX_CONSOLE_MSG_LEN;
-			memcpy(pMsg->Msg,pData,Len);
-			PostMessage(m_hWnd,WM_USER_LOG_MSG,0,(LPARAM)pMsg);
-			return TRUE;
-		}
-	}
-#else
+
 	PANEL_MSG * pMsg;
 	UINT ID=m_MsgPool.NewObject(&pMsg);
 	if(ID)
@@ -68,7 +52,7 @@ BOOL CControlPanel::PushMsg(UINT Type,LPCVOID pData,int Len)
 		memcpy(pMsg->Msg,pData,Len);
 		return TRUE;
 	}
-#endif
+
 	FUNCTION_END;
 	return FALSE;
 }
@@ -154,20 +138,16 @@ UINT CControlPanel::GetServerStatus(LPVOID pBuffer,UINT BufferSize)
 	}
 	return m_ServerStatus.GetUsedSize();
 }
-void CControlPanel::SetServerStatusName(WORD StatusID,LPCTSTR szStatusName)
+void CControlPanel::SetServerStatusFormat(WORD StatusID,LPCTSTR szStatusName,int FormatType)
 {
 	CAutoLock AutoLock(m_CriticalSection);
 
-	SERVER_STATUS_NAME Name;
-	strncpy_0(Name.szName,MAX_SERVER_STATUS_NAME_LEN,szStatusName,MAX_SERVER_STATUS_NAME_LEN);
-	m_ServerStatusName.Insert(StatusID,Name);
+	SERVER_STATUS_FORMAT_INFO FormatInfo;
+	strncpy_0(FormatInfo.szName,MAX_SERVER_STATUS_NAME_LEN,szStatusName,MAX_SERVER_STATUS_NAME_LEN);
+	FormatInfo.FormatType=FormatType;
+	m_ServerStatusFormats.Insert(StatusID,FormatInfo);
 }
-LPCTSTR CControlPanel::GetServerStatusName(WORD StatusID)
+SERVER_STATUS_FORMAT_INFO * CControlPanel::GetServerStatusFormat(WORD StatusID)
 {
-	SERVER_STATUS_NAME *pName=m_ServerStatusName.Find(StatusID);
-	if(pName)
-	{
-		return pName->szName;
-	}
-	return NULL;
+	return m_ServerStatusFormats.Find(StatusID);
 }

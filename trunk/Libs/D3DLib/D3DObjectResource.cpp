@@ -67,7 +67,7 @@ int CD3DObjectResource::GetSubMeshCount()
 	return (int)m_SubMeshList.GetCount();
 }
 
-CD3DSubMesh * CD3DObjectResource::GetSubMesh(int index)
+CD3DSubMesh * CD3DObjectResource::GetSubMesh(UINT index)
 {
 	if((UINT)index<m_SubMeshList.GetCount())
 		return m_SubMeshList[index];
@@ -94,17 +94,7 @@ void CD3DObjectResource::PickResource(CNameObjectSet * pObjectSet,UINT Param)
 		CD3DSubMesh * pSubMesh=GetSubMesh(i);
 		if(pSubMesh)
 		{
-			if(pSubMesh->GetMaterial().GetFX())
-			{			
-				pObjectSet->Add(pSubMesh->GetMaterial().GetFX());
-			}
-			for(UINT j=0;j<pSubMesh->GetMaterial().GetTextureLayerCount();j++)
-			{
-				if(pSubMesh->GetMaterial().GetTexture(j))
-				{
-					pObjectSet->Add(pSubMesh->GetMaterial().GetTexture(j));
-				}
-			}
+			pSubMesh->PickResource(pObjectSet,Param);
 		}
 	}	
 }

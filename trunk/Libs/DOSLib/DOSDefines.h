@@ -47,6 +47,16 @@ struct OBJECT_ID
 	static int Compare(const void * Value1,const void * Value2);
 };
 
+inline int OBJECT_ID::Compare(const void * Value1,const void * Value2)
+{
+	if(((OBJECT_ID *)Value1)->ID==((OBJECT_ID *)Value2)->ID)
+		return 0;
+	else if(((OBJECT_ID *)Value1)->ID<((OBJECT_ID *)Value2)->ID)
+		return -1;
+	else
+		return 1;
+}
+
 #define BROAD_CAST_ROUTER_ID		(0xFFFF)
 #define BROAD_CAST_OBJECT_TYPE_ID	(0xFFFF)
 #define BROAD_CAST_GROUP_INDEX		(0xFFFF)
@@ -81,7 +91,7 @@ struct DOS_CONFIG
 	UINT										MemoryPoolLeveSize;
 	UINT										MemoryPoolLevelCount;
 
-	UINT										MaxObjectCount;
+	//UINT										MaxObjectCount;
 	UINT										ObjectGroupCount;
 	UINT										MaxGroupObjectCount;
 	UINT										MaxObjectMsgQueue;

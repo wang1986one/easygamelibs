@@ -373,7 +373,7 @@ void CServerConnection::OnMsg(CSmartStruct& Msg)
 
 void CServerConnection::SendMsg(CSmartStruct& Msg)
 {
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 void CServerConnection::SendMsg(UINT MsgID)
@@ -382,7 +382,7 @@ void CServerConnection::SendMsg(UINT MsgID)
 	CSmartStruct Msg(SendBuffer,32,true);
 
 	Msg.AddMember(SSMM_MSG_TYPE_ID,MsgID);
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 
@@ -401,7 +401,7 @@ void CServerConnection::QueryStartupService(UINT ServiceIndex)
 		ServiceIndex);
 	Msg.AddMember(SSMM_MSG_TYPE_ID,SM_MSG_STARTUP_SERVICE);
 	Msg.AddMember(SSUS_SERVICE_INDEX,ServiceIndex);
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 void CServerConnection::QueryShutDownService(UINT ServiceIndex)
 {
@@ -413,7 +413,7 @@ void CServerConnection::QueryShutDownService(UINT ServiceIndex)
 		ServiceIndex);
 	Msg.AddMember(SSMM_MSG_TYPE_ID,SM_MSG_SHUTDOWN_SERVICE);
 	Msg.AddMember(SSDS_SERVICE_INDEX,ServiceIndex);
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 void CServerConnection::QueryBrowseWorkDir(UINT ServiceIndex,LPCTSTR Dir)
 {
@@ -426,7 +426,7 @@ void CServerConnection::QueryBrowseWorkDir(UINT ServiceIndex,LPCTSTR Dir)
 	Msg.AddMember(SSMM_MSG_TYPE_ID,SM_MSG_BROWSE_SERVICE_DIR);
 	Msg.AddMember(SSDS_SERVICE_INDEX,ServiceIndex);
 	Msg.AddMember(SST_SMBSD_DIRECTORY_NAME,Dir);
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 void CServerConnection::QueryStartDownload(UINT ServiceIndex,LPCTSTR SourceFilePath,LPCTSTR TargetFilePath)
@@ -443,7 +443,7 @@ void CServerConnection::QueryStartDownload(UINT ServiceIndex,LPCTSTR SourceFileP
 	Msg.AddMember(SST_SMSDSF_SERVICE_INDEX,ServiceIndex);
 	Msg.AddMember(SST_SMSDSF_FILE_PATH,SourceFilePath);	
 
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 void CServerConnection::QueryDownloadData(UINT ServiceIndex)
@@ -453,7 +453,7 @@ void CServerConnection::QueryDownloadData(UINT ServiceIndex)
 
 	Msg.AddMember(SSMM_MSG_TYPE_ID,SM_MSG_QUERY_DOWNLOAD_SERVICE_FILE_DATA);
 	Msg.AddMember(SST_SMQDSFD_SERVICE_INDEX,ServiceIndex);
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 void CServerConnection::QueryStartUpload(UINT ServiceIndex,LPCTSTR SourceFilePath,LPCTSTR TargetFilePath,time_t FileTime,UINT TotalSize,UINT OrgTotalSize,LPVOID pPackProps,UINT PackPropSize)
@@ -474,7 +474,7 @@ void CServerConnection::QueryStartUpload(UINT ServiceIndex,LPCTSTR SourceFilePat
 	Msg.AddMember(SST_SMSUSF_PACK_PROP,(LPCTSTR)pPackProps,PackPropSize);
 	Msg.AddMember(SST_SMSUSF_FILE_LAST_WRITE_TIME,FileTime);
 
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 void CServerConnection::QueryContinueUpload(UINT ServiceIndex,UINT TotalSize,UINT LeftSize,LPVOID pData,UINT DataSize)
@@ -493,7 +493,7 @@ void CServerConnection::QueryContinueUpload(UINT ServiceIndex,UINT TotalSize,UIN
 	Msg.AddMember(SST_SMSUSFD_LEFT_SIZE,LeftSize);	
 	Msg.AddMember(SST_SMSUSFD_DATA,(LPCTSTR)pData,DataSize);
 
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 
@@ -512,7 +512,7 @@ void CServerConnection::QueryCreateDir(UINT ServiceIndex,LPCTSTR Dir)
 	Msg.AddMember(SST_SMCD_DIR_NAME,Dir);
 
 
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 void CServerConnection::QueryDeleteFile(UINT ServiceIndex,LPCTSTR FilePath)
@@ -529,7 +529,7 @@ void CServerConnection::QueryDeleteFile(UINT ServiceIndex,LPCTSTR FilePath)
 	Msg.AddMember(SST_SMDF_SERVICE_INDEX,ServiceIndex);
 	Msg.AddMember(SST_SMDF_FILE_PATH,FilePath);
 
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 void CServerConnection::QueryCreateProcess(UINT ServiceIndex,LPCTSTR FilePath,LPCTSTR WorkDir,LPCTSTR Param)
@@ -549,7 +549,7 @@ void CServerConnection::QueryCreateProcess(UINT ServiceIndex,LPCTSTR FilePath,LP
 	Msg.AddMember(SST_SMCP_PARAM,Param);
 
 
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }
 
 
@@ -573,5 +573,5 @@ void CServerConnection::QueryRunScript(UINT ServiceIndex,LPCTSTR FilePath)
 	Msg.AddMember(SST_SMES_SCRIPT_TYPE,SCRIPT_TYPE_FROM_FILE);
 	Msg.AddMember(SST_SMES_SCRIPT,FilePath);
 
-	QuerySend(Msg.GetData(),Msg.GetDataLen());
+	Send(Msg.GetData(),Msg.GetDataLen());
 }

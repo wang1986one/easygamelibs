@@ -46,10 +46,10 @@ protected:
 		UINT64			Property;
 		CD3DMatrix		UVTransform;
 	};
-	D3DMATERIAL9				m_Material;
-	D3DCOLORVALUE				m_GlobalColor;
-	vector<MATERIAL_TEXTURE>	m_TextureList;	
-	CD3DFX*						m_pFX;
+	D3DMATERIAL9					m_Material;
+	D3DCOLORVALUE					m_GlobalColor;
+	CEasyArray<MATERIAL_TEXTURE>	m_TextureList;	
+	CD3DFX*							m_pFX;
 
 
 	DECLARE_CLASS_INFO(CD3DSubMeshMaterial)
@@ -81,6 +81,8 @@ public:
 	UINT GetTextureLayerCount();
 	void ClearAllTexture();
 
+
+	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
 
 	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
 	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
@@ -127,12 +129,12 @@ inline void CD3DSubMeshMaterial::AddTexture(CD3DTexture * pTexture,UINT64 Proper
 	Tex.pTexture=pTexture;
 	Tex.Property=Property;
 	Tex.UVTransform.SetIdentity();
-	m_TextureList.push_back(Tex);
+	m_TextureList.Add(Tex);
 }
 
 inline bool CD3DSubMeshMaterial::SetTextureProperty(UINT Layer,UINT64 Property)
 {
-	if(Layer<m_TextureList.size())
+	if(Layer<m_TextureList.GetCount())
 	{
 		m_TextureList[Layer].Property=Property;
 		return true;
@@ -142,7 +144,7 @@ inline bool CD3DSubMeshMaterial::SetTextureProperty(UINT Layer,UINT64 Property)
 
 inline bool CD3DSubMeshMaterial::SetTextureUVTransform(UINT Layer,CD3DMatrix& TransformMat)
 {
-	if(Layer<m_TextureList.size())
+	if(Layer<m_TextureList.GetCount())
 	{
 		m_TextureList[Layer].UVTransform=TransformMat;
 		return true;
@@ -152,7 +154,7 @@ inline bool CD3DSubMeshMaterial::SetTextureUVTransform(UINT Layer,CD3DMatrix& Tr
 
 inline CD3DTexture * CD3DSubMeshMaterial::GetTexture(UINT Layer)
 {
-	if(Layer<m_TextureList.size())
+	if(Layer<m_TextureList.GetCount())
 	{
 		return m_TextureList[Layer].pTexture;
 	}
@@ -161,7 +163,7 @@ inline CD3DTexture * CD3DSubMeshMaterial::GetTexture(UINT Layer)
 
 inline UINT64 CD3DSubMeshMaterial::GetTextureProperty(UINT Layer)
 {
-	if(Layer<m_TextureList.size())
+	if(Layer<m_TextureList.GetCount())
 	{
 		return m_TextureList[Layer].Property;
 	}
@@ -170,12 +172,17 @@ inline UINT64 CD3DSubMeshMaterial::GetTextureProperty(UINT Layer)
 
 inline CD3DMatrix& CD3DSubMeshMaterial::GetTextureUVTransform(UINT Layer)
 {
-	return m_TextureList[Layer].UVTransform;
+	static CD3DMatrix Mat;
+	if(Layer<m_TextureList.GetCount())
+	{
+		return m_TextureList[Layer].UVTransform;
+	}
+	return Mat;
 }
 
 inline UINT CD3DSubMeshMaterial::GetTextureLayerCount()
 {
-	return (UINT)m_TextureList.size();
+	return (UINT)m_TextureList.GetCount();
 }
 
 }

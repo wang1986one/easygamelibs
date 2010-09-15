@@ -15,7 +15,6 @@
 IMPLEMENT_CLASS_INFO_STATIC(CServerThread,CNetServer);
 
 CServerThread::CServerThread()
-	:m_CommandExecutor(128,128)
 {
 	FUNCTION_BEGIN
 	m_pSysNetLinkManager=NULL;
@@ -124,14 +123,18 @@ BOOL CServerThread::OnStart()
 		g_ProgramVersion[1],
 		g_ProgramVersion[0]);
 
+	m_ESVariableList.Create(128);
+	m_ESFactionList.Create(128);
+	CESFunctionLib::GetInstance()->AddFunction(&m_ESFactionList);
+	m_ESThread.SetVariableList(&m_ESVariableList);
+	m_ESThread.SetFactionList(&m_ESFactionList);
+	m_ESThread.SetScript(&m_Script);
 
-	
 
-
-	m_CommandExecutor.AddFaction("StartLog",3,(INT_PTR)this,StartLog);
-	m_CommandExecutor.AddFaction("StopLog",2,(INT_PTR)this,StopLog);
-	m_CommandExecutor.AddFaction("TestLog",1,(INT_PTR)this,TestLog);
-	m_CommandExecutor.AddFaction("RebuildUDPControlPort",0,(INT_PTR)this,RebuildUDPControlPort);
+	m_ESFactionList.AddFaction("StartLog",3,this,(LPSCRIPT_FACTION)&CServerThread::StartLog);
+	m_ESFactionList.AddFaction("StopLog",2,this,(LPSCRIPT_FACTION)&CServerThread::StopLog);
+	m_ESFactionList.AddFaction("TestLog",1,this,(LPSCRIPT_FACTION)&CServerThread::TestLog);
+	m_ESFactionList.AddFaction("RebuildUDPControlPort",0,this,(LPSCRIPT_FACTION)&CServerThread::RebuildUDPControlPort);
 
 	if(!CNetServer::OnStart())
 		return FALSE;
@@ -180,17 +183,17 @@ BOOL CServerThread::OnStart()
 	memcpy(Version.Words,g_ProgramVersion,sizeof(ULONG64_CONVERTER));
 
 	SetServerStatus(SC_SST_SS_PROGRAM_VERSION,CSmartValue(Version.QuadPart));
-	SetServerStatusName(SC_SST_SS_CLIENT_COUNT,"客户端数量");
-	SetServerStatusName(SC_SST_SS_CYCLE_TIME,"循环时间(毫秒)");
-	SetServerStatusName(SC_SST_SS_TCP_RECV_FLOW,"TCP接收流量(Byte/S)");
-	SetServerStatusName(SC_SST_SS_TCP_SEND_FLOW,"TCP发送流量(Byte/S)");
-	SetServerStatusName(SC_SST_SS_UDP_RECV_FLOW,"UDP接收流量(Byte/S)");
-	SetServerStatusName(SC_SST_SS_UDP_SEND_FLOW,"UDP发送流量(Byte/S)");
-	SetServerStatusName(SC_SST_SS_TCP_RECV_COUNT,"TCP接收次数(次/S)");
-	SetServerStatusName(SC_SST_SS_TCP_SEND_COUNT,"TCP发送次数(次/S)");
-	SetServerStatusName(SC_SST_SS_UDP_RECV_COUNT,"UDP接收次数(次/S)");
-	SetServerStatusName(SC_SST_SS_UDP_SEND_COUNT,"UDP发送次数(次/S)");
-	SetServerStatusName(SC_SST_SS_PROGRAM_VERSION,"服务器版本");
+	SetServerStatusFormat(SC_SST_SS_CLIENT_COUNT,"客户端数量");
+	SetServerStatusFormat(SC_SST_SS_CYCLE_TIME,"循环时间(毫秒)");
+	SetServerStatusFormat(SC_SST_SS_TCP_RECV_FLOW,"TCP接收流量(Byte/S)",SSFT_FLOW);
+	SetServerStatusFormat(SC_SST_SS_TCP_SEND_FLOW,"TCP发送流量(Byte/S)",SSFT_FLOW);
+	SetServerStatusFormat(SC_SST_SS_UDP_RECV_FLOW,"UDP接收流量(Byte/S)",SSFT_FLOW);
+	SetServerStatusFormat(SC_SST_SS_UDP_SEND_FLOW,"UDP发送流量(Byte/S)",SSFT_FLOW);
+	SetServerStatusFormat(SC_SST_SS_TCP_RECV_COUNT,"TCP接收次数(次/S)");
+	SetServerStatusFormat(SC_SST_SS_TCP_SEND_COUNT,"TCP发送次数(次/S)");
+	SetServerStatusFormat(SC_SST_SS_UDP_RECV_COUNT,"UDP接收次数(次/S)");
+	SetServerStatusFormat(SC_SST_SS_UDP_SEND_COUNT,"UDP发送次数(次/S)");
+	SetServerStatusFormat(SC_SST_SS_PROGRAM_VERSION,"服务器版本");
 
 	Log("服务器成功启动");
 	
@@ -286,19 +289,29 @@ BOOL CServerThread::PrintConsoleLog(LPCTSTR szLogMsg)
 void CServerThread::ExecCommand(LPCTSTR szCommand)
 {
 	FUNCTION_BEGIN;
-	CBolan Result;
-	int RetCode=m_CommandExecutor.ExecScript(szCommand,Result);
+	int RetCode;
+	ES_BOLAN Result;
+
+	Log("执行命令:%s",szCommand);
+
+	RetCode=m_ESThread.PushScript(szCommand);
 	if(RetCode)
 	{
-		Log("执行命令[%s]出错[%d][%s]",szCommand,RetCode,
-			m_CommandExecutor.GetErrorMsg(RetCode));
+		Log("解析命令出错:Line=%d,%s",
+			m_ESThread.GetLastLine(),
+			ESGetErrorMsg(RetCode));
+	}
+	RetCode=m_ScriptExecutor.ExecScript(m_ESThread);
+	if(RetCode)
+	{
+		Log("解析命令出错:Line=%d,%s",
+			m_ESThread.GetLastLine(),
+			ESGetErrorMsg(RetCode));
 	}
 	else
 	{
-		if(Result.ValueType==VALUE_TYPE_NUMBER)
-			Log("执行命令[%s]结果[%g]",szCommand,Result.value);
-		else
-			Log("执行命令[%s]结果[%s]",szCommand,(LPCTSTR)Result.StrValue);
+		Log("执行命令结果:%s",
+			(LPCTSTR)BolanToString(m_ESThread.GetResult()));
 	}
 	FUNCTION_END;
 }
@@ -318,14 +331,14 @@ BOOL CServerThread::SetServerStatus(WORD StatusID,const CSmartValue& Value)
 	return FALSE;
 }
 
-void CServerThread::SetServerStatusName(WORD StatusID,LPCTSTR szStatusName)
+void CServerThread::SetServerStatusFormat(WORD StatusID,LPCTSTR szStatusName,int FormatType)
 {
 	FUNCTION_BEGIN;
-	CControlPanel::GetInstance()->SetServerStatusName(StatusID,szStatusName);
+	CControlPanel::GetInstance()->SetServerStatusFormat(StatusID,szStatusName,FormatType);
 	FUNCTION_END;
 }
 
-int CServerThread::StartLog(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* pParams,int ParamCount)
+int CServerThread::StartLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	FUNCTION_BEGIN;
 	CServerLogPrinter * pLog=NULL;
@@ -393,7 +406,7 @@ int CServerThread::StartLog(INT_PTR FnParam,CVariableList* pVarList,CBolan* pRes
 	return 0;
 }
 
-int CServerThread::StopLog(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* pParams,int ParamCount)
+int CServerThread::StopLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	FUNCTION_BEGIN;
 	CServerLogPrinter * pLog=NULL;
@@ -447,7 +460,7 @@ int CServerThread::StopLog(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResu
 	return 0;
 }
 
-int CServerThread::TestLog(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* pParams,int ParamCount)
+int CServerThread::TestLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	FUNCTION_BEGIN;
 	CServerLogPrinter * pLog=NULL;
@@ -476,25 +489,19 @@ int CServerThread::TestLog(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResu
 	return 0;
 }
 
-int CServerThread::RebuildUDPControlPort(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* pParams,int ParamCount)
+int CServerThread::RebuildUDPControlPort(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	FUNCTION_BEGIN;
-	CServerThread * pServer=(CServerThread *)FnParam;
-	if(pServer)
+	
+	if(!m_pUDPSystemControlPort->Init(this))
 	{
-		if(!pServer->m_pUDPSystemControlPort->Init(pServer))
-		{
-			Log("重建UDP系统控制端口失败");
-		}
-		else
-		{
-			Log("重建UDP系统控制端口成功");
-		}
+		Log("重建UDP系统控制端口失败");
 	}
 	else
 	{
-		Log("服务器指针参数异常");
+		Log("重建UDP系统控制端口成功");
 	}
+	
 	FUNCTION_END;
 	return 0;
 }
@@ -504,10 +511,10 @@ void CServerThread::DoServerStat()
 	FUNCTION_BEGIN;
 	int ClientCount=GetClientCount();
 	float CycleTime=(float)SERVER_INFO_COUNT_TIME/m_CycleCount;
-	float TCPRecvFlow=(float)m_TCPRecvBytes*1000/SERVER_INFO_COUNT_TIME;
-	float TCPSendFlow=(float)m_TCPSendBytes*1000/SERVER_INFO_COUNT_TIME;
-	float UDPRecvFlow=(float)m_UDPRecvBytes*1000/SERVER_INFO_COUNT_TIME;
-	float UDPSendFlow=(float)m_UDPSendBytes*1000/SERVER_INFO_COUNT_TIME;
+	float TCPRecvFlow=(float)m_TCPRecvBytes*1000/1024/SERVER_INFO_COUNT_TIME;
+	float TCPSendFlow=(float)m_TCPSendBytes*1000/1024/SERVER_INFO_COUNT_TIME;
+	float UDPRecvFlow=(float)m_UDPRecvBytes*1000/1024/SERVER_INFO_COUNT_TIME;
+	float UDPSendFlow=(float)m_UDPSendBytes*1000/1024/SERVER_INFO_COUNT_TIME;
 
 	float TCPRecvCount=(float)m_TCPRecvCount*1000/SERVER_INFO_COUNT_TIME;
 	float TCPSendCount=(float)m_TCPSendCount*1000/SERVER_INFO_COUNT_TIME;
@@ -515,15 +522,15 @@ void CServerThread::DoServerStat()
 	float UDPSendCount=(float)m_UDPSendCount*1000/SERVER_INFO_COUNT_TIME;
 
 
-	LogServerInfo("CycleTime=%06.6g,"
-		"TCPRecvFlow=%06.6g,TCPSendFlow=%06.6g,UDPRecvFlow=%06.6g,UDPSendFlow=%06.6g,"
-		"TCPRecvCount=%06.6g,TCPSendCount=%06.6g,UDPRecvCount=%06.6g,UDPSendCount=%06.6g,"
-		"ClientCount=%04d",
+	LogServerInfo("CycleTime=%g,"
+		"TCPRecvFlow=%s,TCPSendFlow=%s,UDPRecvFlow=%s,UDPSendFlow=%s,"
+		"TCPRecvCount=%g,TCPSendCount=%g,UDPRecvCount=%g,UDPSendCount=%g,"
+		"ClientCount=%d",
 		CycleTime,
-		TCPRecvFlow,
-		TCPSendFlow,
-		UDPRecvFlow,
-		UDPSendFlow,
+		(LPCTSTR)FormatNumberWordsFloat(TCPRecvFlow,true),
+		(LPCTSTR)FormatNumberWordsFloat(TCPSendFlow,true),
+		(LPCTSTR)FormatNumberWordsFloat(UDPRecvFlow,true),
+		(LPCTSTR)FormatNumberWordsFloat(UDPSendFlow,true),
 		TCPRecvCount,
 		TCPSendCount,
 		UDPRecvCount,

@@ -138,7 +138,17 @@ ULONG64 CWinFileAccessor::GetSize()
 		Size.QuadPart=0;
 
 		Size.LowPart=GetFileSize(m_hFile,&(Size.HighPart));
-		return Size.QuadPart;
+		if(Size.LowPart==0xFFFFFFFF)
+		{
+			if(GetLastError()==NO_ERROR)
+				return Size.QuadPart;
+			else
+				return 0;
+		}
+		else
+		{
+			return Size.QuadPart;
+		}
 	}
 	else
 		return 0;
