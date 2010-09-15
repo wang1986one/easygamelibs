@@ -86,7 +86,7 @@ BOOL CLogManager::PrintLog(UINT ChannelID,int Level,DWORD Color,LPCTSTR Format,.
 	{
 		va_list	vl;
 		va_start(vl,Format);
-		pLogPrinter->PrintLog(Level,Color,Format,vl);
+		pLogPrinter->PrintLogVL(Level,Color,Format,vl);
 		va_end( vl);
 		return TRUE;
 	}
@@ -97,7 +97,7 @@ BOOL CLogManager::PrintLogVL(UINT ChannelID,int Level,DWORD Color,LPCTSTR Format
 	ILogPrinter * pLogPrinter=GetChannel(ChannelID);
 	if(pLogPrinter)
 	{
-		pLogPrinter->PrintLog(Level,Color,Format,vl);
+		pLogPrinter->PrintLogVL(Level,Color,Format,vl);
 		return TRUE;
 	}
 	return FALSE;

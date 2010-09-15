@@ -34,12 +34,18 @@ public:
 		SMP_BLENDING_MODULATE=(5<<9),
 		SMP_BLENDING_MUL=(6<<9),
 
+		SMP_USE_VERTEX_ALPHA1=(1<<14),
+		SMP_USE_VERTEX_ALPHA2=(1<<15),
+
 		SMP_TEXTURE_TYPE=(0xF<<16),
 		SMP_TEXTURE_TYPE_DIRECT=0,
 		SMP_TEXTURE_TYPE_BODY=(1<<16),
 		SMP_TEXTURE_TYPE_CAPE=(2<<16),
 		SMP_TEXTURE_TYPE_HAIR=(6<<16),
 		SMP_TEXTURE_TYPE_FUR=(8<<16),
+		SMP_TEXTURE_TYPE_CREATURE_SKIN1=(11<<16),
+		SMP_TEXTURE_TYPE_CREATURE_SKIN2=(12<<16),
+		SMP_TEXTURE_TYPE_CREATURE_SKIN3=(13<<16),
 
 		SMP_TEXTURE_FLAG=(7<<20),
 		SMP_TEXTURE_WRAP_X=(1<<20),
@@ -59,6 +65,7 @@ public:
 		FLOAT				BoneWeight[MAX_VERTEX_BONE_BIND];
 		BYTE				BoneID[MAX_VERTEX_BONE_BIND];
 		CD3DVector3			Normal;		
+		D3DCOLOR			Diffuse;
 		CD3DVector2			TextureCoord;	
 	};
 	template<class KEY_TYPE>
@@ -172,7 +179,7 @@ public:
 		WORD								ParticleColorRef;		
 		BYTE								ParticleType;			
 		BYTE								HeadOrTail;				
-		WORD								TextureTileRotation;	
+		short								TextureTileRotation;	
 		WORD								TextureRows;			
 		WORD								TextureCols;	
 		CD3DVector3							Scale;					
@@ -435,7 +442,7 @@ public:
 	int GetAnimationID(LPCTSTR AnimationName);
 	ANIMATION_SEQUENCE * FindAnimationInfo(UINT AnimationID,UINT SubAnimationID);
 	int GetAnimationIndex(UINT AnimationID,UINT SubAnimationID);
-	ANIMATION_SEQUENCE * GetAnimationInfo(UINT AnimationIndex);
+	ANIMATION_SEQUENCE * GetAnimationInfo(UINT AnimationID,UINT SubAnimationID);
 	UINT GetAnimationCount();
 	ANIMATION_SEQUENCE * GetAnimationInfoByIndex(UINT AnimationIndex);
 
@@ -496,6 +503,7 @@ protected:
 	void LoadAniBlockFloat(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<FLOAT>& AniBlock);
 	void LoadAniBlockVector3(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DVector3>& AniBlock);
 	void LoadAniBlockQuaternion(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DQuaternion>& AniBlock);
+	void LoadAniBlockQuaternion2(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DQuaternion>& AniBlock);
 	void LoadAniBlockAlpha(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<FLOAT>& AniBlock);
 	void LoadAniBlockTranslation(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DVector3>& AniBlock);
 	void LoadAniBlockRotation(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DQuaternion>& AniBlock);

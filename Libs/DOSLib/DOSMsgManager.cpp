@@ -30,7 +30,7 @@ CDOSMsgManager::~CDOSMsgManager(void)
 		DOS_MSG_PROC_ENTRY * pEntry=m_MsgMap.GetNextObject(Pos,Key);
 		if(pEntry)
 		{
-			PrintDOSLog(0xff0000,"未注销的客户端消息处理ID=%u,Obj=%p,Proc=%p",
+			PrintSystemLog(0xff0000,"未注销的客户端消息处理ID=%u,Obj=%p,Proc=%p",
 				Key,pEntry->pObject,pEntry->pProc);
 		}
 	}	

@@ -93,6 +93,7 @@ LPCTSTR ITEM_PATH_BY_SLOT[IISI_MAX]=
 	"IISI_RELIC",
 };
 
+IMPLEMENT_FILE_CHANNEL_MANAGER(CBLZWOWDatabase)
 
 CBLZWOWDatabase::CBLZWOWDatabase(void)
 {
@@ -139,7 +140,9 @@ CBLZWOWDatabase::~CBLZWOWDatabase(void)
 
 	//PrintSystemLog(0,"CBLZWOWDatabase卸载完毕");
 
-	m_MaoInfo.Clear();
+	m_MapInfo.Clear();
+
+	m_LiquidTypeInfo.Clear();
 }
 
 bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
@@ -163,15 +166,13 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	m_ItemDisplayInfo.Clear();
 	m_HelmetGeosetVisibleInfo.Clear();
 
-	m_MaoInfo.Clear();
+	m_MapInfo.Clear();
 
 	CEasyString FileName;
 	UINT LoadTime;
 
 	
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_CHAR_SECTION_FILE_NAME;
+	FileName=BLZ_DBC_CHAR_SECTION_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadCharSectionData(FileName))
@@ -182,9 +183,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_ANIMATION_DATA_FILE_NAME;
+	FileName=BLZ_DBC_ANIMATION_DATA_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadAnimationData(FileName))
@@ -195,9 +194,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_CHAR_HAIR_GEOSET_FILE_NAME;
+	FileName=BLZ_DBC_CHAR_HAIR_GEOSET_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadCharHairSubMeshInfo(FileName))
@@ -208,9 +205,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_CHAR_WHISKER_GEOSET_FILE_NAME;
+	FileName=BLZ_DBC_CHAR_WHISKER_GEOSET_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadCharWhiskerSubMeshInfo(FileName))
@@ -221,9 +216,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_CHAR_RACE_FILE_NAME;
+	FileName=BLZ_DBC_CHAR_RACE_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadCharRaceInfo(FileName))
@@ -234,9 +227,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_CREATURE_DISPLAY_INFO_FILE_NAME;
+	FileName=BLZ_DBC_CREATURE_DISPLAY_INFO_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadCreatureDisplayInfo(FileName))
@@ -247,9 +238,18 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_CREATURE_MODEL_INFO_FILE_NAME;
+	FileName=BLZ_DBC_CREATURE_EXTRA_DISPLAY_INFO_FILE_NAME;
+	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
+	LoadTime=CEasyTimer::GetTime();
+	if(!LoadCreatureExtraDisplayInfo(FileName))
+	{
+		ErrorMsg=FileName+"装载失败！";
+		return false;
+	}
+	PrintSystemLog(0,"装载%s花了%u毫秒",
+		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
+
+	FileName=BLZ_DBC_CREATURE_MODEL_INFO_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadCreatureModelInfo(FileName))
@@ -260,9 +260,20 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_ITEM_CLASS_FILE_NAME;
+	BuildCreatureModelInfo();
+
+	FileName=BLZ_DBC_NPC_DATA_FILE_NAME;
+	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
+	LoadTime=CEasyTimer::GetTime();
+	if(!LoadNPCData(FileName))
+	{
+		ErrorMsg=FileName+"装载失败！";
+		return false;
+	}
+	PrintSystemLog(0,"装载%s花了%u毫秒",
+		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
+
+	FileName=BLZ_DBC_ITEM_CLASS_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadItemClass(FileName))
@@ -273,9 +284,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_ITEM_SUB_CLASS_FILE_NAME;
+	FileName=BLZ_DBC_ITEM_SUB_CLASS_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadItemSubClass(FileName))
@@ -286,9 +295,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_ITEM_SUB_CLASS_MASK_FILE_NAME;
+	FileName=BLZ_DBC_ITEM_SUB_CLASS_MASK_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadItemSubClassMask(FileName))
@@ -299,9 +306,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_ITEM_DATA_FILE_NAME;
+	FileName=BLZ_DBC_ITEM_DATA_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadItemData(FileName))
@@ -312,9 +317,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_ITEM_CACHE_DATA_FILE_NAME;
+	FileName=BLZ_DBC_ITEM_CACHE_DATA_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadItemCacheData(FileName))
@@ -325,9 +328,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_ITEM_DISPLAY_INFO_FILE_NAME;
+	FileName=BLZ_DBC_ITEM_DISPLAY_INFO_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadItemDisplayInfo(FileName))
@@ -338,9 +339,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_HELMET_GEOSET_VISIBLE_FILE_NAME;
+	FileName=BLZ_DBC_HELMET_GEOSET_VISIBLE_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadHelmetGeosetVisibleInfo(FileName))
@@ -351,9 +350,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	FileName=DBCPath;
-	FileName+="\\";
-	FileName+=BLZ_DBC_MAP_FILE_NAME;
+	FileName=BLZ_DBC_MAP_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	LoadTime=CEasyTimer::GetTime();
 	if(!LoadMapInfo(FileName))
@@ -364,9 +361,7 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
-	//FileName=DBCPath;
-	//FileName+="\\";
-	//FileName+=BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_FILE_NAME;
+	//FileName=BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_FILE_NAME;
 	//PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
 	//LoadTime=CEasyTimer::GetTime();
 	//if(!m_SpellVisualEffectNameInfo.Load(FileName,
@@ -378,6 +373,30 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	//PrintSystemLog(0,"装载%s花了%u毫秒",
 	//	(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
+
+	FileName=BLZ_DBC_LIQUID_TYPE_FILE_NAME;
+	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
+	LoadTime=CEasyTimer::GetTime();
+	if(!LoadLiquidTypeInfo(FileName))
+	{
+		ErrorMsg=FileName+"装载失败！";
+		return false;
+	}
+	PrintSystemLog(0,"装载%s花了%u毫秒",
+		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
+
+	
+	FileName=BLZ_TRS_MINI_MAP_TEXTURE_FILES;
+	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
+	LoadTime=CEasyTimer::GetTime();
+	if(!LoadMiniMapInfo(FileName))
+	{
+		ErrorMsg=FileName+"装载失败！";
+		return false;
+	}
+	PrintSystemLog(0,"装载%s花了%u毫秒",
+		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
+
 	PrintSystemLog(0,"CBLZWOWDatabase装载完毕");
 
 	return true;
@@ -387,7 +406,7 @@ bool CBLZWOWDatabase::Save(LPCTSTR szFileName)
 {
 	IFileAccessor * pFile;
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(szFileName,IFileAccessor::modeCreateAlways|IFileAccessor::modeWrite))
@@ -410,7 +429,7 @@ bool CBLZWOWDatabase::LoadCharSectionData(LPCTSTR FileName)
 	CEasyBuffer CharSectionData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -545,7 +564,7 @@ bool CBLZWOWDatabase::LoadAnimationData(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -612,7 +631,7 @@ bool CBLZWOWDatabase::LoadCharHairSubMeshInfo(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -678,7 +697,7 @@ bool CBLZWOWDatabase::LoadCharWhiskerSubMeshInfo(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -747,7 +766,7 @@ bool CBLZWOWDatabase::LoadCharRaceInfo(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -820,7 +839,7 @@ bool CBLZWOWDatabase::LoadCreatureDisplayInfo(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -844,42 +863,101 @@ bool CBLZWOWDatabase::LoadCreatureDisplayInfo(LPCTSTR FileName)
 
 	DBC_CREATURE_DISPLAY_INFO_RECORD * pRecord=(DBC_CREATURE_DISPLAY_INFO_RECORD *)((BYTE *)DBData.GetBuffer()+sizeof(BLZ_DBC_HEADER));
 	char * pStringTable=(char *)((BYTE *)DBData.GetBuffer()+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*pHeader->RecordCount);
-
-	m_CreatureDisplayInfo.Resize(pHeader->RecordCount);
+	
 	for(UINT i=0;i<pHeader->RecordCount;i++)
 	{
-		m_CreatureDisplayInfo[i].ID=pRecord[i].ID;
-		m_CreatureDisplayInfo[i].ModelID=pRecord[i].ModelID;						
-		m_CreatureDisplayInfo[i].SoundID=pRecord[i].SoundID;						
-		m_CreatureDisplayInfo[i].ExtraDisplayInformationID=pRecord[i].ExtraDisplayInformationID;	
-		m_CreatureDisplayInfo[i].Scale=pRecord[i].Scale;						
-		m_CreatureDisplayInfo[i].Opacity=pRecord[i].Opacity;					
-		m_CreatureDisplayInfo[i].Skin1=pStringTable+pRecord[i].Skin1;						
-		m_CreatureDisplayInfo[i].Skin2=pStringTable+pRecord[i].Skin2;						
-		m_CreatureDisplayInfo[i].Skin3=pStringTable+pRecord[i].Skin3;	
-		m_CreatureDisplayInfo[i].Icon=pStringTable+pRecord[i].Icon;	
-		m_CreatureDisplayInfo[i].BloodLevelID=pRecord[i].BloodLevelID;			
-		m_CreatureDisplayInfo[i].BloodID=pRecord[i].BloodID;		
-		m_CreatureDisplayInfo[i].NPCSoundID=pRecord[i].NPCSoundID;		
-		m_CreatureDisplayInfo[i].ParticleID=pRecord[i].ParticleID;	
-		m_CreatureDisplayInfo[i].CreatureGeosetDataID=pRecord[i].CreatureGeosetDataID;	
-		m_CreatureDisplayInfo[i].ObjectEffectPackageID=pRecord[i].ObjectEffectPackageID;
+		BLZ_DB_CREATURE_DISPLAY_INFO * pCreatureDisplayInfo=m_CreatureDisplayInfo.New(pRecord[i].ID);
+		pCreatureDisplayInfo->ID=pRecord[i].ID;
+		pCreatureDisplayInfo->ModelID=pRecord[i].ModelID;						
+		pCreatureDisplayInfo->SoundID=pRecord[i].SoundID;						
+		pCreatureDisplayInfo->ExtraDisplayInformationID=pRecord[i].ExtraDisplayInformationID;	
+		pCreatureDisplayInfo->Scale=pRecord[i].Scale;						
+		pCreatureDisplayInfo->Opacity=pRecord[i].Opacity;					
+		pCreatureDisplayInfo->Skin1=pStringTable+pRecord[i].Skin1;						
+		pCreatureDisplayInfo->Skin2=pStringTable+pRecord[i].Skin2;						
+		pCreatureDisplayInfo->Skin3=pStringTable+pRecord[i].Skin3;	
+		pCreatureDisplayInfo->Icon=pStringTable+pRecord[i].Icon;	
+		pCreatureDisplayInfo->BloodLevelID=pRecord[i].BloodLevelID;			
+		pCreatureDisplayInfo->BloodID=pRecord[i].BloodID;		
+		pCreatureDisplayInfo->NPCSoundID=pRecord[i].NPCSoundID;		
+		pCreatureDisplayInfo->ParticleID=pRecord[i].ParticleID;	
+		pCreatureDisplayInfo->CreatureGeosetDataID=pRecord[i].CreatureGeosetDataID;	
+		pCreatureDisplayInfo->ObjectEffectPackageID=pRecord[i].ObjectEffectPackageID;
 	}	
 
 
 	return true;
 }
 
+bool CBLZWOWDatabase::LoadCreatureExtraDisplayInfo(LPCTSTR FileName)
+{
+	IFileAccessor * pFile;
+
+
+	pFile=CreateFileAccessor();
+	if(pFile==NULL)
+		return false;
+	if(!pFile->Open(FileName,IFileAccessor::modeRead))
+	{
+		pFile->Release();
+		return false;	
+	}
+	CBLZDBCFile DBCFile;
+
+	if(!DBCFile.Load(pFile,BLZ_DBC_CREATURE_EXTRA_DISPLAY_INFO_RECORD_SIZE))
+	{
+		pFile->Release();
+		return false;
+	}
+	pFile->Release();
+
+	for(UINT i=0;i<DBCFile.GetRecordCount();i++)
+	{
+		UINT ID=DBCFile.GetDataUint(i,0);
+		BLZ_DB_CREATURE_EXTRA_DISPLAY_INFO * pInfo=m_CreatureExtraDisplayInfo.New(ID);
+		pInfo->ID=ID;
+		pInfo->Race=DBCFile.GetDataUint(i,1);
+		pInfo->Sex=DBCFile.GetDataUint(i,2);
+		pInfo->SkinColor=DBCFile.GetDataUint(i,3);
+		pInfo->FaceType=DBCFile.GetDataUint(i,4);
+		pInfo->HairType=DBCFile.GetDataUint(i,5);
+		pInfo->HairColor=DBCFile.GetDataUint(i,6);
+		pInfo->BeardType=DBCFile.GetDataUint(i,7);
+		pInfo->HeadEuipment=DBCFile.GetDataUint(i,8);
+		pInfo->ShoulderEuipment=DBCFile.GetDataUint(i,9);
+		pInfo->ShirtEuipment=DBCFile.GetDataUint(i,10);
+		pInfo->BustEuipment=DBCFile.GetDataUint(i,11);
+		pInfo->BeltEuipment=DBCFile.GetDataUint(i,12);
+		pInfo->LegEuipment=DBCFile.GetDataUint(i,13);
+		pInfo->BootEuipment=DBCFile.GetDataUint(i,14);
+		pInfo->RingEuipment=DBCFile.GetDataUint(i,15);
+		pInfo->HandEuipment=DBCFile.GetDataUint(i,16);
+		pInfo->WristEuipment=DBCFile.GetDataUint(i,17);
+		pInfo->CapeEuipment=DBCFile.GetDataUint(i,18);
+
+	}
+	return true;
+
+}
+
 CBLZWOWDatabase::BLZ_DB_CREATURE_DISPLAY_INFO * CBLZWOWDatabase::FindCreatureDisplayInfo(UINT ID)
 {
-	for(UINT i=0;i<m_CreatureDisplayInfo.GetCount();i++)
-	{
-		if(m_CreatureDisplayInfo[i].ID==ID)
-		{
-			return &(m_CreatureDisplayInfo[i]);
-		}
-	}
-	return NULL;
+	return m_CreatureDisplayInfo.Find(ID);
+}
+
+CBLZWOWDatabase::BLZ_DB_CREATURE_EXTRA_DISPLAY_INFO * CBLZWOWDatabase::FindCreatureExtraDisplayInfo(UINT ID)
+{
+	return m_CreatureExtraDisplayInfo.Find(ID);
+}
+
+LPVOID CBLZWOWDatabase::GetFirstCreatureDisplayInfoPos()
+{
+	return m_CreatureDisplayInfo.GetFirstObjectPos();
+}
+CBLZWOWDatabase::BLZ_DB_CREATURE_DISPLAY_INFO * CBLZWOWDatabase::GetNextCreatureDisplayInfo(LPVOID& Pos)
+{
+	UINT Key;
+	return m_CreatureDisplayInfo.GetNextObject(Pos,Key);
 }
 
 bool CBLZWOWDatabase::LoadCreatureModelInfo(LPCTSTR FileName)
@@ -889,7 +967,7 @@ bool CBLZWOWDatabase::LoadCreatureModelInfo(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -915,34 +993,74 @@ bool CBLZWOWDatabase::LoadCreatureModelInfo(LPCTSTR FileName)
 	char * pStringTable=(char *)((BYTE *)DBData.GetBuffer()+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*pHeader->RecordCount);
 
 	
-	m_CreatureModelInfo.Resize(pHeader->RecordCount);
 	for(UINT i=0;i<pHeader->RecordCount;i++)
 	{
-		m_CreatureModelInfo[i].ID=pRecord[i].ID;				
-		m_CreatureModelInfo[i].Flags=pRecord[i].Flags;
-		m_CreatureModelInfo[i].ModelPath=pStringTable+pRecord[i].ModelPath;
-		m_CreatureModelInfo[i].AltermateModel=pStringTable+pRecord[i].AltermateModel;
-		m_CreatureModelInfo[i].Scale=pRecord[i].Scale;
-		m_CreatureModelInfo[i].BloodLevelID=pRecord[i].BloodLevelID;
-		m_CreatureModelInfo[i].SoundDataID=pRecord[i].SoundDataID;
-		m_CreatureModelInfo[i].CollisionWidth=pRecord[i].CollisionWidth;
-		m_CreatureModelInfo[i].CollisionHeight=pRecord[i].CollisionHeight;		
+		BLZ_DB_CREATURE_MODEL_INFO * pCreatureModelInfo=m_CreatureModelInfo.New(pRecord[i].ID);
+		pCreatureModelInfo->ID=pRecord[i].ID;				
+		pCreatureModelInfo->Flags=pRecord[i].Flags;
+		pCreatureModelInfo->ModelPath=pStringTable+pRecord[i].ModelPath;
+		pCreatureModelInfo->AltermateModel=pStringTable+pRecord[i].AltermateModel;
+		pCreatureModelInfo->Scale=pRecord[i].Scale;
+		pCreatureModelInfo->BloodLevelID=pRecord[i].BloodLevelID;
+		pCreatureModelInfo->SoundDataID=pRecord[i].SoundDataID;
+		pCreatureModelInfo->CollisionWidth=pRecord[i].CollisionWidth;
+		pCreatureModelInfo->CollisionHeight=pRecord[i].CollisionHeight;		
 	}	
 
 
 	return true;
 }
 
+bool CBLZWOWDatabase::LoadNPCData(LPCTSTR FileName)
+{
+	IFileAccessor * pFile;
+
+	CEasyBuffer DBData;
+
+
+	pFile=CreateFileAccessor();
+	if(pFile==NULL)
+		return false;
+	if(!pFile->Open(FileName,IFileAccessor::modeRead))
+	{
+		pFile->Release();
+		return false;	
+	}
+
+	CCSVReader CSVReader;
+
+	if(!CSVReader.Open(pFile))
+		return false;
+
+	pFile->Release();
+
+	for(UINT i=0;i<CSVReader.GetRowCount();i++)
+	{
+		UINT ID=CSVReader.GetDataInt(i,"ModelID",0);
+		LPCTSTR szName=CSVReader.GetDataString(i,"Name","");
+		BLZ_DB_CREATURE_DISPLAY_INFO * pDisplayInfo=FindCreatureDisplayInfo(ID);
+		if(pDisplayInfo)
+		{			
+			pDisplayInfo->Name=szName;			
+		}		
+	}
+
+	return true;
+}
+
 CBLZWOWDatabase::BLZ_DB_CREATURE_MODEL_INFO * CBLZWOWDatabase::FindCreatureModelInfo(UINT ID)
 {
-	for(UINT i=0;i<m_CreatureModelInfo.GetCount();i++)
-	{
-		if(m_CreatureModelInfo[i].ID==ID)
-		{
-			return &(m_CreatureModelInfo[i]);
-		}
-	}
-	return NULL;
+	return m_CreatureModelInfo.Find(ID);	
+}
+
+LPVOID CBLZWOWDatabase::GetFirstCreatureModelInfoPos()
+{
+	return m_CreatureModelInfo.GetFirstObjectPos();
+}
+CBLZWOWDatabase::BLZ_DB_CREATURE_MODEL_INFO * CBLZWOWDatabase::GetNextCreatureModelInfo(LPVOID& Pos)
+{
+	UINT Key;
+	return m_CreatureModelInfo.GetNextObject(Pos,Key);
 }
 
 bool CBLZWOWDatabase::FindCharModelInfo(UINT Race,UINT Sex,CEasyString& ModelFileName,CEasyString& SkinFileName)
@@ -977,7 +1095,7 @@ bool CBLZWOWDatabase::LoadItemClass(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -1024,7 +1142,7 @@ bool CBLZWOWDatabase::LoadItemSubClass(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -1078,7 +1196,7 @@ bool CBLZWOWDatabase::LoadItemSubClassMask(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -1181,7 +1299,7 @@ bool CBLZWOWDatabase::LoadItemData(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -1221,8 +1339,8 @@ bool CBLZWOWDatabase::LoadItemData(LPCTSTR FileName)
 		Info.SheathID=pRecord[i].SheathID;	
 
 		
-		Info.Type=0;
-		Info.SheathType=0;
+		//Info.Type=0;
+		//Info.SheathType=0;
 		Info.Quality=0;
 
 		BLZ_DB_ITEM_SUB_CLASS * pSubClassInfo=GetItemSubClassInfo(Info.ItemClass,Info.ItemSubClass);
@@ -1243,7 +1361,7 @@ bool CBLZWOWDatabase::LoadItemCacheData(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -1251,84 +1369,26 @@ bool CBLZWOWDatabase::LoadItemCacheData(LPCTSTR FileName)
 		pFile->Release();
 		return false;	
 	}
-	int FileSize=(int)pFile->GetSize();	
-	DBData.Create(FileSize+sizeof(TCHAR));
-	pFile->Read(DBData.GetBuffer(),FileSize);
-	DBData.SetUsedSize(FileSize);
+
+	CCSVReader CSVReader;
+
+	if(!CSVReader.Open(pFile))
+		return false;
+
 	pFile->Release();
-	DBData.PushConstBack(0,sizeof(TCHAR));
 
-
-	//pFile=CD3DWOWM2Model::CreateFileAccessor();
-	//if(pFile==NULL)
-	//	return false;
-	//if(!pFile->Open("ItemData.csv",IFileAccessor::modeCreateAlways|IFileAccessor::modeWrite))
-	//{
-	//	pFile->Release();
-	//	return false;	
-	//}
-
-
-
-	LPCTSTR szText=(LPCTSTR)DBData.GetBuffer();
-
-	bool IsNewLine=true;
-
-	while(*szText)
+	for(UINT i=0;i<CSVReader.GetRowCount();i++)
 	{
-		if(*szText=='\n')
+		UINT ItemID=CSVReader.GetDataInt(i,"ItemID",0);
+		BLZ_DB_ITEM_DATA * pItemData=m_ItemData.Find(ItemID);
+		if(pItemData!=NULL)
 		{
-			IsNewLine=true;
-			szText++;
+			
+			pItemData->Quality=CSVReader.GetDataInt(i,"Quality",0);
+			pItemData->Name=CSVReader.GetDataString(i,"Name","");;				
 		}
-		else if(*szText=='\r')
-		{
-			szText++;
-		}
-		else
-		{
-			if(IsNewLine)
-			{
-				UINT ItemID;
-				UINT ModelID;
-				UINT ClassID;
-				UINT SubClassID;
-				UINT Type;
-				UINT SheathType;
-				UINT Quality;
-				TCHAR szName[128];
-
-				sscanf_s(szText,"%u,%u,%u,%u,%u,%u,%u,%[^,\r\n]s",
-					&ItemID,&ModelID,&ClassID,&SubClassID,&Type,&SheathType,&Quality,szName,128);
-				szName[127]=0;			
-
-				BLZ_DB_ITEM_DATA * pItemData=m_ItemData.Find(ItemID);
-				if(pItemData!=NULL)
-				{
-					pItemData->Type=Type;
-					pItemData->SheathType=SheathType;
-					pItemData->Quality=Quality;
-					pItemData->Name=szName;				
-
-					//CEasyString Output;
-					//Output.Format("%u,%u,%u,%u,%u,%u,%u,%s\r\n",ItemID,ModelID,ClassID,SubClassID,Type,SheathType,Quality,szName);
-					//pFile->Write(Output.GetBuffer(),Output.GetLength());
-				}
-				szText=strchr(szText,'\n');
-				IsNewLine=false;
-
-				
-			}
-			else
-			{
-				szText++;
-			}
-		}
-		
-	}	
-
-	//pFile->Release();
-
+	}
+	
 	return true;
 }
 
@@ -1340,7 +1400,7 @@ bool CBLZWOWDatabase::LoadItemDisplayInfo(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -1419,7 +1479,7 @@ bool CBLZWOWDatabase::LoadHelmetGeosetVisibleInfo(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -1473,7 +1533,7 @@ bool CBLZWOWDatabase::LoadMapInfo(LPCTSTR FileName)
 	CEasyBuffer DBData;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -1498,11 +1558,11 @@ bool CBLZWOWDatabase::LoadMapInfo(LPCTSTR FileName)
 	DBC_MAP_INFO * pRecord=(DBC_MAP_INFO *)((BYTE *)DBData.GetBuffer()+sizeof(BLZ_DBC_HEADER));
 	char * pStringTable=(char *)((BYTE *)DBData.GetBuffer()+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*pHeader->RecordCount);
 
-	m_MaoInfo.Resize(pHeader->RecordCount);
+	m_MapInfo.Resize(pHeader->RecordCount);
 
 	for(UINT i=0;i<pHeader->RecordCount;i++)
 	{
-		BLZ_DB_MAP_INFO& Info=m_MaoInfo[i];
+		BLZ_DB_MAP_INFO& Info=m_MapInfo[i];
 
 		Info.ID=						pRecord[i].ID;
 		Info.InternalName=				pStringTable+pRecord[i].InternalName;			
@@ -1537,12 +1597,134 @@ bool CBLZWOWDatabase::LoadMapInfo(LPCTSTR FileName)
 
 UINT CBLZWOWDatabase::GetMapInfoCount()
 {
-	return m_MaoInfo.GetCount();
+	return m_MapInfo.GetCount();
 }
 
 CBLZWOWDatabase::BLZ_DB_MAP_INFO * CBLZWOWDatabase::GetMapInfo(UINT Index)
 {
-	return m_MaoInfo.GetObject(Index);
+	return m_MapInfo.GetObject(Index);
+}
+
+bool CBLZWOWDatabase::LoadLiquidTypeInfo(LPCTSTR FileName)
+{
+	IFileAccessor * pFile;
+
+	pFile=CreateFileAccessor();
+	if(pFile==NULL)
+		return false;
+	if(!pFile->Open(FileName,IFileAccessor::modeRead))
+	{
+		pFile->Release();
+		return false;	
+	}
+	CBLZDBCFile DBCFile;
+	if(!DBCFile.Load(pFile,BLZ_DBC_LIQUID_TYPE_RECORD_SIZE))
+		return false;
+	m_LiquidTypeInfo.Resize(DBCFile.GetRecordCount());
+	for(UINT i=0;i<DBCFile.GetRecordCount();i++)
+	{
+		m_LiquidTypeInfo[i].ID=DBCFile.GetDataUint(i,0);
+		m_LiquidTypeInfo[i].Name=DBCFile.GetDataString(i,1);
+		m_LiquidTypeInfo[i].Flag=DBCFile.GetDataUint(i,2);
+		m_LiquidTypeInfo[i].Type=DBCFile.GetDataUint(i,3);
+		m_LiquidTypeInfo[i].SoundEntriesID=DBCFile.GetDataUint(i,4);
+		m_LiquidTypeInfo[i].SpellID=DBCFile.GetDataUint(i,5);
+		m_LiquidTypeInfo[i].LiquidMaterialID=DBCFile.GetDataUint(i,15);
+		m_LiquidTypeInfo[i].TextureList[0]=DBCFile.GetDataString(i,16);
+		m_LiquidTypeInfo[i].TextureList[1]=DBCFile.GetDataString(i,17);
+		m_LiquidTypeInfo[i].TextureList[2]=DBCFile.GetDataString(i,18);
+		m_LiquidTypeInfo[i].TextureList[3]=DBCFile.GetDataString(i,19);
+		m_LiquidTypeInfo[i].TextureList[4]=DBCFile.GetDataString(i,20);
+		m_LiquidTypeInfo[i].TextureList[5]=DBCFile.GetDataString(i,21);
+		m_LiquidTypeInfo[i].TextureList[6]=DBCFile.GetDataString(i,22);
+		m_LiquidTypeInfo[i].TextureList[7]=DBCFile.GetDataString(i,23);
+	}
+	DBCFile.Close();
+	pFile->Release();
+	return true;
+}
+
+CBLZWOWDatabase::BLZ_DB_LIQUID_TYPE * CBLZWOWDatabase::GetLiquidTypeInfo(UINT TypeID)
+{
+	for(UINT i=0;i<m_LiquidTypeInfo.GetCount();i++)
+	{
+		if(m_LiquidTypeInfo[i].ID==TypeID)
+		{
+			return m_LiquidTypeInfo.GetObject(i);
+		}
+	}
+	return NULL;
+}
+
+void CBLZWOWDatabase::BuildCreatureModelInfo()
+{
+	void * Pos=m_CreatureDisplayInfo.GetFirstObjectPos();
+	while(Pos)
+	{
+		UINT Key;
+		BLZ_DB_CREATURE_DISPLAY_INFO * pDisplayInfo=m_CreatureDisplayInfo.GetNextObject(Pos,Key);
+		BLZ_DB_CREATURE_MODEL_INFO * pModelInfo=FindCreatureModelInfo(pDisplayInfo->ModelID);
+		if(pModelInfo)
+		{
+			pModelInfo->CreatureDisplayInfos.Add(pDisplayInfo);
+		}
+	}
+}
+
+
+bool CBLZWOWDatabase::LoadMiniMapInfo(LPCTSTR FileName)
+{
+	IFileAccessor * pFile;
+
+	pFile=CreateFileAccessor();
+	if(pFile==NULL)
+		return false;
+	if(!pFile->Open(FileName,IFileAccessor::modeRead))
+	{
+		pFile->Release();
+		return false;	
+	}
+	CStringFile FileInfos;
+
+	if(!FileInfos.LoadFile(pFile))
+	{
+		pFile->Release();
+		return false;
+	}
+	pFile->Release();
+
+	for(UINT i=0;i<FileInfos.GetLineCount();i++)
+	{
+		CEasyString Line=FileInfos[i];
+		if(_strnicmp(Line,"dir: ",5)==0)
+		{
+			
+		}
+		else
+		{
+			int Pos=Line.Find('\t');
+			if(Pos>=0)
+			{
+				CEasyString Key=Line.Left(Pos);
+				CEasyString FileName=Line.Right(Line.GetLength()-Pos-1);
+				Key.MakeUpper();
+				m_MiniMapFileInfos.Insert(Key,FileName);
+			}
+		}
+	}
+	return true;
+}
+
+LPCTSTR CBLZWOWDatabase::GetMiniMapRealFileName(LPCTSTR FileName)
+{
+	CEasyString MiniMapFileName=FileName;
+	MiniMapFileName.MakeUpper();
+	CEasyString * pRealFileName=m_MiniMapFileInfos.Find(MiniMapFileName);
+	if(pRealFileName)
+	{
+		return pRealFileName->GetBuffer();
+	}
+	return NULL;
 }
 
 }

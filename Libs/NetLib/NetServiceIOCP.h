@@ -50,7 +50,7 @@ public:
 	virtual BOOL Create(int Protocol = IPPROTO_TCP,
 		int AcceptQueueSize=DEFAULT_SERVER_ACCEPT_QUEUE,
 		int RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE,
-		int SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE,
+		int SendQueueSize=0,
 		int ParallelAcceptCount=DEFAULT_PARALLEL_ACCEPT,
 		int ParallelRecvCount=DEFAULT_PARALLEL_RECV,
 		bool IsUseListenThread=false);

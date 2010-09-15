@@ -58,7 +58,7 @@
 #endif
 
 
-#define SERVER_INFO_COUNT_TIME		5000
+
 
 
 // TODO: 在此处引用程序要求的附加头文件

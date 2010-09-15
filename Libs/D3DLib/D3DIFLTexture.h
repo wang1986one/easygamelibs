@@ -52,7 +52,7 @@ public:
 	void AddFrame(CD3DTexture *	pTexture,float FrameTime);
 
 	virtual LPDIRECT3DTEXTURE9 GetD3DTexture();
-	virtual bool ApplyTexture(int stage);
+	virtual void Update(FLOAT Time);
 
 	virtual void Destory();
 

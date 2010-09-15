@@ -86,6 +86,10 @@ bool CD3DTextureManager::AddTexture(CD3DTexture * pTexture,LPCTSTR TextureName)
 	{
 		pTexture->SetID(ID);
 		pTexture->SetName(TextureName);
+		if(pTexture->IsKindOf(GET_CLASS_INFO(CD3DIFLTexture)))
+		{
+			AddAniTexture(pTexture);
+		}
 		return true;
 	}
 	else
@@ -96,7 +100,14 @@ bool CD3DTextureManager::AddTexture(CD3DTexture * pTexture,LPCTSTR TextureName)
 
 bool CD3DTextureManager::DeleteTexture(UINT ID)
 {
-	
+	CD3DTexture ** ppTexture=m_TextureStorage.GetObject(ID);
+	if(ppTexture)
+	{
+		if((*ppTexture)->IsKindOf(GET_CLASS_INFO(CD3DIFLTexture)))
+		{
+			DelAniTexture(*ppTexture);
+		}
+	}
 	return m_TextureStorage.DeleteObject(ID);		
 		
 }
@@ -106,6 +117,10 @@ bool CD3DTextureManager::DeleteTexture(LPCTSTR TextureName)
 	CD3DTexture ** ppTexture=m_TextureStorage.GetObject(TextureName);
 	if(ppTexture)
 	{
+		if((*ppTexture)->IsKindOf(GET_CLASS_INFO(CD3DIFLTexture)))
+		{
+			DelAniTexture(*ppTexture);
+		}
 		m_TextureStorage.DeleteObject((*ppTexture)->GetID());		
 		return true;
 	}
@@ -200,6 +215,30 @@ CD3DTexture * CD3DTextureManager::GetNext(LPVOID& Pos)
 CD3DTexture * CD3DTextureManager::GetPrev(LPVOID& Pos)
 {
 	return *m_TextureStorage.GetPrev(Pos);
+}
+
+void CD3DTextureManager::Update(FLOAT Time)
+{
+	for(UINT i=0;i<m_AniTextureList.GetCount();i++)
+	{
+		m_AniTextureList[i]->Update(Time);
+	}
+}
+
+void CD3DTextureManager::AddAniTexture(CD3DTexture * pTexture)
+{
+	m_AniTextureList.Add(pTexture);
+}
+void CD3DTextureManager::DelAniTexture(CD3DTexture * pTexture)
+{
+	for(UINT i=0;i<m_AniTextureList.GetCount();i++)
+	{
+		if(m_AniTextureList[i]==pTexture)
+		{
+			m_AniTextureList.Delete(i);
+			break;
+		}
+	}
 }
 
 }

@@ -68,13 +68,13 @@ public:
 
 public:
 
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera);
+	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 	virtual void Update(FLOAT Time);
 	virtual int GetSubMeshCount()
 	{
 		return 1;
 	}
-	virtual CD3DSubMesh * GetSubMesh(int index)
+	virtual CD3DSubMesh * GetSubMesh(UINT index)
 	{
 		return &m_SubMesh;
 	}	

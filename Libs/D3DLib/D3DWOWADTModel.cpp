@@ -53,7 +53,7 @@ bool CD3DWOWADTModel::Restore()
 	return true;
 }
 
-bool CD3DWOWADTModel::LoadFromFile(LPCTSTR ModelFileName)
+bool CD3DWOWADTModel::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask)
 {
 	if(GetDevice()==NULL)
 		return false;
@@ -66,7 +66,7 @@ bool CD3DWOWADTModel::LoadFromFile(LPCTSTR ModelFileName)
 	if(!pResource)
 	{
 		pResource=new CD3DWOWADTModelResource(GetDevice()->GetObjectResourceManager());
-		if(!pResource->LoadFromFile(ModelFileName))
+		if(!pResource->LoadFromFile(ModelFileName,IsBigAlphaMask))
 		{
 			pResource->Release();
 			return false;
@@ -106,8 +106,27 @@ bool CD3DWOWADTModel::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UIN
 {
 	SAFE_RELEASE(m_pBoundingFrame);
 
-	if(!CD3DBaseStaticModel::ToSmartStruct(Packet,pUSOFile,Param))
-		return false;		
+	if(!CD3DBaseStaticModel::ToSmartStruct(Packet,pUSOFile,Param|OPP_WITHOUT_CHILD))
+		return false;	
+
+	if((Param&OPP_WITHOUT_CHILD)==0)
+	{
+		for(UINT i=0;i<m_ChildList.GetCount();i++)
+		{
+			if((!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DWOWWMOModel)))&&
+				(!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DWOWDoodadModel))))
+			{
+				UINT BufferSize;
+				void * pBuffer=Packet.PrepareMember(BufferSize);
+				CSmartStruct ChildPacket(pBuffer,BufferSize,true);
+				if(!m_ChildList[i]->ToSmartStruct(ChildPacket,pUSOFile,Param))
+					return false;
+				if(!Packet.FinishMember(SST_TO_CHILD,ChildPacket.GetDataLen()))
+					return false;
+			}
+		}
+	}
+	
 
 	int ResourceID=pUSOFile->ResourceObjectToIndex(m_pModelResource);
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWAM_MODEL_RESOURCE,ResourceID));	
@@ -146,14 +165,26 @@ bool CD3DWOWADTModel::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,U
 
 UINT CD3DWOWADTModel::GetSmartStructSize(UINT Param)
 {
-	UINT Size=CD3DBaseStaticModel::GetSmartStructSize(Param);
+	UINT Size=CD3DBaseStaticModel::GetSmartStructSize(Param|OPP_WITHOUT_CHILD);
+
+	if((Param&OPP_WITHOUT_CHILD)==0)
+	{
+		for(UINT i=0;i<m_ChildList.GetCount();i++)
+		{
+			if((!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DWOWWMOModel)))&&
+				(!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DWOWDoodadModel))))
+			{
+				Size+=SMART_STRUCT_STRUCT_MEMBER_SIZE(m_ChildList[i]->GetSmartStructSize(Param));
+			}
+		}
+	}
 
 	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(int));
 
 	return Size;
 }
 
-void CD3DWOWADTModel::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera)
+void CD3DWOWADTModel::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
 	if(pSubMesh&&pMaterial)
 	{	
@@ -161,15 +192,49 @@ void CD3DWOWADTModel::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,
 		if(pMaterial->GetFX())
 		{
 			//设置灯光
-			if(pLight[0])
-			{			
-				D3DLIGHT9 Light;
-				pLight[0]->GetCurLight(Light);
-				pMaterial->GetFX()->SetVector("LightDir",CD3DVector4(Light.Direction));
-				pMaterial->GetFX()->SetColor("LightAmbient",Light.Ambient);
-				pMaterial->GetFX()->SetColor("LightDiffuse",Light.Diffuse);
-				pMaterial->GetFX()->SetColor("LightSpecular",Light.Specular);
+			if(LightList.GetCount())
+			{		
+				D3DLIGHT9	Light;
+				char		szParamName[32];
+				pMaterial->GetFX()->SetInt("LightCount",LightList.GetCount());
+				for(UINT i=0;i<LightList.GetCount();i++)
+				{
+					LightList[i]->GetCurLight(Light);
+					sprintf_s(szParamName,32,"LightType[%d]",i);
+					pMaterial->GetFX()->SetInt(szParamName,Light.Type);
+					sprintf_s(szParamName,32,"LightPos[%d]",i);
+					pMaterial->GetFX()->SetVector(szParamName,CD3DVector3(Light.Position));
+					sprintf_s(szParamName,32,"LightDir[%d]",i);
+					pMaterial->GetFX()->SetVector(szParamName,CD3DVector3(Light.Direction));
+					sprintf_s(szParamName,32,"LightAmbient[%d]",i);
+					pMaterial->GetFX()->SetColor(szParamName,Light.Ambient);
+					sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
+					pMaterial->GetFX()->SetColor(szParamName,Light.Diffuse);
+					sprintf_s(szParamName,32,"LightSpecular[%d]",i);
+					pMaterial->GetFX()->SetColor(szParamName,Light.Specular);
+					sprintf_s(szParamName,32,"LightRange[%d]",i);
+					pMaterial->GetFX()->SetFloat(szParamName,Light.Range);
+					sprintf_s(szParamName,32,"LightAtn0[%d]",i);
+					pMaterial->GetFX()->SetFloat(szParamName,Light.Attenuation0);
+					sprintf_s(szParamName,32,"LightAtn1[%d]",i);
+					pMaterial->GetFX()->SetFloat(szParamName,Light.Attenuation1);
+					sprintf_s(szParamName,32,"LightAtn2[%d]",i);
+					pMaterial->GetFX()->SetFloat(szParamName,Light.Attenuation2);
+					//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
+					//pMaterial->GetFX()->SetFloat(szParamName,Light.Falloff);
+					//sprintf_s(szParamName,32,"LightTheta[%d]",i);
+					//pMaterial->GetFX()->SetFloat(szParamName,Light.Theta);
+					//sprintf_s(szParamName,32,"LightPhi[%d]",i);
+					//pMaterial->GetFX()->SetFloat(szParamName,Light.Phi);
+
+				}
+				
 			}
+			//设置雾
+			pMaterial->GetFX()->SetColor("FogColor",GetRender()->GetFogColor());
+			pMaterial->GetFX()->SetFloat("FogNear",GetRender()->GetFogNear());
+			pMaterial->GetFX()->SetFloat("FogFar",GetRender()->GetFogFar());
+
 			//设置材质
 			D3DMATERIAL9 * pD3DMaterial;
 			if(pSubMesh->IsSelected())
@@ -183,23 +248,42 @@ void CD3DWOWADTModel::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,
 			pMaterial->GetFX()->SetFloat("MaterialPower",pD3DMaterial->Power);
 
 			//设置纹理
-			for(UINT i=0;i<pMaterial->GetTextureLayerCount();i++)
+			if(pSubMesh->GetProperty()&CD3DWOWADTModelResource::SMP_IS_WATER)
 			{
-				char szTexName[64];
-				sprintf_s(szTexName,64,"TexLay%d",i);
-				pMaterial->GetFX()->SetTexture(szTexName,pMaterial->GetTexture(i));
+				pMaterial->GetFX()->SetTexture("TexLay0",pMaterial->GetTexture(0));
+				pMaterial->GetFX()->SetTexture("TexLay1",GetRender()->GetDepthTexture());
 			}
+			else
+			{
+				for(UINT i=0;i<pMaterial->GetTextureLayerCount();i++)
+				{
+					char szTexName[64];
+					sprintf_s(szTexName,64,"TexLay%d",i);
+					if(pMaterial->GetTextureProperty(i)&CD3DWOWADTModelResource::TP_SHADOW_MAP)
+					{
+						pMaterial->GetFX()->SetTexture("TexShadow",pMaterial->GetTexture(i));
+					}
+					else
+					{
+						pMaterial->GetFX()->SetTexture(szTexName,pMaterial->GetTexture(i));
+					}					
+				}
+			}
+
+			
+			
 
 			CD3DMatrix Mat=GetWorldMatrix();
 			pMaterial->GetFX()->SetMatrix("WorldMatrix",Mat);
 
+			
 			Mat=GetWorldMatrix()*pCamera->GetViewMat();
 			pMaterial->GetFX()->SetMatrix("WorldViewMatrix",Mat);
-
-			Mat=GetWorldMatrix()*pCamera->GetViewMat()*pCamera->GetProjectMat();
-			pMaterial->GetFX()->SetMatrix("WorldViewPrjMatrix",Mat);
+			pMaterial->GetFX()->SetMatrix("PrjMatrix",pCamera->GetProjectMat());
 
 			pMaterial->GetFX()->SetVector("CameraPos",pCamera->GetWorldMatrix().GetTranslation());
+			pMaterial->GetFX()->SetFloat("CameraNear",pCamera->GetNear());
+			pMaterial->GetFX()->SetFloat("CameraFar",pCamera->GetFar());
 		}	
 	}
 	else
@@ -208,13 +292,46 @@ void CD3DWOWADTModel::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,
 	}
 }
 
+void CD3DWOWADTModel::Update(FLOAT Time)
+{
+	CD3DBaseStaticModel::Update(Time);
+	
+	//if(GetRender())
+	//{
+	//	CD3DCamera * pCamera=GetRender()->GetCamera();
+
+	//	for(UINT i=0;i<m_M2ObjectList.GetCount();i++)
+	//	{
+	//	
+	//		CD3DBoundingBox BBox=(*m_M2ObjectList[i]->GetBoundingBox())*m_M2ObjectList[i]->GetWorldMatrix();
+	//		FLOAT Size=CD3DVector3(BBox.m_Max-BBox.m_Min).Length();
+	//		FLOAT Dis=CD3DVector3(m_M2ObjectList[i]->GetWorldMatrix().GetTranslation()-pCamera->GetWorldMatrix().GetTranslation()).Length();
+	//		if(Size<50)
+	//		{
+	//			if(Dis>300)
+	//			{
+	//				m_M2ObjectList[i]->SetVisibleRecursive(false);
+	//			}
+	//			else
+	//			{
+	//				m_M2ObjectList[i]->SetVisibleRecursive(true);
+	//			}
+	//		}
+	//		
+	//	}
+	//	
+
+	//	
+	//}
+}
+
 int CD3DWOWADTModel::GetSubMeshCount()
 {
 	if(m_pModelResource)
 		return m_pModelResource->GetSubMeshCount();
 	return 0;
 }
-CD3DSubMesh * CD3DWOWADTModel::GetSubMesh(int index)
+CD3DSubMesh * CD3DWOWADTModel::GetSubMesh(UINT index)
 {
 	if(m_pModelResource)
 		return m_pModelResource->GetSubMesh(index);
@@ -228,16 +345,24 @@ CD3DSubMeshMaterial * CD3DWOWADTModel::GetSubMeshMaterial(int index)
 }
 
 CD3DBoundingBox * CD3DWOWADTModel::GetBoundingBox()
-{
-	if(m_pModelResource)
-		return m_pModelResource->GetBoundingBox();
-	return NULL;
+{	
+	return &m_BoundingBox;
 }
 CD3DBoundingSphere * CD3DWOWADTModel::GetBoundingSphere()
 {
 	if(m_pModelResource)
 		return m_pModelResource->GetBoundingSphere();
 	return NULL;
+}
+
+bool CD3DWOWADTModel::GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT& WaterHeight)
+{
+	if(m_pModelResource)
+	{
+		CD3DVector3 Pos=GetWorldMatrix().GetTranslation();
+		return m_pModelResource->GetHeightByXZ(x-Pos.x,z-Pos.z,Height,WaterHeight);
+	}
+	return false;
 }
 
 
@@ -248,7 +373,7 @@ bool CD3DWOWADTModel::LoadObjects()
 		CD3DWOWADTModelResource::M2_OBJECT_INFO * pInfo=m_pModelResource->GetM2ObjectInfo(i);
 		if(pInfo)
 		{
-			CD3DWOWM2Model * pObject=new CD3DWOWM2Model();
+			CD3DWOWDoodadModel * pObject=new CD3DWOWDoodadModel();
 			pObject->SetDevice(GetDevice());
 			if(!pObject->LoadFromResource(pInfo->pModelResource))
 			{
@@ -297,7 +422,25 @@ bool CD3DWOWADTModel::LoadObjects()
 			m_WMOObjectList.Add(pObject);
 		}
 	}
+	BuildBoundingBox();
 	return true;
+}
+
+void CD3DWOWADTModel::BuildBoundingBox()
+{
+	m_BoundingBox=*m_pModelResource->GetBoundingBox();
+	for(UINT i=0;i<m_M2ObjectList.GetCount();i++)
+	{
+		if(m_M2ObjectList[i]->GetBoundingBox()->IsValid())
+			m_BoundingBox.Merge((*m_M2ObjectList[i]->GetBoundingBox())*m_M2ObjectList[i]->GetLocalMatrix());
+		if(!m_BoundingBox.IsValid())
+			int err=1;
+	}	
+	for(UINT i=0;i<m_WMOObjectList.GetCount();i++)
+	{
+		if(m_WMOObjectList[i]->GetBoundingBox()->IsValid())
+			m_BoundingBox.Merge((*m_WMOObjectList[i]->GetBoundingBox())*m_WMOObjectList[i]->GetLocalMatrix());
+	}
 }
 
 }

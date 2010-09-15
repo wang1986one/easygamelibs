@@ -234,7 +234,7 @@ inline BOOL CDOSProxyConnection::SendOutSideMsg(CDOSMessagePacket * pPacket)
 	default:
 		{
 			CDOSSimpleMessage * pSimpleMessage=pPacket->GetMessage().MakeSimpleMessage();
-			return QuerySend(pSimpleMessage,pSimpleMessage->GetMsgLength());
+			return Send(pSimpleMessage,pSimpleMessage->GetMsgLength());
 		}
 	}	
 	FUNCTION_END;

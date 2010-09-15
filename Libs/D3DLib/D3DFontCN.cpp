@@ -254,7 +254,7 @@ bool CD3DFontCN::Create(const LOGFONT * pLogFont,int MipLevels,int BufferSize)
 	SetTextAlign( m_FontDC,TA_TOP);
 
 	//½¨Á¢äÖÈ¾Æ÷
-	if(!m_Render.Create(m_pManager->GetDevice(),256,0,100))
+	if(!m_Render.Create(m_pManager->GetDevice()))
 	{
 		DeleteObject(m_CharBmp);
 		DeleteObject(m_GDIFont);

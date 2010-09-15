@@ -77,7 +77,16 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 			if(Services.has_attribute("ReallocConnectionID"))
 				NeedReallocConnectionID=(bool)Services.attribute("ReallocConnectionID");
 
-			
+			CClassifiedID ReportID;
+			if(Services.has_attribute("ReportID"))
+			{
+				ReportID=Services.attribute("ReportID").getvalue().c_str();
+			}
+			else
+			{
+				ReportID=ServerID;
+			}
+
 			for(UINT j=0;j<Services.children();j++)
 			{
 				if(_strnicmp(Services.child(j).name(),"Service",7)==0)
@@ -86,31 +95,32 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 					if(Service.has_attribute("ID")&&
 						Service.has_attribute("Port"))
 					{
-						CClassifiedID ReportID;
-						if(Service.has_attribute("ReportID"))
-						{
-							ReportID=Service.attribute("ReportID").getvalue().c_str();
-						}
-						else
-						{
-							ReportID=ServerID;
-						}
-
 						CClassifiedID ID=Service.attribute("ID").getvalue().c_str();						
 						CIPAddress Address;
-						UINT MaxPacketSize=0;
+						UINT MaxPacketSize=MAX_DATA_PACKET_SIZE;
 						bool IsUseListenThread=true;
 						int ParallelAcceptCount=DEFAULT_PARALLEL_ACCEPT;
+						UINT AcceptQueueSize=DEFAULT_SERVER_ACCEPT_QUEUE;
+						UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE;
+						UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE;
 						if(Service.has_attribute("IP"))
 							Address.SetIP(Service.attribute("IP").getvalue().c_str());
 						if(Service.has_attribute("MaxPacketSize"))
 							MaxPacketSize=(long)Service.attribute("MaxPacketSize");
 						if(Service.has_attribute("IsUseListenThread"))
-							IsUseListenThread=(long)Service.attribute("IsUseListenThread");
+							IsUseListenThread=(bool)Service.attribute("IsUseListenThread");
 						if(Service.has_attribute("ParallelAcceptCount"))
 							ParallelAcceptCount=(long)Service.attribute("ParallelAcceptCount");
+						if(Service.has_attribute("AcceptQueueSize"))
+							AcceptQueueSize=(long)Service.attribute("AcceptQueueSize");
+						if(Service.has_attribute("RecvQueueSize"))
+							RecvQueueSize=(long)Service.attribute("RecvQueueSize");
+						if(Service.has_attribute("SendQueueSize"))
+							SendQueueSize=(long)Service.attribute("SendQueueSize");
 						Address.SetPort((WORD)((long)Service.attribute("Port")));
-						CEasyNetLinkService * pService=AddService(ID,ReportID,Address,NeedReallocConnectionID,MaxPacketSize,IsUseListenThread,ParallelAcceptCount);
+						CEasyNetLinkService * pService=AddService(ID,ReportID,Address,NeedReallocConnectionID,
+							MaxPacketSize,IsUseListenThread,
+							ParallelAcceptCount,AcceptQueueSize,RecvQueueSize,SendQueueSize);
 						if(!pService)
 						{
 							PrintNetLog(0xffffff,"CEasyNetLinkManager::Init 创建Service[%s][%s:%u]失败",
@@ -146,7 +156,15 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 		{
 			xml_node Connections=Config.child(i);	
 
-			
+			CClassifiedID ReportID;
+			if(Connections.has_attribute("ReportID"))
+			{
+				ReportID=Connections.attribute("ReportID").getvalue().c_str();
+			}
+			else
+			{
+				ReportID=ServerID;
+			}
 
 			for(UINT j=0;j<Connections.children();j++)
 			{
@@ -155,23 +173,20 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 					xml_node Connection=Connections.child(j);
 					if(Connection.has_attribute("IP")&&
 						Connection.has_attribute("Port"))
-					{		
-						CClassifiedID ReportID;
-						if(Connection.has_attribute("ReportID"))
-						{
-							ReportID=Connection.attribute("ReportID").getvalue().c_str();
-						}
-						else
-						{
-							ReportID=ServerID;
-						}
+					{											
 						CIPAddress Address;
-						UINT MaxPacketSize=0;
+						UINT MaxPacketSize=MAX_DATA_PACKET_SIZE;
+						UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE;
+						UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE;
 						Address.SetIP(Connection.attribute("IP").getvalue().c_str());
 						Address.SetPort((WORD)((long)Connection.attribute("Port")));
 						if(Connection.has_attribute("MaxPacketSize"))
 							MaxPacketSize=(long)Connection.attribute("MaxPacketSize");
-						if(!AddConnection(ReportID,Address,MaxPacketSize))
+						if(Connection.has_attribute("RecvQueueSize"))
+							RecvQueueSize=(long)Connection.attribute("RecvQueueSize");
+						if(Connection.has_attribute("SendQueueSize"))
+							SendQueueSize=(long)Connection.attribute("SendQueueSize");
+						if(!AddConnection(ReportID,Address,MaxPacketSize,RecvQueueSize,SendQueueSize))
 						{
 							PrintNetLog(0xffffff,"CEasyNetLinkManager::Init 创建Connection[%s][%s:%u]失败",
 								ReportID.ToStr(),Address.GetIPString(),Address.GetPort());
@@ -210,7 +225,10 @@ void CEasyNetLinkManager::Destory()
 	m_ServiceList.clear();
 }
 
-CEasyNetLinkService * CEasyNetLinkManager::AddService(UINT ID,UINT ReportID,const CIPAddress& ListenAddress,BOOL NeedReallocConnectionID,UINT MaxPacketSize,bool IsUseListenThread,int ParallelAcceptCount)
+CEasyNetLinkService * CEasyNetLinkManager::AddService(UINT ID,UINT ReportID,const CIPAddress& ListenAddress,
+													  BOOL NeedReallocConnectionID,UINT MaxPacketSize,bool IsUseListenThread,
+													  int ParallelAcceptCount,UINT AcceptQueueSize,
+													  UINT RecvQueueSize,UINT SendQueueSize)
 {
 	CEasyNetLinkService * pService=CreateLinkService(ID);
 	if(pService)
@@ -218,18 +236,18 @@ CEasyNetLinkService * CEasyNetLinkManager::AddService(UINT ID,UINT ReportID,cons
 		pService->SetMaxPacketSize(MaxPacketSize);
 		pService->SetReportID(ReportID);
 		pService->EnableReallocConnectionID(NeedReallocConnectionID);
-		if(pService->Create(IPPROTO_TCP,DEFAULT_SERVER_ACCEPT_QUEUE,
-			DEFAULT_SERVER_RECV_DATA_QUEUE,DEFAULT_SERVER_SEND_DATA_QUEUE,
+		if(pService->Create(IPPROTO_TCP,AcceptQueueSize,
+			RecvQueueSize,SendQueueSize,
 			ParallelAcceptCount,DEFAULT_PARALLEL_RECV,IsUseListenThread))
 		{		
 			if(pService->StartListen(ListenAddress))
 			{
-				PrintNetLog(0xffffff,"CEasyNetLinkManager::AddService 创建Service[%s][%s:%u],%s,并发Accept=%d",
+				PrintNetLog(0xffffff,"CEasyNetLinkManager::AddService 创建Service[%s][%s:%u],%s,并发Accept=%d,Accept队列长度=%u,接收队列长度=%u,发送队列长度=%u",
 					CClassifiedID(ID).ToStr(),
 					ListenAddress.GetIPString(),
 					ListenAddress.GetPort(),
 					IsUseListenThread?"使用侦听线程":"使用IOCP侦听",
-					ParallelAcceptCount);
+					ParallelAcceptCount,AcceptQueueSize,RecvQueueSize,SendQueueSize);
 				return pService;
 			}
 		}
@@ -239,18 +257,21 @@ CEasyNetLinkService * CEasyNetLinkManager::AddService(UINT ID,UINT ReportID,cons
 	return NULL;
 }
 
-BOOL CEasyNetLinkManager::AddConnection(UINT ReportID,const CIPAddress& ConnectionAddress,UINT MaxPacketSize)
+BOOL CEasyNetLinkManager::AddConnection(UINT ReportID,const CIPAddress& ConnectionAddress,UINT MaxPacketSize,
+										UINT RecvQueueSize,UINT SendQueueSize)
 {
 	CEasyNetLinkConnection * pConnection=CreateAcceptConnection(ReportID);
 	if(pConnection)
 	{		
+		pConnection->Create(RecvQueueSize,SendQueueSize);
 		pConnection->SetMaxPacketSize(MaxPacketSize);
 		pConnection->SetKeepConnect(TRUE);		
 		pConnection->SetRemoteAddress(ConnectionAddress);
-		PrintNetLog(0xffffff,"CEasyNetLinkManager::AddConnection 创建Connection[%s][%s:%u]",
+		PrintNetLog(0xffffff,"CEasyNetLinkManager::AddConnection 创建Connection[%s][%s:%u],接收队列长度=%u,发送队列长度=%u",
 			CClassifiedID(ReportID).ToStr(),
 			ConnectionAddress.GetIPString(),
-			ConnectionAddress.GetPort());
+			ConnectionAddress.GetPort(),
+			RecvQueueSize,SendQueueSize);
 		return TRUE;
 	}
 	return FALSE;

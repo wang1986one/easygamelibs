@@ -18,11 +18,13 @@ IMPLEMENT_CLASS_INFO(CD3DIFLTexture,CD3DTexture);
 CD3DIFLTexture::CD3DIFLTexture():CD3DTexture()
 {
 	m_CurFrame=0;	
+	m_FlipStartTime=0.0f;
 }
 
 CD3DIFLTexture::CD3DIFLTexture(CD3DTextureManager * pManager):CD3DTexture(pManager)
 {
-	m_CurFrame=0;	
+	m_CurFrame=0;
+	m_FlipStartTime=0.0f;
 }
 
 CD3DIFLTexture::~CD3DIFLTexture(void)
@@ -90,9 +92,17 @@ void CD3DIFLTexture::AddFrame(CD3DTexture *	pTexture,float FrameTime)
 
 LPDIRECT3DTEXTURE9 CD3DIFLTexture::GetD3DTexture()
 {
+	if(m_CurFrame<m_TextrueList.GetCount())
+	{		
+		return m_TextrueList[m_CurFrame].pTexture->GetD3DTexture();
+	}
+	return NULL;
+}
+
+void CD3DIFLTexture::Update(FLOAT Time)
+{
 	if(m_TextrueList.GetCount())
 	{	
-		FLOAT Time=(FLOAT)CEasyTimer::GetTime()/1000.0f;
 		if(Time-m_FlipStartTime>m_TextrueList[m_CurFrame].FrameTime)
 		{
 			m_FlipStartTime=Time;
@@ -102,36 +112,10 @@ LPDIRECT3DTEXTURE9 CD3DIFLTexture::GetD3DTexture()
 			if(m_CurFrame>=(int)m_TextrueList.GetCount())
 				m_CurFrame=0;			
 		}	
-		return m_TextrueList[m_CurFrame].pTexture->GetD3DTexture();
 	}
-	return NULL;
 }
 
-bool CD3DIFLTexture::ApplyTexture(int stage)
-{
-	if(m_TextrueList.GetCount())
-	{	
-		FLOAT Time=(FLOAT)CEasyTimer::GetTime()/1000.0f;
-		if(Time-m_FlipStartTime>m_TextrueList[m_CurFrame].FrameTime)
-		{
-			m_FlipStartTime=Time;
-			m_CurFrame++;
-			if(m_CurFrame<0)
-				m_CurFrame=(int)m_TextrueList.GetCount()-1;
-			if(m_CurFrame>=(int)m_TextrueList.GetCount())
-				m_CurFrame=0;			
-		}
-		if(m_pManager&&m_TextrueList[m_CurFrame].pTexture)
-		{
-			if(m_pManager->GetDevice())
-			{			
-				if(SUCCEEDED(m_pManager->GetDevice()->GetD3DDevice()->SetTexture(stage,m_pTexture)))
-					return true;			
-			}
-		}
-	}	
-	return false;
-}
+
 
 void CD3DIFLTexture::Destory()
 {
@@ -196,9 +180,9 @@ bool CD3DIFLTexture::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT
 		void * pBuffer=Packet.PrepareMember(BufferSize);
 		CSmartStruct SubPacket(pBuffer,BufferSize,true);
 
-		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_FI_TIME,m_TextrueList[i].FrameTime));
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_FI_TIME,m_TextrueList[i].FrameTime));
 		int ResourceID=pUSOFile->ResourceObjectToIndex(m_TextrueList[i].pTexture);
-		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_FI_TEXTURE,ResourceID));
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_FI_TEXTURE,ResourceID));
 		if(!Packet.FinishMember(SST_D3DITEX_FRAME,SubPacket.GetDataLen()))
 			return false;
 	}

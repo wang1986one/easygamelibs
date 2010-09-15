@@ -86,6 +86,7 @@ public:
 		UINT32			ModelID;						
 		UINT32			SoundID;						
 		UINT32			ExtraDisplayInformationID;	
+		CEasyString		Name;
 		FLOAT			Scale;						
 		UINT32			Opacity;					
 		CEasyString		Skin1;						
@@ -99,17 +100,43 @@ public:
 		UINT32			CreatureGeosetDataID;			
 		UINT32			ObjectEffectPackageID;		
 	};
+
+	struct BLZ_DB_CREATURE_EXTRA_DISPLAY_INFO
+	{
+		UINT32			ID;
+		UINT32			Race;
+		UINT32			Sex;
+		UINT32			SkinColor;
+		UINT32			FaceType;
+		UINT32			HairType;
+		UINT32			HairColor;
+		UINT32			BeardType;
+		UINT32			HeadEuipment;
+		UINT32			ShoulderEuipment;
+		UINT32			ShirtEuipment;
+		UINT32			BustEuipment;
+		UINT32			BeltEuipment;
+		UINT32			LegEuipment;
+		UINT32			BootEuipment;
+		UINT32			RingEuipment;
+		UINT32			HandEuipment;
+		UINT32			WristEuipment;
+		UINT32			CapeEuipment;
+
+
+	};
 	struct BLZ_DB_CREATURE_MODEL_INFO
 	{
 		UINT32			ID;							
 		UINT32			Flags;						
 		CEasyString		ModelPath;					
-		CEasyString		AltermateModel;				
+		CEasyString		AltermateModel;	
 		FLOAT			Scale;						
 		UINT32			BloodLevelID;					
 		UINT32			SoundDataID;					
 		FLOAT			CollisionWidth; 			
-		FLOAT			CollisionHeight;			
+		FLOAT			CollisionHeight;	
+		CEasyArray<BLZ_DB_CREATURE_DISPLAY_INFO *> CreatureDisplayInfos;
 	};
 
 	struct BLZ_DB_ITEM_DATA
@@ -121,8 +148,8 @@ public:
 		UINT			ItemDisplayInfo;
 		UINT			InventorySlotID;
 		UINT			SheathID;	
-		UINT 			Type;
-		UINT 			SheathType;
+		//UINT 			Type;
+		//UINT 			SheathType;
 		UINT 			Quality;
 		CEasyString 	Name;
 	};
@@ -222,6 +249,23 @@ public:
 
 	};
 
+	struct BLZ_DB_LIQUID_TYPE
+	{
+		UINT		ID;
+		CEasyString	Name;
+		UINT		Flag;
+		UINT		Type;
+		UINT		SoundEntriesID;
+		UINT		SpellID;
+		UINT		LiquidMaterialID;
+		CEasyString	TextureList[8];
+	};
+
+
+	struct BLZ_MINI_MAP_FILE_INFO
+	{
+		
+	};
 
 
 protected:
@@ -237,8 +281,9 @@ protected:
 	CEasyArray<BLZ_DB_CHAR_WHISKER_SUBMESH_INFO>				m_CharWhiskerSubMeshInfo;
 
 	CEasyArray<BLZ_DB_CHAR_RACE_INFO>							m_CharRaceInfo;
-	CEasyArray<BLZ_DB_CREATURE_DISPLAY_INFO>					m_CreatureDisplayInfo;
-	CEasyArray<BLZ_DB_CREATURE_MODEL_INFO>						m_CreatureModelInfo;
+	CEasyMap<UINT,BLZ_DB_CREATURE_DISPLAY_INFO>					m_CreatureDisplayInfo;
+	CEasyMap<UINT,BLZ_DB_CREATURE_EXTRA_DISPLAY_INFO>			m_CreatureExtraDisplayInfo;
+	CEasyMap<UINT,BLZ_DB_CREATURE_MODEL_INFO>					m_CreatureModelInfo;
 
 	CEasyArray<BLZ_DB_ITEM_CLASS>								m_ItemClass;
 	
@@ -250,9 +295,15 @@ protected:
 
 	CEasyMap<UINT,BLZ_DB_HELMET_GEOSET_VISIBLE_INFO>			m_HelmetGeosetVisibleInfo;
 
-	CEasyArray<BLZ_DB_MAP_INFO>									m_MaoInfo;
+	CEasyArray<BLZ_DB_MAP_INFO>									m_MapInfo;
 
 	CBLZDBCFile													m_SpellVisualEffectNameInfo;
+
+	CEasyArray<BLZ_DB_LIQUID_TYPE>								m_LiquidTypeInfo;
+
+	CEasyMap<CEasyString,CEasyString>							m_MiniMapFileInfos;
+
+	DECLARE_FILE_CHANNEL_MANAGER
 
 public:
 	CBLZWOWDatabase(void);
@@ -287,12 +338,24 @@ public:
 	BLZ_DB_CHAR_RACE_INFO * FindRaceInfo(UINT Race);
 
 	bool LoadCreatureDisplayInfo(LPCTSTR FileName);
+	bool LoadCreatureExtraDisplayInfo(LPCTSTR FileName);
 
 	BLZ_DB_CREATURE_DISPLAY_INFO * FindCreatureDisplayInfo(UINT ID);
+	BLZ_DB_CREATURE_EXTRA_DISPLAY_INFO * FindCreatureExtraDisplayInfo(UINT ID);
+	LPVOID GetFirstCreatureDisplayInfoPos();
+	BLZ_DB_CREATURE_DISPLAY_INFO * GetNextCreatureDisplayInfo(LPVOID& Pos);
+
+
+
 
 	bool LoadCreatureModelInfo(LPCTSTR FileName);
 
+	bool LoadNPCData(LPCTSTR FileName);
+	
+
 	BLZ_DB_CREATURE_MODEL_INFO * FindCreatureModelInfo(UINT ID);
+	LPVOID GetFirstCreatureModelInfoPos();
+	BLZ_DB_CREATURE_MODEL_INFO * GetNextCreatureModelInfo(LPVOID& Pos);
 
 	bool FindCharModelInfo(UINT Race,UINT Sex,CEasyString& ModelFileName,CEasyString& SkinFileName);
 
@@ -311,6 +374,7 @@ public:
 	bool LoadItemCacheData(LPCTSTR FileName);
 
 	bool LoadItemDisplayInfo(LPCTSTR FileName);
+	
 
 	BLZ_DB_ITEM_DATA * GetItemData(UINT ItemID);
 
@@ -324,10 +388,17 @@ public:
 
 	UINT GetMapInfoCount();
 	BLZ_DB_MAP_INFO * GetMapInfo(UINT Index);
-	
+
+	bool LoadLiquidTypeInfo(LPCTSTR FileName);
+	BLZ_DB_LIQUID_TYPE * GetLiquidTypeInfo(UINT TypeID);
+
+	bool LoadMiniMapInfo(LPCTSTR FileName);
+
+	LPCTSTR GetMiniMapRealFileName(LPCTSTR FileName);
 
 protected:
 	CEasyString UTF8ToLocal(LPCTSTR szStr,int StrLen);
+	void BuildCreatureModelInfo();
 
 	
 };

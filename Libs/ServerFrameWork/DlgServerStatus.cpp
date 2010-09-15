@@ -57,8 +57,14 @@ void CDlgServerStatus::FlushStatus(CSmartStruct& ServerStatus)
 	{
 		WORD MemberID;
 		CSmartValue Value=ServerStatus.GetNextMember(Pos,MemberID);
-		CEasyString MemberIDStr;
-		MemberIDStr=CControlPanel::GetInstance()->GetServerStatusName(MemberID);
+		CEasyString MemberIDStr("Î´ÖªÊôÐÔ");
+		int FormatType=SSFT_DEFAULT;
+		SERVER_STATUS_FORMAT_INFO * pFormatInfo=CControlPanel::GetInstance()->GetServerStatusFormat(MemberID);
+		if(pFormatInfo)
+		{
+			MemberIDStr=pFormatInfo->szName;
+			FormatType=pFormatInfo->FormatType;
+		}
 		CEasyString ValueStr;
 		switch(Value.GetType())
 		{
@@ -69,28 +75,52 @@ void CDlgServerStatus::FlushStatus(CSmartStruct& ServerStatus)
 			ValueStr.Format("%u",(BYTE)Value);
 			break;
 		case CSmartValue::VT_SHORT:
-			ValueStr.Format("%d",(short)Value);
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((short)Value,true);
+			else
+				ValueStr.Format("%d",(short)Value);
 			break;
 		case CSmartValue::VT_USHORT:
-			ValueStr.Format("%u",(WORD)Value);
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((WORD)Value,true);
+			else
+				ValueStr.Format("%u",(WORD)Value);
 			break;
 		case CSmartValue::VT_INT:
-			ValueStr.Format("%d",(int)Value);
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((int)Value,true);
+			else
+				ValueStr.Format("%d",(int)Value);
 			break;
 		case CSmartValue::VT_UINT:
-			ValueStr.Format("%u",(UINT)Value);
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((UINT)Value,true);
+			else
+				ValueStr.Format("%u",(UINT)Value);
 			break;
 		case CSmartValue::VT_BIGINT:
-			ValueStr.Format("%lld",(INT64)Value);
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((INT64)Value,true);
+			else
+				ValueStr.Format("%lld",(INT64)Value);
 			break;
 		case CSmartValue::VT_UBIGINT:
-			ValueStr.Format("%llu",(UINT64)Value);
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWords((UINT64)Value,true);
+			else
+				ValueStr.Format("%llu",(UINT64)Value);
 			break;
 		case CSmartValue::VT_FLOAT:
-			ValueStr.Format("%g",(float)Value);
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWordsFloat((float)Value,true);
+			else
+				ValueStr.Format("%g",(float)Value);
 			break;
 		case CSmartValue::VT_DOUBLE:
-			ValueStr.Format("%g",(double)Value);
+			if(FormatType==SSFT_FLOW)
+				ValueStr=FormatNumberWordsFloat((double)Value,true);
+			else
+				ValueStr.Format("%g",(double)Value);
 			break;
 		case CSmartValue::VT_STRING:
 			ValueStr=(LPCTSTR)Value;

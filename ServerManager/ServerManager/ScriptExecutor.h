@@ -19,8 +19,13 @@ class CScriptExecutor :
 protected:
 	CServerManagerClient *			m_pManager;	
 	CEasyBuffer						m_AssembleBuffer;		
-	CBolanStack						m_CurScript;
-	CExpressionCaculator			m_ScriptExecutor;
+
+	CESBolanStack					m_CurScript;
+	CEasyScriptExecutor				m_ScriptExecutor;
+	CESVariableList					m_VarList;
+	CESFactionList					m_FnList;
+	CESThread						m_ESThread;
+
 	UINT							m_Param;
 	int								m_Status;
 	CEasyString						m_WorkDir;
@@ -74,6 +79,6 @@ protected:
 	void OnStartDownloadResult(int Result,UINT TotalSize,UINT OrgTotalSize,LPCVOID pPackProps,UINT PackPropSize,time_t LastWriteTime);
 	void OnDownloadData(int Result,UINT TotalSize,UINT LeftSize,LPCVOID pData,UINT DataSize);
 
-	static int DownloadFileFN(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* pParams,int ParamCount);
+	int DownloadFileFN(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
 	
 };

@@ -48,4 +48,5 @@ public:
 	bool WaitForStatus(int Status,UINT WaitTimeOut);
 
 	int GetServiceStatus();
+	bool GetServiceImageFilePath(LPTSTR pBuffer,int BufferSize);
 };

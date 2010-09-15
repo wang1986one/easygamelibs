@@ -17,8 +17,14 @@ class CServerThread :
 	public CNetServer,
 	public IBaseServer
 {
-protected:		
-	CExpressionCaculator		m_CommandExecutor;
+protected:	
+	CESVariableList				m_ESVariableList;
+	CESFactionList				m_ESFactionList;
+	CESBolanStack				m_Script;
+	CESThread					m_ESThread;
+	CEasyScriptExecutor			m_ScriptExecutor;
+
+
 	CSystemNetLinkManager		*m_pSysNetLinkManager;
 	CSystemControlPort			*m_pUDPSystemControlPort;
 	CSmartStruct				m_ServerStatus;
@@ -47,7 +53,7 @@ public:
 	virtual void ExecCommand(LPCTSTR szCommand);
 
 	virtual BOOL SetServerStatus(WORD StatusID,const CSmartValue& Value);
-	virtual void SetServerStatusName(WORD StatusID,LPCTSTR szStatusName);
+	virtual void SetServerStatusFormat(WORD StatusID,LPCTSTR szStatusName,int FormatType=SSFT_DEFAULT);
 	virtual CSmartValue GetServerStatus(WORD StatusID)
 	{
 		return m_ServerStatus.GetMember(StatusID);
@@ -83,8 +89,8 @@ protected:
 		return m_pSysNetLinkManager;
 	}
 
-	static int StartLog(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* pParams,int ParamCount);
-	static int StopLog(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* pParams,int ParamCount);
-	static int TestLog(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* pParams,int ParamCount);	
-	static int RebuildUDPControlPort(INT_PTR FnParam,CVariableList* pVarList,CBolan* pResult,CBolan* pParams,int ParamCount);
+	int StartLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
+	int StopLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
+	int TestLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);	
+	int RebuildUDPControlPort(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
 };

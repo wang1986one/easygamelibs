@@ -52,6 +52,12 @@ protected:
 		ADT_COMPRESS,
 	};
 
+	enum
+	{		
+		TERRAIN_BLOCK_HEIGHT_COUNT=145,
+		TERRAIN_BLOCK_WATER_HEIGHT_COUNT=81,
+	};
+
 	struct TEXTURE_LAYER_INFO
 	{
 		BYTE						LayerCount;
@@ -63,7 +69,24 @@ protected:
 			pShadowMap=NULL;
 		}
 	};
+
+	struct TERRAIN_BLOCK_HEIGHT_INFO
+	{
+		bool	HaveWater;
+		FLOAT	TerrainHeight[TERRAIN_BLOCK_HEIGHT_COUNT];
+		FLOAT	WaterHeight[TERRAIN_BLOCK_WATER_HEIGHT_COUNT];
+	};
 public:
+	enum SUB_MESH_PROPERTY:UINT64
+	{
+		SMP_IS_WATER=(1<<4),
+		SMP_RENDER_TO_DEPTH=(1<<5),
+	};
+	enum TEXTURE_PROPERTY:UINT64
+	{
+		TP_ALPHA_MAP=1,
+		TP_SHADOW_MAP=(1<<1),
+	};
 	struct M2_OBJECT_INFO
 	{
 		UINT						ID;
@@ -81,12 +104,16 @@ public:
 		UINT						DoodadSet;
 	};
 
+	
+
 protected:
 
 	enum SST_MEMBER_ID
 	{
 		SST_D3DWAMR_M2_OBJECT_LIST=SST_D3DOR_MAX,
 		SST_D3DWAMR_WMO_OBJECT_LIST,
+		SST_D3DWAMR_HEIGHT_INFO_LIST,
+		SST_D3DWAMR_POSITION,
 		SST_D3DWAMR_MAX=SST_D3DOR_MAX+50,
 	};
 
@@ -118,9 +145,22 @@ protected:
 		SST_WOI_DOODAD_SET,
 	};
 
-	
+	enum SST_HEIGHT_INFO_LIST
+	{
+		SST_HIL_HEIGHT_INFO=1,
+	};
+
+	enum SST_HEIGHT_INFO
+	{
+		SST_HI_HAVE_WATER=1,
+		SST_HI_TERRAIN_HEIGHT,
+		SST_HI_WATER_HEIGHT,
+	};
 
 	
+
+	TERRAIN_BLOCK_HEIGHT_INFO		m_TerrainHeightInfo[BLZ_ADT_MAP_TILE_COUNT];
+	CD3DVector3						m_Position;
 	CEasyArray<M2_OBJECT_INFO>		m_M2ObjectList;
 	CEasyArray<WMO_OBJECT_INFO>		m_WMOObjectList;
 	
@@ -136,13 +176,15 @@ public:
 	virtual bool Reset();
 	virtual bool Restore();
 
-	bool LoadFromFile(LPCTSTR ModelFileName);
+	bool LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask);
 
 	UINT GetM2ObjectCount();
 	M2_OBJECT_INFO * GetM2ObjectInfo(UINT Index);
 
 	UINT GetWMOObjectCount();
 	WMO_OBJECT_INFO * GetWMOObjectInfo(UINT Index);
+
+	bool GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT& WaterHeight);
 public:	
 
 	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
@@ -151,10 +193,11 @@ public:
 	virtual UINT GetSmartStructSize(UINT Param=0);
 protected:
 	CD3DFX * BuildFX(UINT Index,UINT LayCount,bool HaveShadowMap);
-	bool LoadAlphaLayer(TEXTURE_LAYER_INFO& LayInfo,UINT LayerCount,BLZ_CHUNK_MCLY * pMCLY,BLZ_CHUNK_MCAL * pMCAL);
-	CD3DTexture * CreateAlphaMap(int DataType,LPBYTE pData,UINT DataSize,UINT& ProcessSize);
-	bool LoadShadowMap(TEXTURE_LAYER_INFO& LayInfo,BLZ_CHUNK_MCSH * pMCSH);
+	bool LoadAlphaLayer(TEXTURE_LAYER_INFO& LayInfo,UINT LayerCount,BLZ_CHUNK_MCLY * pMCLY,BLZ_CHUNK_MCAL * pMCAL,UINT ID,bool IsBigAlphaMask);
+	CD3DTexture * CreateAlphaMap(int DataType,LPBYTE pData,UINT DataSize,UINT& ProcessSize,UINT ID);
+	bool LoadShadowMap(TEXTURE_LAYER_INFO& LayInfo,BLZ_CHUNK_MCSH * pMCSH,UINT ID);
 	CD3DTexture * LoadLiquidTexture(int LiquidType);
+	bool WantRenderWater(BYTE * pRenderMask,int Pos);
 };
 
 

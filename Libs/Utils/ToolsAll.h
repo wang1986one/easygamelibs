@@ -76,29 +76,32 @@ inline CEasyString FormatSplitNumber(ULONG64 Number)
 	return Str;
 }
 
-inline CEasyString FormatNumberWords(ULONG64 Number)
+inline CEasyString FormatNumberWords(ULONG64 Number,bool IsTiny=false)
 {
 	CEasyString temp;
 	
 
-	if(Number==0) return "0 Byte";
+	if(Number==0) return "0";
 	if(Number<=1024)
 	{
-		temp.Format("%llu Byte",Number);
+		temp.Format("%llu",Number);
 	}else if(Number<=1048576)
 	{
 		float size=Number/1024.0f;
-		temp.Format("%.2fK Byte",size);
+		temp.Format("%.2fK",size);
 	}else
 	{
 		float size=Number/1048576.0f;
-		temp.Format("%.2fM Byte",size);
+		temp.Format("%.2fM",size);
 	}
 	
-	return temp;
+	if(IsTiny)
+		return temp;
+	else
+		return temp+" Byte";
 }
 
-inline CEasyString FormatNumberWordsFloat(float Number,bool IsTiny)
+inline CEasyString FormatNumberWordsFloat(float Number,bool IsTiny=false)
 {
 	CEasyString temp;
 

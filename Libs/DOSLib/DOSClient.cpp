@@ -57,7 +57,7 @@ BOOL CDOSClient::SendMessage(WORD CmdID,LPVOID pData,UINT DataSize)
 	if(pData)
 		memcpy(pSimpleMessage->GetDataBuffer(),pData,DataSize);
 	
-	return QuerySend(pSimpleMessage,pSimpleMessage->GetMsgLength());
+	return Send(pSimpleMessage,pSimpleMessage->GetMsgLength());
 }
 
 void CDOSClient::OnRecvData(const CEasyBuffer& DataBuffer)

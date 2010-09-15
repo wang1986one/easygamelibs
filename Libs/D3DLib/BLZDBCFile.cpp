@@ -55,8 +55,11 @@ bool CBLZDBCFile::Load(BYTE * pData,UINT DataSize,UINT RecordSize,bool IsSelfRel
 	if(pHeader->Tag!=BLZ_DBC_HEADER_TAG)
 		return false;
 
-	if(pHeader->RecordSize!=RecordSize)
-		return false;
+	if(RecordSize)
+	{
+		if(pHeader->RecordSize!=RecordSize)
+			return false;
+	}
 
 	return true;
 }
@@ -70,6 +73,12 @@ void CBLZDBCFile::Close()
 	m_pData=NULL;
 	m_DataSize=0;
 	m_IsSelfRelease=false;
+}
+
+UINT CBLZDBCFile::GetRecordSize()
+{
+	BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)m_pData;
+	return pHeader->RecordSize;
 }
 
 UINT CBLZDBCFile::GetRecordCount()

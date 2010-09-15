@@ -26,6 +26,8 @@ class CD3DCamera :
 protected:	
 	CD3DMatrix		m_ViewMatrix;
 	CD3DMatrix		m_ProjectMatrix;
+	FLOAT			m_Near;
+	FLOAT			m_Far;
 	
 	//struct STORAGE_STRUCT:public CD3DObject::STORAGE_STRUCT
 	//{
@@ -60,6 +62,9 @@ public:
 	void GetPickRay(FLOAT ScreenX,FLOAT ScreenY,CD3DVector3& Point,CD3DVector3& Dir);
 	void GetPickRay(int ScreenX,int ScreenY,int ScreenWidth,int ScreenHeight,CD3DVector3& Point,CD3DVector3& Dir);
 
+	FLOAT GetNear();
+	FLOAT GetFar();
+
 	virtual void Update(FLOAT Time);
 
 protected:
@@ -81,6 +86,14 @@ inline void CD3DCamera::SetViewMat(const CD3DMatrix& Mat)
 inline void CD3DCamera::SetProjectMat(const CD3DMatrix& Mat)
 {
 	m_ProjectMatrix=Mat;
+	CD3DMatrix Invert=Mat;
+	Invert.Invert();
+	CD3DVector3 Near(0,0,0);
+	CD3DVector3 Far(0,0,1);
+	Near=Near*Invert;
+	Far=Far*Invert;
+	m_Near=Near.z;
+	m_Far=Far.z;
 }
 
 inline CD3DMatrix& CD3DCamera::GetViewMat()
@@ -103,6 +116,8 @@ inline void CD3DCamera::LookAt(const CD3DVector3& Eye,const CD3DVector3& At,cons
 inline void CD3DCamera::SetProjectPerspective(FLOAT Fov,FLOAT Aspect,FLOAT Near,FLOAT Far)
 {
 	m_ProjectMatrix=CD3DMatrix::FromPerspectiveFovLH(Fov,Aspect,Near,Far);
+	m_Near=Near;
+	m_Far=Far;
 }
 inline void CD3DCamera::SetProjectOrtho(FLOAT Width,FLOAT Height,FLOAT Near,FLOAT Far)
 {
@@ -131,6 +146,15 @@ inline void CD3DCamera::Apply(CD3DDevice* pDevice,int Mode)
 			pDevice->GetD3DDevice()->SetTransform(D3DTS_PROJECTION,&m_ProjectMatrix);
 	}
 
+}
+
+inline FLOAT CD3DCamera::GetNear()
+{
+	return m_Near;
+}
+inline FLOAT CD3DCamera::GetFar()
+{
+	return m_Far;
 }
 
 }

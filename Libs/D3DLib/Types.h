@@ -35,7 +35,7 @@ namespace D3DLib{
 
 #define MAX_TEXTURE_LAYER	8
 #define MAX_LIGHT			8
-#define MAX_BONE_NUM		70
+#define MAX_BONE_NUM		62
 
 #define MAX_HEIGHT			1.0e10f
 

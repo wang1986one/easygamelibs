@@ -14,7 +14,7 @@
 namespace D3DLib{
 
 bool CD3DBoundingBox::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly)
-{
+{	
 	CD3DVector3 p1,p2,p3;
 	FLOAT U,V;
 	//¶¥Ãæ

@@ -84,10 +84,16 @@ BOOL CStringFile::LoadFile( const char * pszTextFile )
 		pFile->Release();
 		return false;
 	}
+	bool Ret=LoadFile(pFile);	
+	pFile->Release();	
+	return Ret;
+}
+
+BOOL CStringFile::LoadFile( IFileAccessor * pFile )
+{
 	m_iDataSize=(int)pFile->GetSize();
 	m_pData=new char[m_iDataSize+2];
-	pFile->Read(m_pData,m_iDataSize);
-	pFile->Release();
+	pFile->Read(m_pData,m_iDataSize);	
 	m_pData[m_iDataSize] = 0;
 	m_pData[m_iDataSize+1] = 0;
 	m_iLineCount = ProcData();

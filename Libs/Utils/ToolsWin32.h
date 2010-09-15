@@ -94,6 +94,15 @@ inline CEasyString GetPathFileName(LPCTSTR Path)
 }
 
 
+inline CEasyString GetPathFileExtName(LPCTSTR Path)
+{
+	CEasyString ExtName;
+
+	ExtName.Resize(8);
+	_splitpath_s(Path,NULL,0,NULL,0,NULL,0,ExtName,8);
+	ExtName.TrimBuffer();
+	return ExtName;
+}
 
 
 

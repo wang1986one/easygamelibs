@@ -73,8 +73,14 @@
 
 #include "Protocol.h"
 
+enum SERVICE_TYPE
+{
+	SERVICE_TYPE_NORMAL,
+	SERVICE_TYPE_WIN_SERVICE,
+};
 struct SERVICE_INFO
 {
+	int			Type;
 	char		Name[MAX_PATH];
 	char		ImageFilePath[MAX_PATH];
 	char		WorkDir[MAX_PATH];
@@ -88,6 +94,7 @@ struct SERVICE_INFO
 	CEasyTime	ImageFileTime;
 	SERVICE_INFO()
 	{
+		Type=SERVICE_TYPE_NORMAL;
 		Name[0]=0;
 		ImageFilePath[0]=0;
 		WorkDir[0]=0;

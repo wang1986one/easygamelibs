@@ -296,7 +296,7 @@ int CD3DFrameDynamicModel::GetSubMeshCount()
 	}
 	return 0;
 }
-CD3DSubMesh * CD3DFrameDynamicModel::GetSubMesh(int index)
+CD3DSubMesh * CD3DFrameDynamicModel::GetSubMesh(UINT index)
 {
 	if(m_AniFrames.GetCount()>0)
 	{

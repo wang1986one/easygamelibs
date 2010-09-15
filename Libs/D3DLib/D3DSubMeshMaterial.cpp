@@ -36,11 +36,11 @@ void CD3DSubMeshMaterial::Destory()
 	m_GlobalColor.r=1.0f;
 	m_GlobalColor.g=1.0f;
 	m_GlobalColor.b=1.0f;
-	for(size_t i=0;i<m_TextureList.size();i++)
+	for(size_t i=0;i<m_TextureList.GetCount();i++)
 	{
 		SAFE_RELEASE(m_TextureList[i].pTexture);
 	}
-	m_TextureList.clear();
+	m_TextureList.Clear();
 	SAFE_RELEASE(m_pFX);
 	CNameObject::Destory();
 }
@@ -50,7 +50,7 @@ bool CD3DSubMeshMaterial::Reset()
 	bool Ret=true;
 	if(m_pFX)
 		Ret=m_pFX->Reset();
-	for(size_t i=0;i<m_TextureList.size();i++)
+	for(size_t i=0;i<m_TextureList.GetCount();i++)
 	{
 		Ret=Ret&&m_TextureList[i].pTexture->Reset();		
 	}
@@ -62,7 +62,7 @@ bool CD3DSubMeshMaterial::Restore()
 	bool Ret=true;
 	if(m_pFX)
 		Ret=m_pFX->Restore();
-	for(size_t i=0;i<m_TextureList.size();i++)
+	for(size_t i=0;i<m_TextureList.GetCount();i++)
 	{
 		Ret=Ret&&m_TextureList[i].pTexture->Restore();		
 	}
@@ -77,7 +77,7 @@ void CD3DSubMeshMaterial::SetFX(CD3DFX * pFX)
 
 bool CD3DSubMeshMaterial::SetTexture(UINT Layer,CD3DTexture * pTexture)
 {
-	if(Layer<m_TextureList.size())
+	if(Layer<m_TextureList.GetCount())
 	{
 		SAFE_RELEASE(m_TextureList[Layer].pTexture);
 		m_TextureList[Layer].pTexture=pTexture;
@@ -88,11 +88,25 @@ bool CD3DSubMeshMaterial::SetTexture(UINT Layer,CD3DTexture * pTexture)
 
 void CD3DSubMeshMaterial::ClearAllTexture()
 {
-	for(size_t i=0;i<m_TextureList.size();i++)
+	for(size_t i=0;i<m_TextureList.GetCount();i++)
 	{
 		SAFE_RELEASE(m_TextureList[i].pTexture);
 	}
-	m_TextureList.clear();
+	m_TextureList.Clear();
+}
+
+void CD3DSubMeshMaterial::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+{
+	if(m_pFX)
+		pObjectSet->Add(m_pFX);
+	for(size_t i=0;i<m_TextureList.GetCount();i++)
+	{
+		if(m_TextureList[i].pTexture)
+		{
+			m_TextureList[i].pTexture->PickResource(pObjectSet,Param);
+			pObjectSet->Add(m_TextureList[i].pTexture);
+		}
+	}
 }
 
 
@@ -102,7 +116,7 @@ bool CD3DSubMeshMaterial::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile
 		return false;	
 
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DSMM_MATERIAL,(char *)&m_Material,sizeof(m_Material)));
-	for(UINT i=0;i<m_TextureList.size();i++)
+	for(UINT i=0;i<m_TextureList.GetCount();i++)
 	{
 		UINT BufferSize;
 		void * pBuffer=Packet.PrepareMember(BufferSize);
@@ -167,7 +181,7 @@ UINT CD3DSubMeshMaterial::GetSmartStructSize(UINT Param)
 {
 	UINT Size=CNameObject::GetSmartStructSize(Param);
 	Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_Material));
-	for(UINT i=0;i<m_TextureList.size();i++)
+	for(UINT i=0;i<m_TextureList.GetCount();i++)
 	{
 		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(int));
 		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_TextureList[i].Property));

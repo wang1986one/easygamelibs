@@ -40,6 +40,8 @@ protected:
 	FLOAT						m_StartTime;	
 	CD3DVector3					m_RecentCreatePos;
 	FLOAT						m_ClipLength;
+	FLOAT						m_RecentCreateTime;
+	FLOAT						m_RecentClipTime;
 
 	DECLARE_CLASS_INFO(CD3DWOWM2RibbonEmitter)
 public:
@@ -52,7 +54,7 @@ public:
 	virtual bool Restore();
 
 	virtual int GetSubMeshCount();
-	virtual CD3DSubMesh * GetSubMesh(int index);
+	virtual CD3DSubMesh * GetSubMesh(UINT index);
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();
@@ -61,7 +63,7 @@ public:
 
 	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
 
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera);
+	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 
 
 	virtual void Update(FLOAT Time);
@@ -69,6 +71,7 @@ public:
 	bool Init(CD3DWOWM2ModelResource * pModelResource,UINT EmitterIndex);
 protected:
 	void BuildRibbon(CD3DWOWM2ModelResource::RIBBON_EMITTER_INFO * pRibbonEmitterInfo,CD3DWOWM2ModelResource::RIBBON_PARAM * pParam);
+	void DelRibbon();
 };
 
 }

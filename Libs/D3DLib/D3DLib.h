@@ -17,6 +17,28 @@
 #undef new
 #endif
 
+
+#define LOG_D3D_ERROR_CHANNEL	1202
+
+
+inline BOOL PrintD3DLog(DWORD Color,LPCTSTR Format,...)
+{
+	va_list vl;
+	va_start(vl,Format);
+	BOOL ret=CLogManager::GetInstance()->PrintLogVL(LOG_D3D_ERROR_CHANNEL,ILogPrinter::LOG_LEVEL_NORMAL,Color,Format,vl);
+	va_end(vl);
+	return ret;
+}
+
+inline BOOL PrintD3DDebugLog(DWORD Color,LPCTSTR Format,...)
+{
+	va_list vl;
+	va_start(vl,Format);
+	BOOL ret=CLogManager::GetInstance()->PrintLogVL(LOG_D3D_ERROR_CHANNEL,ILogPrinter::LOG_LEVEL_DEBUG,Color,Format,vl);
+	va_end(vl);
+	return ret;
+}
+
 #include "D3D9.h"
 #include "D3DX9.h"
 
@@ -56,6 +78,7 @@
 
 #include "D3DRender.h"
 #include "D3DSortedRender.h"
+#include "D3DSceneRender.h"
 
 #include "D3DObject.h"
 
@@ -68,6 +91,7 @@
 #include "D3DScene.h"
 
 #include "D3DBoundingFrame.h"
+#include "D3DBoard.h"
 #include "D3DDummy.h"
 
 #include "D3DBaseStaticModel.h"
@@ -85,6 +109,7 @@
 
 #include "BLZChunkFile.h"
 #include "BLZDBCFile.h"
+#include "BLZBLSImporter.h"
 #include "BLZWOWDatabase.h"
 #include "D3DWOWM2ModelResource.h"
 #include "D3DWOWM2BillBoardParticleEmitter.h"
@@ -92,12 +117,17 @@
 #include "D3DWOWM2Model.h"
 #include "D3DWOWM2CharacterModel.h"
 #include "D3DWOWM2ItemModel.h"
+#include "D3DWOWDoodadModel.h"
 
 #include "D3DWOWWMOModelResource.h"
+#include "D3DWOWWMOGroupModel.h"
 #include "D3DWOWWMOModel.h"
 
 #include "D3DWOWADTModelResource.h"
 #include "D3DWOWADTModel.h"
+
+#include "BLZWDTFile.h"
+#include "BLZWDLFile.h"
 
 #include "D3DBaseFont.h"
 #include "D3DDX9Font.h"

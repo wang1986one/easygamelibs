@@ -54,7 +54,7 @@ bool CDBTransationManager::Init(IDatabase * pDatabase,LPCTSTR szConnectStr,int T
 		IDBConnection * pConnection=m_pDatabase->CreateConnection();
 		if(pConnection->Connect(szConnectStr)!=DBERR_SUCCEED)
 		{
-			PrintDBLog(0xff,"数据库无法连接，但初始化继续");
+			PrintDBLog(0xff,"[%u]数据库无法连接，但初始化继续",GetID());
 		}
 		CDBTransationWorkThread * pThread=new CDBTransationWorkThread(this);
 		if(!pThread->Init(pConnection,szConnectStr,QueueSize))
@@ -69,7 +69,7 @@ bool CDBTransationManager::Init(IDatabase * pDatabase,LPCTSTR szConnectStr,int T
 
 	m_PerformanceCountTimer.SaveTime();
 
-	PrintDBLog(0xff,"一共建立了%d个工作线程",ThreadCount);
+	PrintDBLog(0xff,"[%u]一共建立了%d个工作线程",GetID(),ThreadCount);
 
 	return true;
 }
@@ -135,7 +135,7 @@ int CDBTransationManager::Update(int ProcessLimit)
 		m_ExecTimes=0;
 		if(m_Flag&DBTM_FLAG_LOG_PERFORMANCE)
 		{
-			PrintDBLog(0xff,"平均执行时间=%g毫秒,每秒执行次数%g",m_AvgExecTime,m_ExecTimesPerSec);
+			PrintDBLog(0xff,"[%u]平均执行时间=%g毫秒,每秒执行次数%g",GetID(),m_AvgExecTime,m_ExecTimesPerSec);
 		}
 	}
 

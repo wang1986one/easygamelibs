@@ -21,11 +21,11 @@ CVSOutputLogPrinter::~CVSOutputLogPrinter(void)
 {
 }
 
-void CVSOutputLogPrinter::PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list vl)
+void CVSOutputLogPrinter::PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_list vl)
 {
 #ifdef WIN32
-	char MsgBuff[2048];
-	vsprintf_s( MsgBuff, 2048, Format, vl );
+	char MsgBuff[4096];
+	vsprintf_s( MsgBuff, 4096, Format, vl );
 	OutputDebugString(MsgBuff);
 	OutputDebugString("\r\n");
 #else

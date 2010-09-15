@@ -22,6 +22,7 @@ public:
 	CD3DVector2(const D3DXVECTOR2& Vector):D3DXVECTOR2(Vector){}
 	CD3DVector2(const D3DXFLOAT16 * pData):D3DXVECTOR2(pData){}
 	CD3DVector2(FLOAT x, FLOAT y):D3DXVECTOR2(x,y){}
+	CD3DVector2(FLOAT Value);
 
 	~CD3DVector2(void){}
 
@@ -38,7 +39,15 @@ public:
 	//µã»ý
 	FLOAT Dot(const D3DXVECTOR2& V2);	
 
+	const CD3DVector2& operator=(FLOAT Value);
+
 };
+
+inline CD3DVector2::CD3DVector2(FLOAT Value)
+{
+	x=Value;
+	y=Value;
+}
 
 inline void CD3DVector2::SetValue(FLOAT vx, FLOAT vy)
 {
@@ -73,6 +82,11 @@ inline FLOAT CD3DVector2::Dot(const D3DXVECTOR2& V2)
 	return D3DXVec2Dot(this,&V2);
 }
 
-
+inline const CD3DVector2& CD3DVector2::operator=(FLOAT Value)
+{
+	x=Value;
+	y=Value;
+	return *this;
+}
 
 }

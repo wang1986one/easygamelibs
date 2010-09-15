@@ -15,6 +15,8 @@
 //
 
 #pragma once
+#include <afx.h>
+#include <Shellapi.h>
 
 #include "targetver.h"
 
@@ -24,3 +26,4 @@
 #include "../../Libs/Utils/Utils.h"
 
 // TODO: 在此处引用程序需要的其他头文件
+#include "ScriptFunctions.h"

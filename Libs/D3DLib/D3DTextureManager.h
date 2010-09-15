@@ -21,7 +21,8 @@ class CD3DTextureManager :
 {
 protected:
 	CD3DDevice *					m_pD3DDevice;
-	CNameStorage<CD3DTexture *>	m_TextureStorage;
+	CNameStorage<CD3DTexture *>		m_TextureStorage;
+	CEasyArray<CD3DTexture *>		m_AniTextureList;
 
 	DECLARE_CLASS_INFO_STATIC(CD3DTextureManager)
 public:
@@ -54,6 +55,12 @@ public:
 	LPVOID GetLastPos();
 	CD3DTexture * GetNext(LPVOID& Pos);
 	CD3DTexture * GetPrev(LPVOID& Pos);
+
+	void Update(FLOAT Time);
+
+protected:
+	void AddAniTexture(CD3DTexture * pTexture);
+	void DelAniTexture(CD3DTexture * pTexture);
 };
 
 inline CD3DTexture * CD3DTextureManager::GetTextrue(UINT ID)

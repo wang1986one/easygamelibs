@@ -39,7 +39,7 @@ void CServerLogPrinter::SetLogMode(UINT Mode,int Level,LPCTSTR FileName,int File
 }
 
 
-void CServerLogPrinter::PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list vl)
+void CServerLogPrinter::PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_list vl)
 {
 	try
 	{

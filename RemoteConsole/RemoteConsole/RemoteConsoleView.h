@@ -15,14 +15,20 @@
 
 #pragma once
 #include "afxwin.h"
+#include "afxcmn.h"
 
 
 class CRemoteConsoleView : public CFormView
 {
 protected: // 仅从序列化创建
-	CDialogItemSorter	m_ItemSorter;
-	CNetLink *			m_pNetLink;
-	CServerLogPrinter*	m_pFileLog;
+	CDialogItemSorter							m_ItemSorter;
+	CNetLink *									m_pNetLink;
+	CAsyncFileLogPrinter*						m_pFileLog;
+	CEasyMap<WORD,SERVER_STATUS_FORMAT_INFO>	m_ServerStatusFormats;
+
+	CEdit										m_edCommand;
+	CEdit										m_edLog;
+	CListCtrl									m_lvServerStatus;
 
 	CRemoteConsoleView();
 	DECLARE_DYNCREATE(CRemoteConsoleView)
@@ -42,11 +48,13 @@ public:
 		CEasyString ModulePath=GetModulePath(NULL);		
 
 		LogFileName.Format("%s\\Log\\%s",(LPCTSTR)ModulePath,m_pNetLink->GetRemoteAddress().GetIPString());
-		m_pFileLog=new CServerLogPrinter(NULL,CServerLogPrinter::LOM_FILE,ILogPrinter::LOG_LEVEL_NORMAL|ILogPrinter::LOG_LEVEL_DEBUG,LogFileName);
+		m_pFileLog=new CAsyncFileLogPrinter(ILogPrinter::LOG_LEVEL_NORMAL|ILogPrinter::LOG_LEVEL_DEBUG,LogFileName);
 	}
 
 	void PrintLogMsg(LPCTSTR szMsg);
+	void PrintFileLog(LPCTSTR szFormat,...);
 	void SetServerStatus(CSmartStruct& ServerStatus);
+	void SetServerStatusFormats(CSmartStruct& ServerStatusFormats);
 // 操作
 public:
 
@@ -67,29 +75,21 @@ public:
 
 protected:
 
-	
 
 	
 // 生成的消息映射函数
 protected:
 	DECLARE_MESSAGE_MAP()
-public:
+
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnBnClickedButtonSendCommand();
 	afx_msg void OnEditCut();
 	afx_msg void OnEditCopy();
 	afx_msg void OnEditPaste();
-	afx_msg void OnEditUndo();
-	CEdit m_edCommand;
-	CEdit m_edLog;
-	
+	afx_msg void OnEditUndo();	
 	afx_msg void OnTimer(UINT nIDEvent);
-	int m_STClientCount;
-	float m_STCycleTime;
-	float m_STTCPRecvFlow;
-	float m_STTCPSendFlow;
-	float m_STUDPRecvFlow;
-	float m_STUDPSendFlow;
+	
+	
 };
 
 #ifndef _DEBUG  // RemoteConsoleView.cpp 的调试版本

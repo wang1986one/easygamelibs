@@ -84,7 +84,7 @@ protected:
 	FLOAT												m_PlaySpeedRate;
 	
 
-	CD3DBoundingBox *									m_pCurBoundingBox;
+	CD3DBoundingBox 									m_CurBoundingBox;
 	//STORAGE_STRUCT_ATTACHMENT *							m_pActivedAttachments;
 	
 
@@ -128,10 +128,10 @@ public:
 	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
 	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
-protected:
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera);
+
+	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 	virtual int GetSubMeshCount();
-	virtual CD3DSubMesh * GetSubMesh(int index);
+	virtual CD3DSubMesh * GetSubMesh(UINT index);
 	//virtual CD3DSubMesh::MESH_MATERIAL * GetSubMeshMaterial(int index);
 
 	virtual CD3DBoundingBox * GetBoundingBox();
@@ -142,7 +142,7 @@ protected:
 	
 
 	virtual void Update(FLOAT Time);
-
+protected:
 	void PrepareSoftSkinMesh();
 	void CaculateSoftSkinMesh();
 

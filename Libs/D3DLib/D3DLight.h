@@ -40,6 +40,7 @@ public:
 	void SetSpecular(FLOAT r,FLOAT g,FLOAT b,FLOAT a);	
 
 	void Apply(CD3DDevice * pDevice,int Index);
+	virtual void Update(FLOAT Time);
 };
 
 inline bool CD3DLight::CanRender()
@@ -47,19 +48,7 @@ inline bool CD3DLight::CanRender()
 	return false;
 }
 
-inline void CD3DLight::SetDirect(FLOAT x,FLOAT y,FLOAT z)
-{
-	m_LightData.Direction.x=x;
-	m_LightData.Direction.y=y;
-	m_LightData.Direction.z=z;
-}
 
-inline void CD3DLight::SetPosition(FLOAT x,FLOAT y,FLOAT z)
-{
-	m_LightData.Position.x=x;
-	m_LightData.Position.y=y;
-	m_LightData.Position.z=z;
-}
 
 
 inline void CD3DLight::SetAmbient(FLOAT r,FLOAT g,FLOAT b,FLOAT a)

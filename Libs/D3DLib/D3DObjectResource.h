@@ -53,7 +53,7 @@ public:
 	virtual bool Restore();
 
 	virtual int GetSubMeshCount();
-	virtual CD3DSubMesh * GetSubMesh(int index);
+	virtual CD3DSubMesh * GetSubMesh(UINT index);
 	
 
 	virtual CD3DBoundingBox * GetBoundingBox();

@@ -111,7 +111,7 @@ public:
 	virtual bool Reset();
 	virtual bool Restore();
 
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera);
+	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 
 	bool LoadM2(LPCTSTR FileName);
 
@@ -159,7 +159,7 @@ public:
 	virtual UINT GetSmartStructSize(UINT Param=0);
 public:
 	virtual int GetSubMeshCount();
-	virtual CD3DSubMesh * GetSubMesh(int index);
+	virtual CD3DSubMesh * GetSubMesh(UINT index);
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();

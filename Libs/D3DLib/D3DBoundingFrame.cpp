@@ -72,7 +72,7 @@ bool CD3DBoundingFrame::Restore()
 	return m_pSubMesh->Restore()&&CD3DObject::Restore();	
 }
 
-bool CD3DBoundingFrame::CreateFromBBox(const CD3DBoundingBox& BBox)
+bool CD3DBoundingFrame::CreateFromBBox(const CD3DBoundingBox& BBox,D3DCOLOR Color)
 {
 	if(GetDevice()==NULL)
 		return false;
@@ -117,63 +117,63 @@ bool CD3DBoundingFrame::CreateFromBBox(const CD3DBoundingBox& BBox)
 
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Min.x,BBox.m_Min.y,BBox.m_Min.z),
-		CD3DVector3(BBox.m_Max.x,BBox.m_Min.y,BBox.m_Min.z));
+		CD3DVector3(BBox.m_Max.x,BBox.m_Min.y,BBox.m_Min.z),Color);
 	pBuff+=2;
 
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Max.x,BBox.m_Min.y,BBox.m_Min.z),
-		CD3DVector3(BBox.m_Max.x,BBox.m_Max.y,BBox.m_Min.z));
+		CD3DVector3(BBox.m_Max.x,BBox.m_Max.y,BBox.m_Min.z),Color);
 	pBuff+=2;
 
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Max.x,BBox.m_Max.y,BBox.m_Min.z),
-		CD3DVector3(BBox.m_Min.x,BBox.m_Max.y,BBox.m_Min.z));
+		CD3DVector3(BBox.m_Min.x,BBox.m_Max.y,BBox.m_Min.z),Color);
 	pBuff+=2;
 
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Min.x,BBox.m_Max.y,BBox.m_Min.z),
-		CD3DVector3(BBox.m_Min.x,BBox.m_Min.y,BBox.m_Min.z));
+		CD3DVector3(BBox.m_Min.x,BBox.m_Min.y,BBox.m_Min.z),Color);
 	pBuff+=2;
 
 	//
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Min.x,BBox.m_Min.y,BBox.m_Min.z),
-		CD3DVector3(BBox.m_Min.x,BBox.m_Min.y,BBox.m_Max.z));
+		CD3DVector3(BBox.m_Min.x,BBox.m_Min.y,BBox.m_Max.z),Color);
 	pBuff+=2;
 
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Max.x,BBox.m_Min.y,BBox.m_Min.z),
-		CD3DVector3(BBox.m_Max.x,BBox.m_Min.y,BBox.m_Max.z));
+		CD3DVector3(BBox.m_Max.x,BBox.m_Min.y,BBox.m_Max.z),Color);
 	pBuff+=2;
 
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Max.x,BBox.m_Max.y,BBox.m_Min.z),
-		CD3DVector3(BBox.m_Max.x,BBox.m_Max.y,BBox.m_Max.z));
+		CD3DVector3(BBox.m_Max.x,BBox.m_Max.y,BBox.m_Max.z),Color);
 	pBuff+=2;
 
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Min.x,BBox.m_Max.y,BBox.m_Min.z),
-		CD3DVector3(BBox.m_Min.x,BBox.m_Max.y,BBox.m_Max.z));
+		CD3DVector3(BBox.m_Min.x,BBox.m_Max.y,BBox.m_Max.z),Color);
 	pBuff+=2;
 	//
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Min.x,BBox.m_Min.y,BBox.m_Max.z),
-		CD3DVector3(BBox.m_Max.x,BBox.m_Min.y,BBox.m_Max.z));
+		CD3DVector3(BBox.m_Max.x,BBox.m_Min.y,BBox.m_Max.z),Color);
 	pBuff+=2;
 
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Max.x,BBox.m_Min.y,BBox.m_Max.z),
-		CD3DVector3(BBox.m_Max.x,BBox.m_Max.y,BBox.m_Max.z));
+		CD3DVector3(BBox.m_Max.x,BBox.m_Max.y,BBox.m_Max.z),Color);
 	pBuff+=2;
 
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Max.x,BBox.m_Max.y,BBox.m_Max.z),
-		CD3DVector3(BBox.m_Min.x,BBox.m_Max.y,BBox.m_Max.z));
+		CD3DVector3(BBox.m_Min.x,BBox.m_Max.y,BBox.m_Max.z),Color);
 	pBuff+=2;
 
 	BuildLine(pBuff,
 		CD3DVector3(BBox.m_Min.x,BBox.m_Max.y,BBox.m_Max.z),
-		CD3DVector3(BBox.m_Min.x,BBox.m_Min.y,BBox.m_Max.z));
+		CD3DVector3(BBox.m_Min.x,BBox.m_Min.y,BBox.m_Max.z),Color);
 	pBuff+=2;
 
 	m_pSubMesh->GetDXVertexBuffer()->Unlock();
@@ -187,7 +187,7 @@ int CD3DBoundingFrame::GetSubMeshCount()
 	return 1;
 }
 
-CD3DSubMesh * CD3DBoundingFrame::GetSubMesh(int index)
+CD3DSubMesh * CD3DBoundingFrame::GetSubMesh(UINT index)
 {
 	return m_pSubMesh;
 }
@@ -206,7 +206,7 @@ bool CD3DBoundingFrame::GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& y)
 	return false;
 }
 
-void CD3DBoundingFrame::BuildRect(BF_VERTEX * pBuff,CD3DVector3 p1,CD3DVector3 p2,CD3DVector3 p3,CD3DVector3 p4)
+void CD3DBoundingFrame::BuildRect(BF_VERTEX * pBuff,CD3DVector3 p1,CD3DVector3 p2,CD3DVector3 p3,CD3DVector3 p4,D3DCOLOR Color)
 {
 	pBuff[0].Pos=p1;
 	pBuff[1].Pos=p2;
@@ -218,17 +218,17 @@ void CD3DBoundingFrame::BuildRect(BF_VERTEX * pBuff,CD3DVector3 p1,CD3DVector3 p
 	
 	for(int i=0;i<6;i++)
 	{
-		pBuff[i].Color=D3DCOLOR_ARGB(255,255,0,0);
+		pBuff[i].Color=Color;
 	}
 }
 
-void CD3DBoundingFrame::BuildLine(BF_VERTEX * pBuff,CD3DVector3 p1,CD3DVector3 p2)
+void CD3DBoundingFrame::BuildLine(BF_VERTEX * pBuff,CD3DVector3 p1,CD3DVector3 p2,D3DCOLOR Color)
 {
 	pBuff[0].Pos=p1;
 	pBuff[1].Pos=p2;
 	for(int i=0;i<2;i++)
 	{
-		pBuff[i].Color=D3DCOLOR_ARGB(255,255,0,0);
+		pBuff[i].Color=Color;
 	}
 }
 
@@ -236,6 +236,12 @@ bool CD3DBoundingFrame::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,U
 {
 	PrintSystemLog(0,"CD3DBoundingFrame被保存");
 	return CD3DObject::ToSmartStruct(Packet,pUSOFile,Param);
+}
+
+UINT CD3DBoundingFrame::GetSmartStructSize(UINT Param)
+{
+	PrintSystemLog(0,"CD3DBoundingFrame被保存");
+	return CD3DObject::GetSmartStructSize(Param);
 }
 
 }

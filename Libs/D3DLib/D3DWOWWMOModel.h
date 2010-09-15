@@ -28,7 +28,8 @@ protected:
 
 
 	CD3DWOWWMOModelResource *							m_pModelResource;
-	CEasyArray<CD3DWOWM2Model *>						m_DoodadList;
+	CEasyArray<CD3DWOWWMOGroupModel *>					m_GroupList;
+	CEasyArray<CD3DWOWDoodadModel *>					m_DoodadList;
 	int													m_CurDoodadSet;
 
 	DECLARE_FILE_CHANNEL_MANAGER
@@ -38,9 +39,7 @@ public:
 	~CD3DWOWWMOModel(void);
 
 	virtual void Destory();
-
-	virtual bool Reset();
-	virtual bool Restore();
+	
 
 	bool LoadFromFile(LPCTSTR ModelFileName);
 	bool LoadFromResource(CD3DWOWWMOModelResource * pModelResource);
@@ -50,27 +49,38 @@ public:
 	void ClearDoodads();
 	int GetCurDoodadSet();
 
+	CD3DWOWWMOModelResource * GetModelResource();
+
+	void DoPortalCull(CD3DCamera * pCamera);
+
 public:
 	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
 	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
 	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera);
+	//virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void Update(FLOAT Time);
 	virtual int GetSubMeshCount();
-	virtual CD3DSubMesh * GetSubMesh(int index);
+	virtual CD3DSubMesh * GetSubMesh(UINT index);
 	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(int index);
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();
 
 protected:
-	
+	void BuildGroups();
+	void GetGroupByPos(const CD3DVector3& Pos,CEasyArray<CD3DWOWWMOGroupModel *>& Groups);
 };
 
 inline int CD3DWOWWMOModel::GetCurDoodadSet()
 {
 	return m_CurDoodadSet;
+}
+
+inline CD3DWOWWMOModelResource * CD3DWOWWMOModel::GetModelResource()
+{
+	return m_pModelResource;
 }
 
 }

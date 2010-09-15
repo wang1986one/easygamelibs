@@ -16,6 +16,8 @@ namespace D3DLib{
 #define BLZ_DBC_HEADER_TAG					((DWORD)'CBDW')
 #define BLZ_M2_HEADER_TAG					((DWORD)'02DM')
 #define BLZ_SKIN_HEADER_TAG					((DWORD)'NIKS')
+#define BLZ_BLS_VS_HEADER_TAG				((DWORD)'GXVS')
+#define BLZ_BLS_PS_HEADER_TAG				((DWORD)'GXPS')
 
 #define M2_MODEL_FX_FILE_NAME				"M2Model.fx"
 #define M2_PARTICLE_FX_FILE_NAME			"M2Particle.fx"
@@ -32,6 +34,7 @@ namespace D3DLib{
 #define BLZ_DBC_CHAR_WHISKER_GEOSET_RECORD_SIZE			(32)
 #define BLZ_DBC_CHAR_RACE_RECORD_SIZE					(276)
 #define BLZ_DBC_CREATURE_DISPLAY_INFO_RECORD_SIZE		(64)
+#define BLZ_DBC_CREATURE_EXTRA_DISPLAY_INFO_RECORD_SIZE	(84)
 #define BLZ_DBC_CREATURE_MODEL_INFO_RECORD_SIZE			(104)
 #define BLZ_DBC_ITEM_CLASS_RECORD_SIZE					(80)
 #define BLZ_DBC_ITEM_SUB_CLASS_RECORD_SIZE				(176)
@@ -41,26 +44,32 @@ namespace D3DLib{
 #define BLZ_DBC_HELMET_GEOSET_VISIBLE_RECORD_SIZE		(32)
 #define BLZ_DBC_MAP_RECORD_SIZE							(472)
 #define BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_RECORD_SIZE	(28)
+#define BLZ_DBC_LIQUID_TYPE_RECORD_SIZE					(46*sizeof(UINT32))
 
 #define BLZ_DBC_STR_LOCAL_ZH_CN							4
 #define BLZ_DBC_STR_LOCAL_NUM							17
 
-#define BLZ_DBC_CHAR_SECTION_FILE_NAME					"CharSections.dbc"
-#define BLZ_DBC_ANIMATION_DATA_FILE_NAME				"AnimationData.dbc"
-#define BLZ_DBC_CHAR_HAIR_GEOSET_FILE_NAME				"CharHairGeosets.dbc"
-#define BLZ_DBC_CHAR_WHISKER_GEOSET_FILE_NAME			"CharacterFacialHairStyles.dbc"
-#define BLZ_DBC_CHAR_RACE_FILE_NAME						"ChrRaces.dbc"
-#define BLZ_DBC_CREATURE_DISPLAY_INFO_FILE_NAME			"CreatureDisplayInfo.dbc"
-#define BLZ_DBC_CREATURE_MODEL_INFO_FILE_NAME			"CreatureModelData.dbc"
-#define BLZ_DBC_ITEM_CLASS_FILE_NAME					"ItemClass.dbc"
-#define BLZ_DBC_ITEM_SUB_CLASS_FILE_NAME				"ItemSubClass.dbc"
-#define BLZ_DBC_ITEM_SUB_CLASS_MASK_FILE_NAME			"ItemSubClassMask.dbc"
-#define BLZ_DBC_ITEM_DATA_FILE_NAME						"Item.dbc"
+#define BLZ_DBC_CHAR_SECTION_FILE_NAME					"DBFilesClient\\CharSections.dbc"
+#define BLZ_DBC_ANIMATION_DATA_FILE_NAME				"DBFilesClient\\AnimationData.dbc"
+#define BLZ_DBC_CHAR_HAIR_GEOSET_FILE_NAME				"DBFilesClient\\CharHairGeosets.dbc"
+#define BLZ_DBC_CHAR_WHISKER_GEOSET_FILE_NAME			"DBFilesClient\\CharacterFacialHairStyles.dbc"
+#define BLZ_DBC_CHAR_RACE_FILE_NAME						"DBFilesClient\\ChrRaces.dbc"
+#define BLZ_DBC_CREATURE_DISPLAY_INFO_FILE_NAME			"DBFilesClient\\CreatureDisplayInfo.dbc"
+#define BLZ_DBC_CREATURE_EXTRA_DISPLAY_INFO_FILE_NAME	"DBFilesClient\\CreatureDisplayInfoExtra.dbc"
+#define BLZ_DBC_CREATURE_MODEL_INFO_FILE_NAME			"DBFilesClient\\CreatureModelData.dbc"
+#define BLZ_DBC_NPC_DATA_FILE_NAME						"NPCData.csv"
+#define BLZ_DBC_ITEM_CLASS_FILE_NAME					"DBFilesClient\\ItemClass.dbc"
+#define BLZ_DBC_ITEM_SUB_CLASS_FILE_NAME				"DBFilesClient\\ItemSubClass.dbc"
+#define BLZ_DBC_ITEM_SUB_CLASS_MASK_FILE_NAME			"DBFilesClient\\ItemSubClassMask.dbc"
+#define BLZ_DBC_ITEM_DATA_FILE_NAME						"DBFilesClient\\Item.dbc"
 #define BLZ_DBC_ITEM_CACHE_DATA_FILE_NAME				"ItemData.csv"
-#define BLZ_DBC_ITEM_DISPLAY_INFO_FILE_NAME				"ItemDisplayInfo.dbc"
-#define BLZ_DBC_HELMET_GEOSET_VISIBLE_FILE_NAME			"HelmetGeosetVisData.dbc"
-#define BLZ_DBC_MAP_FILE_NAME							"Map.dbc"
-#define BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_FILE_NAME		"SpellVisualEffectName.dbc"
+#define BLZ_DBC_ITEM_DISPLAY_INFO_FILE_NAME				"DBFilesClient\\ItemDisplayInfo.dbc"
+#define BLZ_DBC_HELMET_GEOSET_VISIBLE_FILE_NAME			"DBFilesClient\\HelmetGeosetVisData.dbc"
+#define BLZ_DBC_MAP_FILE_NAME							"DBFilesClient\\Map.dbc"
+#define BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_FILE_NAME		"DBFilesClient\\SpellVisualEffectName.dbc"
+#define BLZ_DBC_LIQUID_TYPE_FILE_NAME					"DBFilesClient\\LiquidType.dbc"
+
+#define BLZ_TRS_MINI_MAP_TEXTURE_FILES					"Textures\\MiniMap\\md5translate.trs"
 
 
 #define EQUIPMENT_ARM_UPPER_TEXTURE_PATH		"ITEM\\TEXTURECOMPONENTS\\ARMUPPERTEXTURE"
@@ -73,12 +82,17 @@ namespace D3DLib{
 #define EQUIPMENT_FOOT_TEXTURE_PATH				"ITEM\\TEXTURECOMPONENTS\\FOOTTEXTURE"
 
 #define WOW_MAP_ADT_FILE_DIR					"WORLD\\MAPS"
+#define WOW_MINI_MAP_FILE_DIR					"Textures\\MiniMap"
 
 
 #define BLZ_ADT_MAP_TILE_SIZE					(33.33333333f)
+#define BLZ_ADT_MAP_TILE_WIDTH					(16)
+#define BLZ_ADT_MAP_TILE_COUNT					(BLZ_ADT_MAP_TILE_WIDTH*BLZ_ADT_MAP_TILE_WIDTH)
 #define BLZ_ADT_MAP_AREA_SIZE					(BLZ_ADT_MAP_TILE_SIZE*16.0f)
 #define BLZ_ADT_MAP_TRANS_VALUE					(BLZ_ADT_MAP_AREA_SIZE*32.0f)
 #define BLZ_ADT_TEXTURE_LAYER_COUNT				(4)
+#define BLZ_ADT_MAP_TILE_BLOCK_SIZE				(BLZ_ADT_MAP_TILE_SIZE/8)
+#define BLZ_ADT_MAP_TILE_BLOCK_HALF_SIZE		(BLZ_ADT_MAP_TILE_SIZE/16)
 
 //WMO Root
 #define CHUNK_ID_VERSION						((DWORD)'MVER')
@@ -136,6 +150,22 @@ namespace D3DLib{
 #define CHUNK_ID_ADT_MFBO						((DWORD)'MFBO')
 #define CHUNK_ID_ADT_MTFX						((DWORD)'MTFX')
 
+#define CHUNK_ID_WDT_MPHD						((DWORD)'MPHD')
+#define CHUNK_ID_WDT_MAIN						((DWORD)'MAIN')
+#define CHUNK_ID_WDT_MWMO						((DWORD)'MWMO')
+#define CHUNK_ID_WDT_MODF						((DWORD)'MODF')
+
+#define CHUNK_ID_WDL_MWMO						((DWORD)'MWMO')
+#define CHUNK_ID_WDL_MODF						((DWORD)'MODF')
+#define CHUNK_ID_WDL_MAOF						((DWORD)'MAOF')
+#define CHUNK_ID_WDL_MARE						((DWORD)'MARE')
+#define CHUNK_ID_WDL_MAHO						((DWORD)'MAHO')
+
+//enum BLZ_M2_MODEL_FLAG
+//{
+//	BLZ_M2_MODEL_FLAG_USE_VERTEX_COLOR=0x10,
+//};
+
 enum BLZ_M2_RENDER_FLAG
 {
 	BLZ_M2_RENDER_FLAG_NO_LIGHT=1,
@@ -154,6 +184,11 @@ enum BLZ_M2_BLENDING_MODE
 	BLZ_M2_BLENDING_MODE_ADDITIVE_ALPHA,
 	BLZ_M2_BLENDING_MODE_MODULATE,
 	BLZ_M2_BLENDING_MODE_MUL,
+};
+
+enum BLZ_M2_TEXTURE_UNIT_FLAG
+{
+	BLZ_M2_TEXTURE_UNIT_FLAG_USE_VERTEX_ALPHA2=0x100,
 };
 
 enum BLZ_M2_ANIMATION_SEQUENCE_FLAG
@@ -368,15 +403,19 @@ enum PARTICLE_EMITTER_BLENDING_TYPE
 	EBT_ALPHA_BLEND=2,		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 	EBT_ALPHA_TEST=3,		//glDisable(GL_BLEND); glEnable(GL_ALPHA_TEST);  
 	EBT_ALPHA_ADD=4,		//glBlendFunc(GL_SRC_ALPHA, GL_ONE); 
+	EBT_ALPHA_MUL=5,
 };
 
 enum PARTICLE_EMITTER_FLAG
 {
-	PEF_NO_GRAVITY_TRANSFORM=(0x2),
-	PEF_DIR_VERTICAL_TRANS=0x1,
-	PEDTT_DIR_HORIZONTAL_TRANS=0x400,
+	PEF_GRAVITY_TRANSFORM=(0x8),
+	//PEF_DIR_VERTICAL_TRANS=0x20,//0x1,
+	PEF_HAVE_SPEED_VARIATION=0x02,
+	PED_DIR_NO_HORIZONTAL_TRANS=0x20000,//0x400,
 	PEF_NO_TRAIL=(0x10),	
 	PEF_ACITVE_ON_TIME=(0x400),
+	PEF_NOT_BILLBOARD=0x1000,
+	//PEF_NO_SPEED_VARIATION=0x20000,
 };
 
 enum WMO_LIGHT_TYPE 
@@ -431,6 +470,14 @@ enum MCNK_FLAGS
 	MCNK_FLAG_UNKNOWN=0x8000,
 };
 
+enum WOW_LIQUID_TYPE
+{
+	WLT_RIVER=1,
+	WLT_OCEAN=2,
+	WLT_MAGMA=3,
+	WLT_SLIMA=4,
+};
+
 enum MCLY_LAYER_INFO_FLAGS
 {
 	MLIF_ANI_45=0x01,
@@ -444,6 +491,18 @@ enum MCLY_LAYER_INFO_FLAGS
 	MLIF_ALPHA_MAP=0x100,
 	MLIF_COMPRESSED_ALPHA_MAP=0x200,
 	MLIF_SHINY=0x400,
+};
+
+enum MH2O_FLAG
+{
+	MH2OF_NO_HEIGHT_MAP=0x02,
+};
+
+enum WDT_MPHD_FLAG
+{
+	WDT_MPHD_FLAG_NO_TERRAIN=0x01,
+	WDT_MPHD_FLAG_USE_VERTEX_SHADING=0x02,
+	WDT_MPHD_FLAG_BIG_ALPHA_MASK=0x04,
 };
 
 
@@ -831,7 +890,7 @@ struct BLZ_M2_HEADER
 	DWORD		Version;
 	UINT		ModelNameLength;
 	UINT		ModelNameOffset;
-	UINT		ModelType;
+	UINT		ModelFlag;
 	UINT		GlobalSequencesCount;
 	UINT		GlobalSequencesOffset;
 	UINT		AnimationsCount;
@@ -905,8 +964,7 @@ struct M2_MODEL_VERTEXT
 struct M2_MODEL_TEXTURE
 {
 	UINT32 Type;
-	UINT16 Unknown;
-	UINT16 Flags;
+	UINT32 Flags;
 	UINT32 FileNameLength;
 	UINT32 FileNameOffset;
 };
@@ -1246,8 +1304,8 @@ struct WMOPortalRelationship
 {
 	UINT16 		PortalIndex;
 	UINT16 		GroupIndex;
-	INT16 		Unknow1;		//1 or -1
-	UINT16 		Unknow2;		//always 0
+	INT16 		Side;		//1 or -1
+	UINT16 		Filler;		//always 0
 };
 
 struct BLZ_CHUNK_MOPR:public BLZ_CHUNK_HEADER
@@ -1707,6 +1765,63 @@ struct BLZ_CHUNK_MCSE:public BLZ_CHUNK_HEADER
 {
 	MCSESoundEmitter	SoundEmitters[1];
 };
+
+struct BLZ_BLS_HEADER
+{
+	UINT32	Tag;
+	UINT32	Version;
+	UINT32	DataBlockCount;
+};
+
+struct BLZ_BLS_DATA_BLOCK_HEADER
+{
+	UINT32	Flag1;
+	UINT32	Flag2;
+	UINT32	Unknow;
+	UINT32	DataSize;
+};
+struct BLZ_BLS_DATA_BLOCK
+{
+	BLZ_BLS_DATA_BLOCK_HEADER	Header;
+	char						Data[1];
+};
+
+struct BLZ_CHUNK_MPHD:public BLZ_CHUNK_HEADER
+{
+	UINT32 Flags;
+	UINT32 Something;
+	UINT32 Unused[6];
+};
+
+struct MAINMapAreaInfo
+{
+	UINT32	Flag;
+	UINT32	pAsyncObject;
+};
+
+struct BLZ_CHUNK_MAIN:public BLZ_CHUNK_HEADER
+{
+	MAINMapAreaInfo	MapAreaInfo[64][64];
+};
+
+//struct WDT_WMO_OBJECT_INFO
+//{
+//	UINT32 			Index;			//ID (index in the MWID list)
+//	UINT32 			ID;				//unique identifier for this instance
+//	CD3DVector3 	Position;		// (X,Y,Z)
+//	CD3DVector3 	Orientation;	// (A,B,C)
+//	CD3DVector3 	UpperExtents;
+//	CD3DVector3 	LowerExtents;
+//	UINT32 			Flags;
+//	UINT16 			DoodadSet;
+//	UINT16 			NameSet;
+//};
+//
+//struct BLZ_CHUNK_MODF_WDT:public BLZ_CHUNK_HEADER
+//{
+//	WDT_WMO_OBJECT_INFO	WMOObjects[1];
+//};
+
 
 #pragma pack(pop)
 

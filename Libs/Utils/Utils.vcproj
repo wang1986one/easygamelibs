@@ -437,6 +437,42 @@
 				RelativePath=".\WinTypeWrap.h"
 				>
 			</File>
+			<Filter
+				Name="数据存储"
+				>
+				<File
+					RelativePath=".\CycleBuffer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\CycleBuffer.h"
+					>
+				</File>
+				<File
+					RelativePath=".\CycleBufferEx.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\CycleBufferEx.h"
+					>
+				</File>
+				<File
+					RelativePath=".\EasyBuffer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\EasyBuffer.h"
+					>
+				</File>
+				<File
+					RelativePath=".\GrowBuffer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\GrowBuffer.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="头文件"
@@ -651,42 +687,6 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="数据存储"
-			>
-			<File
-				RelativePath=".\CycleBuffer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\CycleBuffer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CycleBufferEx.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\CycleBufferEx.h"
-				>
-			</File>
-			<File
-				RelativePath=".\EasyBuffer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EasyBuffer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\GrowBuffer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\GrowBuffer.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="内存泄漏检测"
 			>
 			<File
@@ -814,11 +814,47 @@
 			Name="简单脚本"
 			>
 			<File
-				RelativePath=".\ExpressionCaculator.cpp"
+				RelativePath=".\EasyScriptExecutor.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ExpressionCaculator.h"
+				RelativePath=".\EasyScriptExecutor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EasyScriptTypes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ESBolanStack.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ESBolanStack.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ESFactionList.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ESFunctionLib.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ESFunctionLib.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ESThread.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ESThread.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ESVariableList.h"
 				>
 			</File>
 		</Filter>
@@ -1365,11 +1401,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\hpc\hppa.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\hppa.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\hppa.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\hpc\hppa.h"
 					>
 				</File>
 				<File
@@ -1409,11 +1445,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\powerpc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\ibmc\powerpc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\ibmc\powerpc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\powerpc.h"
 					>
 				</File>
 				<File
@@ -1437,11 +1473,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\sunc\sparc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\sparc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\sparc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\sunc\sparc.h"
 					>
 				</File>
 				<File
@@ -1457,11 +1493,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\msftc\x86.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\x86.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\x86.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\msftc\x86.h"
 					>
 				</File>
 				<File
@@ -1469,6 +1505,18 @@
 					>
 				</File>
 			</Filter>
+		</Filter>
+		<Filter
+			Name="CSV文件"
+			>
+			<File
+				RelativePath=".\CSVReader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CSVReader.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\Utils.cbp"

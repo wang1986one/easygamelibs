@@ -76,6 +76,8 @@ public:
 	//获得旋转
 	CD3DMatrix GetRotation() const;
 	CD3DQuaternion GetRotationOnQuaternion() const;
+
+	CD3DMatrix GetScaleRotation() const;
 	//设置旋转
 	void SetRotation(const D3DXMATRIX& Rotation);	
 
@@ -290,6 +292,17 @@ inline CD3DQuaternion CD3DMatrix::GetRotationOnQuaternion() const
 	return Quaternion;
 }
 
+inline CD3DMatrix CD3DMatrix::GetScaleRotation() const
+{
+	CD3DMatrix Mat(*this);
+
+	Mat._41=0.0f;
+	Mat._42=0.0f;
+	Mat._43=0.0f;
+
+	return Mat;
+}
+
 inline void CD3DMatrix::SetRotation(const D3DXMATRIX& Rotation)
 {
 	CD3DVector3 Scale = GetScale();
@@ -305,7 +318,7 @@ inline CD3DVector3 CD3DMatrix::GetScale() const
 }
 
 inline void CD3DMatrix::SetScale(const D3DVECTOR& Scale)
-{
+{	
 	CD3DMatrix Rotation  = GetRotation();
 	CD3DVector3 Trans = GetTranslation();
 	*this = CD3DMatrix::FromScale(Scale) * Rotation;

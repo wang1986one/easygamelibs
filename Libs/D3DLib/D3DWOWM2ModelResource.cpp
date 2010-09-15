@@ -167,6 +167,8 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR ModelFileName,LPCTSTR SkinFile
 	if(pHeader->Tag!=BLZ_M2_HEADER_TAG)
 		return false;
 
+	//PrintD3DDebugLog(0,"M2 Flag=0x%X",pHeader->ModelFlag);
+
 	if(!LoadColorAnimation((BYTE *)ModelData.GetBuffer()))
 		return false;
 
@@ -208,7 +210,7 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR ModelFileName,LPCTSTR SkinFile
 		CD3DSubMesh * pD3DSubMesh=new CD3DSubMesh;
 
 
-		pD3DSubMesh->GetVertexFormat().FVF=D3DFVF_XYZB5|D3DFVF_NORMAL|D3DFVF_TEX1|D3DFVF_LASTBETA_UBYTE4;
+		pD3DSubMesh->GetVertexFormat().FVF=D3DFVF_XYZB5|D3DFVF_NORMAL|D3DFVF_DIFFUSE|D3DFVF_TEX1|D3DFVF_LASTBETA_UBYTE4;
 		pD3DSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_VERTEXT);
 		pD3DSubMesh->GetVertexFormat().IndexSize=sizeof(WORD);
 		pD3DSubMesh->SetPrimitiveType(D3DPT_TRIANGLELIST);
@@ -242,7 +244,7 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR ModelFileName,LPCTSTR SkinFile
 		}
 		pD3DSubMesh->GetDXIndexBuffer()->Unlock();
 
-		if(pD3DSubMesh->GetVertexCount()==VertexIndexList.GetCount())
+		if(pD3DSubMesh->GetVertexCount()>=VertexIndexList.GetCount())
 		{
 			pD3DSubMesh->AllocDXVertexBuffer(m_pManager->GetDevice());
 
@@ -261,8 +263,12 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR ModelFileName,LPCTSTR SkinFile
 						m_SkinMeshBoneCount=pModelVertices[j].BoneID[b]+1;
 					}					
 				}			
-				pModelVertices[j].Normal=BLZTranslationToD3D(pVertices[VertexIndex].Normal);
+				pModelVertices[j].Normal=BLZTranslationToD3D(pVertices[VertexIndex].Normal);				
 				pModelVertices[j].TextureCoord=pVertices[VertexIndex].Tex;			
+				
+				pModelVertices[j].Diffuse=(((UINT)(pVertices[VertexIndex].Unknow[0]*255))&0xFF)|
+					(((UINT)(pVertices[VertexIndex].Unknow[1]*255))<<8);
+				
 				TotalVertexCount++;
 			}
 
@@ -270,7 +276,8 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR ModelFileName,LPCTSTR SkinFile
 		}
 		else
 		{
-			PrintSystemLog(0,"Error VertexCount");
+			PrintD3DLog(0,"Error VertexCount,Origin=%u,Now=%u",
+				pD3DSubMesh->GetVertexCount(),VertexIndexList.GetCount());
 		}
 
 		pD3DSubMesh->SetID(pSubMesh[i].ID);
@@ -1274,6 +1281,8 @@ void CD3DWOWM2ModelResource::MakeSubmeshMaterial(BYTE * pModelData,BYTE * pSkinD
 			if(pTextureUnits[i].TextureAnim<pHeader->TexAnimLookupCount)
 				UVAniIndex=pTextureAnimLookup[pTextureUnits[i].TextureAnim];
 			UINT64 TextureProperty=TextureType|TextureFlag|RenderFlag|BlendingMode;
+			if(pTextureUnits[i].Flags&BLZ_M2_TEXTURE_UNIT_FLAG_USE_VERTEX_ALPHA2&&pTextureUnits[i].Mode==2)
+				TextureProperty|=SMP_USE_VERTEX_ALPHA2;
 			TextureProperty|=((((INT64)ColorAniIndex)<<24)&SMP_COLOR_ANI_INDEX)|
 				((((INT64)TransparencyAniIndex)<<32)&SMP_TRANSPARENCY_ANI_INDEX)|
 				((((INT64)UVAniIndex)<<40)&SMP_UV_ANI_INDEX);
@@ -1460,9 +1469,16 @@ int CD3DWOWM2ModelResource::GetAnimationIndex(UINT AnimationID,UINT SubAnimation
 	return -1;
 }
 
-CD3DWOWM2ModelResource::ANIMATION_SEQUENCE * CD3DWOWM2ModelResource::GetAnimationInfo(UINT AnimationIndex)
+CD3DWOWM2ModelResource::ANIMATION_SEQUENCE * CD3DWOWM2ModelResource::GetAnimationInfo(UINT AnimationID,UINT SubAnimationID)
 {
-	return m_AnimationSequence.GetObject(AnimationIndex);
+	for(UINT i=0;i<m_AnimationSequence.GetCount();i++)
+	{
+		if(m_AnimationSequence[i].AnimationID==AnimationID&&m_AnimationSequence[i].SubAnimationID==SubAnimationID)
+		{
+			return m_AnimationSequence.GetObject(i);
+		}
+	}
+	return NULL;
 }
 
 
@@ -1473,11 +1489,7 @@ UINT CD3DWOWM2ModelResource::GetAnimationCount()
 
 CD3DWOWM2ModelResource::ANIMATION_SEQUENCE * CD3DWOWM2ModelResource::GetAnimationInfoByIndex(UINT AnimationIndex)
 {
-	if(AnimationIndex<m_AnimationSequence.GetCount())
-	{
-		return &(m_AnimationSequence[AnimationIndex]);
-	}
-	return NULL;
+	return m_AnimationSequence.GetObject(AnimationIndex);
 }
 
 
@@ -1642,12 +1654,11 @@ bool CD3DWOWM2ModelResource::MakeTransparencyAnimationFrame(UINT AniIndex,UINT T
 			{
 				AniLength=m_GlobalSequences[m_TransparencyAnimations[AniIndex].AlphaAnimations.GlobalSequenceID];
 			}
-			GetInterpolationValue(Time,
+			return GetInterpolationValue(Time,
 				m_TransparencyAnimations[AniIndex].AlphaAnimations.InterpolationType,
 				AniLength,
 				m_TransparencyAnimations[AniIndex].AlphaAnimations.Animations[0],
 				Alpha);
-			return true;
 		}
 	}
 	FUNCTION_END;
@@ -1882,7 +1893,8 @@ bool CD3DWOWM2ModelResource::MakeTextureUVAniFrame(UINT Index,UINT Time,CD3DMatr
 			m_TextureUVAnimations[Index].Translations,
 			m_TextureUVAnimations[Index].Rotations,
 			m_TextureUVAnimations[Index].Scalings,
-			true);		
+			true);	
+		Frame=CD3DMatrix::FromTranslation(-0.5f,-0.5f,-0.5f)*Frame*CD3DMatrix::FromTranslation(0.5f,0.5f,0.5f);
 		return true;
 	}
 	FUNCTION_END;
@@ -2209,8 +2221,8 @@ bool CD3DWOWM2ModelResource::LoadTextureUVAnimation(BYTE * pModelData)
 	for(UINT i=0;i<pHeader->TexAnimsCount;i++)
 	{
 		LoadAniBlockVector3(pModelData,pTexAnims[i].Translation,m_TextureUVAnimations[i].Translations);
-		LoadAniBlockQuaternion(pModelData,pTexAnims[i].Rotation,m_TextureUVAnimations[i].Rotations);
-		LoadAniBlockVector3(pModelData,pTexAnims[i].Scaling,m_TextureUVAnimations[i].Scalings);
+		LoadAniBlockQuaternion2(pModelData,pTexAnims[i].Rotation,m_TextureUVAnimations[i].Rotations);
+		LoadAniBlockVector3(pModelData,pTexAnims[i].Scaling,m_TextureUVAnimations[i].Scalings);		
 	}
 
 	return true;
@@ -2405,6 +2417,39 @@ void CD3DWOWM2ModelResource::LoadAniBlockQuaternion(BYTE * pData,M2_MODEL_ANIMAT
 			for(UINT k=0;k<pKeyPair[j].Count;k++)
 			{
 				CD3DQuaternion Rotation=ShortQuaternionToLongQuaternion(pKeys[k]);
+				Rotation.Normalize();
+				AniBlock.Animations[j].Keys[k]=(Rotation);
+			}
+		}				
+	}	
+}
+
+void CD3DWOWM2ModelResource::LoadAniBlockQuaternion2(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DQuaternion>& AniBlock)
+{
+	AniBlock.InterpolationType=AniBlockInfo.InterpolationType;
+	AniBlock.GlobalSequenceID=AniBlockInfo.GlobalSequenceID;
+
+	M2_MODEL_ANIMATION_PAIR * pTimeStampPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.TimestampsOffset);
+	M2_MODEL_ANIMATION_PAIR * pKeyPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.KeysOffset);
+
+	AniBlock.Animations.Resize(AniBlockInfo.TimestampsCount);
+	for(UINT j=0;j<AniBlockInfo.TimestampsCount;j++)
+	{		
+
+		if(pTimeStampPair[j].Count)
+		{	
+			UINT32 * pTimeStamps=(UINT *)(pData+pTimeStampPair[j].Offset);		
+			AniBlock.Animations[j].TimeStamps.Resize(pTimeStampPair[j].Count);
+			for(UINT k=0;k<pTimeStampPair[j].Count;k++)
+			{				
+				AniBlock.Animations[j].TimeStamps[k]=(pTimeStamps[k]);								
+			}
+			CD3DQuaternion * pKeys=(CD3DQuaternion *)(pData+pKeyPair[j].Offset);
+			AniBlock.Animations[j].Keys.Resize(pKeyPair[j].Count);
+			for(UINT k=0;k<pKeyPair[j].Count;k++)
+			{
+				CD3DQuaternion Rotation=pKeys[k];
+				Rotation.Normalize();
 				AniBlock.Animations[j].Keys[k]=(Rotation);
 			}
 		}				
@@ -2806,9 +2851,13 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMeshMaterial * pSubMeshMaterial)
 	CEasyString SrcBlend;
 	CEasyString DestBlend;
 	CEasyString EnableAlphaTest;
-	CEasyString Texture2PSOp;
+	CEasyString VertexAlphaOperation;
 	CEasyString VShader;
 	CEasyString PShader;
+	CEasyString TextureAddrU[4];
+	CEasyString TextureAddrV[4];	
+	CEasyString OtherPSOperation;
+	CEasyString Temp;
 	UINT64 RenderFlag=pSubMeshMaterial->GetTextureProperty(0)&SMP_RENDER_FLAG;
 	UINT64 BlendingMode=pSubMeshMaterial->GetTextureProperty(0)&SMP_BLENDING_MODE;
 	
@@ -2827,12 +2876,13 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMeshMaterial * pSubMeshMaterial)
 	}
 	if(RenderFlag&SMP_NO_LIGHT)
 	{		
+		PSDiffuseFunction=" * Diffuse.a";
 		VSDiffuseFunction="1.0f";
 	}
 	else
 	{
 		PSDiffuseFunction=" * Diffuse";
-		VSDiffuseFunction="CaculateDiffuse(Normal)";
+		VSDiffuseFunction="CaculateDiffuse(Pos,Normal)";
 	}	
 	
 	if(RenderFlag&SMP_NO_FOG)
@@ -2888,27 +2938,80 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMeshMaterial * pSubMeshMaterial)
 		break;
 	case SMP_BLENDING_MUL:
 		break;
-	}		
-	if(pSubMeshMaterial->GetTextureLayerCount()>1)
+	}
+	if(pSubMeshMaterial->GetTextureProperty(0)&SMP_USE_VERTEX_ALPHA1)
 	{
-		if(pSubMeshMaterial->GetTextureProperty(1)&SMP_TEXTURE_ENV_MAP)
+		VertexAlphaOperation="Output.Diffuse.a =  Input.Diffuse.r;";
+	}
+	else if(pSubMeshMaterial->GetTextureProperty(0)&SMP_USE_VERTEX_ALPHA2)
+	{
+		VertexAlphaOperation="Output.Diffuse.a =  Input.Diffuse.g;";
+	}
+
+	for(UINT i=0;i<4;i++)
+	{
+		TextureAddrU[i]="Clamp";
+		TextureAddrV[i]="Clamp";
+	}	
+	for(UINT i=0;i<pSubMeshMaterial->GetTextureLayerCount();i++)
+	{
+		UINT64 TextureProperty=pSubMeshMaterial->GetTextureProperty(i);
+		if(TextureProperty&SMP_TEXTURE_WRAP_X)
 		{
-			UINT64 Texture2BlendingMode=pSubMeshMaterial->GetTextureProperty(1)&SMP_BLENDING_MODE;
-			if(Texture2BlendingMode==SMP_BLENDING_MUL)
+			TextureAddrU[i]="Wrap";
+		}
+		if(TextureProperty&SMP_TEXTURE_WRAP_Y)
+		{
+			TextureAddrV[i]="Wrap";
+		}
+		if(i)
+		{			
+			if(TextureProperty&SMP_TEXTURE_ENV_MAP)
 			{
-				Texture2PSOp="* (texCUBE( Sampler1, EnvTex ) + 1.0f)";
+				Temp.Format("	float4 Color%d=texCUBE( Sampler%d, EnvTex );",i,i);
+				OtherPSOperation+=Temp;
+				OtherPSOperation+="\r\n";				
 			}
 			else
 			{
-				Texture2PSOp="+ texCUBE( Sampler1, EnvTex ) ";
+				Temp.Format("	float4 Color%d=tex2D( Sampler%d, Tex0.xy );",i,i);
+				OtherPSOperation+=Temp;
+				OtherPSOperation+="\r\n";
 			}
+			UINT64 TextureBlendingMode=TextureProperty&SMP_BLENDING_MODE;
+			switch(TextureBlendingMode)
+			{	
+			case SMP_BLENDING_ALPHA_TEST:
+			case SMP_BLENDING_ALPHA_BLENDING:
+				Temp.Format("	Color=Color*(1-Color%d.a) + Color%d*Color%d.a;",i,i,i);
+				OtherPSOperation+=Temp;
+				OtherPSOperation+="\r\n";	
+				break;
+			case SMP_BLENDING_ADDITIVE:	
+				Temp.Format("	Color=Color + Color%d;",i);
+				OtherPSOperation+=Temp;
+				OtherPSOperation+="\r\n";	
+				break;
+			case SMP_BLENDING_ADDITIVE_ALPHA:					
+				Temp.Format("	Color=Color + Color%d*Color%d.a;",i,i);
+				OtherPSOperation+=Temp;
+				OtherPSOperation+="\r\n";	
+				break;
+			case SMP_BLENDING_MODULATE:
+				Temp.Format("	Color=Color*(1-Color%d.a) + Color%d*Color%d.a;",i,i,i);
+				OtherPSOperation+=Temp;
+				OtherPSOperation+="\r\n";	
+				break;
+			case SMP_BLENDING_MUL:
+				Temp.Format("	Color=Color*Color%d*2.0f;",i);
+				OtherPSOperation+=Temp;
+				OtherPSOperation+="\r\n";	
+				break;
+			}	
+			
+
 		}
-		else
-		{
-			Texture2PSOp="+ tex2D( Sampler1, Tex0 ) ";
-		}
-	}
-	
+	}	
 	PShader="PShaderWithNormal";
 
 	IFileAccessor * pFile;
@@ -2939,9 +3042,18 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMeshMaterial * pSubMeshMaterial)
 	FxContent.Replace("<SrcBlend>",SrcBlend);
 	FxContent.Replace("<DestBlend>",DestBlend);
 	FxContent.Replace("<EnableAlphaTest>",EnableAlphaTest);
-	FxContent.Replace("<Texture2PSOp>",Texture2PSOp);
+	FxContent.Replace("<VertexAlphaOperation>",VertexAlphaOperation);
 	FxContent.Replace("<VShader>",VShader);
 	FxContent.Replace("<PShader>",PShader);
+	for(UINT i=0;i<4;i++)
+	{		
+		Temp.Format("<TextureAddrU%d>",i);
+		FxContent.Replace(Temp,TextureAddrU[0]);
+		Temp.Format("<TextureAddrV%d>",i);
+		FxContent.Replace(Temp,TextureAddrV[0]);
+	}
+	FxContent.Replace("<OtherPSOperation>",OtherPSOperation);
+	
 
 	CD3DFX * pFX=m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory(FXName,FxContent.GetBuffer(),FxContent.GetLength());	
 	pSubMeshMaterial->SetFX(pFX);
@@ -2956,9 +3068,12 @@ CD3DFX * CD3DWOWM2ModelResource::BuildParticleFX(UINT BlendingType)
 	CEasyString SrcBlend;
 	CEasyString DestBlend;
 	CEasyString EnableAlphaTest;
+	CEasyString DiffuseFunction;
 	
 
 	FXName.Format("M2Particle_0x%X",BlendingType);
+
+	DiffuseFunction="CaculateDiffuse(Pos)";
 
 	switch(BlendingType)
 	{
@@ -2977,6 +3092,7 @@ CD3DFX * CD3DWOWM2ModelResource::BuildParticleFX(UINT BlendingType)
 		SrcBlend="SrcColor";
 		DestBlend="One";
 		EnableAlphaTest="False";
+		DiffuseFunction="1.0f";
 		break;
 	case EBT_ALPHA_BLEND:		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 		EnableZWrite="False";
@@ -3001,7 +3117,24 @@ CD3DFX * CD3DWOWM2ModelResource::BuildParticleFX(UINT BlendingType)
 		SrcBlend="SrcAlpha";
 		DestBlend="One";
 		EnableAlphaTest="False";
+		DiffuseFunction="1.0f";
 		break;
+	case EBT_ALPHA_MUL:			//glBlendFunc(GL_SRC_ALPHA, GL_ONE); 
+		EnableZWrite="False";
+		EnableAlphaBlend="True";
+		BlendOp="Add";
+		SrcBlend="Zero";
+		DestBlend="SrcColor";
+		EnableAlphaTest="False";
+		break;
+	default:
+		PrintSystemLog(0,"CD3DWOWM2ModelResource::BuildParticleFX:未知混合模式%d",BlendingType);
+		EnableZWrite="True";
+		EnableAlphaBlend="False";
+		BlendOp="Add";
+		SrcBlend="SrcAlpha";
+		DestBlend="InvSrcAlpha";
+		EnableAlphaTest="False";
 	}	
 
 	IFileAccessor * pFile;
@@ -3028,6 +3161,7 @@ CD3DFX * CD3DWOWM2ModelResource::BuildParticleFX(UINT BlendingType)
 	FxContent.Replace("<SrcBlend>",SrcBlend);
 	FxContent.Replace("<DestBlend>",DestBlend);
 	FxContent.Replace("<EnableAlphaTest>",EnableAlphaTest);
+	FxContent.Replace("<DiffuseFunction>",DiffuseFunction);
 
 	CD3DFX * pFX=m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory(FXName,FxContent.GetBuffer(),FxContent.GetLength());
 	return pFX;
@@ -3044,6 +3178,7 @@ CD3DFX * CD3DWOWM2ModelResource::BuildRibbonFX(UINT RenderFlag,UINT BlendingMode
 	CEasyString SrcBlend;
 	CEasyString DestBlend;
 	CEasyString EnableAlphaTest;	
+	CEasyString DiffuseFunction;
 
 	FXName.Format("M2Ribbon_0x%X_0x%X",
 		RenderFlag,BlendingMode);
@@ -3072,6 +3207,8 @@ CD3DFX * CD3DWOWM2ModelResource::BuildRibbonFX(UINT RenderFlag,UINT BlendingMode
 	BlendOp="Add";
 	SrcBlend="SrcAlpha";
 	DestBlend="InvSrcAlpha";
+	DiffuseFunction="CaculateDiffuse(Pos)";
+
 	switch(BlendingMode)
 	{	
 	case BLZ_M2_BLENDING_MODE_ALPHA_TEST:
@@ -3084,11 +3221,13 @@ CD3DFX * CD3DWOWM2ModelResource::BuildRibbonFX(UINT RenderFlag,UINT BlendingMode
 		EnableAlphaBlend="True";
 		SrcBlend="One";
 		DestBlend="One";
+		DiffuseFunction="1.0f";
 		break;
 	case BLZ_M2_BLENDING_MODE_ADDITIVE_ALPHA:
 		EnableAlphaBlend="True";
 		SrcBlend="DestColor";
 		DestBlend="One";
+		DiffuseFunction="1.0f";
 		break;
 	case BLZ_M2_BLENDING_MODE_MODULATE:
 		break;
@@ -3122,6 +3261,7 @@ CD3DFX * CD3DWOWM2ModelResource::BuildRibbonFX(UINT RenderFlag,UINT BlendingMode
 	FxContent.Replace("<SrcBlend>",SrcBlend);
 	FxContent.Replace("<DestBlend>",DestBlend);
 	FxContent.Replace("<EnableAlphaTest>",EnableAlphaTest);
+	FxContent.Replace("<DiffuseFunction>",DiffuseFunction);
 
 	CD3DFX * pFX=m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory(FXName,FxContent.GetBuffer(),FxContent.GetLength());	
 	return pFX;
@@ -3219,6 +3359,7 @@ bool CD3DWOWM2ModelResource::GetInterpolationTransform(UINT Time,UINT AniIndex,U
 			AniLength,
 			Rotations.Animations[AniIndex],
 			Rotation);
+		//Rotation.Normalize();
 		IsAnimated=true;
 	}
 
@@ -3286,6 +3427,7 @@ bool CD3DWOWM2ModelResource::GetInterpolationTransformGlobal(UINT Time,CD3DMatri
 				m_GlobalSequences[Rotations.GlobalSequenceID],
 				Rotations.Animations[0],
 				Rotation);
+			//Rotation.Normalize();
 			IsAnimated=true;
 		}
 	}
@@ -3298,6 +3440,7 @@ bool CD3DWOWM2ModelResource::GetInterpolationTransformGlobal(UINT Time,CD3DMatri
 				0,
 				Rotations.Animations[0],
 				Rotation);
+			//Rotation.Normalize();
 			IsAnimated=true;
 		}
 	}
@@ -3327,10 +3470,14 @@ bool CD3DWOWM2ModelResource::GetInterpolationTransformGlobal(UINT Time,CD3DMatri
 			IsAnimated=true;
 		}
 	}
+
+	
 	
 	if(IsAnimated)
+	{
 		//TransformMatrix=CD3DMatrix::FromScale(Scaling)*CD3DMatrix::FromRotationQuaternion(Rotation)*CD3DMatrix::FromTranslation(Translation);
 		TransformMatrix.SetTransformation(Scaling,Rotation,Translation);
+	}
 
 	return IsAnimated;
 
@@ -3379,6 +3526,7 @@ bool CD3DWOWM2ModelResource::GetInterpolationTransformWithGlobal(UINT Time,UINT 
 				m_GlobalSequences[Rotations.GlobalSequenceID],
 				Rotations.Animations[0],
 				Rotation);
+			//Rotation.Normalize();
 			IsAnimated=true;
 		}
 	}
@@ -3389,6 +3537,7 @@ bool CD3DWOWM2ModelResource::GetInterpolationTransformWithGlobal(UINT Time,UINT 
 			AniLength,
 			Rotations.Animations[AniIndex],
 			Rotation);
+		//Rotation.Normalize();
 		IsAnimated=true;
 	}
 
@@ -3413,6 +3562,7 @@ bool CD3DWOWM2ModelResource::GetInterpolationTransformWithGlobal(UINT Time,UINT 
 			Scaling);
 		IsAnimated=true;
 	}
+
 
 	if(IsAnimated)
 		//TransformMatrix=CD3DMatrix::FromScale(Scaling)*CD3DMatrix::FromRotationQuaternion(Rotation)*CD3DMatrix::FromTranslation(Translation);
@@ -3470,7 +3620,7 @@ CD3DWOWM2ModelResource::BONE_ANI_CACHE * CD3DWOWM2ModelResource::BuildBoneAniCac
 		m_BoneAniCache.Delete(m_BoneAniCache.GetHead());
 	}
 	UINT FrameTimeSpan=1000/m_BoneAniCacheFreq;
-	UINT FrameCount=pAniInfo->Length/FrameTimeSpan;
+	UINT FrameCount=ceil((float)pAniInfo->Length/FrameTimeSpan);
 	BONE_ANI_CACHE& AniCache=m_BoneAniCache.InsertAfter();
 	AniCache.AniIndex=pAniInfo->Index;
 	AniCache.Bones.Resize(m_Bones.GetCount());
@@ -3482,7 +3632,10 @@ CD3DWOWM2ModelResource::BONE_ANI_CACHE * CD3DWOWM2ModelResource::BuildBoneAniCac
 		for(UINT j=0;j<FrameCount;j++)
 		{
 			BoneFrames.Matrix[j].SetIdentity();
-			GetInterpolationTransform(FrameTimeSpan*j,pAniInfo->Index,pAniInfo->Length,BoneFrames.Matrix[j],
+			UINT Time=FrameTimeSpan*j;
+			if(Time>=pAniInfo->Length)
+				Time=pAniInfo->Length-1;
+			GetInterpolationTransform(Time,pAniInfo->Index,pAniInfo->Length,BoneFrames.Matrix[j],
 				m_Bones[i].Translations,
 				m_Bones[i].Rotations,
 				m_Bones[i].Scalings);

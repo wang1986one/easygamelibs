@@ -21,7 +21,11 @@ protected:
 	
 	CDOSServer										*m_pServer;
 	CThreadSafeIDStorage<CDOSMessagePacket *>		m_MsgQueue;
-	
+
+	volatile UINT									m_RouteInMsgCount;
+	volatile UINT									m_RouteInMsgFlow;
+	volatile UINT									m_RouteOutMsgCount;
+	volatile UINT									m_RouteOutMsgFlow;
 	
 
 	DECLARE_CLASS_INFO(CDOSRouter);
@@ -46,6 +50,12 @@ public:
 
 	UINT GetRouterID();
 	CDOSServer * GetServer();
+
+	UINT GetInMsgCount();
+	UINT GetInMsgFlow();
+	UINT GetOutMsgCount();
+	UINT GetOutMsgFlow();
+	void ResetStatData();
 protected:
 	int DoMessageRoute(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT);	
 	BOOL IsSameRouter(OBJECT_ID * pReceiverIDs,int Count);
@@ -57,4 +67,28 @@ protected:
 inline CDOSServer * CDOSRouter::GetServer()
 {
 	return m_pServer;
+}
+
+inline UINT CDOSRouter::GetInMsgCount()
+{
+	return m_RouteInMsgCount;
+}
+inline UINT CDOSRouter::GetInMsgFlow()
+{
+	return m_RouteInMsgFlow;
+}
+inline UINT CDOSRouter::GetOutMsgCount()
+{
+	return m_RouteOutMsgCount;
+}
+inline UINT CDOSRouter::GetOutMsgFlow()
+{
+	return m_RouteOutMsgFlow;
+}
+inline void CDOSRouter::ResetStatData()
+{
+	m_RouteInMsgCount=0;
+	m_RouteInMsgFlow=0;
+	m_RouteOutMsgCount=0;
+	m_RouteOutMsgFlow=0;
 }

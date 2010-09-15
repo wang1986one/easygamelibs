@@ -27,43 +27,25 @@ public:
 		CES_SHOULDER,
 		CES_LEFT_HAND,
 		CES_RIGHT_HAND,
-		CES_BACK,	
+		CES_SHIELD,
+		CES_CAPE,	
 		CES_SHIRT,		
 		CES_LEG,
-		CES_FOOT,
+		CES_BOOT,
 		CES_BUST,
 		CES_WRIST,
 		CES_HAND,		
-		CES_WAIST,
+		CES_BELT,
 		CES_ENSIGN,
 		CES_MAX,
 	};
-protected:	
-	//struct STORAGE_STRUCT:CD3DWOWM2Model::STORAGE_STRUCT
-	//{
-	//	int				MaterialCount;
-	//	int				CharRace;
-	//	int				CharSex;
-	//	int				CharSexMax;
-	//	int				CharSkinColor;
-	//	int				CharSkinColorMax;
-	//	int				CharHairColor;
-	//	int				CharHairColorMax;
-	//	int				CharFaceType;
-	//	int				CharFaceTypeMax;
-	//	int				CharHairType;
-	//	int				CharHairTypeMax;
-	//	int				CharWhiskerType;
-	//	int				CharWhiskerTypeMax;
-	//	bool			IsCharBald;
-	//	UINT			Equipments[CES_MAX];
-	//	UINT			HelmetModelStorageID;
-	//	UINT			LeftShoulderModelStorageID;
-	//	UINT			RightShoulderModelStorageID;
-	//	UINT			LeftWeaponModelStorageID;
-	//	UINT			RightWeaponModelStorageID;
 
-	//};
+	struct EQUIPMENT_INFO
+	{
+		UINT	ItemID;
+		UINT	ItemDisplayID;
+	};
+protected:		
 
 	enum SST_MEMBER_ID
 	{
@@ -82,37 +64,45 @@ protected:
 		SST_D3DWMCM_CHAR_LEFT_SHOULDER_MODEL,
 		SST_D3DWMCM_CHAR_RIGHT_SHOULDER_MODEL,
 		SST_D3DWMCM_CHAR_LEFT_WEAPON_MODEL,
-		SST_D3DWMCM_CHAR_RIGHT_WEAPON_MODEL,		
+		SST_D3DWMCM_CHAR_RIGHT_WEAPON_MODEL,
+		SST_D3DWMCM_CHAR_SHIELD_MODEL,
+		SST_D3DWMCM_CREATURE_DISPLAY_ID,
+		SST_D3DWMCM_NEED_REBUILD_SUBMESH,
 		SST_D3DWMCM_MAX=SST_D3DWMM_MAX+50,
 	};
 
-	CEasyArray<CD3DSubMesh *>					m_SubMeshList;
-	CEasyArray<CD3DSubMeshMaterial>				m_SubMeshMaterialList;
+	CEasyArray<CD3DSubMesh *>			m_SubMeshList;
+	CEasyArray<CD3DSubMeshMaterial>		m_SubMeshMaterialList;
 
-	int								m_CharRace;
-	int								m_CharSex;
-	int								m_CharSexMax;
-	int								m_CharSkinColor;
-	int								m_CharSkinColorMax;
-	int								m_CharHairColor;
-	int								m_CharHairColorMax;
-	int								m_CharFaceType;
-	int								m_CharFaceTypeMax;
-	int								m_CharHairType;
-	int								m_CharHairTypeMax;
-	int								m_CharWhiskerType;
-	int								m_CharWhiskerTypeMax;
-	bool							m_IsCharBald;
+	UINT								m_CreatureDisplayID;
+	bool								m_NeedRebuildSubMesh;
 
-	UINT							m_Equipments[CES_MAX];
+	int									m_CharRace;
+	int									m_CharSex;
+	int									m_CharSexMax;
+	int									m_CharSkinColor;
+	int									m_CharSkinColorMax;
+	int									m_CharHairColor;
+	int									m_CharHairColorMax;
+	int									m_CharFaceType;
+	int									m_CharFaceTypeMax;
+	int									m_CharHairType;
+	int									m_CharHairTypeMax;
+	int									m_CharBeardType;
+	int									m_CharBeardTypeMax;
+	bool								m_IsCharBald;
 
-	CD3DWOWM2ItemModel *			m_pHelmetModel;
-	CD3DWOWM2ItemModel *			m_pLeftShoulderModel;
-	CD3DWOWM2ItemModel *			m_pRightShoulderModel;
-	CD3DWOWM2ItemModel *			m_pLeftWeaponModel;
-	CD3DWOWM2ItemModel *			m_pRightWeaponModel;
+	EQUIPMENT_INFO						m_Equipments[CES_MAX];
+	
 
-	int								m_CloseHandAnimationIndex;
+	CD3DWOWM2ItemModel *				m_pHelmetModel;
+	CD3DWOWM2ItemModel *				m_pLeftShoulderModel;
+	CD3DWOWM2ItemModel *				m_pRightShoulderModel;
+	CD3DWOWM2ItemModel *				m_pLeftWeaponModel;
+	CD3DWOWM2ItemModel *				m_pRightWeaponModel;
+	CD3DWOWM2ItemModel *				m_pRightShieldModel;
+
+	int									m_CloseHandAnimationIndex;
 	
 	DECLARE_CLASS_INFO(CD3DWOWM2CharacterModel)
 public:
@@ -125,31 +115,35 @@ public:
 	virtual bool Reset();
 	virtual bool Restore();
 
-	bool SetCharRace(int Value);
-	bool SetCharSex(int Value);
+	bool SetCreatureDisplayID(UINT ID);
+	
 	bool SetCharSkinColor(int Value);
 	bool SetCharHairColor(int Value);
 	bool SetCharFaceType(int Value);
 	bool SetCharHairType(int Value);
-	bool SetCharWhiskerType(int Value);
+	bool SetCharBeardType(int Value);
 	void SetCharBald(bool IsCharBald);
 
+	UINT GetCreatureDisplayID();
 	int GetCharRace();
 	int GetCharSex();
 	int GetCharSkinColor();
 	int GetCharHairColor();
 	int GetCharFaceType();
 	int GetCharHairType();
-	int GetCharWhiskerType();
+	int GetCharBeardType();
 	bool IsCharBald();
 
 	bool SetEquipment(UINT Slot,UINT ItemID);
-	UINT GetEquipment(UINT Slot);
+	EQUIPMENT_INFO * GetEquipment(UINT Slot);
 
-	bool BuildCharModel();
+	bool LoadCharacter(UINT Race,UINT Sex);
+	bool LoadCreature(UINT CreatureDisplayID);
+
+	bool BuildModel();
 
 	virtual int GetSubMeshCount();
-	virtual CD3DSubMesh * GetSubMesh(int index);
+	virtual CD3DSubMesh * GetSubMesh(UINT index);
 	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(int index);
 
 	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
@@ -160,28 +154,29 @@ public:
 	virtual UINT GetSmartStructSize(UINT Param=0);
 
 protected:
-	bool MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTexture *& pCharSkinTexture,CD3DTexture *& pCharSkinExtraTexture,CD3DTexture *& pCharHairTexture,bool HaveSleeve);
-	void AlphaMix(D3D_A8B8G8R8_PIXEL& DestPixel,D3D_A8B8G8R8_PIXEL& SrcPixel);
-	bool AddTexture(CD3DTexture * pDestTexture,CD3DTexture * pSrcTexture,UINT SrcWifth,UINT SrcHeight,UINT DestOffsetX,UINT DestOffsetY);
-	bool MixTexture(CD3DTexture * pSrcTexture,int MipLevel,UINT SrcWifth,UINT SrcHeight,BYTE * pDestPixels,UINT DestPitch,UINT DestOffsetX,UINT DestOffsetY);
+	bool FetchCreatureExtraInfo(UINT ExtraInfoID);
+	bool BuildEquipmentModel(bool& HairVisible,bool& Facial1Visible,bool& Facial2Visible,bool& Facial3Visible,bool& EarsVisible);
+	bool RebuildSubMesh(bool HairVisible,bool Facial1Visible,bool Facial2Visible,bool Facial3Visible,bool EarsVisible,bool& HaveSleeve);
+
+	bool MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTexture *& pCharSkinTexture,CD3DTexture *& pCharSkinExtraTexture,
+		CD3DTexture *& pCharHairTexture,CD3DTexture *& pCapeTexture,
+		CD3DTexture *& pSkinTexture1,CD3DTexture *& pSkinTexture2,CD3DTexture *& pSkinTexture3,
+		bool HaveSleeve);
+	void AlphaMix(D3D_A8B8G8R8_PIXEL& DestPixel,D3D_A8B8G8R8_PIXEL& SrcPixel,bool UseAlphaBlend);
+	bool AddTexture(CD3DTexture * pDestTexture,CD3DTexture * pSrcTexture,UINT SrcWifth,UINT SrcHeight,UINT DestOffsetX,UINT DestOffsetY,bool UseAlphaBlend);
+	bool MixTexture(CD3DTexture * pSrcTexture,int MipLevel,UINT SrcWidth,UINT SrcHeight,BYTE * pDestPixels,UINT DestPitch,UINT DestOffsetX,UINT DestOffsetY,bool UseAlphaBlend);
 	CD3DTexture * LoadTextureBySex(CD3DDevice * pD3DDevice,LPCTSTR TextureFileName,int Sex);
 	virtual void FetchAnimationFrames(UINT Time);
-
-	//virtual CNameObject::STORAGE_STRUCT * USOCreateHead(UINT Param=0);
-	//virtual int USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);	
-	//virtual bool USOWriteData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	//virtual bool USOWriteChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	//virtual int USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	//virtual int USOReadData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,BYTE * pData,int DataSize,UINT Param=0);
-	//virtual bool USOReadChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	//virtual bool USOReadFinish(CNameObject::STORAGE_STRUCT * pHead,UINT Param=0);
 };
 
 inline void CD3DWOWM2CharacterModel::SetCharBald(bool IsCharBald)
 {
 	m_IsCharBald=IsCharBald;
 }
-
+inline UINT CD3DWOWM2CharacterModel::GetCreatureDisplayID()
+{
+	return m_CreatureDisplayID;
+}
 inline int CD3DWOWM2CharacterModel::GetCharRace()
 {
 	return m_CharRace;
@@ -206,22 +201,22 @@ inline int CD3DWOWM2CharacterModel::GetCharHairType()
 {
 	return m_CharHairType;
 }
-inline int CD3DWOWM2CharacterModel::GetCharWhiskerType()
+inline int CD3DWOWM2CharacterModel::GetCharBeardType()
 {
-	return m_CharWhiskerType;
+	return m_CharBeardType;
 }
 inline bool CD3DWOWM2CharacterModel::IsCharBald()
 {
 	return m_IsCharBald;
 }
 
-inline UINT CD3DWOWM2CharacterModel::GetEquipment(UINT Slot)
+inline CD3DWOWM2CharacterModel::EQUIPMENT_INFO * CD3DWOWM2CharacterModel::GetEquipment(UINT Slot)
 {
 	if(Slot<CES_MAX)
 	{
-		return m_Equipments[Slot];
+		return &(m_Equipments[Slot]);
 	}
-	return 0;
+	return NULL;
 }
 
 }

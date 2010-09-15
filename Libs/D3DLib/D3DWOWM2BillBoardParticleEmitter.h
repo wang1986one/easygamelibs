@@ -70,29 +70,21 @@ protected:
 	{
 		PARTICLE_VERTEX		Vertex[4];
 	};
-	struct PARTICLE_INFO
-	{		
-
-		
-		CD3DVector3			Scale;					
-		
-		CD3DWOWM2ModelResource::FAKE_ANIMATION_FRAME<CD3DVector3>	Color;			
-		CD3DWOWM2ModelResource::FAKE_ANIMATION_FRAME<FLOAT>			Opacity;		
-		CD3DWOWM2ModelResource::FAKE_ANIMATION_FRAME<CD3DVector2>	Size;			
-		CD3DWOWM2ModelResource::FAKE_ANIMATION_FRAME<short>			Intensity;
-	};
-	CD3DWOWM2ModelResource *	m_pModelResource;
-	CD3DSubMesh					m_SubMesh;
-	UINT						m_EmitterIndex;
-	UINT						m_MaxParticleCount;	
-	PARTICLE_RECT *				m_pParticleVertexBuffer;
-	WORD *						m_pParticleIndexBuffer;
-	UINT						m_ParticleCount;
-	FLOAT						m_StartTime;
-	FLOAT						m_RecentUpdateTime;
-	FLOAT						m_EmitterRate;	
-	bool						m_EnbaleGravityTransform;
-	bool						m_NoTrail;
+	
+	CD3DWOWM2ModelResource *						m_pModelResource;
+	CD3DSubMesh										m_SubMesh;
+	UINT											m_EmitterIndex;
+	CD3DWOWM2ModelResource::PARTICLE_EMITTER_INFO * m_pEmitterInfo;
+	UINT											m_MaxParticleCount;	
+	PARTICLE_RECT *									m_pParticleVertexBuffer;
+	WORD *											m_pParticleIndexBuffer;
+	UINT											m_ParticleCount;
+	FLOAT											m_StartTime;
+	FLOAT											m_RecentUpdateTime;
+	FLOAT											m_EmitterRate;	
+	bool											m_EnbaleGravityTransform;
+	bool											m_NoTrail;
+	int												m_TextureTileRotation;
 
 	DECLARE_CLASS_INFO(CD3DWOWM2BillBoardParticleEmitter)
 
@@ -106,7 +98,7 @@ public:
 	virtual bool Restore();
 
 	virtual int GetSubMeshCount();
-	virtual CD3DSubMesh * GetSubMesh(int index);
+	virtual CD3DSubMesh * GetSubMesh(UINT index);
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();
@@ -115,15 +107,23 @@ public:
 
 	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
 
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera);
+	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 
 
 	virtual void Update(FLOAT Time);
 
 	bool Init(CD3DWOWM2ModelResource * pModelResource,UINT EmitterIndex,UINT MaxParticleCount);
+
+	CD3DWOWM2ModelResource::PARTICLE_EMITTER_INFO * GetEmitterInfo();
 protected:
 	void BuildParticle(CD3DWOWM2ModelResource::PARTICLE_EMITTER_INFO * pParticleEmitterInfo,CD3DWOWM2ModelResource::PARTICLE_PARAM * pParam);
+	void BuildColor(CD3DWOWM2ModelResource::FAKE_ANIMATION_FRAME<CD3DVector3>& ColorAni,CD3DWOWM2ModelResource::FAKE_ANIMATION_FRAME<FLOAT>& OpacityAni,D3DCOLOR& StartColor,D3DCOLOR& MidColor,D3DCOLOR& EndColor,FLOAT& ColorMidTime,FLOAT& OpacityMidTime);
+	void BuildSize(CD3DWOWM2ModelResource::FAKE_ANIMATION_FRAME<CD3DVector2>& SizeAni,CD3DVector2& StartSize,CD3DVector2& MidSize,CD3DVector2& EndSize,FLOAT& MidTime);
 };
 
+inline CD3DWOWM2ModelResource::PARTICLE_EMITTER_INFO * CD3DWOWM2BillBoardParticleEmitter::GetEmitterInfo()
+{
+	return m_pEmitterInfo;
+}
 
 }

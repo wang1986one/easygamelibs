@@ -80,22 +80,29 @@ bool CMainConfig::LoadConfig(LPCTSTR FileName)
 					if(_stricmp(Service.name(),"Service")==0)
 					{
 						SERVICE_INFO ServiceInfo;
+						if(Service.has_attribute("Type"))
+						{
+							ServiceInfo.Type=(long)Service.attribute("Type");
+						}
 						if(Service.has_attribute("Name"))
 						{
 							strncpy_0(ServiceInfo.Name,MAX_PATH,Service.attribute("Name").getvalue().c_str(),MAX_PATH);
 						}
-						if(Service.has_attribute("ImageFilePath"))
+						if(ServiceInfo.Type==SERVICE_TYPE_NORMAL)
 						{
-							strncpy_0(ServiceInfo.ImageFilePath,MAX_PATH,Service.attribute("ImageFilePath").getvalue().c_str(),MAX_PATH);
+							if(Service.has_attribute("ImageFilePath"))
+							{
+								strncpy_0(ServiceInfo.ImageFilePath,MAX_PATH,Service.attribute("ImageFilePath").getvalue().c_str(),MAX_PATH);
+							}
+							if(Service.has_attribute("WorkDir"))
+							{
+								strncpy_0(ServiceInfo.WorkDir,MAX_PATH,Service.attribute("WorkDir").getvalue().c_str(),MAX_PATH);
+							}
+							if(Service.has_attribute("StartupParam"))
+							{
+								strncpy_0(ServiceInfo.StartupParam,MAX_PATH,Service.attribute("StartupParam").getvalue().c_str(),MAX_PATH);
+							}					
 						}
-						if(Service.has_attribute("WorkDir"))
-						{
-							strncpy_0(ServiceInfo.WorkDir,MAX_PATH,Service.attribute("WorkDir").getvalue().c_str(),MAX_PATH);
-						}
-						if(Service.has_attribute("StartupParam"))
-						{
-							strncpy_0(ServiceInfo.StartupParam,MAX_PATH,Service.attribute("StartupParam").getvalue().c_str(),MAX_PATH);
-						}					
 
 						m_ServiceInfoList.Add(ServiceInfo);
 					}

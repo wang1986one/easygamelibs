@@ -161,3 +161,28 @@ int CWinServiceController::GetServiceStatus()
 	}
 	return SS_NONE;
 }
+
+bool CWinServiceController::GetServiceImageFilePath(LPTSTR pBuffer,int BufferSize)
+{
+	if(m_hService)
+	{		
+		DWORD InfoSize;
+		if(!QueryServiceConfig(m_hService,NULL,0,&InfoSize))
+		{
+			DWORD dwError = GetLastError();
+			if( ERROR_INSUFFICIENT_BUFFER == dwError )
+			{
+				char * pInfoBuffer=new char[InfoSize];
+				QUERY_SERVICE_CONFIG * pConfigInfo=(QUERY_SERVICE_CONFIG *)pInfoBuffer;
+				if(QueryServiceConfig(m_hService,pConfigInfo,InfoSize,&InfoSize))
+				{
+					strncpy_0(pBuffer,BufferSize,pConfigInfo->lpBinaryPathName,BufferSize);
+					delete[] pInfoBuffer;
+					return true;
+				}
+				delete[] pInfoBuffer;
+			}				
+		}
+	}
+	return false;
+}

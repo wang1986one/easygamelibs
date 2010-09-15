@@ -85,7 +85,7 @@ public:
 	{return m_pTexture;}
 	
 	
-
+	virtual void Update(FLOAT Time);
 	
 	
 	//virtual void Release();
@@ -110,7 +110,6 @@ public:
 		return m_TextureInfo;
 	}
 
-	virtual bool ApplyTexture(int stage);	
 
 	bool LockBits(UINT Level,D3DLOCKED_RECT* pLockedRect,const RECT* pRect,DWORD Flags);
 	bool UnlockBits(UINT Level);

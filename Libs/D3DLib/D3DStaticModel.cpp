@@ -153,7 +153,7 @@ bool CD3DStaticModel::LoadFromSMDL(LPCTSTR FileName)
 //}
 
 
-//void CD3DStaticModel::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CD3DLight ** pLight,CD3DCamera * pCamera)
+//void CD3DStaticModel::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 //{
 //	if(pSubMesh&&pMaterial)
 //	{	
@@ -207,7 +207,7 @@ int CD3DStaticModel::GetSubMeshCount()
 	else
 		return 0;
 }
-CD3DSubMesh * CD3DStaticModel::GetSubMesh(int index)
+CD3DSubMesh * CD3DStaticModel::GetSubMesh(UINT index)
 {
 	if(m_pResource)
 		return m_pResource->GetSubMesh(index);

@@ -53,7 +53,18 @@ public:
 	CD3DVector3 operator+(const CD3DVector3& V2);
 	void operator+=(const CD3DVector3& V2);
 
+	CD3DVector3 operator+(FLOAT Value);
+	void operator+=(FLOAT Value);
+
+	CD3DVector3 operator-(const CD3DVector3& V2);
+	void operator-=(const CD3DVector3& V2);
+
+	CD3DVector3 operator-(FLOAT Value);
+	void operator-=(FLOAT Value);
+
 	CD3DVector3 operator*(const D3DXVECTOR3& V2);
+
+	bool IsValid();
 
 	//²åÖµ
 	static CD3DVector3 Lerp(const D3DXVECTOR3& v1,const D3DXVECTOR3& v2,FLOAT s);
@@ -164,6 +175,58 @@ inline CD3DVector3 CD3DVector3::operator*(const D3DXVECTOR3& V2)
 	RetVec.z=z*V2.z;
 
 	return RetVec;
+}
+
+inline CD3DVector3 CD3DVector3::operator+(FLOAT Value)
+{
+	CD3DVector3 RetVec;
+	RetVec.x=x+Value;
+	RetVec.y=y+Value;
+	RetVec.z=z+Value;
+	return RetVec;
+}
+inline void CD3DVector3::operator+=(FLOAT Value)
+{
+	x+=Value;
+	y+=Value;
+	z+=Value;
+}
+
+inline CD3DVector3 CD3DVector3::operator-(const CD3DVector3& V2)
+{
+	CD3DVector3 RetVec;
+	RetVec.x=x-V2.x;
+	RetVec.y=y-V2.y;
+	RetVec.z=z-V2.z;
+	return RetVec;
+}
+
+inline void CD3DVector3::operator-=(const CD3DVector3& V2)
+{
+	x-=V2.x;
+	y-=V2.y;
+	z-=V2.z;
+}
+
+inline CD3DVector3 CD3DVector3::operator-(FLOAT Value)
+{
+	CD3DVector3 RetVec;
+	RetVec.x=x-Value;
+	RetVec.y=y-Value;
+	RetVec.z=z-Value;
+	return RetVec;
+}
+
+inline void CD3DVector3::operator-=(FLOAT Value)
+{
+	x-=Value;
+	y-=Value;
+	z-=Value;
+}
+
+inline bool CD3DVector3::IsValid()
+{
+	return _finite(x)&&_finite(y)&&_finite(x);
 }
 
 inline CD3DVector3 CD3DVector3::Lerp(const D3DXVECTOR3& v1,const D3DXVECTOR3& v2,FLOAT s)

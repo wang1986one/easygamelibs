@@ -16,6 +16,38 @@
 
 #define MAX_MSG_BUFF	1024
 
+
+// SQLSetConnectAttr driver specific defines.
+// Microsoft has 1200 thru 1249 reserved for Microsoft SQL Native Client driver usage.
+// Connection attributes
+#define SQL_COPT_SS_BASE                            1200
+#define SQL_COPT_SS_REMOTE_PWD                      (SQL_COPT_SS_BASE+1) // dbrpwset SQLSetConnectOption only
+#define SQL_COPT_SS_USE_PROC_FOR_PREP               (SQL_COPT_SS_BASE+2) // Use create proc for SQLPrepare
+#define SQL_COPT_SS_INTEGRATED_SECURITY             (SQL_COPT_SS_BASE+3) // Force integrated security on login
+#define SQL_COPT_SS_PRESERVE_CURSORS                (SQL_COPT_SS_BASE+4) // Preserve server cursors after SQLTransact
+#define SQL_COPT_SS_USER_DATA                       (SQL_COPT_SS_BASE+5) // dbgetuserdata/dbsetuserdata
+#define SQL_COPT_SS_ENLIST_IN_DTC                   SQL_ATTR_ENLIST_IN_DTC // Enlist in a DTC transaction
+#define SQL_COPT_SS_ENLIST_IN_XA                    SQL_ATTR_ENLIST_IN_XA // Enlist in a XA transaction
+#define SQL_COPT_SS_FALLBACK_CONNECT                (SQL_COPT_SS_BASE+10) // Enables FallBack connections
+#define SQL_COPT_SS_PERF_DATA                       (SQL_COPT_SS_BASE+11) // Used to access SQL Server ODBC driver performance data
+#define SQL_COPT_SS_PERF_DATA_LOG                   (SQL_COPT_SS_BASE+12) // Used to set the logfile name for the Performance data
+#define SQL_COPT_SS_PERF_QUERY_INTERVAL             (SQL_COPT_SS_BASE+13) // Used to set the query logging threshold in milliseconds.
+#define SQL_COPT_SS_PERF_QUERY_LOG                  (SQL_COPT_SS_BASE+14) // Used to set the logfile name for saving queryies.
+#define SQL_COPT_SS_PERF_QUERY                      (SQL_COPT_SS_BASE+15) // Used to start and stop query logging.
+#define SQL_COPT_SS_PERF_DATA_LOG_NOW               (SQL_COPT_SS_BASE+16) // Used to make a statistics log entry to disk.
+#define SQL_COPT_SS_QUOTED_IDENT                    (SQL_COPT_SS_BASE+17) // Enable/Disable Quoted Identifiers
+#define SQL_COPT_SS_ANSI_NPW                        (SQL_COPT_SS_BASE+18) // Enable/Disable ANSI NULL, Padding and Warnings
+#define SQL_COPT_SS_BCP                             (SQL_COPT_SS_BASE+19) // Allow BCP usage on connection
+#define SQL_COPT_SS_TRANSLATE                       (SQL_COPT_SS_BASE+20) // Perform code page translation
+#define SQL_COPT_SS_ATTACHDBFILENAME                (SQL_COPT_SS_BASE+21) // File name to be attached as a database
+#define SQL_COPT_SS_CONCAT_NULL                     (SQL_COPT_SS_BASE+22) // Enable/Disable CONCAT_NULL_YIELDS_NULL
+#define SQL_COPT_SS_ENCRYPT                         (SQL_COPT_SS_BASE+23) // Allow strong encryption for data
+#define SQL_COPT_SS_MARS_ENABLED                    (SQL_COPT_SS_BASE+24) // Multiple active result set per connection
+#define SQL_COPT_SS_FAILOVER_PARTNER                (SQL_COPT_SS_BASE+25) // Failover partner server
+#define SQL_COPT_SS_OLDPWD                          (SQL_COPT_SS_BASE+26) // Old Password, used when changing password during login
+#define SQL_COPT_SS_TXN_ISOLATION                   (SQL_COPT_SS_BASE+27) // Used to set/get any driver-specific or ODBC-defined TXN iso level
+#define SQL_COPT_SS_TRUST_SERVER_CERTIFICATE        (SQL_COPT_SS_BASE+28) // Trust server certificate
+
 namespace DBLib
 {
 
@@ -95,6 +127,13 @@ int CODBCConnection::Connect(LPCTSTR ConnectStr)
 		SQLFreeHandle( SQL_HANDLE_STMT, m_hStmt );
 		m_hStmt = NULL;
 	}
+
+	CSettingFile StrAnalyzer;
+	StrAnalyzer.Load(ConnectStr,';',0);
+	const char * FlagsStr=StrAnalyzer.GetString(NULL,"Flag","");
+
+	SetConnectFlags(FlagsStr);
+
 
 	nResult = SQLDriverConnect( m_hDBConn, NULL, (SQLCHAR *)ConnectStr, (SQLSMALLINT)strlen(ConnectStr),
 		(SQLCHAR *)szBuffer,(SQLSMALLINT)strlen(szBuffer),(SQLSMALLINT *)&swStrLen,
@@ -646,7 +685,7 @@ int CODBCConnection::DBLibTypeToODBCSQLType(int Type,UINT& Size)
 	case DB_TYPE_GUID:
 		return SQL_GUID;
 	case DB_TYPE_BINARY:
-		return SQL_VARBINARY;	
+		return SQL_BINARY;	
 	}
 	return Type;
 }
@@ -692,8 +731,6 @@ int CODBCConnection::ODBCSQLTypeTOODBCCType(int Type,UINT& Size)
 	case SQL_BINARY:
 	case SQL_VARBINARY:
 	case SQL_LONGVARBINARY:
-		if(Size==0)
-			Size=MAX_FEILD_LEN;
 		return SQL_C_BINARY;
 	case SQL_TYPE_DATE:
 		Size=sizeof(DATE_STRUCT);
@@ -839,8 +876,6 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 		return DBERR_PARAMCOUNTFAIL;
 	}
 
-	CEasyBuffer DataLenBuffer;
-
 	if(ParamNum>0)
 	{
 
@@ -848,8 +883,8 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 		{
 			return DBERR_NOTENOUGHPARAM;
 		}	
-		DataLenBuffer.Create(sizeof(SQLINTEGER)*ParamNum);
-		SQLINTEGER * pDataLen=(SQLINTEGER*)DataLenBuffer.GetBuffer();
+		
+
 		//绑定参数
 		for(int i=0;i<ParamNum;i++)
 		{
@@ -858,13 +893,11 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 			int DigitalSize=pParamSet->GetParam(i).GetDigitalLength();
 			int ODBCSQLType=DBLibTypeToODBCSQLType(pParamSet->GetParamInfo(i)->Type,Size);
 			int ODBCCType=DBLibTypeToODBCCType(pParamSet->GetParamInfo(i)->Type,Size);
-			
+			SQLINTEGER DataLen;
 			if(pParamSet->GetParamInfo(i)->IsNull||pParamSet->GetParam(i).IsNull())
-				pDataLen[i]=SQL_NULL_DATA;
-			else if(ODBCSQLType==SQL_BINARY||ODBCSQLType==SQL_VARBINARY||ODBCSQLType==SQL_LONGVARBINARY)
-				pDataLen[i]=pParamSet->GetParam(i).GetLength();
+				DataLen=SQL_NULL_DATA;
 			else
-				pDataLen[i]=SQL_NTS;
+				DataLen=SQL_NTS;
 			int ColumnSize=0;
 			if(ODBCSQLType==SQL_CHAR||ODBCSQLType==SQL_VARCHAR||ODBCSQLType==SQL_LONGVARCHAR||
 				ODBCSQLType==SQL_BINARY||ODBCSQLType==SQL_VARBINARY||ODBCSQLType==SQL_LONGVARBINARY)
@@ -879,7 +912,7 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 			nResult=SQLBindParameter(m_hStmt,i+1,
 				ParamType,ODBCCType,ODBCSQLType,ColumnSize,DigitalSize,
 				(SQLPOINTER)((LPCVOID)pParamSet->GetParam(i)),
-				pParamSet->GetParam(i).GetLength(),pDataLen+i);
+				pParamSet->GetParam(i).GetLength(),&DataLen);
 
 
 			if ( nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO )
@@ -906,6 +939,25 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 		return DBERR_EXE_SQL_FAIL;
 	}	
 	return DBERR_SUCCEED;
+}
+
+void CODBCConnection::SetConnectFlags(LPCTSTR szFlags)
+{
+	CStringSplitter Splitter(szFlags,'|');
+	for(int i=0;i<(int)Splitter.GetCount();i++)
+	{
+		CEasyString Flag=Splitter[i];
+		Flag.Trim(' ');
+		if(Flag.CompareNoCase("NC_MARS_ENABLED")==0)
+		{
+			PrintDBDebugLog(0,"应用参数NC_MARS_ENABLED");
+			int nResult=SQLSetConnectAttr(m_hDBConn, SQL_COPT_SS_MARS_ENABLED, (SQLPOINTER)1, SQL_IS_UINTEGER);
+			if ( nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO )
+			{
+				ProcessMessagesODBC(SQL_HANDLE_DBC, m_hDBConn,"应用参数NC_MARS_ENABLED失败！\r\n", TRUE);
+			}
+		}		
+	}
 }
 
 }

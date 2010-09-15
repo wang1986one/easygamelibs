@@ -41,6 +41,6 @@ public:
 	void SetLogMode(UINT Mode,int Level,LPCTSTR FileName,int FileLogQueueLen=DEFAULT_ASYNC_FILE_LOG_BUFFER_LEN);
 
 
-	virtual void PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list vl);
+	virtual void PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_list vl);
 
 };

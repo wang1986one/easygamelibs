@@ -23,9 +23,9 @@ protected:
 	CThreadSafeIDStorage<DOS_OBJECT_INFO>	m_ObjectRegisterQueue;
 	CThreadSafeIDStorage<OBJECT_ID>			m_ObjectUnregisterQueue;
 
-	CIDStorage<DOS_OBJECT_INFO>			m_ObjectPool;
+	CIDStorage<DOS_OBJECT_INFO>				m_ObjectPool;
 
-	CEasyCriticalSection				m_EasyCriticalSection;
+	CEasyCriticalSection					m_EasyCriticalSection;
 	DECLARE_CLASS_INFO(CDOSObjectGroup);
 public:
 	CDOSObjectGroup(void);
@@ -39,6 +39,7 @@ public:
 
 	BOOL RegisterObject(DOS_OBJECT_INFO& ObjectInfo);
 	BOOL UnregisterObject(OBJECT_ID ObjectID);
+	UINT GetObjectCount();
 
 	int GetWeight();
 
@@ -54,6 +55,11 @@ protected:
 inline CDOSObjectManager * CDOSObjectGroup::GetManager()
 {
 	return m_pManager;
+}
+
+inline UINT CDOSObjectGroup::GetObjectCount()
+{
+	return m_ObjectPool.GetObjectCount();
 }
 
 inline int CDOSObjectGroup::GetWeight()

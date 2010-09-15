@@ -16,8 +16,10 @@ namespace D3DLib{
 IMPLEMENT_CLASS_INFO(CD3DWOWM2CharacterModel,CD3DWOWM2Model);
 CD3DWOWM2CharacterModel::CD3DWOWM2CharacterModel(void)
 {
-	m_CharRace=0;
-	m_CharSex=0;
+	m_CreatureDisplayID=0;
+	m_NeedRebuildSubMesh=false;
+	m_CharRace=-1;
+	m_CharSex=-1;
 	m_CharSexMax=0;
 	m_CharSkinColor=0;
 	m_CharSkinColorMax=0;
@@ -27,8 +29,8 @@ CD3DWOWM2CharacterModel::CD3DWOWM2CharacterModel(void)
 	m_CharFaceTypeMax=0;
 	m_CharHairType=0;
 	m_CharHairTypeMax=0;
-	m_CharWhiskerType=0;
-	m_CharWhiskerTypeMax=0;
+	m_CharBeardType=0;
+	m_CharBeardTypeMax=0;
 	m_IsCharBald=false;
 	ZeroMemory(m_Equipments,sizeof(m_Equipments));
 	m_pHelmetModel=NULL;
@@ -36,6 +38,7 @@ CD3DWOWM2CharacterModel::CD3DWOWM2CharacterModel(void)
 	m_pRightShoulderModel=NULL;
 	m_pLeftWeaponModel=NULL;
 	m_pRightWeaponModel=NULL;
+	m_pRightShieldModel=NULL;
 
 	m_CloseHandAnimationIndex=-1;
 
@@ -70,11 +73,14 @@ void CD3DWOWM2CharacterModel::DestoryModel()
 		m_pLeftWeaponModel->SetParent(NULL);
 	if(m_pRightWeaponModel)
 		m_pRightWeaponModel->SetParent(NULL);
+	if(m_pRightShieldModel)
+		m_pRightShieldModel->SetParent(NULL);
 	SAFE_RELEASE(m_pHelmetModel);
 	SAFE_RELEASE(m_pLeftShoulderModel);
 	SAFE_RELEASE(m_pRightShoulderModel);
 	SAFE_RELEASE(m_pLeftWeaponModel);
-	SAFE_RELEASE(m_pRightWeaponModel);	
+	SAFE_RELEASE(m_pRightWeaponModel);
+	SAFE_RELEASE(m_pRightShieldModel);
 	m_SubMeshMaterialList.Clear();
 	m_SubMeshList.Clear();
 }
@@ -98,26 +104,17 @@ bool CD3DWOWM2CharacterModel::Restore()
 	return Ret&&CD3DWOWM2Model::Restore();
 }
 
-bool CD3DWOWM2CharacterModel::SetCharRace(int Value)
+bool CD3DWOWM2CharacterModel::SetCreatureDisplayID(UINT ID)
 {
-	if(Value<=0||Value>CBLZWOWDatabase::GetInstance()->GetMaxCharRace())
-		return false;
-	m_CharRace=Value;	
-	m_CharSexMax=CBLZWOWDatabase::GetInstance()->GetMaxCharSex(m_CharRace);
-	return true;
+	CBLZWOWDatabase::BLZ_DB_CREATURE_DISPLAY_INFO * pDisplayInfo=CBLZWOWDatabase::GetInstance()->FindCreatureDisplayInfo(ID);
+	if(pDisplayInfo)
+	{
+		m_CreatureDisplayID=ID;
+		return true;
+	}
+	return false;
 }
-bool CD3DWOWM2CharacterModel::SetCharSex(int Value)
-{
-	if(Value<0||Value>=m_CharSexMax)
-		return false;
-	m_CharSex=Value;
 
-	CBLZWOWDatabase::GetInstance()->GetCharMaxInfo(m_CharRace,m_CharSex,
-		m_CharSkinColorMax,m_CharHairColorMax,m_CharFaceTypeMax,m_CharHairTypeMax,m_CharWhiskerTypeMax);
-	
-	return true;
-
-}
 bool CD3DWOWM2CharacterModel::SetCharSkinColor(int Value)
 {
 	if(Value<0||Value>=m_CharSkinColorMax)
@@ -146,11 +143,11 @@ bool CD3DWOWM2CharacterModel::SetCharHairType(int Value)
 	m_CharHairType=Value;
 	return true;
 }
-bool CD3DWOWM2CharacterModel::SetCharWhiskerType(int Value)
+bool CD3DWOWM2CharacterModel::SetCharBeardType(int Value)
 {
-	if(Value<0||Value>=m_CharWhiskerTypeMax)
+	if(Value<0||Value>=m_CharBeardTypeMax)
 		return false;
-	m_CharWhiskerType=Value;
+	m_CharBeardType=Value;
 	return true;
 }		
 
@@ -158,31 +155,127 @@ bool CD3DWOWM2CharacterModel::SetEquipment(UINT Slot,UINT ItemID)
 {
 	if(Slot<CES_MAX)
 	{
-		if(ItemID)
-		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(ItemID);
-			if(pItemData)
+		CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemInfo=CBLZWOWDatabase::GetInstance()->GetItemData(ItemID);
+		if(pItemInfo)
+		{			
+			CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+				CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemInfo->ItemDisplayInfo);
+			if(pItemDisplayInfo)
 			{
-				CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-					CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-				if(pItemDisplayInfo)
-				{
-					m_Equipments[Slot]=ItemID;
-					return true;
-				}
-			}		
+				m_Equipments[Slot].ItemID=ItemID;
+				m_Equipments[Slot].ItemDisplayID=pItemInfo->ItemDisplayInfo;
+				return true;
+			}				
 		}
 		else
 		{
-			m_Equipments[Slot]=0;
+			m_Equipments[Slot].ItemID=0;
+			m_Equipments[Slot].ItemDisplayID=0;
 		}
 		
 	}
 	return false;
 }
 
+bool CD3DWOWM2CharacterModel::LoadCharacter(UINT Race,UINT Sex)
+{
+	if(Race>CBLZWOWDatabase::GetInstance()->GetMaxCharRace())
+		return false;
+	m_CharRace=Race;	
+	m_CharSexMax=CBLZWOWDatabase::GetInstance()->GetMaxCharSex(m_CharRace);
 
-bool CD3DWOWM2CharacterModel::BuildCharModel()
+	if(Sex>=m_CharSexMax)
+		return false;
+
+	m_CharSex=Sex;
+	CBLZWOWDatabase::GetInstance()->GetCharMaxInfo(m_CharRace,m_CharSex,
+		m_CharSkinColorMax,m_CharHairColorMax,m_CharFaceTypeMax,m_CharHairTypeMax,m_CharBeardTypeMax);
+
+
+	CBLZWOWDatabase::BLZ_DB_CHAR_RACE_INFO * pRaceInfo=CBLZWOWDatabase::GetInstance()->FindRaceInfo(m_CharRace);
+	if(pRaceInfo)
+	{
+		CBLZWOWDatabase::BLZ_DB_CREATURE_DISPLAY_INFO * pDisplayInfo=NULL;
+		if(m_CharSex==0)
+			pDisplayInfo=CBLZWOWDatabase::GetInstance()->FindCreatureDisplayInfo(pRaceInfo->MaleModelID);
+		else
+			pDisplayInfo=CBLZWOWDatabase::GetInstance()->FindCreatureDisplayInfo(pRaceInfo->FemaleModelID);
+		if(pDisplayInfo)
+		{
+
+			CBLZWOWDatabase::BLZ_DB_CREATURE_MODEL_INFO * pModelInfo=CBLZWOWDatabase::GetInstance()->
+				FindCreatureModelInfo(pDisplayInfo->ModelID);
+			if(pModelInfo)
+			{
+				CEasyString ModelFileName=pModelInfo->ModelPath;
+				int Pos=ModelFileName.ReverseFind('.');
+				if(Pos>=0)
+				{
+					ModelFileName=ModelFileName.Left(Pos);
+				}
+				CEasyString SkinFileName=ModelFileName+"00.skin";
+				ModelFileName=ModelFileName+".m2";
+				if(LoadFromFile(ModelFileName,SkinFileName))
+				{
+					CEasyString Temp;
+					Temp.Format("%s_%s_%u",
+						(LPCTSTR)pRaceInfo->RaceName,
+						m_CharSex==0?"ÄÐ":"Å®",
+						pDisplayInfo->ID);
+					SetName(Temp);
+					m_CreatureDisplayID=pDisplayInfo->ID;
+					m_NeedRebuildSubMesh=true;
+					if(BuildModel())
+					{
+						CD3DMatrix Mat=CD3DMatrix::FromScale(pDisplayInfo->Scale,pDisplayInfo->Scale,pDisplayInfo->Scale);
+						SetLocalMatrix(Mat);
+						return true;
+					}
+				}
+			}
+		}
+	}	
+	return false;
+}
+
+bool CD3DWOWM2CharacterModel::LoadCreature(UINT CreatureDisplayID)
+{
+	CBLZWOWDatabase::BLZ_DB_CREATURE_DISPLAY_INFO * pDisplayInfo=CBLZWOWDatabase::GetInstance()->FindCreatureDisplayInfo(CreatureDisplayID);
+	if(pDisplayInfo)
+	{
+		CBLZWOWDatabase::BLZ_DB_CREATURE_MODEL_INFO * pModelInfo=CBLZWOWDatabase::GetInstance()->FindCreatureModelInfo(pDisplayInfo->ModelID);
+		if(pModelInfo)
+		{
+			CEasyString ModelFileName=pModelInfo->ModelPath;
+			int Pos=ModelFileName.ReverseFind('.');
+			if(Pos>=0)
+			{
+				ModelFileName=ModelFileName.Left(Pos);
+			}
+			CEasyString SkinFileName=ModelFileName+"00.skin";
+			ModelFileName=ModelFileName+".m2";
+			if(LoadFromFile(ModelFileName,SkinFileName))
+			{	
+				CEasyString Temp;
+				Temp.Format("%u_%s",CreatureDisplayID,(LPCTSTR)pDisplayInfo->Name);
+				SetName(Temp);
+				m_CreatureDisplayID=CreatureDisplayID;
+				FetchCreatureExtraInfo(pDisplayInfo->ExtraDisplayInformationID);
+				m_NeedRebuildSubMesh=pDisplayInfo->ExtraDisplayInformationID!=0;
+				if(BuildModel())
+				{
+					CD3DMatrix Mat=CD3DMatrix::FromScale(pDisplayInfo->Scale,pDisplayInfo->Scale,pDisplayInfo->Scale);
+					SetLocalMatrix(Mat);
+					return true;
+				}				
+			}
+			
+		}
+	}
+	return false;
+}
+
+bool CD3DWOWM2CharacterModel::BuildModel()
 {
 	if(GetDevice()==NULL||m_pModelResource==NULL)
 		return false;
@@ -191,492 +284,43 @@ bool CD3DWOWM2CharacterModel::BuildCharModel()
 
 	m_CloseHandAnimationIndex=m_pModelResource->GetAnimationIndex(15,0);
 
-	int MaxSkinColor;
-	int MaxHairColor;
-	int MaxFaceType;
-	int MaxHairType;
-	int MaxWhiskerType;
-	CBLZWOWDatabase::GetInstance()->GetCharMaxInfo(m_CharRace,m_CharSex,MaxSkinColor,MaxHairColor,MaxFaceType,MaxHairType,MaxWhiskerType);
-
-	int CharHairSubMesh=CBLZWOWDatabase::GetInstance()->FindCharHairSubMesh(m_CharRace,m_CharSex,m_CharHairType,m_IsCharBald);
-
-	int CharWhiskerSubMeshID1=0;
-	int CharWhiskerSubMeshID2=0;
-	int CharWhiskerSubMeshID3=0;
-	CBLZWOWDatabase::GetInstance()->FindCharWhiskerSubMesh(m_CharRace,m_CharSex,m_CharWhiskerType,
-		CharWhiskerSubMeshID1,CharWhiskerSubMeshID2,CharWhiskerSubMeshID3);
-
-	int BackSubMeshType=1;
-	CEasyString BackTextureFileName;
-	int GloveType=1;
-	int PantsType=1;
-	int RobeType=1;
-	int BootsType=1;
-	int SleeveType=1;
-	int EnsignType=1;
-
 	bool	HairVisible=true;				
 	bool	Facial1Visible=true;			
 	bool	Facial2Visible=true;			
 	bool	Facial3Visible=true;			
 	bool	EarsVisible=true;
+	bool	HaveSleeve=false;
 
-	if(m_Equipments[CES_HEAD])
+
+	BuildEquipmentModel(HairVisible,Facial1Visible,Facial2Visible,Facial3Visible,EarsVisible);
+
+	if(m_NeedRebuildSubMesh)
 	{
-		CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(m_Equipments[CES_HEAD]);
-		if(pItemData)
+		RebuildSubMesh(HairVisible,Facial1Visible,Facial2Visible,Facial3Visible,EarsVisible,HaveSleeve);
+	}
+	else
+	{
+		for(int i=0;i<m_pModelResource->GetSubMeshCount();i++)
 		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-				CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-			if(pItemDisplayInfo)
-			{
-				CBLZWOWDatabase::BLZ_DB_CHAR_RACE_INFO * pRaceInfo=CBLZWOWDatabase::GetInstance()->FindRaceInfo(m_CharRace);
-				if(pRaceInfo)
-				{
-					CEasyString ModelFileName=ITEM_PATH_BY_SLOT[pItemData->InventorySlotID];
-					ModelFileName=ModelFileName+"\\"+pItemDisplayInfo->LeftModel;
-					int Pos=ModelFileName.ReverseFind('.');
-					if(Pos>=0)
-					{
-						ModelFileName=ModelFileName.Left(Pos);
-					}				
-					ModelFileName=ModelFileName+"_"+pRaceInfo->Abbrev;
-					if(m_CharSex==0)
-						ModelFileName+="M";
-					else
-						ModelFileName+="F";
-					CEasyString SkinFileName=ModelFileName+"00.skin";
-					ModelFileName=ModelFileName+".m2";
-
-					CD3DDummy * pDummy=EnableAttachment(CAI_HELMET);
-					if(pDummy)
-					{
-						m_pHelmetModel=new CD3DWOWM2ItemModel();
-						m_pHelmetModel->SetDevice(GetDevice());
-						if(m_pHelmetModel->LoadFromFile(ModelFileName,SkinFileName))
-						{
-							m_pHelmetModel->Play(0,0,0,true);
-							m_pHelmetModel->SetParent(pDummy);
-							//GetRender()->AddObject(m_pHelmetModel);
-							m_pHelmetModel->SetItemID(m_Equipments[CES_HEAD]);
-							m_pHelmetModel->BuildModel();
-
-							CBLZWOWDatabase::BLZ_DB_HELMET_GEOSET_VISIBLE_INFO * pVisibleInfo=NULL;
-							
-							pVisibleInfo=CBLZWOWDatabase::GetInstance()->GetHelmetGeosetVisibleInfo(pItemDisplayInfo->HelmetGeosetVisData1);
-						
-							//pVisibleInfo=CBLZWOWDatabase::GetInstance()->GetHelmetGeosetVisibleInfo(pItemDisplayInfo->HelmetGeosetVisData2);
-
-							if(pVisibleInfo)
-							{
-								HairVisible=((pVisibleInfo->HairVisible>>m_CharRace)&1)==0;
-								Facial1Visible=((pVisibleInfo->Facial1Visible>>m_CharRace)&1)==0;
-								Facial2Visible=((pVisibleInfo->Facial2Visible>>m_CharRace)&1)==0;
-								Facial3Visible=((pVisibleInfo->Facial3Visible>>m_CharRace)&1)==0;
-								EarsVisible=((pVisibleInfo->EarsVisible>>m_CharRace)&1)==0;
-							}
-
-						}
-						else
-						{
-							SAFE_RELEASE(m_pHelmetModel);
-						}
-					}
-				}
-			}
+			CD3DSubMesh * pD3DSubMesh=m_pModelResource->GetSubMesh(i);
+			m_SubMeshList.Add(pD3DSubMesh);
 		}
 	}
 
-	if(m_Equipments[CES_SHOULDER])
-	{
-		CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(m_Equipments[CES_SHOULDER]);
-		if(pItemData)
-		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-				CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-			if(pItemDisplayInfo)
-			{
-				CEasyString ModelFileName;
-				CEasyString SkinFileName;
-				int Pos;
-				CD3DDummy * pDummy=NULL;
-				
-				ModelFileName=ITEM_PATH_BY_SLOT[pItemData->InventorySlotID];
-				ModelFileName=ModelFileName+"\\"+pItemDisplayInfo->LeftModel;
-				Pos=ModelFileName.ReverseFind('.');
-				if(Pos>=0)
-				{
-					ModelFileName=ModelFileName.Left(Pos);
-				}
-				SkinFileName=ModelFileName+"00.skin";
-				ModelFileName=ModelFileName+".m2";
-
-				pDummy=EnableAttachment(CAI_LEFT_SHOULDER);
-				if(pDummy)
-				{
-					m_pLeftShoulderModel=new CD3DWOWM2ItemModel();
-					m_pLeftShoulderModel->SetDevice(GetDevice());
-					
-					if(m_pLeftShoulderModel->LoadFromFile(ModelFileName,SkinFileName))
-					{
-						m_pLeftShoulderModel->Play(0,0,0,true);
-						m_pLeftShoulderModel->SetParent(pDummy);
-						//GetRender()->AddObject(m_pLeftShoulderModel);
-						m_pLeftShoulderModel->SetItemID(m_Equipments[CES_SHOULDER]);
-						m_pLeftShoulderModel->SetItemHandType(CD3DWOWM2ItemModel::IHT_LEFT);
-						m_pLeftShoulderModel->BuildModel();
-					}
-					else
-					{
-						SAFE_RELEASE(m_pLeftShoulderModel);
-					}
-				}
-
-				ModelFileName=ITEM_PATH_BY_SLOT[pItemData->InventorySlotID];
-				ModelFileName=ModelFileName+"\\"+pItemDisplayInfo->RightModel;
-				Pos=ModelFileName.ReverseFind('.');
-				if(Pos>=0)
-				{
-					ModelFileName=ModelFileName.Left(Pos);
-				}
-				SkinFileName=ModelFileName+"00.skin";
-				ModelFileName=ModelFileName+".m2";
-
-				pDummy=EnableAttachment(CAI_RIGHT_SHOULDER);
-				if(pDummy)
-				{
-					m_pRightShoulderModel=new CD3DWOWM2ItemModel();
-					m_pRightShoulderModel->SetDevice(GetDevice());
-					if(m_pRightShoulderModel->LoadFromFile(ModelFileName,SkinFileName))
-					{
-						m_pRightShoulderModel->Play(0,0,0,true);
-						m_pRightShoulderModel->SetParent(pDummy);
-						//GetRender()->AddObject(m_pRightShoulderModel);
-						m_pRightShoulderModel->SetItemID(m_Equipments[CES_SHOULDER]);
-						m_pRightShoulderModel->SetItemHandType(CD3DWOWM2ItemModel::IHT_RIGHT);						
-						m_pRightShoulderModel->BuildModel();
-					}
-					else
-					{
-						SAFE_RELEASE(m_pRightShoulderModel);
-					}
-				}
-				
-			}
-		}
-	}
-
-
-	if(m_Equipments[CES_LEFT_HAND])
-	{
-		CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(m_Equipments[CES_LEFT_HAND]);
-		if(pItemData)
-		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-				CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-			if(pItemDisplayInfo)
-			{
-				CEasyString ModelFileName;
-				CEasyString SkinFileName;
-				int Pos;
-				CD3DDummy * pDummy=NULL;
-
-				ModelFileName=ITEM_PATH_BY_SLOT[pItemData->InventorySlotID];
-				ModelFileName=ModelFileName+"\\"+pItemDisplayInfo->LeftModel;
-				Pos=ModelFileName.ReverseFind('.');
-				if(Pos>=0)
-				{
-					ModelFileName=ModelFileName.Left(Pos);
-				}
-				SkinFileName=ModelFileName+"00.skin";
-				ModelFileName=ModelFileName+".m2";
-
-				if(pItemData->InventorySlotID==IISI_SHIELD)
-				{
-					pDummy=EnableAttachment(CAI_LEFT_WRIST);
-				}
-				else
-				{
-					pDummy=EnableAttachment(CAI_LEFT_PALM2);
-				}				
-				if(pDummy)
-				{
-					m_pLeftWeaponModel=new CD3DWOWM2ItemModel();
-					m_pLeftWeaponModel->SetDevice(GetDevice());
-					if(m_pLeftWeaponModel->LoadFromFile(ModelFileName,SkinFileName))
-					{
-						m_pLeftWeaponModel->Play(0,0,0,true);
-						m_pLeftWeaponModel->SetParent(pDummy);
-						//GetRender()->AddObject(m_pLeftWeaponModel);
-						m_pLeftWeaponModel->SetItemID(m_Equipments[CES_LEFT_HAND]);						
-						m_pLeftWeaponModel->BuildModel();
-					}
-					else
-					{
-						SAFE_RELEASE(m_pLeftWeaponModel);
-					}
-				}
-			}
-		}
-	}
-
-	if(m_Equipments[CES_RIGHT_HAND])
-	{
-		CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(m_Equipments[CES_RIGHT_HAND]);
-		if(pItemData)
-		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-				CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-			if(pItemDisplayInfo)
-			{
-				CEasyString ModelFileName;
-				CEasyString SkinFileName;
-				int Pos;
-				CD3DDummy * pDummy=NULL;
-
-				ModelFileName=ITEM_PATH_BY_SLOT[pItemData->InventorySlotID];
-				ModelFileName=ModelFileName+"\\"+pItemDisplayInfo->LeftModel;
-				Pos=ModelFileName.ReverseFind('.');
-				if(Pos>=0)
-				{
-					ModelFileName=ModelFileName.Left(Pos);
-				}
-				SkinFileName=ModelFileName+"00.skin";
-				ModelFileName=ModelFileName+".m2";
-
-				pDummy=EnableAttachment(CAI_RIGHT_PALM2);
-				if(pDummy)
-				{
-					m_pRightWeaponModel=new CD3DWOWM2ItemModel();
-					m_pRightWeaponModel->SetDevice(GetDevice());					
-					if(m_pRightWeaponModel->LoadFromFile(ModelFileName,SkinFileName))
-					{
-						m_pRightWeaponModel->Play(0,0,0,true);
-						m_pRightWeaponModel->SetParent(pDummy);
-						//GetRender()->AddObject(m_pRightWeaponModel);
-						m_pRightWeaponModel->SetItemID(m_Equipments[CES_RIGHT_HAND]);						
-						m_pRightWeaponModel->BuildModel();
-					}
-					else
-					{
-						SAFE_RELEASE(m_pRightWeaponModel);
-					}
-				}
-			}
-		}
-	}
-	
-
-	if(m_Equipments[CES_BACK])
-	{
-		CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(m_Equipments[CES_BACK]);
-		if(pItemData)
-		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-				CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-			if(pItemDisplayInfo)
-			{
-				BackSubMeshType=pItemDisplayInfo->GloveGeosetFlags+1;
-				BackTextureFileName=ITEM_PATH_BY_SLOT[pItemData->InventorySlotID];
-				BackTextureFileName=BackTextureFileName+"\\"+pItemDisplayInfo->LeftModelTexture+".blp";
-			}
-		}
-	}
-	
-	if(m_Equipments[CES_HAND])
-	{
-		CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(m_Equipments[CES_HAND]);
-		if(pItemData)
-		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-				CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-			if(pItemDisplayInfo)
-			{
-				GloveType=pItemDisplayInfo->GloveGeosetFlags+1;
-			}
-		}
-	}
-
-	
-	if(m_Equipments[CES_LEG])
-	{
-		CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(m_Equipments[CES_LEG]);
-		if(pItemData)
-		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-				CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-			if(pItemDisplayInfo)
-			{
-				PantsType=pItemDisplayInfo->PantsGeosetFlags+1;
-				RobeType=pItemDisplayInfo->RobeGeosetFlags+1;
-			}
-		}
-	}
-
-	if(m_Equipments[CES_FOOT])
-	{
-		CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(m_Equipments[CES_FOOT]);
-		if(pItemData)
-		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-				CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-			if(pItemDisplayInfo)
-			{				
-				BootsType=pItemDisplayInfo->GloveGeosetFlags+1;					
-			}
-		}
-	}
-
-	if(m_Equipments[CES_BUST])
-	{
-		CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(m_Equipments[CES_BUST]);
-		if(pItemData)
-		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-				CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-			if(pItemDisplayInfo)
-			{				
-				SleeveType=pItemDisplayInfo->GloveGeosetFlags+1;
-				RobeType=pItemDisplayInfo->RobeGeosetFlags+1;
-				//PantsType=pItemDisplayInfo->PantsGeosetFlags+1;
-			}
-		}
-	}
-	if(m_Equipments[CES_ENSIGN])
-	{
-		CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(m_Equipments[CES_ENSIGN]);
-		if(pItemData)
-		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-				CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
-			if(pItemDisplayInfo)
-			{				
-				EnsignType=pItemDisplayInfo->GloveGeosetFlags+1;				
-			}
-		}
-	}
-	
-	if(RobeType>1)
-	{		
-		PantsType=0;
-		BootsType=0;
-		EnsignType=0;
-	}
-	if(GloveType>1)
-	{
-		SleeveType=1;
-	}
-	if(BootsType>1)
-	{
-		if(PantsType==2)
-			PantsType=1;
-	}
-	
-	for(int i=0;i<m_pModelResource->GetSubMeshCount();i++)
-	{
-		CD3DSubMesh * pD3DSubMesh=m_pModelResource->GetSubMesh(i);
-
-		pD3DSubMesh->SetVisible(false);
-		
-		int Part=pD3DSubMesh->GetID()/100;
-		int Type=pD3DSubMesh->GetID()%100;
-
-		switch(Part)
-		{
-		case CSP_HAIR:
-			if(Type==0)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}
-			else
-			{
-				if(Type==CharHairSubMesh&&HairVisible)
-				{
-					m_SubMeshList.Add(pD3DSubMesh);
-				}				
-			}
-			break;
-		case CSP_WHISKER1:
-			if(Type==CharWhiskerSubMeshID1&&Facial1Visible)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}	
-			break;
-		case CSP_WHISKER2:
-			if(Type==CharWhiskerSubMeshID2&&Facial2Visible)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}	
-			break;
-		case CSP_WHISKER3:
-			if(Type==CharWhiskerSubMeshID3&&Facial2Visible)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}	
-			break;
-		case CSP_GLOVE:
-			if(Type==GloveType)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}	
-			break;
-		case CSP_FOOT:
-			if(Type==BootsType)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}	
-			break;
-		case CSP_EAR:
-			if(EarsVisible)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}	
-			break;
-		case CSP_SLEEVE:
-			if(Type==SleeveType)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}	
-			break;
-		case CSP_PAINTS:
-			if(Type==PantsType)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}	
-			break;
-		case CSP_ENSIGN:
-			if(Type==EnsignType)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}	
-			break;
-		case CSP_ROBE:
-			if(Type==RobeType)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}	
-			break;
-		case CSP_BACK:			
-			if(Type==BackSubMeshType)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}					
-			break;
-		default:
-			if(Type==1)
-			{
-				m_SubMeshList.Add(pD3DSubMesh);
-			}	
-		}	
-		
-	}
 
 	m_SubMeshMaterialList.Resize(m_SubMeshList.GetCount());
 
-	CD3DTexture * pCharSkinTexture;
-	CD3DTexture * pCharSkinExtraTexture;
-	CD3DTexture * pCharHairTexture;	
-	MakeCharSkinTexture(GetDevice(),pCharSkinTexture,pCharSkinExtraTexture,pCharHairTexture,SleeveType>1);
+	CD3DTexture * pCharSkinTexture=NULL;
+	CD3DTexture * pCharSkinExtraTexture=NULL;
+	CD3DTexture * pCharHairTexture=NULL;	
+	CD3DTexture * pCapeTexture=NULL;
+	CD3DTexture * pSkinTexture1=NULL;
+	CD3DTexture * pSkinTexture2=NULL;
+	CD3DTexture * pSkinTexture3=NULL;
+
+	MakeCharSkinTexture(GetDevice(),pCharSkinTexture,pCharSkinExtraTexture,pCharHairTexture,pCapeTexture,
+		pSkinTexture1,pSkinTexture2,pSkinTexture3,HaveSleeve);
+	
 
 	for(UINT i=0;i<m_SubMeshList.GetCount();i++)
 	{
@@ -687,30 +331,31 @@ bool CD3DWOWM2CharacterModel::BuildCharModel()
 		int Part=m_SubMeshList[i]->GetID()/100;
 		int Type=m_SubMeshList[i]->GetID()%100;		
 
-		switch(Part)
-		{		
-		case CSP_BACK:			
-			if(BackSubMeshType!=1)
-			{				
-				CD3DTexture * pTexture=GetDevice()->GetTextureManager()->
-					LoadTexture(BackTextureFileName);
-				UINT64 TextureProperty=m_SubMeshList[i]->GetMaterial().GetTextureProperty(0);
-				m_SubMeshMaterialList[i].AddTexture(pTexture,TextureProperty);
-			}
-			break;		
-
-		}	
-		if(m_SubMeshList[i]->GetMaterial().GetTextureLayerCount()>0)
+		for(UINT j=0;j<m_SubMeshList[i]->GetMaterial().GetTextureLayerCount();j++)
 		{
-			UINT64 TextureProperty=m_SubMeshList[i]->GetMaterial().GetTextureProperty(0);
+			UINT64 TextureProperty=m_SubMeshList[i]->GetMaterial().GetTextureProperty(j);
 			int TextureType=TextureProperty&CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE;
 			switch(TextureType)
 			{
+			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_DIRECT:
+				{
+					CD3DTexture * pTexture=m_SubMeshList[i]->GetMaterial().GetTexture(j);
+					m_SubMeshMaterialList[i].AddTexture(pTexture,TextureProperty);
+					pTexture->AddUseRef();
+				}
+				break;			
 			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_BODY:
 				if(pCharSkinTexture)
 				{				
 					m_SubMeshMaterialList[i].AddTexture(pCharSkinTexture,TextureProperty);
 					pCharSkinTexture->AddUseRef();
+				}
+				break;
+			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_CAPE:
+				if(pCapeTexture)
+				{
+					m_SubMeshMaterialList[i].AddTexture(pCapeTexture,TextureProperty);
+					pCapeTexture->AddUseRef();
 				}
 				break;
 			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_HAIR:
@@ -728,29 +373,57 @@ bool CD3DWOWM2CharacterModel::BuildCharModel()
 					m_SubMeshMaterialList[i].AddTexture(pCharSkinExtraTexture,TextureProperty);
 					pCharSkinExtraTexture->AddUseRef();
 				}
-				break;		
+				break;	
+			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_CREATURE_SKIN1:
+				if(pSkinTexture1)
+				{
+					m_SubMeshMaterialList[i].AddTexture(pSkinTexture1,TextureProperty);
+					pSkinTexture1->AddUseRef();
+				}
+				break;
+			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_CREATURE_SKIN2:
+				if(pSkinTexture2)
+				{
+					m_SubMeshMaterialList[i].AddTexture(pSkinTexture2,TextureProperty);
+					pSkinTexture2->AddUseRef();
+				}
+				break;
+			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_CREATURE_SKIN3:
+				if(pSkinTexture3)
+				{
+					m_SubMeshMaterialList[i].AddTexture(pSkinTexture3,TextureProperty);
+					pSkinTexture3->AddUseRef();
+				}
+				break;
 			default:
 				PrintSystemLog(0,"SubMesh[%s] has no Texture",m_SubMeshList[i]->GetName());
 				break;
 			}
 		}
 
-		
+
 		m_SubMeshMaterialList[i].SetFX(m_SubMeshList[i]->GetMaterial().GetFX());
 		if(m_SubMeshList[i]->GetMaterial().GetFX())
 			m_SubMeshList[i]->GetMaterial().GetFX()->AddUseRef();
-				
+
 	}
 	SAFE_RELEASE(pCharSkinTexture);
 	SAFE_RELEASE(pCharSkinExtraTexture);
 	SAFE_RELEASE(pCharHairTexture);
+	SAFE_RELEASE(pCapeTexture);
+	SAFE_RELEASE(pSkinTexture1);
+	SAFE_RELEASE(pSkinTexture2);
+	SAFE_RELEASE(pSkinTexture3);
 	return true;
 }
+
+
+
 int CD3DWOWM2CharacterModel::GetSubMeshCount()
 {
 	return (int)m_SubMeshList.GetCount();
 }
-CD3DSubMesh * CD3DWOWM2CharacterModel::GetSubMesh(int index)
+CD3DSubMesh * CD3DWOWM2CharacterModel::GetSubMesh(UINT index)
 {
 	return m_SubMeshList[index];
 }
@@ -798,8 +471,8 @@ bool CD3DWOWM2CharacterModel::CloneFrom(CNameObject * pObject,UINT Param)
 	m_CharFaceTypeMax=pSrcObject->m_CharFaceTypeMax;
 	m_CharHairType=pSrcObject->m_CharHairType;
 	m_CharHairTypeMax=pSrcObject->m_CharHairTypeMax;
-	m_CharWhiskerType=pSrcObject->m_CharWhiskerType;
-	m_CharWhiskerTypeMax=pSrcObject->m_CharWhiskerTypeMax;
+	m_CharBeardType=pSrcObject->m_CharBeardType;
+	m_CharBeardTypeMax=pSrcObject->m_CharBeardTypeMax;
 	m_IsCharBald=pSrcObject->m_IsCharBald;
 
 	memcpy(m_Equipments,pSrcObject->m_Equipments,sizeof(m_Equipments));
@@ -814,7 +487,8 @@ bool CD3DWOWM2CharacterModel::CloneFrom(CNameObject * pObject,UINT Param)
 		m_pLeftWeaponModel=(CD3DWOWM2ItemModel *)GetChildByStorageIDRecursive(pSrcObject->m_pLeftWeaponModel->GetStorageID());
 	if(pSrcObject->m_pRightWeaponModel)
 		m_pRightWeaponModel=(CD3DWOWM2ItemModel *)GetChildByStorageIDRecursive(pSrcObject->m_pRightWeaponModel->GetStorageID());
-
+	if(pSrcObject->m_pRightShieldModel)
+		m_pRightShieldModel=(CD3DWOWM2ItemModel *)GetChildByStorageIDRecursive(pSrcObject->m_pRightShieldModel->GetStorageID());
 	return true;
 
 }
@@ -868,7 +542,7 @@ bool CD3DWOWM2CharacterModel::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSO
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_HAIR_COLOR,m_CharHairColor));
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_FACE_TYPE,m_CharFaceType));
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_HAIR_TYPE,m_CharHairType));
-	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_WHISKER_TYPE,m_CharWhiskerType));
+	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_WHISKER_TYPE,m_CharBeardType));
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_IS_BALD,(BYTE)m_IsCharBald));
 
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_EQUIPMENTS,(char *)m_Equipments,sizeof(m_Equipments)));
@@ -893,6 +567,12 @@ bool CD3DWOWM2CharacterModel::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSO
 	{
 		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_RIGHT_WEAPON_MODEL,m_pRightWeaponModel->GetStorageID()));
 	}
+	if(m_pRightShieldModel)
+	{
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_SHIELD_MODEL,m_pRightShieldModel->GetStorageID()));
+	}
+	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CREATURE_DISPLAY_ID,m_CreatureDisplayID));
+	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_NEED_REBUILD_SUBMESH,(BYTE)m_NeedRebuildSubMesh));
 	
 	return true;
 }
@@ -973,7 +653,7 @@ bool CD3DWOWM2CharacterModel::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pU
 			m_CharHairType=Value;
 			break;
 		case SST_D3DWMCM_CHAR_WHISKER_TYPE:
-			m_CharWhiskerType=Value;
+			m_CharBeardType=Value;
 			break;
 		case SST_D3DWMCM_CHAR_IS_BALD:
 			m_IsCharBald=(BYTE)Value!=0;
@@ -1046,11 +726,31 @@ bool CD3DWOWM2CharacterModel::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pU
 				}
 			}
 			break;
+		case SST_D3DWMCM_CHAR_SHIELD_MODEL:
+			{
+				UINT StorageID=Value;
+				if(StorageID)
+				{
+					m_pRightShieldModel=(CD3DWOWM2ItemModel *)GetChildByStorageIDRecursive(StorageID);
+					if(!m_pRightShieldModel->IsKindOf(GET_CLASS_INFO(CD3DWOWM2ItemModel)))
+					{
+						m_pRightShieldModel=NULL;
+					}
+				}
+			}
+			break;
+			
+		case SST_D3DWMCM_CREATURE_DISPLAY_ID:
+			m_CreatureDisplayID=Value;
+			break;
+		case SST_D3DWMCM_NEED_REBUILD_SUBMESH:
+			m_NeedRebuildSubMesh=(BYTE)Value;
+			break;
 		}
 	}
 	m_CharSexMax=CBLZWOWDatabase::GetInstance()->GetMaxCharSex(m_CharRace);
 	CBLZWOWDatabase::GetInstance()->GetCharMaxInfo(m_CharRace,m_CharSex,
-		m_CharSkinColorMax,m_CharHairColorMax,m_CharFaceTypeMax,m_CharHairTypeMax,m_CharWhiskerTypeMax);
+		m_CharSkinColorMax,m_CharHairColorMax,m_CharFaceTypeMax,m_CharHairTypeMax,m_CharBeardTypeMax);
 	return true;
 }
 UINT CD3DWOWM2CharacterModel::GetSmartStructSize(UINT Param)
@@ -1072,7 +772,7 @@ UINT CD3DWOWM2CharacterModel::GetSmartStructSize(UINT Param)
 	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_CharHairColor));
 	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_CharFaceType));
 	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_CharHairType));
-	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_CharWhiskerType));
+	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_CharBeardType));
 	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_IsCharBald));
 	Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_Equipments));
 
@@ -1096,144 +796,704 @@ UINT CD3DWOWM2CharacterModel::GetSmartStructSize(UINT Param)
 	{
 		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_pRightWeaponModel->GetStorageID()));
 	}
+	if(m_pRightShieldModel)
+	{
+		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_pRightShieldModel->GetStorageID()));
+	}
 
-	
+	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_CreatureDisplayID));
+	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_NeedRebuildSubMesh));
 
 	return Size;
 }
 
-bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTexture *& pCharSkinTexture,CD3DTexture *& pCharSkinExtraTexture,CD3DTexture *& pCharHairTexture,bool HaveSleeve)
+
+bool CD3DWOWM2CharacterModel::FetchCreatureExtraInfo(UINT ExtraInfoID)
 {
-	pCharSkinTexture=NULL;
-	pCharSkinExtraTexture=NULL;
-	pCharHairTexture=NULL;
-	if(m_CharRace==0)
-		return false;
-
-	CSmartPtr<CD3DTexture> pSkinTexture=NULL;
-	CSmartPtr<CD3DTexture> pSkinExtraTexture=NULL;	
-	CSmartPtr<CD3DTexture> pHairTexture=NULL;
-	
-
-	CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pSkinSection=CBLZWOWDatabase::GetInstance()->FindCharSection(0,m_CharRace,m_CharSex,0,m_CharSkinColor);
-	if(pSkinSection==NULL)
-		return false;
-	pSkinTexture=new CD3DTexture(pD3DDevice->GetTextureManager());;
-	if(!pSkinTexture->LoadTexture(pSkinSection->Texture1))
-	{			
-		return false;
-	}
-
-	int PosRate=1;
-
-	if(pSkinTexture->GetTextureInfo().Width==256&&pSkinTexture->GetTextureInfo().Height==256)
+	CBLZWOWDatabase::BLZ_DB_CREATURE_EXTRA_DISPLAY_INFO * pExtraInfo=CBLZWOWDatabase::GetInstance()->FindCreatureExtraDisplayInfo(ExtraInfoID);
+	if(pExtraInfo)
 	{
-		PosRate=1;
-	}
-	else if(pSkinTexture->GetTextureInfo().Width==512&&pSkinTexture->GetTextureInfo().Height==512)
-	{
-		PosRate=2;
-	}
-	else
-	{
-		return false;
-	}
-
-	pSkinExtraTexture=pD3DDevice->GetTextureManager()->LoadTexture(pSkinSection->Texture2);	
-
-	CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pFaceSection=CBLZWOWDatabase::GetInstance()->FindCharSection(1,m_CharRace,m_CharSex,m_CharFaceType,m_CharSkinColor);
-	if(pFaceSection)
-	{		
-		if(!pFaceSection->Texture1.IsEmpty())
-		{
-			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pFaceSection->Texture1);
-			AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,192*PosRate);
-		}
-		if(!pFaceSection->Texture2.IsEmpty())
-		{
-			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pFaceSection->Texture2);	
-			AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,160*PosRate);
-		}
+		m_CharRace=pExtraInfo->Race;
+		m_CharSex=pExtraInfo->Sex;
+		m_CharSkinColor=pExtraInfo->SkinColor;
+		m_CharFaceType=pExtraInfo->FaceType;
+		m_CharHairType=pExtraInfo->HairType;
+		m_CharHairColor=pExtraInfo->HairColor;
+		m_CharBeardType=pExtraInfo->BeardType;
+		m_Equipments[CES_HEAD].ItemID=0;
+		m_Equipments[CES_HEAD].ItemDisplayID=pExtraInfo->HeadEuipment;
+		m_Equipments[CES_SHOULDER].ItemID=0;
+		m_Equipments[CES_SHOULDER].ItemDisplayID=pExtraInfo->ShoulderEuipment;
+		m_Equipments[CES_CAPE].ItemID=0;
+		m_Equipments[CES_CAPE].ItemDisplayID=pExtraInfo->CapeEuipment;
+		m_Equipments[CES_SHIRT].ItemID=0;
+		m_Equipments[CES_SHIRT].ItemDisplayID=pExtraInfo->ShirtEuipment;
+		m_Equipments[CES_LEG].ItemID=0;
+		m_Equipments[CES_LEG].ItemDisplayID=pExtraInfo->LegEuipment;
+		m_Equipments[CES_BOOT].ItemID=0;
+		m_Equipments[CES_BOOT].ItemDisplayID=pExtraInfo->BootEuipment;
+		m_Equipments[CES_BUST].ItemID=0;
+		m_Equipments[CES_BUST].ItemDisplayID=pExtraInfo->BustEuipment;
+		m_Equipments[CES_WRIST].ItemID=0;
+		m_Equipments[CES_WRIST].ItemDisplayID=pExtraInfo->WristEuipment;
+		m_Equipments[CES_HAND].ItemID=0;
+		m_Equipments[CES_HAND].ItemDisplayID=pExtraInfo->HandEuipment;
+		m_Equipments[CES_BELT].ItemID=0;
+		m_Equipments[CES_BELT].ItemDisplayID=pExtraInfo->BeltEuipment;
+		if(m_Equipments[CES_BUST].ItemDisplayID==0)
+			m_Equipments[CES_BUST].ItemDisplayID=m_Equipments[CES_WRIST].ItemDisplayID;
+		return true;
 	}
 	
 
+	return false;
 
-	CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pWhiskerSection=CBLZWOWDatabase::GetInstance()->FindCharSection(2,m_CharRace,m_CharSex,m_CharWhiskerType,m_CharHairColor);
-	if(pWhiskerSection)
+}
+
+bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial1Visible,bool& Facial2Visible,bool& Facial3Visible,bool& EarsVisible)
+{
+	if(m_Equipments[CES_HEAD].ItemDisplayID)
 	{		
-		if(!pWhiskerSection->Texture1.IsEmpty())
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_HEAD].ItemDisplayID);
+		if(pItemDisplayInfo)
 		{
-			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pWhiskerSection->Texture1);
-			AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,192*PosRate);
+			CBLZWOWDatabase::BLZ_DB_CHAR_RACE_INFO * pRaceInfo=CBLZWOWDatabase::GetInstance()->FindRaceInfo(m_CharRace);
+			if(pRaceInfo)
+			{
+				CEasyString ModelFileName=ITEM_PATH_BY_SLOT[IISI_HEAD];
+				ModelFileName=ModelFileName+"\\"+pItemDisplayInfo->LeftModel;
+				int Pos=ModelFileName.ReverseFind('.');
+				if(Pos>=0)
+				{
+					ModelFileName=ModelFileName.Left(Pos);
+				}				
+				ModelFileName=ModelFileName+"_"+pRaceInfo->Abbrev;
+				if(m_CharSex==0)
+					ModelFileName+="M";
+				else
+					ModelFileName+="F";
+				CEasyString SkinFileName=ModelFileName+"00.skin";
+				ModelFileName=ModelFileName+".m2";
+
+				CD3DDummy * pDummy=EnableAttachment(CAI_HELMET);
+				if(pDummy)
+				{
+					m_pHelmetModel=new CD3DWOWM2ItemModel();
+					m_pHelmetModel->SetDevice(GetDevice());
+					if(m_pHelmetModel->LoadFromFile(ModelFileName,SkinFileName))
+					{
+						m_pHelmetModel->Play(0,0,0,true);
+						m_pHelmetModel->SetParent(pDummy);
+						//GetRender()->AddObject(m_pHelmetModel);
+						m_pHelmetModel->SetItemDisplayID(m_Equipments[CES_HEAD].ItemDisplayID);
+						m_pHelmetModel->BuildModel();
+
+						CBLZWOWDatabase::BLZ_DB_HELMET_GEOSET_VISIBLE_INFO * pVisibleInfo=NULL;
+
+						pVisibleInfo=CBLZWOWDatabase::GetInstance()->GetHelmetGeosetVisibleInfo(pItemDisplayInfo->HelmetGeosetVisData1);
+
+						//pVisibleInfo=CBLZWOWDatabase::GetInstance()->GetHelmetGeosetVisibleInfo(pItemDisplayInfo->HelmetGeosetVisData2);
+
+						if(pVisibleInfo)
+						{
+							HairVisible=((pVisibleInfo->HairVisible>>m_CharRace)&1)==0;
+							Facial1Visible=((pVisibleInfo->Facial1Visible>>m_CharRace)&1)==0;
+							Facial2Visible=((pVisibleInfo->Facial2Visible>>m_CharRace)&1)==0;
+							Facial3Visible=((pVisibleInfo->Facial3Visible>>m_CharRace)&1)==0;
+							EarsVisible=((pVisibleInfo->EarsVisible>>m_CharRace)&1)==0;
+						}
+
+					}
+					else
+					{
+						SAFE_RELEASE(m_pHelmetModel);
+					}
+				}
+			}
+		}		
+	}
+
+	if(m_Equipments[CES_SHOULDER].ItemDisplayID)
+	{		
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_SHOULDER].ItemDisplayID);
+		if(pItemDisplayInfo)
+		{
+			CEasyString ModelFileName;
+			CEasyString SkinFileName;
+			int Pos;
+			CD3DDummy * pDummy=NULL;
+
+			ModelFileName=ITEM_PATH_BY_SLOT[IISI_SHOULDERS];
+			ModelFileName=ModelFileName+"\\"+pItemDisplayInfo->LeftModel;
+			Pos=ModelFileName.ReverseFind('.');
+			if(Pos>=0)
+			{
+				ModelFileName=ModelFileName.Left(Pos);
+			}
+			SkinFileName=ModelFileName+"00.skin";
+			ModelFileName=ModelFileName+".m2";
+
+			pDummy=EnableAttachment(CAI_LEFT_SHOULDER);
+			if(pDummy)
+			{
+				m_pLeftShoulderModel=new CD3DWOWM2ItemModel();
+				m_pLeftShoulderModel->SetDevice(GetDevice());
+
+				if(m_pLeftShoulderModel->LoadFromFile(ModelFileName,SkinFileName))
+				{
+					m_pLeftShoulderModel->Play(0,0,0,true);
+					m_pLeftShoulderModel->SetParent(pDummy);
+					//GetRender()->AddObject(m_pLeftShoulderModel);
+					m_pLeftShoulderModel->SetItemDisplayID(m_Equipments[CES_SHOULDER].ItemDisplayID);
+					m_pLeftShoulderModel->SetItemHandType(CD3DWOWM2ItemModel::IHT_LEFT);
+					m_pLeftShoulderModel->BuildModel();
+				}
+				else
+				{
+					SAFE_RELEASE(m_pLeftShoulderModel);
+				}
+			}
+
+			ModelFileName=ITEM_PATH_BY_SLOT[IISI_SHOULDERS];
+			ModelFileName=ModelFileName+"\\"+pItemDisplayInfo->RightModel;
+			Pos=ModelFileName.ReverseFind('.');
+			if(Pos>=0)
+			{
+				ModelFileName=ModelFileName.Left(Pos);
+			}
+			SkinFileName=ModelFileName+"00.skin";
+			ModelFileName=ModelFileName+".m2";
+
+			pDummy=EnableAttachment(CAI_RIGHT_SHOULDER);
+			if(pDummy)
+			{
+				m_pRightShoulderModel=new CD3DWOWM2ItemModel();
+				m_pRightShoulderModel->SetDevice(GetDevice());
+				if(m_pRightShoulderModel->LoadFromFile(ModelFileName,SkinFileName))
+				{
+					m_pRightShoulderModel->Play(0,0,0,true);
+					m_pRightShoulderModel->SetParent(pDummy);
+					//GetRender()->AddObject(m_pRightShoulderModel);
+					m_pRightShoulderModel->SetItemDisplayID(m_Equipments[CES_SHOULDER].ItemDisplayID);
+					m_pRightShoulderModel->SetItemHandType(CD3DWOWM2ItemModel::IHT_RIGHT);						
+					m_pRightShoulderModel->BuildModel();
+				}
+				else
+				{
+					SAFE_RELEASE(m_pRightShoulderModel);
+				}
+			}
+
+		}		
+	}
+
+
+	if(m_Equipments[CES_LEFT_HAND].ItemDisplayID)
+	{		
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_LEFT_HAND].ItemDisplayID);
+		if(pItemDisplayInfo)
+		{
+			CEasyString ModelFileName;
+			CEasyString SkinFileName;
+			int Pos;
+			CD3DDummy * pDummy=NULL;
+
+			ModelFileName=ITEM_PATH_BY_SLOT[IISI_ONE_HAND];
+			ModelFileName=ModelFileName+"\\"+pItemDisplayInfo->LeftModel;
+			Pos=ModelFileName.ReverseFind('.');
+			if(Pos>=0)
+			{
+				ModelFileName=ModelFileName.Left(Pos);
+			}
+			SkinFileName=ModelFileName+"00.skin";
+			ModelFileName=ModelFileName+".m2";
+
+			pDummy=EnableAttachment(CAI_LEFT_PALM2);
+
+			if(pDummy)
+			{
+				m_pLeftWeaponModel=new CD3DWOWM2ItemModel();
+				m_pLeftWeaponModel->SetDevice(GetDevice());
+				if(m_pLeftWeaponModel->LoadFromFile(ModelFileName,SkinFileName))
+				{
+					m_pLeftWeaponModel->Play(0,0,0,true);
+					m_pLeftWeaponModel->SetParent(pDummy);
+					//GetRender()->AddObject(m_pLeftWeaponModel);
+					m_pLeftWeaponModel->SetItemDisplayID(m_Equipments[CES_LEFT_HAND].ItemDisplayID);						
+					m_pLeftWeaponModel->BuildModel();
+				}
+				else
+				{
+					SAFE_RELEASE(m_pLeftWeaponModel);
+				}
+			}
 		}
-		if(!pWhiskerSection->Texture2.IsEmpty())
+
+	}
+
+	if(m_Equipments[CES_RIGHT_HAND].ItemDisplayID)
+	{		
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_RIGHT_HAND].ItemDisplayID);
+		if(pItemDisplayInfo)
 		{
-			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pWhiskerSection->Texture2);	
-			AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,160*PosRate);
+			CEasyString ModelFileName;
+			CEasyString SkinFileName;
+			int Pos;
+			CD3DDummy * pDummy=NULL;
+
+			ModelFileName=ITEM_PATH_BY_SLOT[IISI_ONE_HAND];
+			ModelFileName=ModelFileName+"\\"+pItemDisplayInfo->LeftModel;
+			Pos=ModelFileName.ReverseFind('.');
+			if(Pos>=0)
+			{
+				ModelFileName=ModelFileName.Left(Pos);
+			}
+			SkinFileName=ModelFileName+"00.skin";
+			ModelFileName=ModelFileName+".m2";
+
+			pDummy=EnableAttachment(CAI_RIGHT_PALM2);
+			if(pDummy)
+			{
+				m_pRightWeaponModel=new CD3DWOWM2ItemModel();
+				m_pRightWeaponModel->SetDevice(GetDevice());					
+				if(m_pRightWeaponModel->LoadFromFile(ModelFileName,SkinFileName))
+				{
+					m_pRightWeaponModel->Play(0,0,0,true);
+					m_pRightWeaponModel->SetParent(pDummy);
+					//GetRender()->AddObject(m_pRightWeaponModel);
+					m_pRightWeaponModel->SetItemDisplayID(m_Equipments[CES_RIGHT_HAND].ItemDisplayID);						
+					m_pRightWeaponModel->BuildModel();
+				}
+				else
+				{
+					SAFE_RELEASE(m_pRightWeaponModel);
+				}
+			}
+		}
+
+	}
+
+	if(m_Equipments[CES_SHIELD].ItemDisplayID)
+	{
+
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_SHIELD].ItemDisplayID);
+		if(pItemDisplayInfo)
+		{
+			CEasyString ModelFileName;
+			CEasyString SkinFileName;
+			int Pos;
+			CD3DDummy * pDummy=NULL;
+
+			ModelFileName=ITEM_PATH_BY_SLOT[IISI_SHIELD];
+			ModelFileName=ModelFileName+"\\"+pItemDisplayInfo->LeftModel;
+			Pos=ModelFileName.ReverseFind('.');
+			if(Pos>=0)
+			{
+				ModelFileName=ModelFileName.Left(Pos);
+			}
+			SkinFileName=ModelFileName+"00.skin";
+			ModelFileName=ModelFileName+".m2";
+
+			pDummy=EnableAttachment(CAI_LEFT_WRIST);
+
+			if(pDummy)
+			{
+				m_pRightShieldModel=new CD3DWOWM2ItemModel();
+				m_pRightShieldModel->SetDevice(GetDevice());
+				if(m_pRightShieldModel->LoadFromFile(ModelFileName,SkinFileName))
+				{
+					m_pRightShieldModel->Play(0,0,0,true);
+					m_pRightShieldModel->SetParent(pDummy);
+					m_pRightShieldModel->SetItemDisplayID(m_Equipments[CES_SHIELD].ItemDisplayID);						
+					m_pRightShieldModel->BuildModel();
+				}
+				else
+				{
+					SAFE_RELEASE(m_pRightShieldModel);
+				}
+			}
+		}
+
+	}
+	return true;
+}
+
+bool CD3DWOWM2CharacterModel::RebuildSubMesh(bool HairVisible,bool Facial1Visible,bool Facial2Visible,bool Facial3Visible,bool EarsVisible,bool& HaveSleeve)
+{
+	int CharHairSubMesh=CBLZWOWDatabase::GetInstance()->FindCharHairSubMesh(m_CharRace,m_CharSex,m_CharHairType,m_IsCharBald);
+
+	int CharWhiskerSubMeshID1=0;
+	int CharWhiskerSubMeshID2=0;
+	int CharWhiskerSubMeshID3=0;
+	CBLZWOWDatabase::GetInstance()->FindCharWhiskerSubMesh(m_CharRace,m_CharSex,m_CharBeardType,
+		CharWhiskerSubMeshID1,CharWhiskerSubMeshID2,CharWhiskerSubMeshID3);
+
+	int CapeSubMeshType=1;
+	
+	int GloveType=1;
+	int PantsType=1;
+	int RobeType=1;
+	int BootsType=1;
+	int SleeveType=1;
+	int EnsignType=1;
+
+	if(m_Equipments[CES_CAPE].ItemDisplayID)
+	{		
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_CAPE].ItemDisplayID);
+		if(pItemDisplayInfo)
+		{
+			CapeSubMeshType=pItemDisplayInfo->GloveGeosetFlags+1;
+		}		
+	}
+
+	if(m_Equipments[CES_HAND].ItemDisplayID)
+	{
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_HAND].ItemDisplayID);
+		if(pItemDisplayInfo)
+		{
+			GloveType=pItemDisplayInfo->GloveGeosetFlags+1;
 		}
 	}
 
-	CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pHairSection=CBLZWOWDatabase::GetInstance()->FindCharSection(3,m_CharRace,m_CharSex,m_CharHairType,m_CharHairColor);
-	if(pHairSection)
-	{		
-		if(!pHairSection->Texture1.IsEmpty())
+
+	if(m_Equipments[CES_LEG].ItemDisplayID)
+	{
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_LEG].ItemDisplayID);
+		if(pItemDisplayInfo)
 		{
-			pHairTexture=pD3DDevice->GetTextureManager()->LoadTexture(pHairSection->Texture1);			
-		}
-		if(!pHairSection->Texture2.IsEmpty())
-		{
-			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pHairSection->Texture2);
-			AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,192*PosRate);
-		}
-		if(!pHairSection->Texture3.IsEmpty())
-		{
-			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pHairSection->Texture3);
-			AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,160*PosRate);
+			PantsType=pItemDisplayInfo->PantsGeosetFlags+1;
+			RobeType=pItemDisplayInfo->RobeGeosetFlags+1;
 		}
 	}
 
-	CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pUnderwearSection=CBLZWOWDatabase::GetInstance()->FindCharSection(4,m_CharRace,m_CharSex,0,m_CharSkinColor);
-	if(pUnderwearSection)
+	if(m_Equipments[CES_BOOT].ItemDisplayID)
 	{
-		if(!pUnderwearSection->Texture1.IsEmpty())
-		{
-			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pUnderwearSection->Texture1);
-			AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,96*PosRate);
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_BOOT].ItemDisplayID);
+		if(pItemDisplayInfo)
+		{				
+			BootsType=pItemDisplayInfo->GloveGeosetFlags+1;					
 		}
-		if(!pUnderwearSection->Texture2.IsEmpty())
-		{
-			CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pUnderwearSection->Texture2);
-			AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,0);
-		}
-	}	
+	}
 
-	for(int i=0;i<CES_MAX;i++)
+	if(m_Equipments[CES_BUST].ItemDisplayID)
 	{
-		if(m_Equipments[i])
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_BUST].ItemDisplayID);
+		if(pItemDisplayInfo)
+		{				
+			SleeveType=pItemDisplayInfo->GloveGeosetFlags+1;
+			if(pItemDisplayInfo->RobeGeosetFlags+1>1)
+				RobeType=pItemDisplayInfo->RobeGeosetFlags+1;
+		}
+	}
+	if(m_Equipments[CES_ENSIGN].ItemDisplayID)
+	{
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_ENSIGN].ItemDisplayID);
+		if(pItemDisplayInfo)
+		{				
+			EnsignType=pItemDisplayInfo->GloveGeosetFlags+1;
+		}
+	}
+
+	if(RobeType>1)
+	{		
+		PantsType=0;
+		BootsType=0;
+		EnsignType=0;
+	}
+	if(GloveType>1)
+	{
+		SleeveType=1;
+	}
+	if(BootsType>1)
+	{
+		if(PantsType==2)
+			PantsType=1;
+	}
+
+	HaveSleeve=SleeveType>1;
+
+	for(int i=0;i<m_pModelResource->GetSubMeshCount();i++)
+	{
+		CD3DSubMesh * pD3DSubMesh=m_pModelResource->GetSubMesh(i);
+
+		pD3DSubMesh->SetVisible(false);
+
+		int Part=pD3DSubMesh->GetID()/100;
+		int Type=pD3DSubMesh->GetID()%100;
+
+		switch(Part)
 		{
-			CBLZWOWDatabase::BLZ_DB_ITEM_DATA * pItemData=CBLZWOWDatabase::GetInstance()->GetItemData(m_Equipments[i]);
-			if(pItemData)
+		case CSP_HAIR:
+			if(Type==0)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}
+			else
+			{
+				if(Type==CharHairSubMesh&&HairVisible)
+				{
+					m_SubMeshList.Add(pD3DSubMesh);
+				}				
+			}
+			break;
+		case CSP_WHISKER1:
+			if(Type==CharWhiskerSubMeshID1&&Facial1Visible)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}	
+			break;
+		case CSP_WHISKER2:
+			if(Type==CharWhiskerSubMeshID2&&Facial2Visible)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}	
+			break;
+		case CSP_WHISKER3:
+			if(Type==CharWhiskerSubMeshID3&&Facial2Visible)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}	
+			break;
+		case CSP_GLOVE:
+			if(Type==GloveType)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}	
+			break;
+		case CSP_FOOT:
+			if(Type==BootsType)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}	
+			break;
+		case CSP_EAR:
+			if(EarsVisible)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}	
+			break;
+		case CSP_SLEEVE:
+			if(Type==SleeveType)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}	
+			break;
+		case CSP_PAINTS:
+			if(Type==PantsType)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}	
+			break;
+		case CSP_ENSIGN:
+			if(Type==EnsignType)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}	
+			break;
+		case CSP_ROBE:
+			if(Type==RobeType)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}	
+			break;
+		case CSP_BACK:			
+			if(Type==CapeSubMeshType)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}					
+			break;
+		default:
+			if(Type==1)
+			{
+				m_SubMeshList.Add(pD3DSubMesh);
+			}	
+		}	
+	}
+
+	return true;
+}
+
+bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTexture *& pCharSkinTexture,CD3DTexture *& pCharSkinExtraTexture,
+												  CD3DTexture *& pCharHairTexture,CD3DTexture *& pCapeTexture,
+												  CD3DTexture *& pSkinTexture1,CD3DTexture *& pSkinTexture2,CD3DTexture *& pSkinTexture3,
+												  bool HaveSleeve)
+{
+		
+	CBLZWOWDatabase::BLZ_DB_CREATURE_DISPLAY_INFO * pDisplayInfo=CBLZWOWDatabase::GetInstance()->FindCreatureDisplayInfo(m_CreatureDisplayID);
+	if(pDisplayInfo)
+	{
+		CBLZWOWDatabase::BLZ_DB_CREATURE_MODEL_INFO * pModelInfo=CBLZWOWDatabase::GetInstance()->FindCreatureModelInfo(pDisplayInfo->ModelID);
+		if(pModelInfo)
+		{
+			if(!pDisplayInfo->Skin1.IsEmpty())
+			{
+				CEasyString SkinTextureFileName=GetPathDirectory(pModelInfo->ModelPath);
+				SkinTextureFileName+=pDisplayInfo->Skin1;
+				SkinTextureFileName+=".blp";
+				pSkinTexture1=GetDevice()->GetTextureManager()->LoadTexture(SkinTextureFileName);
+			}
+			if(!pDisplayInfo->Skin2.IsEmpty())
+			{
+				CEasyString SkinTextureFileName=GetPathDirectory(pModelInfo->ModelPath);
+				SkinTextureFileName+=pDisplayInfo->Skin2;
+				SkinTextureFileName+=".blp";
+				pSkinTexture2=GetDevice()->GetTextureManager()->LoadTexture(SkinTextureFileName);
+			}
+			if(!pDisplayInfo->Skin3.IsEmpty())
+			{
+				CEasyString SkinTextureFileName=GetPathDirectory(pModelInfo->ModelPath);
+				SkinTextureFileName+=pDisplayInfo->Skin3;
+				SkinTextureFileName+=".blp";
+				pSkinTexture3=GetDevice()->GetTextureManager()->LoadTexture(SkinTextureFileName);
+			}
+		}
+	}
+
+	if(m_Equipments[CES_CAPE].ItemDisplayID)
+	{		
+		CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
+			CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[CES_CAPE].ItemDisplayID);
+		if(pItemDisplayInfo)
+		{			
+			CEasyString CapeTextureFileName=ITEM_PATH_BY_SLOT[IISI_BACK];
+			CapeTextureFileName=CapeTextureFileName+"\\"+pItemDisplayInfo->LeftModelTexture+".blp";
+			pCapeTexture=pD3DDevice->GetTextureManager()->LoadTexture(CapeTextureFileName);
+		}		
+	}
+	
+	if(m_CharRace>=0&&m_CharSex>=0)
+	{
+		CSmartPtr<CD3DTexture> pSkinTexture=NULL;
+		CSmartPtr<CD3DTexture> pSkinExtraTexture=NULL;	
+		CSmartPtr<CD3DTexture> pHairTexture=NULL;
+
+		CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pSkinSection=CBLZWOWDatabase::GetInstance()->FindCharSection(0,m_CharRace,m_CharSex,0,m_CharSkinColor);
+		if(pSkinSection==NULL)
+			return false;
+		pSkinTexture=new CD3DTexture(pD3DDevice->GetTextureManager());;
+		if(!pSkinTexture->LoadTexture(pSkinSection->Texture1))
+		{			
+			return false;
+		}
+
+		int PosRate=1;
+
+		if(pSkinTexture->GetTextureInfo().Width==256&&pSkinTexture->GetTextureInfo().Height==256)
+		{
+			PosRate=1;
+		}
+		else if(pSkinTexture->GetTextureInfo().Width==512&&pSkinTexture->GetTextureInfo().Height==512)
+		{
+			PosRate=2;
+		}
+		else
+		{
+			return false;
+		}
+
+		pSkinExtraTexture=pD3DDevice->GetTextureManager()->LoadTexture(pSkinSection->Texture2);	
+
+		CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pFaceSection=CBLZWOWDatabase::GetInstance()->FindCharSection(1,m_CharRace,m_CharSex,m_CharFaceType,m_CharSkinColor);
+		if(pFaceSection)
+		{		
+			if(!pFaceSection->Texture1.IsEmpty())
+			{
+				CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pFaceSection->Texture1);
+				AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,192*PosRate,false);
+			}
+			if(!pFaceSection->Texture2.IsEmpty())
+			{
+				CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pFaceSection->Texture2);	
+				AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,160*PosRate,false);
+			}
+		}
+
+
+
+		CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pWhiskerSection=CBLZWOWDatabase::GetInstance()->FindCharSection(2,m_CharRace,m_CharSex,m_CharBeardType,m_CharHairColor);
+		if(pWhiskerSection)
+		{		
+			if(!pWhiskerSection->Texture1.IsEmpty())
+			{
+				CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pWhiskerSection->Texture1);
+				AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,192*PosRate,true);
+			}
+			if(!pWhiskerSection->Texture2.IsEmpty())
+			{
+				CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pWhiskerSection->Texture2);	
+				AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,160*PosRate,true);
+			}
+		}
+
+		CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pHairSection=CBLZWOWDatabase::GetInstance()->FindCharSection(3,m_CharRace,m_CharSex,m_CharHairType,m_CharHairColor);
+		if(pHairSection)
+		{		
+			if(!pHairSection->Texture1.IsEmpty())
+			{
+				pHairTexture=pD3DDevice->GetTextureManager()->LoadTexture(pHairSection->Texture1);			
+			}
+			if(!pHairSection->Texture2.IsEmpty())
+			{
+				CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pHairSection->Texture2);
+				AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,192*PosRate,true);
+			}
+			if(!pHairSection->Texture3.IsEmpty())
+			{
+				CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pHairSection->Texture3);
+				AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,160*PosRate,true);
+			}
+		}
+
+		CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pUnderwearSection=CBLZWOWDatabase::GetInstance()->FindCharSection(4,m_CharRace,m_CharSex,0,m_CharSkinColor);
+		if(pUnderwearSection)
+		{
+			if(!pUnderwearSection->Texture1.IsEmpty())
+			{
+				CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pUnderwearSection->Texture1);
+				AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,96*PosRate,false);
+			}
+			if(!pUnderwearSection->Texture2.IsEmpty())
+			{
+				CSmartPtr<CD3DTexture> pTexture=pD3DDevice->GetTextureManager()->LoadTexture(pUnderwearSection->Texture2);
+				AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,0,false);
+			}
+		}	
+
+		for(int i=0;i<CES_MAX;i++)
+		{
+			if(m_Equipments[i].ItemDisplayID)
 			{
 				CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pItemDisplayInfo=
-					CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(pItemData->ItemDisplayInfo);
+					CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_Equipments[i].ItemDisplayID);
 				if(pItemDisplayInfo)
 				{		
-					
+
 					if(!pItemDisplayInfo->UpperArmTexture.IsEmpty()&&(i==CES_SHIRT||i==CES_BUST))
 					{
 						CEasyString TextureFileName=EQUIPMENT_ARM_UPPER_TEXTURE_PATH;						
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->UpperArmTexture;						
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,0);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,0,false);
 					}
-					if((!HaveSleeve)||i==CES_BUST)
+					if((!HaveSleeve)||i==CES_BUST||i==CES_SHIRT)
 					{
 						if(!pItemDisplayInfo->LowerArmTexture.IsEmpty()&&(i==CES_WRIST||i==CES_SHIRT||i==CES_BUST||i==CES_HAND))
 						{
 							CEasyString TextureFileName=EQUIPMENT_ARM_LOWER_TEXTURE_PATH;
 							TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->LowerArmTexture;
 							CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-							AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,64*PosRate);
+							AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,0,64*PosRate,false);
 						}
 					}
 
@@ -1242,74 +1502,86 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 						CEasyString TextureFileName=EQUIPMENT_HAND_TEXTURE_PATH;
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->HandsTexture;
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,128*PosRate);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,0,128*PosRate,false);
 					}
 
-					if(!pItemDisplayInfo->UpperTorsoTexture.IsEmpty()&&(i==CES_BUST||i==CES_SHIRT))
+					if(!pItemDisplayInfo->UpperTorsoTexture.IsEmpty()&&(i==CES_BUST||i==CES_SHIRT||i==CES_ENSIGN))
 					{
 						CEasyString TextureFileName=EQUIPMENT_TORSO_UPPER_TEXTURE_PATH;						
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->UpperTorsoTexture;						
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,0);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,0,false);
 					}
-					
-					if(!pItemDisplayInfo->LowerTorsoTexture.IsEmpty()&&(i==CES_BUST||i==CES_SHIRT))
+
+					if(!pItemDisplayInfo->LowerTorsoTexture.IsEmpty()&&(i==CES_BUST||i==CES_SHIRT||i==CES_ENSIGN))
 					{
 						CEasyString TextureFileName=EQUIPMENT_TORSO_LOWER_TEXTURE_PATH;						
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->LowerTorsoTexture;						
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,128*PosRate,64*PosRate);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,128*PosRate,64*PosRate,false);
 					}
 
-					
-					if(!pItemDisplayInfo->UpperLegTexture.IsEmpty()&&(i==CES_BUST||i==CES_WAIST||i==CES_LEG))
+
+					if(!pItemDisplayInfo->UpperLegTexture.IsEmpty()&&(i==CES_BUST||i==CES_BELT||i==CES_LEG))
 					{
 						CEasyString TextureFileName=EQUIPMENT_LEG_UPPER_TEXTURE_PATH;
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->UpperLegTexture;
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,96*PosRate);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,96*PosRate,false);
 					}
 
-					if(!pItemDisplayInfo->LowerLegTexture.IsEmpty()&&(i==CES_BUST||i==CES_LEG||i==CES_FOOT))
+					if(!pItemDisplayInfo->LowerLegTexture.IsEmpty()&&(i==CES_BUST||i==CES_LEG||i==CES_BOOT))
 					{
 						CEasyString TextureFileName=EQUIPMENT_LEG_LOWER_TEXTURE_PATH;
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->LowerLegTexture;
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,160*PosRate);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,64*PosRate,128*PosRate,160*PosRate,false);
 					}
-					
 
-					if(!pItemDisplayInfo->FootTexture.IsEmpty()&&(i==CES_LEG||i==CES_FOOT))
+
+					if(!pItemDisplayInfo->FootTexture.IsEmpty()&&(i==CES_LEG||i==CES_BOOT))
 					{
 						CEasyString TextureFileName=EQUIPMENT_FOOT_TEXTURE_PATH;
 						TextureFileName=TextureFileName+"\\"+pItemDisplayInfo->FootTexture;
 						CSmartPtr<CD3DTexture> pTexture=LoadTextureBySex(pD3DDevice,TextureFileName,m_CharSex);
-						AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,128*PosRate,224*PosRate);
+						AddTexture(pSkinTexture,pTexture,128*PosRate,32*PosRate,128*PosRate,224*PosRate,false);
 					}
-					
-				}
-			}
-		}	
-	}
 
-	pCharSkinTexture=pSkinTexture;
-	pSkinTexture.Detach();
-	pCharSkinExtraTexture=pSkinExtraTexture;
-	pSkinExtraTexture.Detach();
-	pCharHairTexture=pHairTexture;
-	pHairTexture.Detach();
+				}
+			}	
+		}
+
+		pCharSkinTexture=pSkinTexture;
+		pSkinTexture.Detach();
+		pCharSkinExtraTexture=pSkinExtraTexture;
+		pSkinExtraTexture.Detach();
+		pCharHairTexture=pHairTexture;
+		pHairTexture.Detach();
+	}
 	return true;
 
 }
 
-void CD3DWOWM2CharacterModel::AlphaMix(D3D_A8B8G8R8_PIXEL& DestPixel,D3D_A8B8G8R8_PIXEL& SrcPixel)
+void CD3DWOWM2CharacterModel::AlphaMix(D3D_A8B8G8R8_PIXEL& DestPixel,D3D_A8B8G8R8_PIXEL& SrcPixel,bool UseAlphaBlend)
 {
-	DestPixel.Red=(DestPixel.Red*(255-SrcPixel.Alpha)+SrcPixel.Red*SrcPixel.Alpha)/255;
-	DestPixel.Green=(DestPixel.Green*(255-SrcPixel.Alpha)+SrcPixel.Green*SrcPixel.Alpha)/255;
-	DestPixel.Blue=(DestPixel.Blue*(255-SrcPixel.Alpha)+SrcPixel.Blue*SrcPixel.Alpha)/255;	
+	if(UseAlphaBlend)
+	{
+		DestPixel.Red=(DestPixel.Red*(255-SrcPixel.Alpha)+SrcPixel.Red*SrcPixel.Alpha)/255;
+		DestPixel.Green=(DestPixel.Green*(255-SrcPixel.Alpha)+SrcPixel.Green*SrcPixel.Alpha)/255;
+		DestPixel.Blue=(DestPixel.Blue*(255-SrcPixel.Alpha)+SrcPixel.Blue*SrcPixel.Alpha)/255;	
+	}
+	else
+	{
+		if(SrcPixel.Alpha>=128)
+		{
+			DestPixel.Red=SrcPixel.Red;
+			DestPixel.Green=SrcPixel.Green;
+			DestPixel.Blue=SrcPixel.Blue;	
+		}
+	}
 }
 
-bool CD3DWOWM2CharacterModel::AddTexture(CD3DTexture * pDestTexture,CD3DTexture * pSrcTexture,UINT SrcWifth,UINT SrcHeight,UINT DestOffsetX,UINT DestOffsetY)
+bool CD3DWOWM2CharacterModel::AddTexture(CD3DTexture * pDestTexture,CD3DTexture * pSrcTexture,UINT SrcWifth,UINT SrcHeight,UINT DestOffsetX,UINT DestOffsetY,bool UseAlphaBlend)
 {
 	if((pDestTexture->GetTextureInfo().Format==D3DFMT_X8B8G8R8||
 		pDestTexture->GetTextureInfo().Format==D3DFMT_A8B8G8R8))
@@ -1321,7 +1593,7 @@ bool CD3DWOWM2CharacterModel::AddTexture(CD3DTexture * pDestTexture,CD3DTexture 
 			if(pDestTexture->GetD3DTexture()->LockRect(i,&DestLockRect,NULL,0)==D3D_OK)
 			{			
 
-				MixTexture(pSrcTexture,i,SrcWifth,SrcHeight,(BYTE *)DestLockRect.pBits,DestLockRect.Pitch,DestOffsetX,DestOffsetY);
+				MixTexture(pSrcTexture,i,SrcWifth,SrcHeight,(BYTE *)DestLockRect.pBits,DestLockRect.Pitch,DestOffsetX,DestOffsetY,UseAlphaBlend);
 
 				pDestTexture->GetD3DTexture()->UnlockRect(i);
 			}
@@ -1333,22 +1605,22 @@ bool CD3DWOWM2CharacterModel::AddTexture(CD3DTexture * pDestTexture,CD3DTexture 
 	return false;
 }
 
-bool CD3DWOWM2CharacterModel::MixTexture(CD3DTexture * pSrcTexture,int MipLevel,UINT SrcWifth,UINT SrcHeight,BYTE * pDestPixels,UINT DestPitch,UINT DestOffsetX,UINT DestOffsetY)
+bool CD3DWOWM2CharacterModel::MixTexture(CD3DTexture * pSrcTexture,int MipLevel,UINT SrcWidth,UINT SrcHeight,BYTE * pDestPixels,UINT DestPitch,UINT DestOffsetX,UINT DestOffsetY,bool UseAlphaBlend)
 {
 	if(pSrcTexture!=NULL)
 	{
-		if(pSrcTexture->GetTextureInfo().Width<=SrcWifth&&
+		if(pSrcTexture->GetTextureInfo().Width<=SrcWidth&&
 			pSrcTexture->GetTextureInfo().Height<=SrcHeight)
 		{
-			int Rate=SrcWifth/pSrcTexture->GetTextureInfo().Width;
-			if(pSrcTexture->GetTextureInfo().Width*Rate!=SrcWifth||
+			int Rate=SrcWidth/pSrcTexture->GetTextureInfo().Width;
+			if(pSrcTexture->GetTextureInfo().Width*Rate!=SrcWidth||
 				pSrcTexture->GetTextureInfo().Height*Rate!=SrcHeight)
 			{
 				return false;
 			}
 			UINT OffsetX=(DestOffsetX>>MipLevel);
 			UINT OffsetY=(DestOffsetY>>MipLevel);
-			UINT Width=(SrcWifth>>MipLevel);
+			UINT Width=(SrcWidth>>MipLevel);
 			UINT Height=(SrcHeight>>MipLevel);
 			if(Width==0)
 				Width=1;
@@ -1363,21 +1635,21 @@ bool CD3DWOWM2CharacterModel::MixTexture(CD3DTexture * pSrcTexture,int MipLevel,
 				{
 					D3D_A8B8G8R8_PIXEL * pDestLine=(D3D_A8B8G8R8_PIXEL *)(pDestPixels+sizeof(D3D_A8B8G8R8_PIXEL)*OffsetX);
 					D3D_A8B8G8R8_PIXEL * pSrcLine=(D3D_A8B8G8R8_PIXEL *)(pSrcPixels+SrcLockRect.Pitch*(y/Rate));
-					if(pSrcTexture->GetTextureInfo().Format==D3DFMT_X8B8G8R8)
+					if(pSrcTexture->GetTextureInfo().Format==D3DFMT_A8B8G8R8)
 					{
-						//memcpy(pDestLine,pSrcLine,sizeof(D3D_A8B8G8R8_PIXEL)*Width);
+						for(UINT x=0;x<Width;x++)
+						{
+							AlphaMix(pDestLine[x],pSrcLine[x/Rate],UseAlphaBlend);
+						}
+					}	
+					else
+					{
 						for(UINT x=0;x<Width;x++)
 						{
 							pDestLine[x]=pSrcLine[x/Rate];
 						}
 					}
-					else if(pSrcTexture->GetTextureInfo().Format==D3DFMT_A8B8G8R8)
-					{
-						for(UINT x=0;x<Width;x++)
-						{
-							AlphaMix(pDestLine[x],pSrcLine[x/Rate]);
-						}
-					}								
+												
 					pDestPixels+=DestPitch;
 				}							
 				pSrcTexture->GetD3DTexture()->UnlockRect(MipLevel);
@@ -1408,7 +1680,7 @@ CD3DTexture * CD3DWOWM2CharacterModel::LoadTextureBySex(CD3DDevice * pD3DDevice,
 void CD3DWOWM2CharacterModel::FetchAnimationFrames(UINT Time)
 {
 	CD3DWOWM2Model::FetchAnimationFrames(Time);
-	if(m_Equipments[CES_LEFT_HAND])
+	if(m_Equipments[CES_LEFT_HAND].ItemDisplayID)
 	{
 		for(UINT i=BONE_LFINGER1;i<=BONE_LTHUMB;i++)
 		{
@@ -1420,7 +1692,7 @@ void CD3DWOWM2CharacterModel::FetchAnimationFrames(UINT Time)
 			}
 		}		
 	}
-	if(m_Equipments[CES_RIGHT_HAND])
+	if(m_Equipments[CES_RIGHT_HAND].ItemDisplayID)
 	{
 		for(UINT i=BONE_RFINGER1;i<=BONE_RTHUMB;i++)
 		{
@@ -1434,238 +1706,5 @@ void CD3DWOWM2CharacterModel::FetchAnimationFrames(UINT Time)
 	}
 }
 
-
-//CNameObject::STORAGE_STRUCT * CD3DWOWM2CharacterModel::USOCreateHead(UINT Param)
-//{
-//	STORAGE_STRUCT * pHead=new STORAGE_STRUCT;
-//	ZeroMemory(pHead,sizeof(STORAGE_STRUCT));
-//	pHead->Size=sizeof(STORAGE_STRUCT);
-//	return pHead;
-//}
-//int CD3DWOWM2CharacterModel::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{
-//	int HeadSize=CD3DWOWM2Model::USOWriteHead(pHead,pUSOFile,Param);
-//	if(HeadSize<0)
-//		return -1;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//	
-//	pLocalHead->MaterialCount=(int)m_SubMeshMaterialList.GetCount();
-//	pLocalHead->Size+=sizeof(UINT)*pLocalHead->MaterialCount;
-//
-//	pLocalHead->CharRace			=m_CharRace;
-//	pLocalHead->CharSex				=m_CharSex;
-//	pLocalHead->CharSexMax			=m_CharSexMax;
-//	pLocalHead->CharSkinColor		=m_CharSkinColor;
-//	pLocalHead->CharSkinColorMax	=m_CharSkinColorMax;
-//	pLocalHead->CharHairColor		=m_CharHairColor;
-//	pLocalHead->CharHairColorMax	=m_CharHairColorMax;
-//	pLocalHead->CharFaceType		=m_CharFaceType;
-//	pLocalHead->CharFaceTypeMax		=m_CharFaceTypeMax;
-//	pLocalHead->CharHairType		=m_CharHairType;
-//	pLocalHead->CharHairTypeMax		=m_CharHairTypeMax;
-//	pLocalHead->CharWhiskerType		=m_CharWhiskerType;
-//	pLocalHead->CharWhiskerTypeMax	=m_CharWhiskerTypeMax;
-//	pLocalHead->IsCharBald			=m_IsCharBald;
-//
-//	memcpy(pLocalHead->Equipments,m_Equipments,sizeof(m_Equipments));
-//
-//	pLocalHead->HelmetModelStorageID=0;
-//	pLocalHead->LeftShoulderModelStorageID=0;
-//	pLocalHead->RightShoulderModelStorageID=0;
-//	pLocalHead->LeftWeaponModelStorageID=0;
-//	pLocalHead->RightWeaponModelStorageID=0;
-//	if(m_pHelmetModel)
-//	{
-//		m_pHelmetModel->RefreshStorageID();
-//		pLocalHead->HelmetModelStorageID=m_pHelmetModel->GetStorageID();
-//	}
-//	if(m_pLeftShoulderModel)
-//	{
-//		m_pLeftShoulderModel->RefreshStorageID();
-//		pLocalHead->LeftShoulderModelStorageID=m_pLeftShoulderModel->GetStorageID();
-//	}
-//	if(m_pRightShoulderModel)
-//	{
-//		m_pRightShoulderModel->RefreshStorageID();
-//		pLocalHead->RightShoulderModelStorageID=m_pRightShoulderModel->GetStorageID();
-//	}
-//	if(m_pLeftWeaponModel)
-//	{
-//		m_pLeftWeaponModel->RefreshStorageID();
-//		pLocalHead->LeftWeaponModelStorageID=m_pLeftWeaponModel->GetStorageID();
-//	}
-//	if(m_pRightWeaponModel)
-//	{
-//		m_pRightWeaponModel->RefreshStorageID();
-//		pLocalHead->RightWeaponModelStorageID=m_pRightWeaponModel->GetStorageID();
-//	}
-//	return sizeof(STORAGE_STRUCT);
-//}
-//
-//bool CD3DWOWM2CharacterModel::USOWriteData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{
-//	if(!CD3DWOWM2Model::USOWriteData(pHead,pUSOFile,Param))
-//		return false;
-//
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//
-//	for(UINT i=0;i<m_SubMeshList.GetCount();i++)
-//	{
-//		UINT StorageID=m_SubMeshList[i]->GetStorageID();
-//		if(pFile->Write(&StorageID,sizeof(StorageID))<sizeof(StorageID))
-//			return false;
-//	}	
-//
-//	return true;
-//}
-//
-//bool CD3DWOWM2CharacterModel::USOWriteChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{
-//	if(!CD3DWOWM2Model::USOWriteChild(pHead,pUSOFile,Param))
-//		return false;
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//	for(UINT i=0;i<m_SubMeshMaterialList.GetCount();i++)
-//	{
-//		if(!m_SubMeshMaterialList[i].ToUSOFile(pUSOFile,(UINT)(GetDevice())))
-//			return false;		
-//	}
-//
-//	return true;
-//}
-//
-//int CD3DWOWM2CharacterModel::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{
-//	int ReadSize=CD3DWOWM2Model::USOReadHead(pHead,pUSOFile,Param);
-//	if(ReadSize<0)
-//		return -1;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//
-//	
-//	m_CharRace				=pLocalHead->CharRace			;
-//	m_CharSex				=pLocalHead->CharSex			;
-//	m_CharSexMax			=pLocalHead->CharSexMax			;
-//	m_CharSkinColor			=pLocalHead->CharSkinColor		;
-//	m_CharSkinColorMax		=pLocalHead->CharSkinColorMax	;
-//	m_CharHairColor			=pLocalHead->CharHairColor		;
-//	m_CharHairColorMax		=pLocalHead->CharHairColorMax	;
-//	m_CharFaceType			=pLocalHead->CharFaceType		;
-//	m_CharFaceTypeMax		=pLocalHead->CharFaceTypeMax	;
-//	m_CharHairType			=pLocalHead->CharHairType		;
-//	m_CharHairTypeMax		=pLocalHead->CharHairTypeMax	;
-//	m_CharWhiskerType		=pLocalHead->CharWhiskerType	;
-//	m_CharWhiskerTypeMax	=pLocalHead->CharWhiskerTypeMax	;
-//	m_IsCharBald			=pLocalHead->IsCharBald			;
-//
-//	memcpy(m_Equipments,pLocalHead->Equipments,sizeof(m_Equipments));
-//	return sizeof(STORAGE_STRUCT);
-//}
-//
-//int CD3DWOWM2CharacterModel::USOReadData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,BYTE * pData,int DataSize,UINT Param)
-//{
-//	int ReadSize=CD3DWOWM2Model::USOReadData(pHead,pUSOFile,pData,DataSize,Param);
-//
-//	pData+=ReadSize;
-//	DataSize-=ReadSize;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//
-//	UINT * pSubMeshIDs=(UINT *)pData;
-//	ReadSize+=sizeof(UINT)*pLocalHead->MaterialCount;
-//	m_SubMeshList.Resize(pLocalHead->MaterialCount);
-//	for(int i=0;i<pLocalHead->MaterialCount;i++)
-//	{
-//		m_SubMeshList[i]=(CD3DSubMesh *)pSubMeshIDs[i];
-//	}
-//
-//	return ReadSize;
-//}
-//
-//bool CD3DWOWM2CharacterModel::USOReadChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{	
-//	if(!CD3DWOWM2Model::USOReadChild(pHead,pUSOFile,Param))
-//		return false;
-//
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//
-//	
-//	m_SubMeshMaterialList.Resize(pLocalHead->MaterialCount);
-//	for(int i=0;i<pLocalHead->MaterialCount;i++)
-//	{		
-//		if(!m_SubMeshMaterialList[i].FromUSOFile(pUSOFile,(UINT)(GetDevice())))
-//		{			
-//			return false;
-//		}
-//	}	
-//	return true;
-//}
-//
-//bool CD3DWOWM2CharacterModel::USOReadFinish(CNameObject::STORAGE_STRUCT * pHead,UINT Param)
-//{
-//	if(!CD3DWOWM2Model::USOReadFinish(pHead,Param))
-//		return false;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//
-//	if(m_pModelResource)
-//	{
-//		for(UINT i=0;i<m_SubMeshList.GetCount();i++)
-//		{
-//			UINT StorageID=(UINT)m_SubMeshList[i];
-//			m_SubMeshList[i]=NULL;
-//			for(int j=0;j<m_pModelResource->GetSubMeshCount();j++)
-//			{
-//				if(m_pModelResource->GetSubMesh(j)->GetStorageID()==StorageID)
-//				{
-//					m_SubMeshList[i]=m_pModelResource->GetSubMesh(j);
-//					break;
-//				}
-//			}
-//			if(m_SubMeshList[i]==NULL)
-//				return false;
-//		}
-//	}
-//	else
-//	{
-//		m_SubMeshList.Clear();
-//	}
-//
-//	if(pLocalHead->HelmetModelStorageID)
-//		m_pHelmetModel=(CD3DWOWM2ItemModel *)GetChildByStorageIDRecursive(pLocalHead->HelmetModelStorageID);
-//
-//	if(pLocalHead->LeftShoulderModelStorageID)
-//		m_pLeftShoulderModel=(CD3DWOWM2ItemModel *)GetChildByStorageIDRecursive(pLocalHead->LeftShoulderModelStorageID);
-//
-//	if(pLocalHead->RightShoulderModelStorageID)
-//		m_pRightShoulderModel=(CD3DWOWM2ItemModel *)GetChildByStorageIDRecursive(pLocalHead->RightShoulderModelStorageID);
-//
-//	if(pLocalHead->LeftWeaponModelStorageID)
-//		m_pLeftWeaponModel=(CD3DWOWM2ItemModel *)GetChildByStorageIDRecursive(pLocalHead->LeftWeaponModelStorageID);
-//
-//	if(pLocalHead->RightWeaponModelStorageID)
-//		m_pRightWeaponModel=(CD3DWOWM2ItemModel *)GetChildByStorageIDRecursive(pLocalHead->RightWeaponModelStorageID);
-//	
-//	return true;
-//}
 
 }

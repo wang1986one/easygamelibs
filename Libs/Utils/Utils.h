@@ -140,16 +140,19 @@ enum EASY_DATA_STORAGE_MODE
 #include "LinuxFileAccessorObjectCreator.h"
 #endif
 
+#include "FilePathManager.h"
 
 
 #include "SettingFile.h"
 #include "StringFile.h"
+#include "CSVReader.h"
+
 #ifdef WIN32
 #include "FileSearcherWin.h"
 #else
 #include "FileSearcherLinux.h"
 #endif
-#include "FilePathManager.h"
+
 #include "USOObjectCreateFilter.h"
 #include "USOFile.h"
 
@@ -186,8 +189,13 @@ enum EASY_DATA_STORAGE_MODE
 #include "ThreadSafeStaticMap.h"
 #include "FastMemoryPool.h"
 
-
-#include "ExpressionCaculator.h"
+#include "EasyScriptTypes.h"
+#include "ESVariableList.h"
+#include "ESFactionList.h"
+#include "ESBolanStack.h"
+#include "ESThread.h"
+#include "ESFunctionLib.h"
+#include "EasyScriptExecutor.h"
 
 #include "LZWPack.h"
 #ifdef WIN32
