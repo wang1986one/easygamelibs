@@ -80,7 +80,7 @@ protected:
 	HBITMAP							m_CharBmp;
 	DWORD *							m_pBitmapBits;
 
-	CD3DRender						m_Render;
+	CD3DUIRender					m_Render;
 	CD3DFontCharClip				m_DrawClip;
 
 	DECLARE_CLASS_INFO(CD3DFontCN)

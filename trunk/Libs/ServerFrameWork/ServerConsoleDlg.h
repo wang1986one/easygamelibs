@@ -29,18 +29,21 @@ public:
 
 	void RegisterTrayIcon(LPCTSTR szTip);
 	void UnregisterTrayIcon();
+	void SetServer(IBaseServer * pServer);
 
 // 对话框数据
 	enum { IDD = IDD_SERVER_CONSOLE };
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
-
+	
 	
 // 实现
 protected:
 	HICON m_hIcon;
+	IBaseServer *		m_pServer;
 
+	
 	// 生成的消息映射函数
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
@@ -79,3 +82,8 @@ protected:
 public:
 	afx_msg void OnBnClickedShowServerStatus();
 };
+
+inline void CServerConsoleDlg::SetServer(IBaseServer * pServer)
+{
+	m_pServer=pServer;
+}

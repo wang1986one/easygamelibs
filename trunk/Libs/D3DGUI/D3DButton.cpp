@@ -423,19 +423,19 @@ void CD3DButton::LoadTextureFromXML(xml_node& Texture)
 	}
 }
 
-void CD3DButton::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+void CD3DButton::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
 	for(int i=0;i<BUTTON_STATUS_MAX;i++)
 	{
 		if(m_pStatusInfo[i].pTexture)
 		{
-			m_pStatusInfo[i].pTexture->PickResource(pObjectSet,Param);
+			m_pStatusInfo[i].pTexture->PickResource(pResourceManager,Param);
 		}
 	}		
 
 	for(int i=0;i<(int)m_ChildWndList.size();i++)
 	{
-		m_ChildWndList[i]->PickResource(pObjectSet,Param);
+		m_ChildWndList[i]->PickResource(pResourceManager,Param);
 	}	
 }
 

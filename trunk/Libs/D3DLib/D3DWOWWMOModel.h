@@ -54,19 +54,25 @@ public:
 	void DoPortalCull(CD3DCamera * pCamera);
 
 public:
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
+
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 
-	//virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+
 	virtual void Update(FLOAT Time);
 	virtual int GetSubMeshCount();
 	virtual CD3DSubMesh * GetSubMesh(UINT index);
-	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(int index);
+	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(UINT index);
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();
+
+	bool GetHeightByXZ(const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight);
 
 protected:
 	void BuildGroups();

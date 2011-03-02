@@ -32,13 +32,21 @@ void CDOSRouterLink::OnLinkEnd()
 {
 	FUNCTION_BEGIN;
 	PrintDOSLog(0xff0000,"路由(%d)的连接断开！",GetID());
+	OBJECT_ID SenderID;
+	SenderID.RouterID=GetID();
+	OBJECT_ID TargetID;
+	TargetID.RouterID=0;
+	TargetID.ObjectTypeID=BROAD_CAST_OBJECT_TYPE_ID;
+	TargetID.GroupIndex=BROAD_CAST_GROUP_INDEX;
+	TargetID.ObjectIndex=BROAD_CAST_OBJECT_INDEX;
+	GetRouter()->RouterMessage(SenderID,TargetID,DSM_ROUTE_LINK_LOST,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE,NULL,0);
 	FUNCTION_END;
 }
 
 void CDOSRouterLink::OnData(const CEasyBuffer& DataBuffer)
 {	
 	FUNCTION_BEGIN;
-	WORD PacketLen=*((WORD *)DataBuffer.GetBuffer());
+	MSG_LEN_TYPE PacketLen=*((MSG_LEN_TYPE *)DataBuffer.GetBuffer());
 	CDOSMessagePacket * pNewPacket=GetRouter()->GetServer()->NewMessagePacket(PacketLen);
 	if(pNewPacket)
 	{

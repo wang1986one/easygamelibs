@@ -83,6 +83,11 @@ void CDOSProxyConnection::OnConnection(BOOL IsSucceed)
 {	
 	FUNCTION_BEGIN;
 	PrintDOSDebugLog(0xff0000,"收到代理对象的连接！");
+	SetSendDelay(((CDOSServer *)GetServer())->GetConfig().ProxySendDelay);
+	SetSendQueryLimit(((CDOSServer *)GetServer())->GetConfig().ProxySendQueryLimit);
+	PrintDOSDebugLog(0xff0000,"发送延时设置为%u,并发发送限制为%u",
+		((CDOSServer *)GetServer())->GetConfig().ProxySendDelay,
+		((CDOSServer *)GetServer())->GetConfig().ProxySendQueryLimit);
 	FUNCTION_END;
 }
 void CDOSProxyConnection::OnDisconnection()
@@ -96,11 +101,11 @@ void CDOSProxyConnection::OnDisconnection()
 void CDOSProxyConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 {
 	FUNCTION_BEGIN;
-	WORD PacketSize=0;
+	MSG_LEN_TYPE PacketSize=0;
 	UINT PeekPos=0;
 	m_AssembleBuffer.PushBack(DataBuffer.GetBuffer(),DataBuffer.GetUsedSize());
 
-	m_AssembleBuffer.Peek(PeekPos,&PacketSize,sizeof(WORD));
+	m_AssembleBuffer.Peek(PeekPos,&PacketSize,sizeof(MSG_LEN_TYPE));
 	while(m_AssembleBuffer.GetUsedSize()>=PacketSize&&PacketSize)
 	{
 		if(PacketSize<CDOSSimpleMessage::GetMsgHeaderLength())
@@ -112,7 +117,7 @@ void CDOSProxyConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 		m_AssembleBuffer.PopFront(NULL,PacketSize);
 		PeekPos=0;
 		PacketSize=0;
-		m_AssembleBuffer.Peek(PeekPos,&PacketSize,sizeof(WORD));
+		m_AssembleBuffer.Peek(PeekPos,&PacketSize,sizeof(MSG_LEN_TYPE));
 	}
 	FUNCTION_END;
 }
@@ -120,7 +125,7 @@ void CDOSProxyConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 void CDOSProxyConnection::OnMsg(CDOSSimpleMessage * pMessage)
 {
 	FUNCTION_BEGIN;
-	SendInSideMsg(pMessage->GetCmdID(),pMessage->GetDataBuffer(),pMessage->GetDataLength());
+	SendInSideMsg(pMessage->GetMsgID(),pMessage->GetDataBuffer(),pMessage->GetDataLength());
 	FUNCTION_END;
 }
 
@@ -149,7 +154,7 @@ int CDOSProxyConnection::Update(int ProcessPacketLimit)
 	CDOSMessagePacket * pPacket;
 	while(m_MsgQueue.PopFront(pPacket))
 	{
-		PrintDOSDebugLog(0,"发送了消息[%u]",pPacket->GetMessage().GetCmdID());
+		//PrintDOSDebugLog(0,"发送了消息[%u]",pPacket->GetMessage().GetMsgID());
 
 		SendOutSideMsg(pPacket);
 		if(!GetServer()->ReleaseMessagePacket(pPacket))
@@ -178,20 +183,20 @@ inline CDOSServer * CDOSProxyConnection::GetServer()
 }
 
 
-BOOL CDOSProxyConnection::SendInSideMsg(WORD CmdID,LPVOID pData,UINT DataSize)
+BOOL CDOSProxyConnection::SendInSideMsg(MSG_ID_TYPE MsgID,LPVOID pData,UINT DataSize)
 {
 	FUNCTION_BEGIN;
 	int PacketSize=CDOSMessagePacket::CaculatePacketLength(DataSize,1);
 
 	
-	OBJECT_ID TargetObjectID=GetMsgMapObjectID(CmdID);
+	OBJECT_ID TargetObjectID=GetMsgMapObjectID(MsgID);
 	if(TargetObjectID.ID)
 	{
-		return GetServer()->GetRouter()->RouterMessage(m_ObjectID,TargetObjectID,CmdID,pData,DataSize);
+		return GetServer()->GetRouter()->RouterMessage(m_ObjectID,TargetObjectID,MsgID,0,pData,DataSize);
 	}
 	else
 	{
-		PrintDOSLog(0xff0000,"无法找到消息%u的接收者！",CmdID);
+		PrintDOSLog(0xff0000,"无法找到消息%u的接收者！",MsgID);
 		return FALSE;
 	}
 	FUNCTION_END;
@@ -203,33 +208,36 @@ BOOL CDOSProxyConnection::SendInSideMsg(WORD CmdID,LPVOID pData,UINT DataSize)
 inline BOOL CDOSProxyConnection::SendOutSideMsg(CDOSMessagePacket * pPacket)
 {
 	FUNCTION_BEGIN;
-	switch(pPacket->GetMessage().GetCmdID())
+	switch(pPacket->GetMessage().GetMsgID())
 	{
 	case DSM_PROXY_REGISTER_MSG_MAP:
-		if(pPacket->GetMessage().GetDataLength()>=sizeof(WORD))
+		if(pPacket->GetMessage().GetDataLength()>=sizeof(MSG_ID_TYPE))
 		{
-			int Count=(pPacket->GetMessage().GetDataLength())/sizeof(WORD);
-			WORD * pCmdIDs=(WORD *)(pPacket->GetMessage().GetDataBuffer());
+			int Count=(pPacket->GetMessage().GetDataLength())/sizeof(MSG_ID_TYPE);
+			MSG_ID_TYPE * pMsgIDs=(MSG_ID_TYPE *)(pPacket->GetMessage().GetDataBuffer());
 			for(int i=0;i<Count;i++)
 			{
-				RegisterMsgMap(pCmdIDs[i],pPacket->GetMessage().GetSenderID());
+				RegisterMsgMap(pMsgIDs[i],pPacket->GetMessage().GetSenderID());
 			}
 		}
 		return TRUE;
 	case DSM_PROXY_UNREGISTER_MSG_MAP:
-		if(pPacket->GetMessage().GetDataLength()>=sizeof(WORD))
+		if(pPacket->GetMessage().GetDataLength()>=sizeof(MSG_ID_TYPE))
 		{
-			int Count=(pPacket->GetMessage().GetDataLength())/sizeof(WORD);
-			WORD * pCmdIDs=(WORD *)(pPacket->GetMessage().GetDataBuffer());
+			int Count=(pPacket->GetMessage().GetDataLength())/sizeof(MSG_ID_TYPE);
+			MSG_ID_TYPE * pMsgIDs=(MSG_ID_TYPE *)(pPacket->GetMessage().GetDataBuffer());
 			for(int i=0;i<Count;i++)
 			{
-				UnregisterMsgMap(pCmdIDs[i],pPacket->GetMessage().GetSenderID());
+				UnregisterMsgMap(pMsgIDs[i],pPacket->GetMessage().GetSenderID());
 			}
 		}
 		return TRUE;
 	case DSM_PROXY_DISCONNECT:
 		Disconnect();
 		PrintDOSDebugLog(0xff0000,"连接被0x%llX断开了！",pPacket->GetMessage().GetSenderID().ID);
+		return TRUE;
+	case DSM_ROUTE_LINK_LOST:
+		ClearMsgMapByRouterID(pPacket->GetMessage().GetSenderID().RouterID);
 		return TRUE;
 	default:
 		{
@@ -255,15 +263,15 @@ BOOL CDOSProxyConnection::SendDisconnectNotify()
 	}
 	
 	pNewPacket->SetTargetIDs(0,NULL);
-	pNewPacket->GetMessage().SetCmdID(DSM_PROXY_DISCONNECT);
+	pNewPacket->GetMessage().SetMsgID(DSM_PROXY_DISCONNECT);
 	pNewPacket->GetMessage().SetSenderID(m_ObjectID);
 	OBJECT_ID * pTargetObjectIDs=pNewPacket->GetTargetIDs();
 
 	void * Pos=m_MessageMap.GetFirstObjectPos();
 	while(Pos)
 	{
-		WORD CmdID;
-		OBJECT_ID * pTargetObjectID=m_MessageMap.GetNextObject(Pos,CmdID);
+		MSG_ID_TYPE MsgID;
+		OBJECT_ID * pTargetObjectID=m_MessageMap.GetNextObject(Pos,MsgID);
 		pNewPacket->AddTargetID(*pTargetObjectID);
 	}
 	
@@ -279,7 +287,7 @@ BOOL CDOSProxyConnection::SendDisconnectNotify()
 }
 
 
-OBJECT_ID CDOSProxyConnection::GetMsgMapObjectID(WORD CmdID)
+OBJECT_ID CDOSProxyConnection::GetMsgMapObjectID(MSG_ID_TYPE CmdID)
 {	
 	FUNCTION_BEGIN;
 	OBJECT_ID * pObjectID=m_MessageMap.Find(CmdID);
@@ -296,19 +304,19 @@ OBJECT_ID CDOSProxyConnection::GetMsgMapObjectID(WORD CmdID)
 }
 
 
-BOOL CDOSProxyConnection::RegisterMsgMap(WORD CmdID,OBJECT_ID ObjectID)
+BOOL CDOSProxyConnection::RegisterMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID)
 {
 	FUNCTION_BEGIN;
-	PrintDOSDebugLog(0xff0000,"0x%llX注册了代理[0x%X]消息映射[%u]！",ObjectID.ID,GetID(),CmdID);
-	return m_MessageMap.Insert(CmdID,ObjectID);
+	PrintDOSDebugLog(0xff0000,"0x%llX注册了代理[0x%X]消息映射[%u]！",ObjectID.ID,GetID(),MsgID);
+	return m_MessageMap.Insert(MsgID,ObjectID);
 	FUNCTION_END;
 	return FALSE;
 }
-BOOL CDOSProxyConnection::UnregisterMsgMap(WORD CmdID,OBJECT_ID ObjectID)
+BOOL CDOSProxyConnection::UnregisterMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID)
 {
 	FUNCTION_BEGIN;
-	PrintDOSDebugLog(0xff0000,"0x%llX注销了代理[0x%X]消息映射[%u]！",ObjectID.ID,GetID(),CmdID);
-	return m_MessageMap.Delete(CmdID);
+	PrintDOSDebugLog(0xff0000,"0x%llX注销了代理[0x%X]消息映射[%u]！",ObjectID.ID,GetID(),MsgID);
+	return m_MessageMap.Delete(MsgID);
 	FUNCTION_END;
 	return FALSE;
 }
@@ -372,4 +380,25 @@ int CDOSProxyConnection::FindMinObjectID(OBJECT_ID * pObjectIDs,UINT Count)
 	return MinPtr;
 	FUNCTION_END;
 	return 0;
+}
+
+void CDOSProxyConnection::ClearMsgMapByRouterID(UINT RouterID)
+{
+	FUNCTION_BEGIN;
+	void * Pos=m_MessageMap.GetFirstObjectPos();
+	while(Pos)
+	{
+		MSG_ID_TYPE MsgID;
+		OBJECT_ID * pObjectID=m_MessageMap.GetNextObject(Pos,MsgID);
+		if(pObjectID->RouterID==RouterID)
+		{
+			m_MessageMap.Delete(MsgID);
+		}
+	}
+	if(m_MessageMap.GetObjectCount()<=0)
+	{
+		PrintDOSLog(0xff0000,"代理[0x%X]已经没有任何消息映射，连接断开！",GetID());
+		Disconnect();
+	}
+	FUNCTION_END;
 }

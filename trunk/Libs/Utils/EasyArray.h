@@ -133,21 +133,15 @@ public:
 	{
 		if(Index<m_ArrayLength)
 		{
-			if((m_BufferSize-m_ArrayLength<m_GrowSize)||(m_BufferSize<=m_GrowSize))
+			DestructObjects(m_pBuffer+Index,1);
+			if(m_ArrayLength-Index-1)
+				memmove(m_pBuffer+Index,m_pBuffer+Index+1,sizeof(T)*(m_ArrayLength-Index-1));				
+			m_ArrayLength--;
+
+			if(m_BufferSize-m_ArrayLength>=m_GrowSize)
 			{
-				DestructObjects(m_pBuffer+Index,1);
-				if(m_ArrayLength-Index-1)
-					memmove(m_pBuffer+Index,m_pBuffer+Index+1,sizeof(T)*(m_ArrayLength-Index-1));
-				ConstructObjects(m_pBuffer+m_ArrayLength-1,1);
-				m_ArrayLength--;
-			}
-			else
-			{
-				DestructObjects(m_pBuffer+Index,1);
-				DeleteResize(Index,m_BufferSize-m_GrowSize);
-				ConstructObjects(m_pBuffer+m_ArrayLength-1,1);
-				m_ArrayLength--;
-			}
+				ShrinkBuffer(m_BufferSize-m_GrowSize);
+			}			
 			return true;
 		}
 		return false;
@@ -210,7 +204,8 @@ public:
 	}
 	const CEasyArray& operator=(const CEasyArray& Array)
 	{
-		Create(Array.m_ArrayLength,Array.m_GrowSize);
+		if(m_BufferSize<Array.m_ArrayLength)
+			Create(Array.m_ArrayLength,m_GrowSize);
 		m_ArrayLength=Array.m_ArrayLength;
 		for(UINT i=0;i<m_ArrayLength;i++)
 		{
@@ -268,42 +263,21 @@ protected:
 		m_BufferSize=NewSize;
 		free(m_pBuffer);
 		m_pBuffer=pNewBuffer;
-	}
-	//void ReserveBuffer(UINT NewSize)
-	//{
-	//	if(NewSize>m_BufferSize)
-	//	{
-	//		T * pNewBuffer=(T *)malloc(sizeof(T)*NewSize);
-	//		UINT CopySize=m_BufferSize;
-	//		memcpy(pNewBuffer,m_pBuffer,sizeof(T)*CopySize);
-	//		m_BufferSize=NewSize;
-	//		free(m_pBuffer);
-	//		m_pBuffer=pNewBuffer;
-	//	}
-	//}
-	void DeleteResize(UINT Index,UINT NewSize)
+	}	
+	void ShrinkBuffer(UINT NewSize)
 	{		
-		if(Index>=NewSize)
+		if(NewSize==0)
+		{
+			Clear();
 			return;
-		T * pNewBuffer=(T *)malloc(sizeof(T)*NewSize);		
-		if(Index)
-			memcpy(pNewBuffer,m_pBuffer,sizeof(T)*Index);
-		UINT CopySize;
-		if(NewSize>m_BufferSize)
-			CopySize=m_BufferSize-Index-1;
-		else
-			CopySize=NewSize-Index-1;
-		if(CopySize)
-			memcpy(pNewBuffer+Index,m_pBuffer+Index+1,sizeof(T)*CopySize);
-		
-		if(NewSize>m_BufferSize)
-		{
-			ConstructObjects(pNewBuffer+m_BufferSize,NewSize-m_BufferSize);
 		}
-		else
+		if(NewSize>=m_BufferSize)
 		{
-			DestructObjects(m_pBuffer+NewSize,m_BufferSize-NewSize);
+			assert(NewSize<m_BufferSize);
+			return;
 		}
+		T * pNewBuffer=(T *)malloc(sizeof(T)*NewSize);				
+		memcpy(pNewBuffer,m_pBuffer,sizeof(T)*m_ArrayLength);
 		m_BufferSize=NewSize;
 		free(m_pBuffer);
 		m_pBuffer=pNewBuffer;

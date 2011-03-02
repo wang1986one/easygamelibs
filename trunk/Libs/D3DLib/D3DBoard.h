@@ -26,12 +26,11 @@ public:
 
 	bool Create(CD3DVector3 V1,CD3DVector3 V2,CD3DVector3 V3,CD3DVector3 V4,CD3DVector3 Normal,D3DCOLOR Color);
 
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 	virtual int GetSubMeshCount();
 	virtual CD3DSubMesh * GetSubMesh(UINT index);
 	virtual CD3DBoundingBox * GetBoundingBox();
 
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 };
 

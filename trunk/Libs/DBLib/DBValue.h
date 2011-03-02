@@ -47,6 +47,7 @@ public:
 	CDBValue(const DB_DATE& Value);
 	CDBValue(const DB_TIME& Value);
 	CDBValue(const DB_TIMESTAMP& Value);
+	CDBValue(const CEasyTime& Value);
 	CDBValue(const DB_GUID& Value);
 
 
@@ -85,6 +86,7 @@ public:
 	operator DB_DATE();
 	operator DB_TIME();
 	operator DB_TIMESTAMP();
+	operator CEasyTime();
 	operator DB_GUID();
 	operator const void *();
 
@@ -109,6 +111,7 @@ public:
 	void operator=(const DB_DATE& Value);
 	void operator=(const DB_TIME& Value);
 	void operator=(const DB_TIMESTAMP& Value);
+	void operator=(const CEasyTime& Value);
 	void operator=(const DB_GUID& Value);
 };
 

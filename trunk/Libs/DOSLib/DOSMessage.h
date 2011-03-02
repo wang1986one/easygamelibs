@@ -13,6 +13,11 @@
 
 #define MAX_MESSAGE_PACKET_SIZE		4096
 
+typedef DWORD	MSG_ID_TYPE;
+typedef DWORD	MSG_LEN_TYPE;
+typedef WORD	ID_LIST_COUNT_TYPE;
+
+
 #pragma pack(push)
 
 #pragma pack(1)
@@ -22,8 +27,9 @@ class CDOSSimpleMessage
 public:
 	struct DOS_SIMPLE_MESSAGE_HEAD
 	{
-		WORD		MsgLen;
-		WORD		CmdID;	
+		MSG_LEN_TYPE	MsgLen;
+		MSG_ID_TYPE		MsgID;	
+		WORD			MsgFlag;
 	};	
 protected:
 	DOS_SIMPLE_MESSAGE_HEAD	m_MsgHeader;
@@ -32,27 +38,36 @@ public:
 	void Init()
 	{
 		m_MsgHeader.MsgLen=sizeof(DOS_SIMPLE_MESSAGE_HEAD);
-		m_MsgHeader.CmdID=0;		
+		m_MsgHeader.MsgID=0;		
+		m_MsgHeader.MsgFlag=0;
 	}
-	void SetCmdID(WORD CmdID)
+	void SetMsgID(MSG_ID_TYPE CmdID)
 	{
-		m_MsgHeader.CmdID=CmdID;
+		m_MsgHeader.MsgID=CmdID;
 	}
-	WORD GetCmdID() const
+	MSG_ID_TYPE GetMsgID() const
 	{
-		return m_MsgHeader.CmdID;
+		return m_MsgHeader.MsgID;
 	}
-	void SetDataLength(WORD Length)
+	void SetDataLength(MSG_LEN_TYPE Length)
 	{
 		m_MsgHeader.MsgLen=sizeof(DOS_SIMPLE_MESSAGE_HEAD)+Length;
 	}
-	WORD GetDataLength() const
+	MSG_LEN_TYPE GetDataLength() const
 	{
 		return m_MsgHeader.MsgLen-sizeof(DOS_SIMPLE_MESSAGE_HEAD);
 	}
-	WORD GetMsgLength() const
+	MSG_LEN_TYPE GetMsgLength() const
 	{
 		return m_MsgHeader.MsgLen;
+	}
+	void SetMsgFlag(WORD Flag)
+	{
+		m_MsgHeader.MsgFlag=Flag;
+	}
+	WORD GetMsgFlag()
+	{
+		return m_MsgHeader.MsgFlag;
 	}
 	void * GetDataBuffer()
 	{
@@ -69,11 +84,11 @@ public:
 		CSmartStruct DataPacket(m_DataBuffer,GetDataLength(),true);
 	}
 	
-	static WORD GetMsgHeaderLength()
+	static MSG_LEN_TYPE GetMsgHeaderLength()
 	{
 		return sizeof(DOS_SIMPLE_MESSAGE_HEAD);
 	}
-	static WORD CaculateMsgLength(WORD DataLength)
+	static MSG_LEN_TYPE CaculateMsgLength(MSG_LEN_TYPE DataLength)
 	{
 		return sizeof(DOS_SIMPLE_MESSAGE_HEAD)+DataLength;
 	}
@@ -88,9 +103,10 @@ protected:
 		{
 			struct
 			{
-				WORD		MsgLen;		
-				WORD		CmdID;
-				OBJECT_ID	SenderID;
+				MSG_LEN_TYPE	MsgLen;		
+				MSG_ID_TYPE		MsgID;
+				WORD			MsgFlag;
+				OBJECT_ID		SenderID;
 			};
 			struct  
 			{
@@ -105,31 +121,40 @@ public:
 	void Init()
 	{
 		m_MsgHeader.MsgLen=sizeof(DOS_MESSAGE_HEAD);
-		m_MsgHeader.CmdID=0;
+		m_MsgHeader.MsgID=0;
+		m_MsgHeader.MsgFlag=0;
 		m_MsgHeader.SenderID.ID=0;
 	}
-	void SetCmdID(WORD CmdID)
+	void SetMsgID(MSG_ID_TYPE CmdID)
 	{
-		m_MsgHeader.CmdID=CmdID;
+		m_MsgHeader.MsgID=CmdID;
 	}
-	WORD GetCmdID() const
+	MSG_ID_TYPE GetMsgID() const
 	{
-		return m_MsgHeader.CmdID;
+		return m_MsgHeader.MsgID;
 	}
-	void SetDataLength(WORD Length)
+	void SetDataLength(MSG_LEN_TYPE Length)
 	{
 		m_MsgHeader.MsgLen=sizeof(DOS_MESSAGE_HEAD)+Length;
 	}
-	WORD GetDataLength() const
+	MSG_LEN_TYPE GetDataLength() const
 	{
 		return m_MsgHeader.MsgLen-sizeof(DOS_MESSAGE_HEAD);
 	}
-	void SetData(LPVOID pData,WORD Length)
+	void SetMsgFlag(WORD Flag)
+	{
+		m_MsgHeader.MsgFlag=Flag;
+	}
+	WORD GetMsgFlag()
+	{
+		return m_MsgHeader.MsgFlag;
+	}
+	void SetData(LPVOID pData,MSG_LEN_TYPE Length)
 	{
 		SetDataLength(Length);
 		memcpy(m_DataBuffer,pData,Length);
 	}
-	WORD GetMsgLength() const
+	MSG_LEN_TYPE GetMsgLength() const
 	{
 		return m_MsgHeader.MsgLen;
 	}
@@ -163,15 +188,16 @@ public:
 	}
 	CDOSSimpleMessage * MakeSimpleMessage()
 	{
-		m_MsgHeader.SimpleMsgHeader.MsgLen=CDOSSimpleMessage::GetMsgHeaderLength()+GetDataLength();
-		m_MsgHeader.SimpleMsgHeader.CmdID=m_MsgHeader.CmdID;
+		m_MsgHeader.SimpleMsgHeader.MsgFlag=m_MsgHeader.MsgFlag;
+		m_MsgHeader.SimpleMsgHeader.MsgID=m_MsgHeader.MsgID;
+		m_MsgHeader.SimpleMsgHeader.MsgLen=CDOSSimpleMessage::GetMsgHeaderLength()+GetDataLength();		
 		return (CDOSSimpleMessage *)(&m_MsgHeader.SimpleMsgHeader);
 	}
-	static WORD GetMsgHeaderLength()
+	static MSG_LEN_TYPE GetMsgHeaderLength()
 	{
 		return sizeof(DOS_MESSAGE_HEAD);
 	}
-	static WORD CaculateMsgLength(WORD DataLength)
+	static MSG_LEN_TYPE CaculateMsgLength(MSG_LEN_TYPE DataLength)
 	{
 		return sizeof(DOS_MESSAGE_HEAD)+DataLength;
 	}
@@ -182,7 +208,7 @@ class CDOSMessagePacket
 protected:
 	UINT			m_AllocTime;
 	volatile UINT	m_RefCount;
-	WORD			m_PacketLen;
+	MSG_LEN_TYPE	m_PacketLen;
 	CDOSMessage		m_Message;
 public:	
 	void Init()
@@ -190,7 +216,7 @@ public:
 		m_Message.Init();
 		m_AllocTime=0;
 		m_RefCount=0;
-		m_PacketLen=sizeof(WORD)+CDOSMessage::GetMsgHeaderLength()+sizeof(WORD);
+		m_PacketLen=sizeof(MSG_LEN_TYPE)+CDOSMessage::GetMsgHeaderLength()+sizeof(ID_LIST_COUNT_TYPE);
 	}
 	CDOSMessage& GetMessage()
 	{
@@ -216,11 +242,11 @@ public:
 	{
 		return m_RefCount;
 	}
-	void SetPacketLength(WORD PacketLength)
+	void SetPacketLength(MSG_LEN_TYPE PacketLength)
 	{
 		m_PacketLen=PacketLength;
 	}
-	WORD GetPacketLength() const
+	MSG_LEN_TYPE GetPacketLength() const
 	{
 		return m_PacketLen;
 	}
@@ -228,19 +254,19 @@ public:
 	{
 		return &m_PacketLen;
 	}	
-	void SetTargetIDs(WORD TargetCount,OBJECT_ID * pTargetIDs)
+	void SetTargetIDs(ID_LIST_COUNT_TYPE TargetCount,OBJECT_ID * pTargetIDs)
 	{
 		GetTargetIDCount()=TargetCount;
 		if(pTargetIDs)
 			memcpy(GetTargetIDs(),pTargetIDs,sizeof(OBJECT_ID)*TargetCount);
 	}
-	WORD& GetTargetIDCount()
+	ID_LIST_COUNT_TYPE& GetTargetIDCount()
 	{
-		return *((WORD *)((BYTE *)GetPacketBuffer()+sizeof(WORD)+m_Message.GetMsgLength()));
+		return *((ID_LIST_COUNT_TYPE *)((BYTE *)GetPacketBuffer()+sizeof(MSG_LEN_TYPE)+m_Message.GetMsgLength()));
 	}
 	OBJECT_ID * GetTargetIDs()
 	{
-		return (OBJECT_ID *)((BYTE *)GetPacketBuffer()+sizeof(WORD)+m_Message.GetMsgLength()+sizeof(WORD));
+		return (OBJECT_ID *)((BYTE *)GetPacketBuffer()+sizeof(MSG_LEN_TYPE)+m_Message.GetMsgLength()+sizeof(ID_LIST_COUNT_TYPE));
 	}
 	void AddTargetID(OBJECT_ID TargetID)
 	{
@@ -249,13 +275,13 @@ public:
 	}
 	void MakePacketLength()
 	{
-		m_PacketLen=sizeof(WORD)+GetMessage().GetMsgLength()+sizeof(WORD)+sizeof(OBJECT_ID)*GetTargetIDCount();
+		m_PacketLen=sizeof(MSG_LEN_TYPE)+GetMessage().GetMsgLength()+sizeof(ID_LIST_COUNT_TYPE)+sizeof(OBJECT_ID)*GetTargetIDCount();
 	}
-	static WORD CaculatePacketLength(WORD DataLength,WORD TargetIDCount)
+	static MSG_LEN_TYPE CaculatePacketLength(MSG_LEN_TYPE DataLength,ID_LIST_COUNT_TYPE TargetIDCount)
 	{
-		return sizeof(WORD)+CDOSMessage::CaculateMsgLength(DataLength)+sizeof(WORD)+sizeof(OBJECT_ID)*TargetIDCount;
+		return sizeof(MSG_LEN_TYPE)+CDOSMessage::CaculateMsgLength(DataLength)+sizeof(ID_LIST_COUNT_TYPE)+sizeof(OBJECT_ID)*TargetIDCount;
 	}
-	static WORD CaculateRealPacketLength(WORD PacketLength)
+	static MSG_LEN_TYPE CaculateRealPacketLength(MSG_LEN_TYPE PacketLength)
 	{
 		return sizeof(UINT)+sizeof(UINT)+PacketLength;
 	}
@@ -263,60 +289,23 @@ public:
 
 #pragma pack(pop)
 
-//struct DOS_MESSAGE_HEAD
-//{
-//	WORD		MsgLen;		
-//	WORD		CmdID;
-//	OBJECT_ID	SenderID;
-//};
-//
-//struct DOS_MESSAGE
-//{
-//	DOS_MESSAGE_HEAD	Header;
-//	char				Datas[1];
-//};
-//
-//struct DOS_MESSAGE_PACKET
-//{
-//	WORD		PacketLen;
-//	WORD		RefCount;
-//	DOS_MESSAGE Msg;
-//};
-//
-//struct DOS_MESSAGE_PACKET_HEAD
-//{
-//	WORD				PacketLen;
-//	WORD				RefCount;
-//	DOS_MESSAGE_HEAD	Header;
-//};
-//
-//struct DOS_SIMPLE_MESSAGE_HEAD
-//{
-//	WORD		MsgLen;
-//	WORD		CmdID;	
-//};
-//
-//struct DOS_SIMPLE_MESSAGE
-//{
-//	DOS_SIMPLE_MESSAGE_HEAD	Header;
-//	char					Datas[1];
-//};
-
 enum DOS_SYSTEM_MESSAGE
 {
 	DSM_NONE=0,
-	//DSM_ROUTER_REGISTER,
-	//注册路由，通知自己的路由ID
-	//DSM_PROXY_OBJECT_REGISTER,
-	//DSM_PROXY_OBJECT_UNREGISTER,
-	//DSM_PROXY_OBJECT_CHANGE_LINK,
+	
 	DSM_PROXY_REGISTER_MSG_MAP,
 	DSM_PROXY_UNREGISTER_MSG_MAP,
 	DSM_PROXY_REGISTER_GLOBAL_MSG_MAP,
 	DSM_PROXY_UNREGISTER_GLOBAL_MSG_MAP,
 	DSM_PROXY_DISCONNECT,
-	//OBJECT_ID NewLinkObjectID;
-	//DSM_PROXY_OBJECT_CLOSE,
+	DSM_PROXY_KEEP_ALIVE,
+
+	DSM_ROUTE_LINK_LOST,
+	
 	DSM_MAX,
 };
 
+enum DOS_MESSAGE_FLAG
+{
+	DOS_MESSAGE_FLAG_SYSTEM_MESSAGE=1,
+};

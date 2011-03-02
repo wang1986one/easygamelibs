@@ -29,7 +29,7 @@ public:
 	CD3DGUITextRect(FLOAT_RECT& Rect);
 	virtual ~CD3DGUITextRect(void);
 
-	virtual void SetRender(CD3DRender * pRender);
+	virtual void SetRender(CD3DBaseRender * pRender);
 
 	virtual void SetPos(FLOAT X,FLOAT Y);
 	virtual FLOAT GetXPos();
@@ -80,7 +80,9 @@ public:
 
 	virtual void Release();
 public:
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRenderData();
 	virtual void Update(FLOAT Time);
 	virtual int GetSubMeshCount()
 	{

@@ -69,6 +69,7 @@ public:
 
 	//获得位移
 	CD3DVector3 GetTranslation() const;
+	CD3DMatrix GetTranslationMatrix() const;
 	//设置位移
 	void SetTranslation(const D3DVECTOR& Translation);
 	void SetTranslation(FLOAT x,FLOAT y,FLOAT z);
@@ -86,7 +87,12 @@ public:
 	//设置缩放
 	void SetScale(const D3DVECTOR& Scale);	
 
-	void SetTransformation(const D3DXVECTOR3& Scale,const D3DXQUATERNION& Rotation,const D3DXVECTOR3& Translation);
+	CD3DMatrix GetScaleTranslation() const;
+
+	void SetTransformation(const D3DXVECTOR3 * pScale,const D3DXQUATERNION * pRotation,const D3DXVECTOR3 * pTranslation);
+	void GetTransformation(D3DXVECTOR3 * pScale,D3DXQUATERNION * pRotation,D3DXVECTOR3 * pTranslation) const;
+
+	bool IsValid() const;
 
 	//由位移建立矩阵
 	static CD3DMatrix FromTranslation(FLOAT x,FLOAT y,FLOAT z);
@@ -248,6 +254,19 @@ inline void CD3DMatrix::SetCol3v(int col, const D3DVECTOR& Vector)
 	m[2][col]=Vector.z;
 }
 
+inline CD3DMatrix CD3DMatrix::GetTranslationMatrix() const
+{
+	CD3DMatrix Mat;
+
+	Mat.SetIdentity();
+
+	Mat._41=_41;
+	Mat._42=_42;
+	Mat._43=_43;
+
+	return Mat;
+}
+
 inline CD3DVector3 CD3DMatrix::GetTranslation() const
 {
 	return CD3DVector3(_41, _42, _43);
@@ -325,9 +344,42 @@ inline void CD3DMatrix::SetScale(const D3DVECTOR& Scale)
 	SetTranslation(Trans);
 }
 
-inline void CD3DMatrix::SetTransformation(const D3DXVECTOR3& Scale,const D3DXQUATERNION& Rotation,const D3DXVECTOR3& Translation)
+inline CD3DMatrix CD3DMatrix::GetScaleTranslation() const
 {
-	D3DXMatrixTransformation(this,NULL,NULL,&Scale,NULL,&Rotation,&Translation);
+	CD3DMatrix Mat;
+	Mat.SetIdentity();
+	CD3DVector3 l1(_11, _12, _13), l2(_21, _22, _23), l3(_31, _32, _33);
+	Mat._11=l1.Length();
+	Mat._22=l2.Length();
+	Mat._33=l3.Length();
+	Mat._41=_41;
+	Mat._42=_42;
+	Mat._42=_42;
+
+	return Mat;
+}
+
+inline void CD3DMatrix::SetTransformation(const D3DXVECTOR3 * pScale,const D3DXQUATERNION * pRotation,const D3DXVECTOR3 * pTranslation)
+{
+	D3DXMatrixTransformation(this,NULL,NULL,pScale,NULL,pRotation,pTranslation);
+}
+
+inline void CD3DMatrix::GetTransformation(D3DXVECTOR3 * pScale,D3DXQUATERNION * pRotation,D3DXVECTOR3 * pTranslation) const
+{
+	D3DXMatrixDecompose(pScale,pRotation,pTranslation,this);
+}
+
+inline bool CD3DMatrix::IsValid() const
+{
+	for(UINT i=0;i<4;i++)
+	{
+		for(UINT j=0;j<4;j++)
+		{
+			if(!_finite(m[i][j]))
+				return false;
+		}
+	}
+	return true;
 }
 
 //由位移建立矩阵

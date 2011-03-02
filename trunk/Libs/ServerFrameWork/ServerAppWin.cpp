@@ -19,7 +19,7 @@
 CServerApp::CServerApp(void)
 	:CNTService(g_ServiceName,g_ServiceDesc)
 {
-	
+	m_pServer=NULL;
 }
 
 CServerApp::~CServerApp(void)
@@ -34,6 +34,28 @@ BOOL CServerApp::InitInstance()
  int CServerApp::ExitInstance()
  {
 	 return 0;
+ }
+
+ BOOL CServerApp::OnIdle(LONG lCount)
+ {
+	 // TODO: 在此添加专用代码和/或调用基类
+
+	 CWinApp::OnIdle(lCount);
+
+	 if(m_pServer)
+	 {
+		if(m_pServer->IsServerTerminated())
+		{
+			m_pMainWnd->PostMessage(WM_QUIT);
+		}
+	 }
+	 else
+	 {
+		 m_pMainWnd->PostMessage(WM_QUIT);
+	 }
+
+	 Sleep(1);
+	 return TRUE;
  }
 
  int CServerApp::Run()
@@ -69,6 +91,7 @@ void CServerApp::Run(DWORD argc, LPTSTR * argv)
 
 	if(OnStartUp())
 	{
+		pConsoleDlg->SetServer(m_pServer);
 		CWinApp::Run();
 	}
 
@@ -81,10 +104,9 @@ void CServerApp::Run(DWORD argc, LPTSTR * argv)
 
 void CServerApp::Stop()
 {
-	BOOL Ret;
 	ReportStatus(SERVICE_STOP_PENDING, 11000);
-	if(m_pMainWnd)
-		Ret=m_pMainWnd->PostMessage(WM_QUIT);
+	if(m_pServer)
+		m_pServer->QueryShowDown();
 }
 
 BOOL CServerApp::OnStartUp()

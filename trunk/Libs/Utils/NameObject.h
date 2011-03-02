@@ -148,7 +148,7 @@ public:\
 
 
 
-class CUSOFile;
+class CUSOResourceManager;
 
 
 
@@ -213,6 +213,7 @@ public:
 	void SetName(LPCTSTR Name);
 
 	LPCTSTR GetName();
+	UINT GetNameLength();
 
 	void SetID(UINT ID);
 
@@ -229,10 +230,10 @@ public:
 	
 	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
 	virtual bool StealFrom(CNameObject * pObject,UINT Param=0);
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
 
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 	
 
@@ -301,6 +302,11 @@ inline void CNameObject::SetName(LPCTSTR Name)
 inline LPCTSTR CNameObject::GetName()
 {
 	return m_Name;
+}
+
+inline UINT CNameObject::GetNameLength()
+{
+	return m_Name.GetLength();
 }
 
 inline void CNameObject::SetID(UINT ID)

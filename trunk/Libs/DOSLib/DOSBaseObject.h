@@ -26,14 +26,16 @@ protected:
 	CDOSRouter *								m_pRouter;
 	CDOSObjectManager *							m_pManager;
 	CDOSObjectGroup *							m_pGroup;
+	UINT										m_MsgProcessLimit;
 
-	CDOSMsgManager								m_MsgManager;
 	CThreadSafeIDStorage<CDOSMessagePacket *>	m_MsgQueue;
 
 	DECLARE_CLASS_INFO(CDOSBaseObject);
 public:
 	CDOSBaseObject(void);
 	virtual ~CDOSBaseObject(void);
+
+	bool Init(DOS_OBJECT_REGISTER_INFO& ObjectRegisterInfo);
 
 	virtual bool Initialize();
 	virtual void Destory();
@@ -53,34 +55,24 @@ public:
 	int DoCycle(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT);
 	BOOL PushMessage(CDOSMessagePacket * pPacket);
 
-	BOOL SendMessage(OBJECT_ID ReceiverID,WORD MsgID,LPCVOID pData=0,UINT DataSize=0);
-	BOOL SendMessageMulti(OBJECT_ID * pReceiverIDList,UINT ReceiverCount,bool IsSorted,WORD MsgID,LPCVOID pData=0,UINT DataSize=0);
+	BOOL SendMessage(OBJECT_ID ReceiverID,MSG_ID_TYPE MsgID,WORD MsgFlag=0,LPCVOID pData=0,UINT DataSize=0);
+	BOOL SendMessageMulti(OBJECT_ID * pReceiverIDList,UINT ReceiverCount,bool IsSorted,MSG_ID_TYPE MsgID,WORD MsgFlag=0,LPCVOID pData=0,UINT DataSize=0);
 
 	CDOSMessagePacket * NewMessagePacket(UINT DataSize,UINT ReceiverCount);
 	BOOL ReleaseMessagePacket(CDOSMessagePacket * pPacket);
 	BOOL SendMessagePacket(CDOSMessagePacket * pPacket);
 
-	BOOL InitMsgProc(int MaxMsgCount);
-	void RegisterMsgProc(WORD CmdID,DOS_MSG_PROC MsgProc);
-	void UnregisterMsgProc(WORD CmdID,DOS_MSG_PROC MsgProc);
-
-	BOOL RegisterMsgMap(OBJECT_ID ProxyObjectID,WORD * pCmdIDList,int CmdCount);
-	BOOL UnregisterMsgMap(OBJECT_ID ProxyObjectID,WORD * pCmdIDList,int CmdCount);
-	BOOL RegisterGlobalMsgMap(WORD ProxyRouterID,WORD * pCmdIDList,int CmdCount);
-	BOOL UnregisterGlobalMsgMap(WORD ProxyRouterID,WORD * pCmdIDList,int CmdCount);
+	BOOL RegisterMsgMap(OBJECT_ID ProxyObjectID,MSG_ID_TYPE * pMsgIDList,int CmdCount);
+	BOOL UnregisterMsgMap(OBJECT_ID ProxyObjectID,MSG_ID_TYPE * pMsgIDList,int CmdCount);
+	BOOL RegisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_TYPE * pMsgIDList,int CmdCount);
+	BOOL UnregisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_TYPE * pMsgIDList,int CmdCount);
 	
 protected:
-	virtual BOOL OnPreTranslateMessage(CDOSMessage * pMessage);
+	virtual BOOL OnMessage(CDOSMessage * pMessage);
 	virtual int Update(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT);
 };
 
-struct DOS_OBJECT_INFO
-{
-	OBJECT_ID			ObjectID;
-	int					Weight;
-	CDOSBaseObject *	pObject;
-	UINT				Param;
-};
+
 
 inline void CDOSBaseObject::SetRouter(CDOSRouter * pRouter)
 {

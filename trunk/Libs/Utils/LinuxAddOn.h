@@ -263,15 +263,6 @@ inline unsigned int AtomicDec(volatile unsigned int * pVal)
 	return AO_int_fetch_and_sub1_read(pVal)+1;
 }
 
-//inline unsigned int AtomicRead(volatile unsigned int * pVal)
-//{
-//	return AO_int_load(pVal);
-//}
-//
-//inline void AtomicWrite(volatile unsigned int * pVal,unsigned int NewVal)
-//{
-//	AO_int_store(pVal,NewVal);
-//}
 
 inline unsigned int AtomicAdd(volatile unsigned int * pVal,int AddVal)
 {

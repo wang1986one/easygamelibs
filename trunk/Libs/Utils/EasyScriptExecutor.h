@@ -18,13 +18,16 @@ public:
 	CEasyScriptExecutor(void);
 	~CEasyScriptExecutor(void);	
 
-
-	int ExecScript(CESThread& ESThread,int StartPos=0,int EndPos=-1);
+	int ExecScript(CESThread& ESThread);
+	int ContinueScript(CESThread& ESThread);
+	int CallFunction(CESThread& ESThread,LPCTSTR szFunctionName);
+	
 		
 
 protected:
-	int CaculateBolanExpression(CESThread& ESThread,int& StartPos);
-	int DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESVariableList * pVariableList);
+	int ExecScript(CESThread& ESThread,int StartPos,int EndPos);
+	int CallFunction(CESThread& ESThread,ES_FUNCTION * pFunction);
+	int DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESThread& ESThread);
 	int DoAdd(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult);
 	int DoSub(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult);
 	int DoMul(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult);
@@ -39,14 +42,5 @@ protected:
 	int DoAnd(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult);
 	int DoOr(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult);
 	int DoNot(ES_BOLAN * pValue,ES_BOLAN * pResult);
-
-	int FindKeyWord(CESBolanStack * pScriptList,int KeyWord,int StartPos,int StopKeyWord);
-	int FindKeyWordReverse(CESBolanStack * pScriptList,int KeyWord,int StartPos,int StopKeyWord);
-	int FindCoupleKeyWord(CESBolanStack * pScriptList,int KeyWord,int CoupleKeyWord,int StartPos);
-	int FindCoupleKeyWordReverse(CESBolanStack * pScriptList,int KeyWord,int CoupleKeyWord,int StartPos);
-	int FindCoupleIF(CESBolanStack * pScriptList,int KeyWord,int CoupleKeyWord1,int CoupleKeyWord2,int StartPos,int StopKeyWord);
-
-	
-
-
+	int IsZero(ES_BOLAN * pValue);
 };

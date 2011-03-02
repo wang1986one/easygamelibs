@@ -21,11 +21,11 @@ class CD3DGUIObjectCreator :
 {
 protected:
 	CD3DDevice *	m_pDevice;
-	CD3DRender *	m_pRender;
+	CD3DUIRender *	m_pRender;
 
 	DECLARE_CLASS_INFO_STATIC(CD3DGUIObjectCreator)
 public:
-	CD3DGUIObjectCreator(CD3DRender *	pRender);
+	CD3DGUIObjectCreator(CD3DUIRender *	pRender);
 	virtual ~CD3DGUIObjectCreator(void);
 
 	virtual IUIWndRect * CreateWndRect(FLOAT_RECT * pRect);

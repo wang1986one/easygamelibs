@@ -54,6 +54,11 @@ bool CD3DBaseDynamicModel::IsPlaying()
 	return false;
 }
 
+void CD3DBaseDynamicModel::SetPlaySpeed(FLOAT Rate)
+{
+
+}
+
 
 
 }

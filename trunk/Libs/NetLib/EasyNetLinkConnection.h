@@ -72,7 +72,7 @@ public:
 	virtual void OnConnection(BOOL IsSucceed);
 	virtual void OnDisconnection();
 
-	void SendLinkMsg(WORD MsgID,LPCVOID pData=NULL,int DataSize=0);
+	void SendLinkMsg(DWORD MsgID,LPCVOID pData=NULL,UINT DataSize=0);
 
 	void EnableReallocConnectionID(BOOL Enable);
 	BOOL NeedReallocConnectionID();

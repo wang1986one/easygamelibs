@@ -45,9 +45,11 @@ CD3DBoard::~CD3DBoard(void)
 
 void CD3DBoard::Destory()
 {
+	CD3DObject::Destory();
+
 	SAFE_RELEASE(m_pSubMesh[0]);
 	SAFE_RELEASE(m_pSubMesh[1]);
-	CD3DObject::Destory();
+	
 }
 
 bool CD3DBoard::Reset()
@@ -68,7 +70,7 @@ bool CD3DBoard::Create(CD3DVector3 V1,CD3DVector3 V2,CD3DVector3 V3,CD3DVector3 
 
 	Destory();
 
-	m_pSubMesh[0]=new CD3DSubMesh;
+	m_pSubMesh[0]=new CD3DSubMesh(GetDevice());
 
 	m_pSubMesh[0]->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE;
 	m_pSubMesh[0]->GetVertexFormat().VertexSize=sizeof(VERTEX);
@@ -76,7 +78,7 @@ bool CD3DBoard::Create(CD3DVector3 V1,CD3DVector3 V2,CD3DVector3 V3,CD3DVector3 
 	m_pSubMesh[0]->SetPrimitiveCount(2);
 	m_pSubMesh[0]->SetPrimitiveType(D3DPT_TRIANGLESTRIP);
 	
-	m_pSubMesh[0]->AllocDXVertexBuffer(GetDevice());
+	m_pSubMesh[0]->AllocDXVertexBuffer();
 
 	VERTEX * pBuff;
 
@@ -102,7 +104,7 @@ bool CD3DBoard::Create(CD3DVector3 V1,CD3DVector3 V2,CD3DVector3 V3,CD3DVector3 
 
 
 
-	m_pSubMesh[1]=new CD3DSubMesh;
+	m_pSubMesh[1]=new CD3DSubMesh(GetDevice());
 
 	m_pSubMesh[1]->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE;
 	m_pSubMesh[1]->GetVertexFormat().VertexSize=sizeof(VERTEX);
@@ -110,7 +112,7 @@ bool CD3DBoard::Create(CD3DVector3 V1,CD3DVector3 V2,CD3DVector3 V3,CD3DVector3 
 	m_pSubMesh[1]->SetPrimitiveCount(1);
 	m_pSubMesh[1]->SetPrimitiveType(D3DPT_LINELIST);
 
-	m_pSubMesh[1]->AllocDXVertexBuffer(GetDevice());
+	m_pSubMesh[1]->AllocDXVertexBuffer();
 
 
 	m_pSubMesh[1]->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pBuff,0);
@@ -137,19 +139,6 @@ bool CD3DBoard::Create(CD3DVector3 V1,CD3DVector3 V2,CD3DVector3 V3,CD3DVector3 
 
 }
 
-void CD3DBoard::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
-{
-	if(pSubMesh&&pMaterial)
-	{	
-		
-	}
-	else
-	{		
-		//设置变换矩阵
-		pDevice->GetD3DDevice()->SetTransform(D3DTS_WORLD,&GetWorldMatrix());
-	}
-}
-
 int CD3DBoard::GetSubMeshCount()
 {
 	return 2;
@@ -167,10 +156,10 @@ CD3DBoundingBox * CD3DBoard::GetBoundingBox()
 	return &m_BoundingBox;
 }
 
-bool CD3DBoard::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DBoard::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
 	PrintSystemLog(0,"CD3DBoard被保存");
-	return CD3DObject::ToSmartStruct(Packet,pUSOFile,Param);
+	return CD3DObject::ToSmartStruct(Packet,pResourceManager,Param);
 }
 
 UINT CD3DBoard::GetSmartStructSize(UINT Param)

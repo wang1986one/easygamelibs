@@ -17,6 +17,7 @@ class CServerApp :
 	public CWinApp,public CNTService
 {
 protected:
+	IBaseServer *		m_pServer;
 public:
 	CServerApp(void);
 	~CServerApp(void);
@@ -25,7 +26,7 @@ public:
 
 	virtual int ExitInstance();
 
-	
+	virtual BOOL OnIdle(LONG lCount);
 
 	virtual void Run(DWORD argc, LPTSTR * argv);
 	
@@ -40,5 +41,5 @@ protected:
 	void GetProgamVersion();
 
 	//DECLARE_MESSAGE_MAP()
-
+	
 };

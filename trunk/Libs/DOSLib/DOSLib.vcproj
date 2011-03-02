@@ -227,26 +227,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="消息处理"
-			>
-			<File
-				RelativePath=".\DOSMsgCatcher.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DOSMsgCatcher.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DOSMsgManager.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DOSMsgManager.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="对象和对象管理"
 			>
 			<Filter
@@ -305,26 +285,6 @@
 				RelativePath=".\DOSClient.h"
 				>
 			</File>
-			<Filter
-				Name="消息映射"
-				>
-				<File
-					RelativePath=".\DOSClientMsgCatcher.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\DOSClientMsgCatcher.h"
-					>
-				</File>
-				<File
-					RelativePath=".\DOSClientMsgManager.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\DOSClientMsgManager.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="消息协议"

@@ -15,7 +15,7 @@
 IMPLEMENT_CLASS_INFO_STATIC(CGuardThread,CEasyThread);
 
 #define DEFAULT_GUARD_KEEPALIVE_TIME	(20*1000)
-#define DEFAULT_MAX_LOST_ALIVE_COUNT	(5)
+#define DEFAULT_MAX_LOST_ALIVE_COUNT	(6)
 
 CGuardThread::CGuardThread(void)
 {

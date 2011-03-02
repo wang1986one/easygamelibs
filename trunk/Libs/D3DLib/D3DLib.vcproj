@@ -53,6 +53,7 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
+				EnablePREfast="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -251,6 +252,10 @@
 				Name="类型定义"
 				>
 				<File
+					RelativePath=".\AniDefines.h"
+					>
+				</File>
+				<File
 					RelativePath=".\Types.h"
 					>
 				</File>
@@ -279,26 +284,26 @@
 				Name="渲染器"
 				>
 				<Filter
-					Name="普通渲染器"
+					Name="UI渲染器"
 					>
 					<File
-						RelativePath=".\D3DRender.cpp"
+						RelativePath=".\D3DUIRender.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\D3DRender.h"
+						RelativePath=".\D3DUIRender.h"
 						>
 					</File>
 				</Filter>
 				<Filter
-					Name="排序渲染器"
+					Name="基类"
 					>
 					<File
-						RelativePath=".\D3DSortedRender.cpp"
+						RelativePath=".\D3DBaseRender.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\D3DSortedRender.h"
+						RelativePath=".\D3DBaseRender.h"
 						>
 					</File>
 				</Filter>
@@ -311,6 +316,18 @@
 					</File>
 					<File
 						RelativePath=".\D3DSceneRender.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="渲染线程"
+					>
+					<File
+						RelativePath=".\D3DRenderThread.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\D3DRenderThread.h"
 						>
 					</File>
 				</Filter>
@@ -353,22 +370,6 @@
 				<Filter
 					Name="静态模型"
 					>
-					<File
-						RelativePath=".\D3DStaticModel.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DStaticModel.h"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DStaticModelResource.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DStaticModelResource.h"
-						>
-					</File>
 					<Filter
 						Name="基类"
 						>
@@ -379,6 +380,13 @@
 						<File
 							RelativePath=".\D3DBaseStaticModel.h"
 							>
+							<FileConfiguration
+								Name="Debug|Win32"
+								>
+								<Tool
+									Name="VCCustomBuildTool"
+								/>
+							</FileConfiguration>
 						</File>
 					</Filter>
 				</Filter>
@@ -395,59 +403,15 @@
 					</File>
 				</Filter>
 				<Filter
-					Name="场景"
-					>
-					<File
-						RelativePath=".\D3DScene.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DScene.h"
-						>
-					</File>
-				</Filter>
-				<Filter
 					Name="动态模型"
 					>
 					<Filter
 						Name="骨骼动画动态模型"
 						>
-						<File
-							RelativePath=".\D3DBonedAniResource.cpp"
-							>
-						</File>
-						<File
-							RelativePath=".\D3DBonedAniResource.h"
-							>
-						</File>
-						<File
-							RelativePath=".\D3DBonedDynamicModel.cpp"
-							>
-						</File>
-						<File
-							RelativePath=".\D3DBonedDynamicModel.h"
-							>
-						</File>
-						<File
-							RelativePath=".\D3DBonedModelResource.cpp"
-							>
-						</File>
-						<File
-							RelativePath=".\D3DBonedModelResource.h"
-							>
-						</File>
 					</Filter>
 					<Filter
 						Name="帧动画动态模型"
 						>
-						<File
-							RelativePath=".\D3DFrameDynamicModel.cpp"
-							>
-						</File>
-						<File
-							RelativePath=".\D3DFrameDynamicModel.h"
-							>
-						</File>
 					</Filter>
 					<Filter
 						Name="顶点动画动态模型"
@@ -462,6 +426,46 @@
 						</File>
 						<File
 							RelativePath=".\D3DBaseDynamicModel.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="条带"
+						>
+						<File
+							RelativePath=".\D3DRibbonEmitter.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DRibbonEmitter.h"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DRibbonEmitterResource.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DRibbonEmitterResource.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="粒子"
+						>
+						<File
+							RelativePath=".\D3DBillBoardParticleEmitter.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DBillBoardParticleEmitter.h"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DParticleEmitterResource.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DParticleEmitterResource.h"
 							>
 						</File>
 					</Filter>
@@ -483,6 +487,14 @@
 					</File>
 					<File
 						RelativePath=".\D3DBoundingFrame.h"
+						>
+					</File>
+					<File
+						RelativePath=".\D3DLine.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\D3DLine.h"
 						>
 					</File>
 				</Filter>
@@ -558,14 +570,6 @@
 						>
 					</File>
 					<File
-						RelativePath=".\D3DWOWM2BillBoardParticleEmitter.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWM2BillBoardParticleEmitter.h"
-						>
-					</File>
-					<File
 						RelativePath=".\D3DWOWM2CharacterModel.cpp"
 						>
 					</File>
@@ -595,14 +599,6 @@
 					</File>
 					<File
 						RelativePath=".\D3DWOWM2ModelResource.h"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWM2RibbonEmitter.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWM2RibbonEmitter.h"
 						>
 					</File>
 					<File
@@ -705,6 +701,18 @@
 							>
 						</File>
 					</Filter>
+				</Filter>
+				<Filter
+					Name="场景"
+					>
+					<File
+						RelativePath=".\D3DScene.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\D3DScene.h"
+						>
+					</File>
 				</Filter>
 			</Filter>
 			<Filter
@@ -860,6 +868,18 @@
 				</File>
 				<File
 					RelativePath=".\D3DGUIWndRect.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="渲染输出"
+				>
+				<File
+					RelativePath=".\D3DSwapChain.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\D3DSwapChain.h"
 					>
 				</File>
 			</Filter>

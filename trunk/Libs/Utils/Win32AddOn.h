@@ -81,6 +81,8 @@
 #include "shlobj.h"
 #include "tchar.h"
 #include <time.h>
+#include <conio.h>
+
 
 #pragma warning (push)
 #pragma warning (disable : 4311)
@@ -110,22 +112,11 @@ inline unsigned int AtomicInc(volatile unsigned int * pVal)
 	return AO_int_fetch_and_add1_read(pVal)+1;
 }
 
-
-
 inline unsigned int AtomicDec(volatile unsigned int * pVal)
 {
 	return AO_int_fetch_and_sub1_read(pVal)-1;
 }
 
-//inline unsigned int AtomicRead(volatile unsigned int * pVal)
-//{
-//	return AO_int_load(pVal);
-//}
-//
-//inline void AtomicWrite(volatile unsigned int * pVal,unsigned int NewVal)
-//{
-//	AO_int_store(pVal,NewVal);
-//}
 
 inline unsigned int AtomicAdd(volatile unsigned int * pVal,int AddVal)
 {
@@ -142,17 +133,15 @@ inline int AtomicCompareAndSet(volatile unsigned int * pVal,unsigned int CompVal
 	return InterlockedCompareExchange((volatile LONG *)pVal,NewVal,CompValue)!=*pVal;
 }
 
+inline unsigned int AtomicAnd(volatile unsigned int * pVal,int AndVal)
+{
+	return _InterlockedAnd((volatile LONG *)pVal,AndVal);
+}
 
-
-//inline unsigned __int64 AtomicIncAndRead(volatile unsigned __int64 * pVal)
-//{
-//	return InterlockedIncrement64(pVal);
-//}
-//
-//inline unsigned __int64 AtomicDecAndRead(volatile unsigned __int64 * pVal)
-//{
-//	return InterlockedDecrement64(pVal);
-//}
+inline unsigned int AtomicOr(volatile unsigned int * pVal,int AndVal)
+{
+	return _InterlockedOr((volatile LONG *)pVal,AndVal);
+}
 
 inline size_t GetEnvVar(LPCTSTR pszVarName,LPTSTR pszValue,size_t nBufferLen)
 {

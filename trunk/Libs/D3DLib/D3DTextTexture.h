@@ -89,8 +89,11 @@ protected:
 	int					m_LineSpace;
 
 	bool				m_AllowUpdate;
+	bool				m_WantUpdate;
 
 	CD3DFX *			m_pFX;
+
+	
 
 	DECLARE_CLASS_INFO(CD3DTextTexture)
 public:
@@ -183,17 +186,21 @@ public:
 	{return (FLOAT)m_Height/m_TextureSurfaceInfo.Height;}
 	
 	HDC GetDC();
+
+	virtual void OnPrepareRenderData();
 	
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
+
+
 protected:
 	void UpdateTexture();
 
 	//virtual CNameObject::STORAGE_STRUCT * USOCreateHead(UINT Param=0);
-	//virtual int USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);	
+	//virtual int USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param=0);	
 
-	//virtual int USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
+	//virtual int USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param=0);
 	//virtual bool USOReadFinish(CNameObject::STORAGE_STRUCT * pHead,UINT Param=0);
 
 };

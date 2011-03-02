@@ -48,8 +48,8 @@ public:
 
 	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
 
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 	
 	void RefreshStorageIDRecursive();

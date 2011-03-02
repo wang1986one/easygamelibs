@@ -11,11 +11,13 @@
 /****************************************************************************/
 #include "StdAfx.h"
 
-
+LPCTSTR OPERATOR_STRINGS[OPERATOR_MAX]={"加","减","乘","除","右括号","左括号","取负","逗号",
+			"小于","大于","小于等于","大于等于","等于","不等于","赋值","与","或","非","跳转",
+			"条件跳转","函数调用","函数调用返回","清空堆栈","添加临时变量","添加调用参数","脚本退出","空操作"};
 
 LPCTSTR KEYWORD_STRINGS[KW_MAX]=
-{"END","IF","THEN","ELSE","ELSEIF","ENDIF","WHILE","DO","ENDWHILE","BREAK","CONTINUE","GOTO",":",";",
-"DECLARE","INT","INT64","FLOAT","DOUBLE","STRING"};
+{"EXIT","IF","THEN","ELSE","ELSEIF","ENDIF","WHILE","DO","ENDWHILE","BREAK","CONTINUE","GOTO",";",
+"INT","INT64","FLOAT","DOUBLE","STRING","FUNCTION","ENDFUN"};
 
 
 
@@ -44,20 +46,10 @@ char * ESGetErrorMsg(int ErrCode)
 		return "非法字符";
 		break;
 	case 2001:
-		return "有IF而缺少ENDIF";
-		break;
-	case 2002:
-		return "有ELSE而缺少ENDIF";
-		break;
-	case 2003:
-		return "有IF或ELSEIF而缺少THEN";
-		break;
-	case 2004:
-		return "有ELSEIF而缺少ENDIF";
-		break;
-	case 2010:
+		return "有IF语句未正确配对";
+		break;	
 	case 2011:
-		return "有ENDWHILE而缺少WHILE";
+		return "WHILE DO与ENDWHILE未能配对";
 		break;
 	case 2012:
 		return "BREAK必须出现在WHILE循环中";
@@ -70,6 +62,21 @@ char * ESGetErrorMsg(int ErrCode)
 		break;
 	case 2015:
 		return "GOTO语句后面的标记未定义";
+		break;
+	case 2016:
+		return "FUNCTION和ENDFUN未配对";
+		break;
+	case 2018:
+		return "不允许在函数内定义函数";
+		break;
+	case 2019:
+		return "函数定义格式错误";
+		break;	
+	case 2020:
+		return "IF,ELSEIF,WHILE所需的表达式必须有返回值";
+		break;
+	case 2021:
+		return "括号未配对";
 		break;
 	case 3001:
 		return "赋值目标不是变量";
@@ -116,12 +123,16 @@ char * ESGetErrorMsg(int ErrCode)
 		return "第二操作数必须是变量或值";
 	case 3018:
 		return "操作符不支持此操作数类型";
+	case 3019:
+		return "未知操作符";
 	case 4010:	
 		return "定义变量错误";		
 	case 4012:
-		return "变量未定义";	
+		return "未知标识符";	
 	case 4013:
 		return "操作符参数不足";
+	case 4016:
+		return "变量未定义";
 	case 5001:
 		return "中断不存在";
 	case 6001:
@@ -130,6 +141,18 @@ char * ESGetErrorMsg(int ErrCode)
 		return "未设置函数列表";
 	case 6003:
 		return "未设置脚本代码";
+	case 6004:
+		return "当前线程正在中断中，请用ContinueScript";
+	case 6005:
+		return "当前线程未在中断中，不能使用ContinueScript";
+	case 6006:
+		return "要调用的函数未找到";
+	case 6007:
+		return "要调用的函数不是脚本函数";
+	case 6008:
+		return "添加局部变量失败";		
+	case 10000:
+		return "遇到意外的布兰式";
 	}
 	return "未知错误";
 }
@@ -144,322 +167,142 @@ CEasyScriptExecutor::~CEasyScriptExecutor(void)
 
 }
 
-int CEasyScriptExecutor::ExecScript(CESThread& ESThread,int StartPos,int EndPos)
+int CEasyScriptExecutor::ExecScript(CESThread& ESThread)
 {
-
-	int ReturnCode;	
-	bool IsAfterInterrupt=false;
-	int OldPos;
-	int SavedPos;
-	CESBolanStack *		pScript=ESThread.GetScript();
-
-	
-	//处理中断恢复
 	if(ESThread.IsInInterrupt())
-	{	
-		ReturnCode=CaculateBolanExpression(ESThread,StartPos);
-		if(ReturnCode)
-		{
-			ESThread.SetResultCode(ReturnCode);
-			return ReturnCode;
-		}
-		if(ESThread.GetInterruptRecentControlPos()>=0)
-		{
-			IsAfterInterrupt=true;
-			SavedPos=StartPos;		
-			StartPos=ESThread.GetInterruptRecentControlPos();
-		}
+	{
+		ESThread.SetResultCode(6004);
+		return 	6004;
 	}
 
-	while(StartPos<pScript->GetSize())
+	ESThread.GetStack()->Clear();
+	ESThread.ClearLocalVariable();
+	ESThread.ClearCallStack();
+
+	int Ret=ExecScript(ESThread,0,-1);
+	ESThread.SetResultCode(Ret);
+	if(Ret==0)
 	{
-		ESThread.SetLastLine(pScript->GetAt(StartPos)->Line);
-		OldPos=StartPos;
-		switch(pScript->GetAt(StartPos)->Type)
-		{
-		case BOLAN_TYPE_VALUE:
-		case BOLAN_TYPE_OPERATOR:
-		case BOLAN_TYPE_FUNCTION:		
-		case BOLAN_TYPE_VARIABLE:
-			ESThread.SetInterruptRecentControlPos(-1);
-			ReturnCode=CaculateBolanExpression(ESThread,StartPos);
-			if(ReturnCode)
-			{
-				ESThread.SetResultCode(ReturnCode);
-				return ReturnCode;
-			}
-			break;
-		case BOLAN_TYPE_KEYWORD:
-			switch((int)(pScript->GetAt(StartPos)->Index))
-			{			
-			case KW_END:
-				StartPos++;
-				ESThread.SetResultCode(0);
-				return 0;
-			case KW_IF:			
-			case KW_ELSEIF:
-				{
-					StartPos++;
-					if(IsAfterInterrupt)
-					{
-						StartPos=SavedPos;
-						IsAfterInterrupt=false;
-					}
-					else
-					{
-						ESThread.SetInterruptRecentControlPos(OldPos);
-						ReturnCode=CaculateBolanExpression(ESThread,StartPos);
-						if(ReturnCode)
-						{
-							ESThread.SetResultCode(ReturnCode);
-							return ReturnCode;
-						}
-					}	
-					//校验Then关键字
-					int ThenPos=FindCoupleIF(pScript,KW_THEN,KW_IF,KW_ENDIF,StartPos,KW_ENDIF);
-					if(ThenPos<0)
-					{
-						ESThread.SetResultCode(2003);
-						return 2003;
-					}
-					//查找配对的ElseIF、Else、EndIF关键词
-					int ElseIfPos=FindCoupleIF(pScript,KW_ELSEIF,KW_IF,KW_ENDIF,StartPos,KW_ENDIF);
-					int ElsePos=FindCoupleIF(pScript,KW_ELSE,KW_IF,KW_ENDIF,StartPos,KW_ENDIF);
-					int EndIfPos=FindCoupleIF(pScript,KW_ENDIF,KW_IF,KW_ENDIF,StartPos,-1);				
-					if(ESThread.GetResult().ValueInt)
-					{
-						//执行代码段
-						StartPos++;		
-						int EndPos=0;
-						if(ElseIfPos>=0)
-							EndPos=ElseIfPos;
-						else if(ElsePos>=0)
-							EndPos=ElsePos+1;
-						else if(EndIfPos>=0)
-							EndPos=EndIfPos+1;
-						else
-						{
-							ESThread.SetResultCode(2001);
-							return 2001;
-						}						
-						ReturnCode=ExecScript(ESThread,StartPos,EndPos);
-						if(ReturnCode)
-						{
-							ESThread.SetResultCode(ReturnCode);
-							return ReturnCode;
-						}
-						StartPos=EndIfPos+1;
-					}
-					else
-					{				
-						//跳过代码段
-						if(ElseIfPos>=0)
-							StartPos=ElseIfPos;
-						else if(ElsePos>=0)
-							StartPos=ElsePos+1;
-						else if(EndIfPos>=0)
-							StartPos=EndIfPos+1;
-						else
-						{
-							ESThread.SetResultCode(2001);
-							return 2001;
-						}
-					}
-				}
-				break;
-			case KW_THEN:
-				StartPos++;
-				break;
-			case KW_ELSE:
-				StartPos++;					
-				break;				
-			case KW_ENDIF:
-				StartPos++;
-				break;
-			case KW_WHILE:				
-				StartPos++;			
-				if(IsAfterInterrupt)
-				{
-					StartPos=SavedPos;
-					IsAfterInterrupt=false;
-				}
-				else
-				{
-					ESThread.SetInterruptRecentControlPos(OldPos);
-					ReturnCode=CaculateBolanExpression(ESThread,StartPos);
-					if(ReturnCode)
-					{
-						ESThread.SetResultCode(ReturnCode);
-						return ReturnCode;
-					}
-				}
-				if(ESThread.GetResult().ValueInt==0)
-				{
-					int EndWhilePos=FindCoupleKeyWord(pScript,KW_ENDWHILE,KW_WHILE,StartPos);
-					if(EndWhilePos<0)
-					{
-						ESThread.SetResultCode(2010);
-						return 2010;
-					}
-					StartPos=EndWhilePos+1;					
-				}				
-				break;
-			case KW_DO:
-				StartPos++;
-				break;
-			case KW_ENDWHILE:
-				{
-					if(StartPos==0)
-					{
-						ESThread.SetResultCode(2014);
-						return 2014;
-					}
-					int WhilePos=FindCoupleKeyWordReverse(pScript,KW_WHILE,KW_ENDWHILE,StartPos-1);
-					if(WhilePos<0)
-					{
-						ESThread.SetResultCode(2011);
-						return 2011;
-					}
-					StartPos=WhilePos;
-				}
-				break;
-			case KW_BREAK:
-				{
-					int EndWhilePos=FindKeyWord(pScript,KW_ENDWHILE,StartPos,-1);
-					if(EndWhilePos<0)
-					{
-						ESThread.SetResultCode(2012);
-						return 2012;
-					}
-					StartPos=EndWhilePos+1;		
-				}		
-				break;
-			case KW_CONTINUE:
-				{
-					int WhilePos=FindKeyWordReverse(pScript,KW_WHILE,StartPos,-1);
-					if(WhilePos<0)
-					{
-						ESThread.SetResultCode(2013);
-						return 2013;
-					}
-					StartPos=WhilePos;
-				}
-				break;
-			case KW_GOTO:
-				{
-					if(pScript->GetAt(StartPos+1)==NULL)
-					{
-						ESThread.SetResultCode(2014);
-						return 2014;
-					}
-					if(pScript->GetAt(StartPos+1)->Type!=BOLAN_TYPE_IDENTIFIER)
-					{
-						ESThread.SetResultCode(2014);
-						return 2014;
-					}
-					int IdentifierPos=pScript->FindIdentifier(0,pScript->GetAt(StartPos+1)->StrValue);
-					if(IdentifierPos<0)
-					{
-						ESThread.SetResultCode(2015);
-						return 2015;
-					}
-					StartPos=IdentifierPos+1;
-				}
-				break;
-			case KW_IDHEADER:
-				StartPos++;
-				break;
-			case KW_LINEEND:
-				StartPos++;				
-				break;
-			case KW_DECLARE:
-				StartPos++;				
-				break;
-			case KW_INT:
-			case KW_INT64:
-			case KW_FLOAT:
-			case KW_DOUBLE:
-			case KW_STRING:			
-				StartPos+=2;
-				break;
-			default:
-				StartPos++;
-			}
-			break;
-		case BOLAN_TYPE_IDENTIFIER:
-			StartPos++;			
-			break;
-		default:
-			StartPos++;
-		}
-		if(EndPos>=0)
-		{
-			if(StartPos>=EndPos)
-				break;
-		}
+		ES_BOLAN * pResult=ESThread.GetStack()->Pop();
+		if(pResult)
+			ESThread.SetResult(*pResult);
 	}
-	return 0;
+	return Ret;
 }
 
+int CEasyScriptExecutor::ContinueScript(CESThread& ESThread)
+{
+	if(!ESThread.IsInInterrupt())
+	{
+		ESThread.SetResultCode(6005);
+		return 	6005;
+	}	
+	int Ret=ExecScript(ESThread,0,-1);
+	ESThread.SetResultCode(Ret);
+	ES_BOLAN * pResult=ESThread.GetStack()->Pop();
+	if(pResult)
+		ESThread.SetResult(*pResult);
+	return Ret;
+}
+int CEasyScriptExecutor::CallFunction(CESThread& ESThread,LPCTSTR szFunctionName)
+{
+	if(ESThread.IsInInterrupt())
+	{
+		ESThread.SetResultCode(6004);
+		return 	6004;
+	}
+	//ESThread.GetStack()->Clear();
+	//ESThread.ClearLocalVariable();
+	ESThread.ClearCallStack();
 
-int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartPos)
+	ES_FUNCTION * pFunction=ESThread.GetFunctionList()->FindFunction(szFunctionName);
+	if(pFunction==NULL)
+	{
+		ESThread.SetResultCode(6006);
+		return 6006;
+	}
+	if(pFunction->Type!=FUNCTION_TYPE_SCRIPT)
+	{
+		ESThread.SetResultCode(6007);
+		return 6007;
+	}
+
+	int Ret=CallFunction(ESThread,pFunction);
+	ESThread.SetResultCode(Ret);
+	ES_BOLAN * pResult=ESThread.GetStack()->Pop();
+	if(pResult)
+		ESThread.SetResult(*pResult);
+	return Ret;
+}
+
+int CEasyScriptExecutor::ExecScript(CESThread& ESThread,int StartPos,int EndPos)
 {
 	ES_BOLAN *			pBolan;		
 	ES_VARIABLE *		pVar;	
 	ES_BOLAN *			t1;
 	ES_BOLAN *			t2;	
-	ES_BOLAN			FnResult,Temp;		
+	ES_BOLAN			FnResult;		
 	int					ResultCode;
 	CESBolanStack *		pScript=ESThread.GetScript();
-	CESBolanStack * 	pStack=ESThread.GetStack();
-	CESVariableList *	pVariableList=ESThread.GetVariableList();
-	CESFactionList *	pFactionList=ESThread.GetFactionList();
-	
+	CESBolanStack * 	pStack=ESThread.GetStack();	
+	CESFunctionList *	pFunctionList=ESThread.GetFunctionList();
 
-	if(ESThread.IsInInterrupt())
-	{
-		pStack->Push(&ESThread.GetResult());
-		StartPos=ESThread.GetInterruptPos();		
-	}
-	else
-	{
-		pStack->Clear();
-	}
+
 	if(pStack==NULL)
 		return 3013;
 
-	pBolan=pScript->GetAt(StartPos);
-	while(pBolan&&
-		(pBolan->Type==BOLAN_TYPE_VALUE||pBolan->Type==BOLAN_TYPE_OPERATOR||
-		pBolan->Type==BOLAN_TYPE_FUNCTION||pBolan->Type==BOLAN_TYPE_VARIABLE))
-	{		
+	int StackStartSize=pStack->GetSize();
+
+	if(ESThread.IsInInterrupt())
+	{
+		pStack->PushValue(&ESThread.GetResult());
+		StartPos=ESThread.GetInterruptPos();
+		ESThread.ClearInterrupt();
+	}
+
+	
+
+	while(StartPos<(int)pScript->GetSize())
+	{
+		//BLOCK_BEGIN("WHILE");
+		//BLOCK_BEGIN("GET");
+		pBolan=pScript->GetAt(StartPos);
 		ESThread.SetLastLine(pBolan->Line);
+		//BLOCK_END;
+		
 		switch(pBolan->Type)
 		{
-		case BOLAN_TYPE_VALUE:
-			pStack->Push(pBolan);
+		case BOLAN_TYPE_VALUE:			
+			//BLOCK_BEGIN("BOLAN_TYPE_VALUE");
+			pStack->PushValue(pBolan);
+			StartPos++;			
+			//BLOCK_END;
 			break;
-		case BOLAN_TYPE_VARIABLE:						
-			pVar=pVariableList->FindVariable(pBolan->Index);
+		case BOLAN_TYPE_VARIABLE:	
+			//BLOCK_BEGIN("BOLAN_TYPE_VARIABLE");
+			pVar=ESThread.FindVariable(pBolan->Index);				
 			if(pVar==NULL)
 				return 4012;
-			Temp=*pBolan;
-			Temp.ValueType=pVar->Type;
-			if(Temp.ValueType==VALUE_TYPE_STRING)
-				Temp.StrValue=pVar->StrValue;
+			if(pBolan->ValueType==VALUE_TYPE_STRING)
+				pBolan->StrValue=pVar->StrValue;
 			else
-				Temp.ValueInt64=pVar->ValueInt64;
-			pStack->Push(&Temp);
+				pBolan->ValueInt64=pVar->ValueInt64;
+			pStack->PushValue(pBolan);			
+			StartPos++;
+			//BLOCK_END;
 			break;		
 		case BOLAN_TYPE_OPERATOR:
 			switch((int)(pBolan->Index))
 			{
 			case OPERATOR_EVA:
+				//BLOCK_BEGIN("OPERATOR_EVA");
 				t2=pStack->Pop();
-				t1=pStack->GetTop();
-				ResultCode=DoEva(t1,t2,pVariableList);
+				t1=pStack->Pop();
+				ResultCode=DoEva(t1,t2,ESThread);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
+				//BLOCK_END;
 				break;
 			case OPERATOR_ADD:
 				t2=pStack->Pop();
@@ -467,13 +310,17 @@ int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartP
 				ResultCode=DoAdd(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_SUB:
+				//BLOCK_BEGIN("OPERATOR_SUB");
 				t2=pStack->Pop();
 				t1=pStack->GetTop();			
 				ResultCode=DoSub(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
+				//BLOCK_END;
 				break;
 			case OPERATOR_MUL:
 				t2=pStack->Pop();
@@ -481,6 +328,7 @@ int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartP
 				ResultCode=DoMul(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_DIV:
 				t2=pStack->Pop();
@@ -488,6 +336,7 @@ int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartP
 				ResultCode=DoDiv(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_EQU:
 				t2=pStack->Pop();
@@ -495,6 +344,7 @@ int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartP
 				ResultCode=DoEqu(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_DIFF:
 				t2=pStack->Pop();
@@ -502,6 +352,7 @@ int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartP
 				ResultCode=DoDiff(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_LESS:
 				t2=pStack->Pop();
@@ -509,6 +360,7 @@ int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartP
 				ResultCode=DoLess(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_MORE:
 				t2=pStack->Pop();
@@ -516,6 +368,7 @@ int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartP
 				ResultCode=DoMore(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_LESS_EQU:
 				t2=pStack->Pop();
@@ -523,6 +376,7 @@ int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartP
 				ResultCode=DoLessEqu(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_MORE_EQU:
 				t2=pStack->Pop();
@@ -530,12 +384,14 @@ int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartP
 				ResultCode=DoMoreEqu(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_NEG:
 				t1=pStack->GetTop();				
 				ResultCode=DoNeg(t1,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_AND:
 				t2=pStack->Pop();
@@ -543,6 +399,7 @@ int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartP
 				ResultCode=DoAnd(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_OR:
 				t2=pStack->Pop();
@@ -550,68 +407,178 @@ int CEasyScriptExecutor::CaculateBolanExpression(CESThread& ESThread,int& StartP
 				ResultCode=DoOr(t1,t2,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
 			case OPERATOR_NOT:				
-				t1=pStack->GetTop();								
+				t1=pStack->GetTop();
 				ResultCode=DoNot(t1,t1);
 				if(ResultCode)
 					return ResultCode;
+				StartPos++;
 				break;
-			}
-			break;
-		case BOLAN_TYPE_FUNCTION:
-			{
-				ES_FACTION * pFaction=pFactionList->FindFaction(pBolan->Index);
-
-				if(pStack->GetSize()<pFaction->ParaCount)
-					return 3007;
-
-				t1=pStack->GetTop()-(pFaction->ParaCount-1);
-				pStack->Pop(pFaction->ParaCount);
-				for(int i=0;i<pFaction->ParaCount;i++)
-				{
-					if(t1[i].Type!=BOLAN_TYPE_VALUE&&t1[i].Type!=BOLAN_TYPE_VARIABLE)
-						return 3008;
-				}
-
-				ResultCode=((pFaction->pObject)->*(pFaction->FnPtr))(pVariableList,&FnResult,t1,pFaction->ParaCount);	
-
-				FnResult.Type=BOLAN_TYPE_VALUE;
-
-				if(ResultCode<0) 
-					return 3009;					//调用函数出错				
+			case OPERATOR_JMP:
+				//BLOCK_BEGIN("OPERATOR_JMP");
+				StartPos=pBolan->Level;
+				//BLOCK_END;
+				break;
+			case OPERATOR_JZ:
+				//BLOCK_BEGIN("OPERATOR_JZ");
+				t1=pStack->Pop();				
+				ResultCode=IsZero(t1);
 				if(ResultCode>0)
+					return ResultCode;
+				else if(ResultCode==0)				
+					StartPos=pBolan->Level;
+				else
+					StartPos++;
+				//BLOCK_END;
+				break;
+			case OPERATOR_CALL:
 				{
-					ESThread.GetResult()=ResultCode;
-					ESThread.SetInterruptPos(StartPos+1);					
-					return -1;
+					ES_FUNCTION * pFunction=pFunctionList->FindFunction(pBolan->Level);
+
+					if(pFunction->Type==FUNCTION_TYPE_C)
+					{					
+						if(pStack->GetSize()<pFunction->ParaCount)
+							return 3007;
+
+						t1=pStack->GetTop()-(pFunction->ParaCount-1);
+
+						for(int i=0;i<pFunction->ParaCount;i++)
+						{
+							if(t1[i].Type!=BOLAN_TYPE_VALUE&&t1[i].Type!=BOLAN_TYPE_VARIABLE)
+								return 3008;
+						}
+
+						FnResult=0;
+
+						ResultCode=(pFunction->FnPtr)(pFunction->CallParam,&ESThread,&FnResult,t1,pFunction->ParaCount);
+
+						pStack->Pop(pFunction->ParaCount);
+
+
+
+						if(ResultCode<0) 
+							return 3009;					//调用函数出错				
+						if(ResultCode>0)
+						{							
+							ESThread.SetInterruptCode(ResultCode);
+							ESThread.SetInterruptPos(StartPos+1);					
+							return -1;
+						}
+						else
+						{
+							pStack->PushValue(&FnResult);
+						}				
+					}
+					else
+					{
+						ESThread.PushCallStack(StartPos+1);
+						ResultCode=CallFunction(ESThread,pFunction);
+						if(ResultCode)
+							return ResultCode;					
+					}
 				}
-				pStack->Push(&FnResult);
-			}
+				StartPos++;
+				break;
+			case OPERATOR_RET:
+				StartPos=ESThread.PopCallStack();
+				if(StartPos<0)
+					return 0;
+				break;
+			case OPERATOR_CLEAR_STACK:
+				pStack->Clear();
+				StartPos++;
+				break;
+			case OPERATOR_ADD_VAR:
+				pVar=ESThread.GetLocalVariableList()->AddEmptyVariable(pBolan->StrValue,pBolan->ValueType);
+				if(pVar==NULL)
+				{
+					return 6009;
+				}
+				StartPos++;
+				break;
+			case OPERATOR_ADD_CALL_PARAM:
+				{
+					pVar=ESThread.GetLocalVariableList()->AddEmptyVariable(pBolan->StrValue,pBolan->ValueType);
+					if(pVar==NULL)
+					{
+						return 6009;
+					}
+					t1=pStack->Pop();					
+					ES_BOLAN LeftValue;
+					LeftValue.Type=BOLAN_TYPE_VARIABLE;
+					LeftValue.Index=pVar->ID;
+					LeftValue.Level=1;
+					ResultCode=DoEva(&LeftValue,t1,ESThread);
+					if(ResultCode)
+						return ResultCode;
+				}
+				StartPos++;
+				break;
+			case OPERATOR_EXIT:
+				return 0;
+				break;
+			case OPERATOR_NOP:
+				StartPos++;
+				break;
+			default:
+				return 3019;
+				break;
+			}			
+			break;
+		case BOLAN_TYPE_FUNCTION:			
+		case BOLAN_TYPE_KEYWORD:
+			return 10000;
 			break;		
+		}		
+		if(EndPos>=0)
+		{
+			if(StartPos>=EndPos)
+				break;
 		}
-		StartPos++;
-		pBolan=pScript->GetAt(StartPos);
+		//BLOCK_END;
 	}
-	pBolan=pStack->Pop();
-	if(pBolan)
-	{
-		ESThread.SetResult(*pBolan);
-	}
-	if(pStack->GetSize()!=0)
-		PrintSystemLog(0,"表达式计算对堆栈未能清空！");	
 	return 0;
 }
 
-int CEasyScriptExecutor::DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESVariableList * pVariableList)
+
+int CEasyScriptExecutor::CallFunction(CESThread& ESThread,ES_FUNCTION * pFunction)
 {
+	int RetCode;
+
+	ESThread.ClearLocalVariable();
+	//RetCode=ESThread.GetScript()->DealIdentifiers(&ESThread,pFunction->FunStartPos,pFunction->FunEndPos,true);
+	//if(RetCode)
+	//	return RetCode;
+
+	if(ESThread.GetStack()->GetSize()<pFunction->ParaCount)
+		return 3007;
+
+	ES_BOLAN * pParams=ESThread.GetStack()->GetTop()-(pFunction->ParaCount-1);
+
+	for(int i=0;i<pFunction->ParaCount;i++)
+	{
+		if(pParams[i].Type!=BOLAN_TYPE_VALUE&&pParams[i].Type!=BOLAN_TYPE_VARIABLE)
+			return 3008;
+	}
+	
+	RetCode=ExecScript(ESThread,pFunction->FunStartPos,pFunction->FunEndPos);
+	if(RetCode)
+		return RetCode;	
+	return 0;
+}
+
+int CEasyScriptExecutor::DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESThread& ESThread)
+{
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE)
 		return 3001;
 	if(pRightValue->Type!=BOLAN_TYPE_VARIABLE&&pRightValue->Type!=BOLAN_TYPE_VALUE)
 		return 3015;
-	ES_VARIABLE * pVar=pVariableList->FindVariable(pLeftValue->Index);
+	ES_VARIABLE * pVar=ESThread.FindVariable(pLeftValue->Index);
 	if(pVar==NULL)
 		return 4012;
 	switch(pVar->Type)
@@ -621,7 +588,7 @@ int CEasyScriptExecutor::DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESV
 			switch(pRightValue->ValueType)
 			{
 				case VALUE_TYPE_INT:
-					pVar->ValueInt=pRightValue->ValueInt;
+					pVar->ValueInt=pRightValue->ValueInt;					
 					break;
 				case VALUE_TYPE_INT64:
 					pVar->ValueInt=(int)pRightValue->ValueInt64;
@@ -635,6 +602,7 @@ int CEasyScriptExecutor::DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESV
 				case VALUE_TYPE_STRING:
 					return 3004;
 			}
+			//pLeftValue->ValueInt=pVar->ValueInt;
 		}
 		break;
 	case VALUE_TYPE_INT64:
@@ -656,6 +624,7 @@ int CEasyScriptExecutor::DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESV
 			case VALUE_TYPE_STRING:
 				return 3004;
 			}
+			//pLeftValue->ValueInt64=pVar->ValueInt64;
 		}
 		break;
 	case VALUE_TYPE_FLOAT:
@@ -677,6 +646,7 @@ int CEasyScriptExecutor::DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESV
 			case VALUE_TYPE_STRING:
 				return 3004;
 			}
+			//pLeftValue->ValueFloat=pVar->ValueFloat;
 		}
 		break;
 	case VALUE_TYPE_DOUBLE:
@@ -698,6 +668,7 @@ int CEasyScriptExecutor::DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESV
 			case VALUE_TYPE_STRING:
 				return 3004;
 			}
+			//pLeftValue->ValueDouble=pVar->ValueDouble;
 		}
 		break;
 	case VALUE_TYPE_STRING:
@@ -710,19 +681,21 @@ int CEasyScriptExecutor::DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESV
 			case VALUE_TYPE_DOUBLE:
 				return 3004;
 			case VALUE_TYPE_STRING:
-				pVar->StrValue=pRightValue->StrValue;
+				pVar->StrValue=pRightValue->StrValue;				
 				break;
 			}
+			//pLeftValue->StrValue=pVar->StrValue;
 		}
 		break;
 	}	
-	pLeftValue->ValueInt64=pVar->ValueInt64;
-	pLeftValue->StrValue=pVar->StrValue;
-	return 0;				
+	return 0;	
+	//FUNCTION_END;
+	//return 0;
 }
 
 int CEasyScriptExecutor::DoAdd(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -854,10 +827,13 @@ int CEasyScriptExecutor::DoAdd(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_B
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 int CEasyScriptExecutor::DoSub(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -975,10 +951,13 @@ int CEasyScriptExecutor::DoSub(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_B
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 int CEasyScriptExecutor::DoMul(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -1097,10 +1076,13 @@ int CEasyScriptExecutor::DoMul(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_B
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 int CEasyScriptExecutor::DoDiv(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -1219,11 +1201,14 @@ int CEasyScriptExecutor::DoDiv(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_B
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 
 int CEasyScriptExecutor::DoEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -1338,10 +1323,13 @@ int CEasyScriptExecutor::DoEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_B
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 int CEasyScriptExecutor::DoDiff(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -1456,10 +1444,13 @@ int CEasyScriptExecutor::DoDiff(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 int CEasyScriptExecutor::DoLess(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -1574,11 +1565,14 @@ int CEasyScriptExecutor::DoLess(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 
 int CEasyScriptExecutor::DoMore(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -1693,11 +1687,14 @@ int CEasyScriptExecutor::DoMore(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 
 int CEasyScriptExecutor::DoLessEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -1812,11 +1809,14 @@ int CEasyScriptExecutor::DoLessEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 
 int CEasyScriptExecutor::DoMoreEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -1931,10 +1931,13 @@ int CEasyScriptExecutor::DoMoreEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 int CEasyScriptExecutor::DoNeg(ES_BOLAN * pValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pValue==NULL||pResult==NULL)
 		return 4013;
 	if(pValue->Type!=BOLAN_TYPE_VARIABLE&&pValue->Type!=BOLAN_TYPE_VALUE)
@@ -1963,11 +1966,14 @@ int CEasyScriptExecutor::DoNeg(ES_BOLAN * pValue,ES_BOLAN * pResult)
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 
 }
 
 int CEasyScriptExecutor::DoAnd(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -2069,10 +2075,13 @@ int CEasyScriptExecutor::DoAnd(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_B
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 int CEasyScriptExecutor::DoOr(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pLeftValue==NULL||pRightValue==NULL||pResult==NULL)
 		return 4013;
 	if(pLeftValue->Type!=BOLAN_TYPE_VARIABLE&&pLeftValue->Type!=BOLAN_TYPE_VALUE)
@@ -2174,11 +2183,14 @@ int CEasyScriptExecutor::DoOr(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BO
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 }
 
 
 int CEasyScriptExecutor::DoNot(ES_BOLAN * pValue,ES_BOLAN * pResult)
 {
+	//FUNCTION_BEGIN;
 	if(pValue==NULL||pResult==NULL)
 		return 4013;
 	if(pValue->Type!=BOLAN_TYPE_VARIABLE&&pValue->Type!=BOLAN_TYPE_VALUE)
@@ -2207,102 +2219,47 @@ int CEasyScriptExecutor::DoNot(ES_BOLAN * pValue,ES_BOLAN * pResult)
 
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
+	//FUNCTION_END;
+	//return 0;
 
 }
 
-int CEasyScriptExecutor::FindKeyWord(CESBolanStack * pScriptList,int KeyWord,int StartPos,int StopKeyWord)
+int CEasyScriptExecutor::IsZero(ES_BOLAN * pValue)
 {
-	for(int i=StartPos;i<pScriptList->GetSize();i++)
+	//FUNCTION_BEGIN;
+	if(pValue==NULL)
+		return 4013;
+	if(pValue->Type!=BOLAN_TYPE_VARIABLE&&pValue->Type!=BOLAN_TYPE_VALUE)
+		return 3016;
+	switch(pValue->ValueType)
 	{
-		if(StopKeyWord>0&&pScriptList->GetAt(i)->Type==BOLAN_TYPE_KEYWORD&&pScriptList->GetAt(i)->Index==StopKeyWord)
+	case VALUE_TYPE_INT:
+		if(pValue->ValueInt)
 			return -1;
-		if(pScriptList->GetAt(i)->Type==BOLAN_TYPE_KEYWORD&&pScriptList->GetAt(i)->Index==KeyWord)
-			return i;
+		else
+			return 0;
+		break;
+	case VALUE_TYPE_INT64:
+		if(pValue->ValueInt64)
+			return -1;
+		else
+			return 0;
+		break;
+	case VALUE_TYPE_FLOAT:
+		if(pValue->ValueFloat)
+			return -1;
+		else
+			return 0;
+		break;
+	case VALUE_TYPE_DOUBLE:
+		if(pValue->ValueDouble)
+			return -1;
+		else
+			return 0;
+		break;
+	default:
+		return 3018;
 	}
-	return -1;
+	//FUNCTION_END;
+	//return 0;
 }
-
-int CEasyScriptExecutor::FindKeyWordReverse(CESBolanStack * pScriptList,int KeyWord,int StartPos,int StopKeyWord)
-{
-	if(StartPos>=pScriptList->GetSize())
-		return -1;
-	for(;StartPos>=0;StartPos--)
-	{
-		if(pScriptList->GetAt(StartPos)->Type==BOLAN_TYPE_KEYWORD)
-		{
-			if(StopKeyWord>0&&pScriptList->GetAt(StartPos)->Index==StopKeyWord)
-				return -1;
-			if(pScriptList->GetAt(StartPos)->Index==KeyWord)
-				return StartPos;
-		}
-	}
-	return -1;
-}
-
-int CEasyScriptExecutor::FindCoupleKeyWord(CESBolanStack * pScriptList,int KeyWord,int CoupleKeyWord,int StartPos)
-{
-	int CoupleCount=0;
-	for(int i=StartPos;i<pScriptList->GetSize();i++)
-	{
-		if(pScriptList->GetAt(i)->Type==BOLAN_TYPE_KEYWORD)
-		{
-			if(pScriptList->GetAt(i)->Index==CoupleKeyWord)
-				CoupleCount++;
-			if(pScriptList->GetAt(i)->Index==KeyWord)
-			{
-				if(CoupleCount)
-					CoupleCount--;
-				else
-					return i;
-			}
-		}
-	}
-	return -1;
-}
-
-int CEasyScriptExecutor::FindCoupleKeyWordReverse(CESBolanStack * pScriptList,int KeyWord,int CoupleKeyWord,int StartPos)
-{
-	int CoupleCount=0;
-	if(StartPos>=pScriptList->GetSize())
-		return -1;
-	for(;StartPos>=0;StartPos--)
-	{
-		if(pScriptList->GetAt(StartPos)->Type==BOLAN_TYPE_KEYWORD)
-		{
-			if(pScriptList->GetAt(StartPos)->Index==CoupleKeyWord)
-				CoupleCount++;
-			if(pScriptList->GetAt(StartPos)->Index==KeyWord)
-			{
-				if(CoupleCount)
-					CoupleCount--;
-				else
-					return StartPos;
-			}
-		}
-	}
-	return -1;
-}
-
-int CEasyScriptExecutor::FindCoupleIF(CESBolanStack * pScriptList,int KeyWord,int CoupleKeyWord1,int CoupleKeyWord2,int StartPos,int StopKeyWord)
-{
-	int CoupleCount=0;
-	for(int i=StartPos;i<pScriptList->GetSize();i++)
-	{
-		if(pScriptList->GetAt(i)->Type==BOLAN_TYPE_KEYWORD)
-		{	
-			if(CoupleCount==0)
-			{
-				if(pScriptList->GetAt(i)->Index==KeyWord)
-					return i;
-				if(StopKeyWord>0&&pScriptList->GetAt(i)->Index==StopKeyWord)
-					return -1;
-			}
-			if(pScriptList->GetAt(i)->Index==CoupleKeyWord1)
-				CoupleCount++;
-			if(pScriptList->GetAt(i)->Index==CoupleKeyWord2)
-				CoupleCount--;
-		}
-	}
-	return -1;
-}
-

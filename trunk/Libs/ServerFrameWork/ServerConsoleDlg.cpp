@@ -41,6 +41,7 @@ CServerConsoleDlg::CServerConsoleDlg(CWnd* pParent /*=NULL*/)
 	, m_UCPSend(_T(""))
 {	
 	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON_TRAY);
+	m_pServer=NULL;
 }
 
 CServerConsoleDlg::~CServerConsoleDlg()
@@ -353,7 +354,8 @@ void CServerConsoleDlg::OnBnClickedCloseServer()
 	// TODO: 在此添加控件通知处理程序代码
 	if(MessageBox("是否要关闭服务器","提示",MB_YESNO)==IDYES)
 	{		
-		PostMessage(WM_QUIT);
+		if(m_pServer)
+			m_pServer->QueryShowDown();
 	}
 	
 }

@@ -4,8 +4,10 @@ class CCSVReader :
 	public CNameObject
 {
 protected:
-	char *									m_pData;
+	TCHAR *									m_pData;
 	UINT									m_DataSize;
+	UINT									m_BufferSize;
+	UINT									m_GrowSize;
 	CEasyArray<CEasyArray<LPTSTR> >			m_Records;
 	CEasyArray<LPTSTR>						m_ColumnNames;
 
@@ -38,9 +40,25 @@ public:
 
 	bool GetDataBool(UINT Row,UINT Col,bool Default);
 	bool GetDataBool(UINT Row,LPCTSTR ColName,bool Default);
+
+public:
+	bool Create(UINT BufferSize,UINT GrowSize);
+	bool Save(LPCTSTR szFileName,bool WriteHeader=true);
+	bool Save(IFileAccessor * pFileAccessor,bool WriteHeader=true);
+	bool AddColumn(LPCTSTR ColName);
+	bool AddRow();
+	bool AddDataString(LPCTSTR Data);	
+	bool AddDataInt(int Data);
+	bool AddDataInt64(INT64 Data);
+	bool AddDataDouble(double Data);
+	bool AddDataBool(bool Data);
 protected:
 	UINT GetLineCount(LPCTSTR szData);
 	LPTSTR ParseLine(LPTSTR szLine,CEasyArray<LPTSTR>& LineRecord);
+	void ConfirmBufferFreeSize(UINT NeedSize);
+	UINT GetSavedDataLen();
+	UINT GetSavedLineLen(CEasyArray<LPTSTR>& LineRecord);
+	UINT SaveLine(LPTSTR pSaveBuffer,UINT BufferSize,CEasyArray<LPTSTR>& LineRecord);
 
 
 };

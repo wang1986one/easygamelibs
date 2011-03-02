@@ -29,11 +29,12 @@ CD3DWOWM2ItemModel::~CD3DWOWM2ItemModel(void)
 
 bool CD3DWOWM2ItemModel::BuildModel()
 {
-	
+	D3DLOCK_FOR_OBJECT_MODIFY
+
 	CBLZWOWDatabase::BLZ_DB_ITEM_DISPLAY_INFO * pDisplayInfo=CBLZWOWDatabase::GetInstance()->GetItemDisplayInfo(m_ItemDisplayID);
 	if(pDisplayInfo)
 	{
-		CEasyString TexturePath=GetPathDirectory(GetName());
+		CEasyString TexturePath=GetPathDirectory(m_pModelResource->GetName());
 		if(m_ItemHandType==IHT_LEFT)
 			TexturePath+=pDisplayInfo->LeftModelTexture+".blp";
 		else
@@ -41,15 +42,16 @@ bool CD3DWOWM2ItemModel::BuildModel()
 		CD3DTexture * pTexture=GetDevice()->GetTextureManager()->LoadTexture(TexturePath);
 		if(pTexture)
 		{
-			for(int i=0;i<GetSubMeshCount();i++)
+			for(int j=0;j<GetSubMeshCount();j++)
 			{
-				CD3DSubMesh  * pSubMesh=GetSubMesh(i);
+				CD3DSubMesh  * pSubMesh=GetSubMesh(j);
 				if(pSubMesh)
 				{
 					for(UINT i=0;i<pSubMesh->GetMaterial().GetTextureLayerCount();i++)
 					{
-						UINT TextureType=pSubMesh->GetMaterial().GetTextureProperty(i)&CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE;
-						if(TextureType!=CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_DIRECT)
+						UINT TextureType=(pSubMesh->GetMaterial().GetTextureProperty(i)&CD3DWOWM2ModelResource::TF_SKIN_TEXTURE_TYPE_MASK)>>
+							CD3DWOWM2ModelResource::TF_SKIN_TEXTURE_TYPE_SHIFT;
+						if(TextureType!=D3D_TEXTURE_TYPE_DIRECT)
 						{
 							pSubMesh->GetMaterial().SetTexture(i,pTexture);
 							pTexture->AddUseRef();
@@ -80,11 +82,11 @@ bool CD3DWOWM2ItemModel::CloneFrom(CNameObject * pObject,UINT Param)
 	return true;
 }
 
-bool CD3DWOWM2ItemModel::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DWOWM2ItemModel::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
 	SAFE_RELEASE(m_pBoundingFrame);
 
-	if(!CD3DWOWM2Model::ToSmartStruct(Packet,pUSOFile,Param))
+	if(!CD3DWOWM2Model::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMIM_ITEM_DISPLAY_ID,m_ItemDisplayID));
@@ -92,9 +94,9 @@ bool CD3DWOWM2ItemModel::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,
 
 	return true;
 }
-bool CD3DWOWM2ItemModel::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DWOWM2ItemModel::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CD3DWOWM2Model::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CD3DWOWM2Model::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	m_ItemDisplayID=Packet.GetMember(SST_D3DWMIM_ITEM_DISPLAY_ID);
@@ -118,9 +120,9 @@ UINT CD3DWOWM2ItemModel::GetSmartStructSize(UINT Param)
 //	pHead->Size=sizeof(STORAGE_STRUCT);
 //	return pHead;
 //}
-//int CD3DWOWM2ItemModel::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//int CD3DWOWM2ItemModel::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{
-//	int HeadSize=CD3DWOWM2Model::USOWriteHead(pHead,pUSOFile,Param);
+//	int HeadSize=CD3DWOWM2Model::USOWriteHead(pHead,pResourceManager,Param);
 //	if(HeadSize<0)
 //		return -1;
 //
@@ -131,9 +133,9 @@ UINT CD3DWOWM2ItemModel::GetSmartStructSize(UINT Param)
 //	return sizeof(STORAGE_STRUCT);
 //}
 //
-//int CD3DWOWM2ItemModel::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//int CD3DWOWM2ItemModel::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{
-//	int ReadSize=CD3DWOWM2Model::USOReadHead(pHead,pUSOFile,Param);
+//	int ReadSize=CD3DWOWM2Model::USOReadHead(pHead,pResourceManager,Param);
 //	if(ReadSize<0)
 //		return -1;
 //
@@ -148,9 +150,7 @@ UINT CD3DWOWM2ItemModel::GetSmartStructSize(UINT Param)
 
 void CD3DWOWM2ItemModel::Update(FLOAT Time)
 {
-	FUNCTION_BEGIN;
 	CD3DWOWM2Model::Update(Time);
-	FUNCTION_END;
 }
 
 }

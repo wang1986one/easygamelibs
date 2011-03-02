@@ -14,7 +14,8 @@
 
 CSystemConfig::CSystemConfig(void)
 {
-	m_UDPControlAddress.SetPort(9600);
+	m_MainThreadProcessLimit=DEFAULT_PROCESS_LIMIT;
+	m_UDPControlAddress.SetPort(0);
 	m_LogServerObjectUse=TRUE;
 #ifdef _DEBUG
 	m_LogLevel=ILogPrinter::LOG_LEVEL_NORMAL|ILogPrinter::LOG_LEVEL_DEBUG;
@@ -38,6 +39,15 @@ bool CSystemConfig::LoadConfig(LPCTSTR ConfigFileName)
 		xml_node Config=Parser.document();
 		if(Config.moveto_child("System"))
 		{
+
+			xml_node MainThread=Config;
+			if(MainThread.moveto_child("MainThread"))
+			{
+				if(MainThread.has_attribute("ProcessLimit"))
+					m_MainThreadProcessLimit=(long)MainThread.attribute("ProcessLimit");
+
+			}
+			
 			xml_node UDPControlAddress=Config;
 			if(UDPControlAddress.moveto_child("UDPControlAddress"))
 			{
@@ -68,6 +78,16 @@ bool CSystemConfig::LoadConfig(LPCTSTR ConfigFileName)
 				if(GuardThread.has_attribute("KeepAliveCount"))
 					m_GuardThreadKeepAliveCount=(long)GuardThread.attribute("KeepAliveCount");
 			}
+
+
+			PrintImportantLog(0,"系统配置已载入");
+			PrintImportantLog(0,"主线程处理限制:%u",m_MainThreadProcessLimit);
+			PrintImportantLog(0,"UDP控制接口:%s:%u",m_UDPControlAddress.GetIPString(),m_UDPControlAddress.GetPort());
+			PrintImportantLog(0,"是否记录OverLapped对象使用状态:%s",m_LogServerObjectUse?"是":"否");
+			PrintImportantLog(0,"Log输出级别:%u",m_LogLevel);
+			PrintImportantLog(0,"主线程死锁判定时间:%u",m_GuardThreadKeepAliveTime);
+			PrintImportantLog(0,"主线程死锁判定次数:%u",m_GuardThreadKeepAliveCount);
+
 		}
 		else
 		{

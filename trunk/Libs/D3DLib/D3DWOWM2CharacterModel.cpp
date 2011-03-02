@@ -54,36 +54,22 @@ CD3DWOWM2CharacterModel::~CD3DWOWM2CharacterModel(void)
 
 void CD3DWOWM2CharacterModel::Destory()
 {
-	DestoryModel();
-	
 	CD3DWOWM2Model::Destory();
-}
+	
+	m_pHelmetModel=NULL;
+	m_pLeftShoulderModel=NULL;
+	m_pRightShoulderModel=NULL;
+	m_pLeftWeaponModel=NULL;
+	m_pRightWeaponModel=NULL;
+	m_pRightShieldModel=NULL;
 
-void CD3DWOWM2CharacterModel::DestoryModel()
-{
 	m_CloseHandAnimationIndex=-1;
 
-	if(m_pHelmetModel)
-		m_pHelmetModel->SetParent(NULL);
-	if(m_pLeftShoulderModel)
-		m_pLeftShoulderModel->SetParent(NULL);
-	if(m_pRightShoulderModel)
-		m_pRightShoulderModel->SetParent(NULL);
-	if(m_pLeftWeaponModel)
-		m_pLeftWeaponModel->SetParent(NULL);
-	if(m_pRightWeaponModel)
-		m_pRightWeaponModel->SetParent(NULL);
-	if(m_pRightShieldModel)
-		m_pRightShieldModel->SetParent(NULL);
-	SAFE_RELEASE(m_pHelmetModel);
-	SAFE_RELEASE(m_pLeftShoulderModel);
-	SAFE_RELEASE(m_pRightShoulderModel);
-	SAFE_RELEASE(m_pLeftWeaponModel);
-	SAFE_RELEASE(m_pRightWeaponModel);
-	SAFE_RELEASE(m_pRightShieldModel);
 	m_SubMeshMaterialList.Clear();
 	m_SubMeshList.Clear();
 }
+
+
 
 bool CD3DWOWM2CharacterModel::Reset()
 {
@@ -213,9 +199,8 @@ bool CD3DWOWM2CharacterModel::LoadCharacter(UINT Race,UINT Sex)
 				{
 					ModelFileName=ModelFileName.Left(Pos);
 				}
-				CEasyString SkinFileName=ModelFileName+"00.skin";
 				ModelFileName=ModelFileName+".m2";
-				if(LoadFromFile(ModelFileName,SkinFileName))
+				if(LoadFromFile(ModelFileName))
 				{
 					CEasyString Temp;
 					Temp.Format("%s_%s_%u",
@@ -252,9 +237,8 @@ bool CD3DWOWM2CharacterModel::LoadCreature(UINT CreatureDisplayID)
 			{
 				ModelFileName=ModelFileName.Left(Pos);
 			}
-			CEasyString SkinFileName=ModelFileName+"00.skin";
 			ModelFileName=ModelFileName+".m2";
-			if(LoadFromFile(ModelFileName,SkinFileName))
+			if(LoadFromFile(ModelFileName))
 			{	
 				CEasyString Temp;
 				Temp.Format("%u_%s",CreatureDisplayID,(LPCTSTR)pDisplayInfo->Name);
@@ -277,6 +261,8 @@ bool CD3DWOWM2CharacterModel::LoadCreature(UINT CreatureDisplayID)
 
 bool CD3DWOWM2CharacterModel::BuildModel()
 {
+	D3DLOCK_FOR_OBJECT_ADD
+
 	if(GetDevice()==NULL||m_pModelResource==NULL)
 		return false;
 
@@ -334,31 +320,32 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 		for(UINT j=0;j<m_SubMeshList[i]->GetMaterial().GetTextureLayerCount();j++)
 		{
 			UINT64 TextureProperty=m_SubMeshList[i]->GetMaterial().GetTextureProperty(j);
-			int TextureType=TextureProperty&CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE;
+			int TextureType=(TextureProperty&CD3DWOWM2ModelResource::TF_SKIN_TEXTURE_TYPE_MASK)>>
+				CD3DWOWM2ModelResource::TF_SKIN_TEXTURE_TYPE_SHIFT;
 			switch(TextureType)
 			{
-			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_DIRECT:
+			case D3D_TEXTURE_TYPE_DIRECT:
 				{
 					CD3DTexture * pTexture=m_SubMeshList[i]->GetMaterial().GetTexture(j);
 					m_SubMeshMaterialList[i].AddTexture(pTexture,TextureProperty);
 					pTexture->AddUseRef();
 				}
 				break;			
-			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_BODY:
+			case D3D_TEXTURE_TYPE_BODY:
 				if(pCharSkinTexture)
 				{				
 					m_SubMeshMaterialList[i].AddTexture(pCharSkinTexture,TextureProperty);
 					pCharSkinTexture->AddUseRef();
 				}
 				break;
-			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_CAPE:
+			case D3D_TEXTURE_TYPE_CAPE:
 				if(pCapeTexture)
 				{
 					m_SubMeshMaterialList[i].AddTexture(pCapeTexture,TextureProperty);
 					pCapeTexture->AddUseRef();
 				}
 				break;
-			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_HAIR:
+			case D3D_TEXTURE_TYPE_HAIR:
 				if(pCharHairTexture)
 				{
 
@@ -366,7 +353,7 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 					pCharHairTexture->AddUseRef();
 				}
 				break;
-			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_FUR:
+			case D3D_TEXTURE_TYPE_FUR:
 				if(pCharSkinExtraTexture)
 				{
 
@@ -374,21 +361,21 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 					pCharSkinExtraTexture->AddUseRef();
 				}
 				break;	
-			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_CREATURE_SKIN1:
+			case D3D_TEXTURE_TYPE_CREATURE_SKIN1:
 				if(pSkinTexture1)
 				{
 					m_SubMeshMaterialList[i].AddTexture(pSkinTexture1,TextureProperty);
 					pSkinTexture1->AddUseRef();
 				}
 				break;
-			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_CREATURE_SKIN2:
+			case D3D_TEXTURE_TYPE_CREATURE_SKIN2:
 				if(pSkinTexture2)
 				{
 					m_SubMeshMaterialList[i].AddTexture(pSkinTexture2,TextureProperty);
 					pSkinTexture2->AddUseRef();
 				}
 				break;
-			case CD3DWOWM2ModelResource::SMP_TEXTURE_TYPE_CREATURE_SKIN3:
+			case D3D_TEXTURE_TYPE_CREATURE_SKIN3:
 				if(pSkinTexture3)
 				{
 					m_SubMeshMaterialList[i].AddTexture(pSkinTexture3,TextureProperty);
@@ -414,6 +401,8 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 	SAFE_RELEASE(pSkinTexture1);
 	SAFE_RELEASE(pSkinTexture2);
 	SAFE_RELEASE(pSkinTexture3);
+
+	OnSubMeshChanged();
 	return true;
 }
 
@@ -423,11 +412,11 @@ int CD3DWOWM2CharacterModel::GetSubMeshCount()
 {
 	return (int)m_SubMeshList.GetCount();
 }
-CD3DSubMesh * CD3DWOWM2CharacterModel::GetSubMesh(UINT index)
+CD3DSubMesh * CD3DWOWM2CharacterModel::GetOriginSubMesh(UINT index)
 {
 	return m_SubMeshList[index];
 }
-CD3DSubMeshMaterial * CD3DWOWM2CharacterModel::GetSubMeshMaterial(int index)
+CD3DSubMeshMaterial * CD3DWOWM2CharacterModel::GetSubMeshMaterial(UINT index)
 {
 	return &(m_SubMeshMaterialList[index]);
 }
@@ -436,6 +425,8 @@ bool CD3DWOWM2CharacterModel::CloneFrom(CNameObject * pObject,UINT Param)
 {
 	if(!pObject->IsKindOf(GET_CLASS_INFO(CD3DWOWM2CharacterModel)))
 		return false;
+
+	Destory();
 
 	if(!CD3DWOWM2Model::CloneFrom(pObject,Param))
 		return false;
@@ -489,34 +480,36 @@ bool CD3DWOWM2CharacterModel::CloneFrom(CNameObject * pObject,UINT Param)
 		m_pRightWeaponModel=(CD3DWOWM2ItemModel *)GetChildByStorageIDRecursive(pSrcObject->m_pRightWeaponModel->GetStorageID());
 	if(pSrcObject->m_pRightShieldModel)
 		m_pRightShieldModel=(CD3DWOWM2ItemModel *)GetChildByStorageIDRecursive(pSrcObject->m_pRightShieldModel->GetStorageID());
+
+	OnSubMeshChanged();
 	return true;
 
 }
 
-void CD3DWOWM2CharacterModel::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+void CD3DWOWM2CharacterModel::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
-	CD3DWOWM2Model::PickResource(pObjectSet,Param);
+	CD3DWOWM2Model::PickResource(pResourceManager,Param);
 	for(UINT i=0;i<m_SubMeshMaterialList.GetCount();i++)
 	{
 		if(m_SubMeshMaterialList[i].GetFX())
 		{			
-			pObjectSet->Add(m_SubMeshMaterialList[i].GetFX());
+			pResourceManager->AddResource(m_SubMeshMaterialList[i].GetFX());
 		}
 		for(UINT j=0;j<m_SubMeshMaterialList[i].GetTextureLayerCount();j++)
 		{
 			if(m_SubMeshMaterialList[i].GetTexture(j))
 			{
-				pObjectSet->Add(m_SubMeshMaterialList[i].GetTexture(j));
+				pResourceManager->AddResource(m_SubMeshMaterialList[i].GetTexture(j));
 			}
 		}
 	}
 }
 
-bool CD3DWOWM2CharacterModel::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DWOWM2CharacterModel::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
 	SAFE_RELEASE(m_pBoundingFrame);
 
-	if(!CD3DWOWM2Model::ToSmartStruct(Packet,pUSOFile,Param))
+	if(!CD3DWOWM2Model::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	for(UINT i=0;i<m_SubMeshList.GetCount();i++)
@@ -530,7 +523,7 @@ bool CD3DWOWM2CharacterModel::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSO
 		void * pBuffer=Packet.PrepareMember(BufferSize);
 		CSmartStruct SubPacket(pBuffer,BufferSize,true);
 
-		if(!m_SubMeshMaterialList[i].ToSmartStruct(SubPacket,pUSOFile,Param))
+		if(!m_SubMeshMaterialList[i].ToSmartStruct(SubPacket,pResourceManager,Param))
 			return false;
 
 		if(!Packet.FinishMember(SST_D3DWMCM_CHAR_MATERIAL,SubPacket.GetDataLen()))
@@ -576,9 +569,9 @@ bool CD3DWOWM2CharacterModel::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSO
 	
 	return true;
 }
-bool CD3DWOWM2CharacterModel::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DWOWM2CharacterModel::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CD3DWOWM2Model::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CD3DWOWM2Model::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	UINT SubMeshCount=0;
@@ -629,7 +622,7 @@ bool CD3DWOWM2CharacterModel::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pU
 		case SST_D3DWMCM_CHAR_MATERIAL:
 			{
 				CSmartStruct MaterialPacket=Value;
-				if(!m_SubMeshMaterialList[MaterialCount].FromSmartStruct(MaterialPacket,pUSOFile,Param))
+				if(!m_SubMeshMaterialList[MaterialCount].FromSmartStruct(MaterialPacket,pResourceManager,Param))
 					return false;
 			}
 			MaterialCount++;
@@ -751,6 +744,7 @@ bool CD3DWOWM2CharacterModel::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pU
 	m_CharSexMax=CBLZWOWDatabase::GetInstance()->GetMaxCharSex(m_CharRace);
 	CBLZWOWDatabase::GetInstance()->GetCharMaxInfo(m_CharRace,m_CharSex,
 		m_CharSkinColorMax,m_CharHairColorMax,m_CharFaceTypeMax,m_CharHairTypeMax,m_CharBeardTypeMax);
+	OnSubMeshChanged();
 	return true;
 }
 UINT CD3DWOWM2CharacterModel::GetSmartStructSize(UINT Param)
@@ -807,6 +801,32 @@ UINT CD3DWOWM2CharacterModel::GetSmartStructSize(UINT Param)
 	return Size;
 }
 
+
+void CD3DWOWM2CharacterModel::DestoryModel()
+{
+	m_CloseHandAnimationIndex=-1;
+
+	if(m_pHelmetModel)
+		m_pHelmetModel->SetParent(NULL);
+	if(m_pLeftShoulderModel)
+		m_pLeftShoulderModel->SetParent(NULL);
+	if(m_pRightShoulderModel)
+		m_pRightShoulderModel->SetParent(NULL);
+	if(m_pLeftWeaponModel)
+		m_pLeftWeaponModel->SetParent(NULL);
+	if(m_pRightWeaponModel)
+		m_pRightWeaponModel->SetParent(NULL);
+	if(m_pRightShieldModel)
+		m_pRightShieldModel->SetParent(NULL);
+	SAFE_RELEASE(m_pHelmetModel);
+	SAFE_RELEASE(m_pLeftShoulderModel);
+	SAFE_RELEASE(m_pRightShoulderModel);
+	SAFE_RELEASE(m_pLeftWeaponModel);
+	SAFE_RELEASE(m_pRightWeaponModel);
+	SAFE_RELEASE(m_pRightShieldModel);
+	m_SubMeshMaterialList.Clear();
+	m_SubMeshList.Clear();
+}
 
 bool CD3DWOWM2CharacterModel::FetchCreatureExtraInfo(UINT ExtraInfoID)
 {
@@ -873,7 +893,6 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 					ModelFileName+="M";
 				else
 					ModelFileName+="F";
-				CEasyString SkinFileName=ModelFileName+"00.skin";
 				ModelFileName=ModelFileName+".m2";
 
 				CD3DDummy * pDummy=EnableAttachment(CAI_HELMET);
@@ -881,7 +900,7 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 				{
 					m_pHelmetModel=new CD3DWOWM2ItemModel();
 					m_pHelmetModel->SetDevice(GetDevice());
-					if(m_pHelmetModel->LoadFromFile(ModelFileName,SkinFileName))
+					if(m_pHelmetModel->LoadFromFile(ModelFileName))
 					{
 						m_pHelmetModel->Play(0,0,0,true);
 						m_pHelmetModel->SetParent(pDummy);
@@ -932,7 +951,6 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 			{
 				ModelFileName=ModelFileName.Left(Pos);
 			}
-			SkinFileName=ModelFileName+"00.skin";
 			ModelFileName=ModelFileName+".m2";
 
 			pDummy=EnableAttachment(CAI_LEFT_SHOULDER);
@@ -941,7 +959,7 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 				m_pLeftShoulderModel=new CD3DWOWM2ItemModel();
 				m_pLeftShoulderModel->SetDevice(GetDevice());
 
-				if(m_pLeftShoulderModel->LoadFromFile(ModelFileName,SkinFileName))
+				if(m_pLeftShoulderModel->LoadFromFile(ModelFileName))
 				{
 					m_pLeftShoulderModel->Play(0,0,0,true);
 					m_pLeftShoulderModel->SetParent(pDummy);
@@ -963,7 +981,6 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 			{
 				ModelFileName=ModelFileName.Left(Pos);
 			}
-			SkinFileName=ModelFileName+"00.skin";
 			ModelFileName=ModelFileName+".m2";
 
 			pDummy=EnableAttachment(CAI_RIGHT_SHOULDER);
@@ -971,7 +988,7 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 			{
 				m_pRightShoulderModel=new CD3DWOWM2ItemModel();
 				m_pRightShoulderModel->SetDevice(GetDevice());
-				if(m_pRightShoulderModel->LoadFromFile(ModelFileName,SkinFileName))
+				if(m_pRightShoulderModel->LoadFromFile(ModelFileName))
 				{
 					m_pRightShoulderModel->Play(0,0,0,true);
 					m_pRightShoulderModel->SetParent(pDummy);
@@ -1008,7 +1025,6 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 			{
 				ModelFileName=ModelFileName.Left(Pos);
 			}
-			SkinFileName=ModelFileName+"00.skin";
 			ModelFileName=ModelFileName+".m2";
 
 			pDummy=EnableAttachment(CAI_LEFT_PALM2);
@@ -1017,7 +1033,7 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 			{
 				m_pLeftWeaponModel=new CD3DWOWM2ItemModel();
 				m_pLeftWeaponModel->SetDevice(GetDevice());
-				if(m_pLeftWeaponModel->LoadFromFile(ModelFileName,SkinFileName))
+				if(m_pLeftWeaponModel->LoadFromFile(ModelFileName))
 				{
 					m_pLeftWeaponModel->Play(0,0,0,true);
 					m_pLeftWeaponModel->SetParent(pDummy);
@@ -1052,7 +1068,6 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 			{
 				ModelFileName=ModelFileName.Left(Pos);
 			}
-			SkinFileName=ModelFileName+"00.skin";
 			ModelFileName=ModelFileName+".m2";
 
 			pDummy=EnableAttachment(CAI_RIGHT_PALM2);
@@ -1060,7 +1075,7 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 			{
 				m_pRightWeaponModel=new CD3DWOWM2ItemModel();
 				m_pRightWeaponModel->SetDevice(GetDevice());					
-				if(m_pRightWeaponModel->LoadFromFile(ModelFileName,SkinFileName))
+				if(m_pRightWeaponModel->LoadFromFile(ModelFileName))
 				{
 					m_pRightWeaponModel->Play(0,0,0,true);
 					m_pRightWeaponModel->SetParent(pDummy);
@@ -1096,7 +1111,6 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 			{
 				ModelFileName=ModelFileName.Left(Pos);
 			}
-			SkinFileName=ModelFileName+"00.skin";
 			ModelFileName=ModelFileName+".m2";
 
 			pDummy=EnableAttachment(CAI_LEFT_WRIST);
@@ -1105,7 +1119,7 @@ bool CD3DWOWM2CharacterModel::BuildEquipmentModel(bool& HairVisible,bool& Facial
 			{
 				m_pRightShieldModel=new CD3DWOWM2ItemModel();
 				m_pRightShieldModel->SetDevice(GetDevice());
-				if(m_pRightShieldModel->LoadFromFile(ModelFileName,SkinFileName))
+				if(m_pRightShieldModel->LoadFromFile(ModelFileName))
 				{
 					m_pRightShieldModel->Play(0,0,0,true);
 					m_pRightShieldModel->SetParent(pDummy);
@@ -1381,7 +1395,10 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 		CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pSkinSection=CBLZWOWDatabase::GetInstance()->FindCharSection(0,m_CharRace,m_CharSex,0,m_CharSkinColor);
 		if(pSkinSection==NULL)
 			return false;
-		pSkinTexture=new CD3DTexture(pD3DDevice->GetTextureManager());;
+		pSkinTexture=new CD3DTexture(pD3DDevice->GetTextureManager());
+		CEasyString Name;
+		Name.Format("%s\\SKINTEX",m_pModelResource->GetName());
+		pSkinTexture->SetName(Name);
 		if(!pSkinTexture->LoadTexture(pSkinSection->Texture1))
 		{			
 			return false;
@@ -1402,7 +1419,10 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 			return false;
 		}
 
-		pSkinExtraTexture=pD3DDevice->GetTextureManager()->LoadTexture(pSkinSection->Texture2);	
+		if(!pSkinSection->Texture2.IsEmpty())
+		{
+			pSkinExtraTexture=pD3DDevice->GetTextureManager()->LoadTexture(pSkinSection->Texture2);	
+		}		
 
 		CBLZWOWDatabase::BLZ_DB_CHAR_SECTION * pFaceSection=CBLZWOWDatabase::GetInstance()->FindCharSection(1,m_CharRace,m_CharSex,m_CharFaceType,m_CharSkinColor);
 		if(pFaceSection)
@@ -1687,7 +1707,7 @@ void CD3DWOWM2CharacterModel::FetchAnimationFrames(UINT Time)
 			int Bone=m_pModelResource->GetKeyBone(i);
 			if(Bone>=0)
 			{					
-				m_pModelResource->MakeAnimationBoneFrameByTree(m_CloseHandAnimationIndex,32,Bone,					
+				m_pModelResource->MakeAnimationBoneFrameByTree(m_CloseHandAnimationIndex,32,false,Bone,					
 					m_BoneMatrices.GetBuffer(),m_BoneMatrices.GetCount());
 			}
 		}		
@@ -1699,7 +1719,7 @@ void CD3DWOWM2CharacterModel::FetchAnimationFrames(UINT Time)
 			int Bone=m_pModelResource->GetKeyBone(i);
 			if(Bone>=0)
 			{
-				m_pModelResource->MakeAnimationBoneFrameByTree(m_CloseHandAnimationIndex,32,Bone,				
+				m_pModelResource->MakeAnimationBoneFrameByTree(m_CloseHandAnimationIndex,32,false,Bone,				
 					m_BoneMatrices.GetBuffer(),m_BoneMatrices.GetCount());
 			}
 		}		

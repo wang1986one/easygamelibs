@@ -55,15 +55,42 @@ void CPerformanceStatistician::PrintPerformanceStat(int LogChannel)
 		}
 	}
 	std::sort(PerformanceList.begin(),PerformanceList.end(),PERFORMANCE_INFO::Sort);
-	for(size_t i=0;i<PerformanceList.size();i++)
+
+	LARGE_INTEGER PerformanceFrequency;
+	if(QueryPerformanceFrequency(&PerformanceFrequency))
 	{
-		if(PerformanceList[i].PerformanceCount==0)
-			break;
-		CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %u:%d",
-			PerformanceList[i].PerformanceFunctionName,
-			PerformanceList[i].PerformanceCount,
-			PerformanceList[i].PerformanceFunctionCall);
+		double Total=0;
+		for(size_t i=0;i<PerformanceList.size();i++)
+		{
+			if(PerformanceList[i].PerformanceCount==0)
+				break;
+			double Count=((double)PerformanceList[i].PerformanceCount*1000.0f)/((double)PerformanceFrequency.QuadPart);
+			Total+=Count;
+			CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %gMS:%d",
+				PerformanceList[i].PerformanceFunctionName,
+				Count,
+				PerformanceList[i].PerformanceFunctionCall);
+		}
+		CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %gMS",
+			"Total",Total);
 	}
+	else
+	{
+		UINT64 Total=0;
+		for(size_t i=0;i<PerformanceList.size();i++)
+		{
+			if(PerformanceList[i].PerformanceCount==0)
+				break;
+			Total+=PerformanceList[i].PerformanceCount;
+			CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %u:%d",
+				PerformanceList[i].PerformanceFunctionName,
+				PerformanceList[i].PerformanceCount,
+				PerformanceList[i].PerformanceFunctionCall);
+		}
+		CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %llu",
+			"Total",Total);
+	}
+	
 }
 
 void CPerformanceStatistician::PrintPerformanceStatUnit(int LogChannel)
@@ -92,11 +119,29 @@ void CPerformanceStatistician::PrintPerformanceStatUnit(int LogChannel)
 		}
 	}
 	std::sort(PerformanceList.begin(),PerformanceList.end(),PERFORMANCE_INFO::Sort);
-	for(size_t i=0;i<PerformanceList.size();i++)
+
+	LARGE_INTEGER PerformanceFrequency;
+	if(QueryPerformanceFrequency(&PerformanceFrequency))
 	{
-		CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %u",
-			PerformanceList[i].PerformanceFunctionName,
-			PerformanceList[i].PerformanceCount);
+		for(size_t i=0;i<PerformanceList.size();i++)
+		{
+			if(PerformanceList[i].PerformanceCount==0)
+				break;
+			double Count=((double)PerformanceList[i].PerformanceCount*1000.0f)/((double)PerformanceFrequency.QuadPart);
+
+			CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %gMS",
+				PerformanceList[i].PerformanceFunctionName,
+				Count);
+		}
+	}
+	else
+	{
+		for(size_t i=0;i<PerformanceList.size();i++)
+		{
+			CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %u",
+				PerformanceList[i].PerformanceFunctionName,
+				PerformanceList[i].PerformanceCount);
+		}
 	}
 }
 

@@ -15,6 +15,7 @@ namespace D3DLib{
 IMPLEMENT_CLASS_INFO(CD3DSubMesh,CNameObject);
 CD3DSubMesh::CD3DSubMesh(void)
 {
+	m_pDevice=NULL;
 	ZeroMemory(&m_VertexFormat,sizeof(m_VertexFormat));
 	m_PrimitiveType=D3DPT_TRIANGLELIST;
 	m_PrimitiveCount=0;
@@ -36,8 +37,43 @@ CD3DSubMesh::CD3DSubMesh(void)
 	m_Flag=0;
 	m_RenderBufferUsed=BUFFER_USE_DX;
 	m_OrginDataBufferUsed=BUFFER_USE_DX;
+	m_pVertexBufferR=NULL;
+	m_VertexBufferRSize=0;
+	m_pIndexBufferR=NULL;
+	m_IndexBufferRSize=0;
 	SetVisible(true);
 
+}
+
+CD3DSubMesh::CD3DSubMesh(CD3DDevice * pDevice)
+{
+	m_pDevice=pDevice;
+	ZeroMemory(&m_VertexFormat,sizeof(m_VertexFormat));
+	m_PrimitiveType=D3DPT_TRIANGLELIST;
+	m_PrimitiveCount=0;
+	m_pVertexBuffer=NULL;
+	m_pDXVertexBuffer=NULL;
+	m_pBackupVertexBuffer=NULL;
+	m_IsVertexsSelfDelete=false;
+	m_IsDXVertexBufferSelfRelease=false;
+	m_VertexCount=0;
+	m_StartVertex=0;
+	m_pIndexBuffer=NULL;
+	m_pDXIndexBuffer=NULL;
+	m_pBackupIndexBuffer=NULL;
+	m_IsIndexsSelfDelete=false;
+	m_IsDXIndexBufferSelfRelease=false;
+	m_IndexCount=0;	
+	m_StartIndex=0;
+	m_Property=0;
+	m_Flag=0;
+	m_RenderBufferUsed=BUFFER_USE_DX;
+	m_OrginDataBufferUsed=BUFFER_USE_DX;
+	m_pVertexBufferR=NULL;
+	m_VertexBufferRSize=0;
+	m_pIndexBufferR=NULL;
+	m_IndexBufferRSize=0;
+	SetVisible(true);
 }
 
 CD3DSubMesh::~CD3DSubMesh(void)
@@ -67,6 +103,8 @@ void CD3DSubMesh::Destory()
 	SAFE_DELETE_ARRAY(m_pBackupVertexBuffer);
 	SAFE_DELETE_ARRAY(m_pBackupIndexBuffer);
 	SAFE_RELEASE(m_VertexFormat.pVertexDeclaration);
+	SAFE_DELETE_ARRAY(m_pVertexBufferR);
+	SAFE_DELETE_ARRAY(m_pIndexBufferR);
 	m_Material.Destory();
 	CNameObject::Destory();
 }
@@ -113,18 +151,110 @@ void CD3DSubMesh::CreateBounding()
 	
 }
 
-bool CD3DSubMesh::RayIntersect(const CD3DMatrix& WorldMatrix,const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly)
+void CD3DSubMesh::CreateBoundingBox()
+{
+	if(m_VertexCount)
+	{
+		if(GetOrginDataBufferUsed()==BUFFER_USE_DX)
+		{				
+			BYTE *pBuff;
+			m_pDXVertexBuffer->Lock(0,0,(LPVOID *)&pBuff,0);
+			m_BoundingBox.ComputeFromVertex(
+				pBuff+m_StartVertex*m_VertexFormat.VertexSize,
+				m_VertexCount,
+				m_VertexFormat.VertexSize);		
+			m_pDXVertexBuffer->Unlock();
+		}
+		else
+		{
+			m_BoundingBox.ComputeFromVertex(
+				m_pVertexBuffer+m_StartVertex*m_VertexFormat.VertexSize,
+				m_VertexCount,
+				m_VertexFormat.VertexSize);		
+		}
+	}
+}
+void CD3DSubMesh::CreateBoundingSphere()
+{
+	if(m_VertexCount)
+	{
+		if(GetOrginDataBufferUsed()==BUFFER_USE_DX)
+		{				
+			BYTE *pBuff;
+			m_pDXVertexBuffer->Lock(0,0,(LPVOID *)&pBuff,0);		
+			m_BoundingSphere.ComputeFromVertex(
+				pBuff+m_StartVertex*m_VertexFormat.VertexSize,
+				m_VertexCount,
+				m_VertexFormat.VertexSize);			
+			m_pDXVertexBuffer->Unlock();
+		}
+		else
+		{			
+			m_BoundingSphere.ComputeFromVertex(
+				m_pVertexBuffer+m_StartVertex*m_VertexFormat.VertexSize,
+				m_VertexCount,
+				m_VertexFormat.VertexSize);			
+		}
+	}
+}
+
+CD3DBoundingBox CD3DSubMesh::GetBoundingBoxWithTranform(const CD3DMatrix& TransformMat)
+{
+	CD3DBoundingBox BBox;
+	if(m_VertexCount)
+	{
+		if(GetOrginDataBufferUsed()==BUFFER_USE_DX)
+		{				
+			BYTE *pBuff;
+			m_pDXVertexBuffer->Lock(0,0,(LPVOID *)&pBuff,0);
+			BBox.ComputeFromVertexWithTransform(
+				pBuff+m_StartVertex*m_VertexFormat.VertexSize,
+				m_VertexCount,
+				m_VertexFormat.VertexSize,TransformMat);		
+			m_pDXVertexBuffer->Unlock();
+		}
+		else
+		{
+			BBox.ComputeFromVertexWithTransform(
+				m_pVertexBuffer+m_StartVertex*m_VertexFormat.VertexSize,
+				m_VertexCount,
+				m_VertexFormat.VertexSize,TransformMat);		
+		}
+	}
+	return BBox;
+}
+
+void CD3DSubMesh::AppendBoundingBoxWithTranform(CD3DBoundingBox& BBox,const CD3DMatrix& TransformMat)
+{
+	if(m_VertexCount)
+	{
+		if(GetOrginDataBufferUsed()==BUFFER_USE_DX)
+		{				
+			BYTE *pBuff;
+			m_pDXVertexBuffer->Lock(0,0,(LPVOID *)&pBuff,0);
+			BBox.AppendFromVertexWithTransform(
+				pBuff+m_StartVertex*m_VertexFormat.VertexSize,
+				m_VertexCount,
+				m_VertexFormat.VertexSize,TransformMat);		
+			m_pDXVertexBuffer->Unlock();
+		}
+		else
+		{
+			BBox.AppendFromVertexWithTransform(
+				m_pVertexBuffer+m_StartVertex*m_VertexFormat.VertexSize,
+				m_VertexCount,
+				m_VertexFormat.VertexSize,TransformMat);		
+		}
+	}
+}
+
+bool CD3DSubMesh::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly)
 {
 	BYTE * pVertexBuff=NULL;
 	BYTE * pIndexBuff=NULL;
 	bool IsIntersect=false;
 
-	
-	CD3DVector3 InterPoint;
-
-	CD3DBoundingBox BBox=m_BoundingBox*WorldMatrix;
-
-	if(!BBox.RayIntersect(Point,Dir,IntersectPoint,Distance))
+	if(!m_BoundingBox.RayIntersect(Point,Dir,IntersectPoint,Distance))
 		return IsIntersect;
 
 	Distance=3.4E+38f;
@@ -175,25 +305,17 @@ bool CD3DSubMesh::RayIntersect(const CD3DMatrix& WorldMatrix,const CD3DVector3& 
 			p3=*(CD3DVector3 *)(pVertexBuff+(t*3+2)*m_VertexFormat.VertexSize);
 		}
 		
-		
-
-		p1*=WorldMatrix;
-		p2*=WorldMatrix;
-		p3*=WorldMatrix;
 
 		FLOAT U,V;
 		FLOAT Dis;
 
 		if(D3DXIntersectTri(&p1,&p2,&p3,&Point,&Dir,&U,&V,&Dis))
 		{			
-			InterPoint=p1+(p2-p1)*U+(p3-p1)*V;
 			IsIntersect=true;
-			//CD3DVector3 DistanceVector=InterPoint-Point;
-			//FLOAT Dis=DistanceVector.Length();
 			if(Dis<Distance)
 			{
 				Distance=Dis;
-				IntersectPoint=InterPoint;
+				IntersectPoint=p1+(p2-p1)*U+(p3-p1)*V;
 			}
 			if(TestOnly)
 			{
@@ -210,10 +332,129 @@ bool CD3DSubMesh::RayIntersect(const CD3DMatrix& WorldMatrix,const CD3DVector3& 
 	return IsIntersect;
 }
 
-bool CD3DSubMesh::DeclareVertexFormat(CD3DDevice * pDevice,D3DVERTEXELEMENT9* pVertexElements,WORD VertexSize,WORD IndexSize)
+bool CD3DSubMesh::LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly)
 {
+	CD3DVector3 Dir=EndPoint-StartPoint;
+	FLOAT Len=Dir.Length();
+	Dir.Normalize();
+
+	BYTE * pVertexBuff=NULL;
+	BYTE * pIndexBuff=NULL;
+	bool IsIntersect=false;
+
+	if(!m_BoundingBox.RayIntersect(StartPoint,Dir,IntersectPoint,Distance))
+		return IsIntersect;
+
+	Distance=Len;
+
+	if(GetOrginDataBufferUsed()==BUFFER_USE_DX)
+	{
+		m_pDXVertexBuffer->Lock(0,0,(LPVOID *)&pVertexBuff,D3DLOCK_READONLY);
+		if(m_pDXIndexBuffer)
+			m_pDXIndexBuffer->Lock(0,0,(LPVOID *)&pIndexBuff,D3DLOCK_READONLY);
+	}
+	else if(GetOrginDataBufferUsed()==BUFFER_USE_CUSTOM)
+	{				
+		pVertexBuff=m_pVertexBuffer;
+		pIndexBuff=m_pIndexBuffer;
+	}
+	else
+	{
+		pVertexBuff=m_pBackupVertexBuffer;
+		pIndexBuff=m_pBackupIndexBuffer;
+	}
+	for(UINT t=0;t<m_PrimitiveCount;t++)
+	{
+		CD3DVector3 p1;
+		CD3DVector3 p2;
+		CD3DVector3 p3;
+
+		if(pIndexBuff)
+		{
+			if(m_VertexFormat.IndexSize==2)
+			{
+				WORD * IndexList=(WORD *)pIndexBuff;
+				p1=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3]*m_VertexFormat.VertexSize);
+				p2=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+1]*m_VertexFormat.VertexSize);
+				p3=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+2]*m_VertexFormat.VertexSize);
+			}
+			else
+			{
+				DWORD * IndexList=(DWORD *)pIndexBuff;
+				p1=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3]*m_VertexFormat.VertexSize);
+				p2=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+1]*m_VertexFormat.VertexSize);
+				p3=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+2]*m_VertexFormat.VertexSize);
+			}
+		}
+		else
+		{
+			p1=*(CD3DVector3 *)(pVertexBuff+(t*3)*m_VertexFormat.VertexSize);
+			p2=*(CD3DVector3 *)(pVertexBuff+(t*3+1)*m_VertexFormat.VertexSize);
+			p3=*(CD3DVector3 *)(pVertexBuff+(t*3+2)*m_VertexFormat.VertexSize);
+		}
+
+
+		FLOAT U,V;
+		FLOAT Dis;
+
+		if(D3DXIntersectTri(&p1,&p2,&p3,&StartPoint,&Dir,&U,&V,&Dis))
+		{			
+			if(Dis<=Distance)
+			{
+				IsIntersect=true;
+				Distance=Dis;
+				IntersectPoint=p1+(p2-p1)*U+(p3-p1)*V;
+				if(TestOnly)
+				{
+					break;
+				}
+			}			
+		}
+	}
+	if(GetOrginDataBufferUsed()==BUFFER_USE_DX)
+	{
+		m_pDXVertexBuffer->Unlock();
+		if(m_pDXIndexBuffer)
+			m_pDXIndexBuffer->Unlock();
+	}
+	return IsIntersect;
+}
+
+bool CD3DSubMesh::GetHeightByXZ(const CD3DMatrix& WorldMatrix,const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight)
+{
+	CD3DMatrix InvMat=WorldMatrix.GetInverse();
+	CD3DVector3 RayPos=Pos;
+	CD3DVector3 RayDir(0,-1,0);
+	CD3DVector3 IntersectPoint;
+	FLOAT Distance;
+	RayPos.y=MaxHeight;
+	RayPos*=InvMat;
+	RayDir*=InvMat.GetScaleRotation();
+	RayDir.Normalize();
+	if(RayIntersect(RayPos,RayDir,IntersectPoint,Distance,false))
+	{
+		IntersectPoint*=WorldMatrix;
+		if(IntersectPoint.y>=MinHeight)
+		{
+			Height=IntersectPoint.y;
+			WaterHeight=Height;
+			return true;
+		}
+		//else
+		//{
+		//	PrintSystemLog(0,"得到的高%g度不在高度范围[%g,%g]内",
+		//		IntersectPoint.y,MinHeight,MaxHeight);
+		//}
+	}
+	return false;
+}
+
+bool CD3DSubMesh::DeclareVertexFormat(D3DVERTEXELEMENT9* pVertexElements,WORD VertexSize,WORD IndexSize)
+{
+	if(m_pDevice==NULL)
+		return false;
 	SAFE_RELEASE(m_VertexFormat.pVertexDeclaration);
-	if(pDevice->GetD3DDevice()->CreateVertexDeclaration(pVertexElements,&(m_VertexFormat.pVertexDeclaration))==D3D_OK)
+	if(m_pDevice->GetD3DDevice()->CreateVertexDeclaration(pVertexElements,&(m_VertexFormat.pVertexDeclaration))==D3D_OK)
 	{
 		m_VertexFormat.VertexSize=VertexSize;
 		m_VertexFormat.IndexSize=IndexSize;
@@ -222,57 +463,129 @@ bool CD3DSubMesh::DeclareVertexFormat(CD3DDevice * pDevice,D3DVERTEXELEMENT9* pV
 	return false;
 }
 
+void CD3DSubMesh::SetVertices(BYTE * pVertexBuffer,UINT BufferSize,bool IsSelfDelete)
+{
+	m_pVertexBuffer=pVertexBuffer;
+	m_IsVertexsSelfDelete=IsSelfDelete;
+	if(CD3DDevice::IsUseMultiThreadRender()&&BufferSize)
+	{
+		SAFE_DELETE_ARRAY(m_pVertexBufferR);
+		m_pVertexBufferR=new BYTE[BufferSize];
+		m_VertexBufferRSize=BufferSize;
+	}
+}
+
 void CD3DSubMesh::AllocVertexBuffer()
 {
+	SAFE_DELETE_ARRAY(m_pVertexBuffer);	
 	m_pVertexBuffer=new BYTE[m_VertexFormat.VertexSize*m_VertexCount];	
 	m_IsVertexsSelfDelete=true;
+	if(CD3DDevice::IsUseMultiThreadRender())
+	{
+		SAFE_DELETE_ARRAY(m_pVertexBufferR);
+		m_pVertexBufferR=new BYTE[m_VertexFormat.VertexSize*m_VertexCount];
+		m_VertexBufferRSize=m_VertexFormat.VertexSize*m_VertexCount;
+	}
 }
-bool CD3DSubMesh::AllocDXVertexBuffer(CD3DDevice * pDevice,DWORD Usage,D3DPOOL Pool)
+bool CD3DSubMesh::AllocDXVertexBuffer(DWORD Usage,D3DPOOL Pool)
 {
-	if(pDevice->GetD3DDevice()->CreateVertexBuffer( 
+	if(m_pDevice==NULL)
+		return false;
+	SAFE_RELEASE(m_pDXVertexBuffer);
+	HRESULT hResult=m_pDevice->GetD3DDevice()->CreateVertexBuffer( 
 		m_VertexFormat.VertexSize*m_VertexCount,
 		Usage, m_VertexFormat.FVF,
-		Pool, &m_pDXVertexBuffer, NULL )==D3D_OK)
+		Pool, &m_pDXVertexBuffer, NULL );
+	if(hResult==D3D_OK)
 	{
 		m_IsDXVertexBufferSelfRelease=true;
 		return true;
 	}
+	else
+	{
+		PrintSystemLog(0,"申请顶点缓冲失败%X",hResult);
+	}
 	return false;	
+}
+
+void CD3DSubMesh::SetIndices(BYTE * pIndexBuffer,UINT BufferSize,bool IsSelfDelete)
+{
+	m_pIndexBuffer=pIndexBuffer;
+	m_IsIndexsSelfDelete=IsSelfDelete;
+	if(CD3DDevice::IsUseMultiThreadRender()&&BufferSize)
+	{
+		SAFE_DELETE_ARRAY(m_pIndexBufferR);
+		m_pIndexBufferR=new BYTE[BufferSize];
+		m_IndexBufferRSize=BufferSize;
+	}
 }
 
 void CD3DSubMesh::AllocBackupVertexBuffer()
 {
+	SAFE_DELETE_ARRAY(m_pBackupVertexBuffer);
 	m_pBackupVertexBuffer=new BYTE[m_VertexFormat.VertexSize*m_VertexCount];	
 }
 
 void CD3DSubMesh::AllocIndexBuffer()
 {
+	SAFE_DELETE_ARRAY(m_pIndexBuffer);	
 	m_pIndexBuffer=new BYTE[m_VertexFormat.IndexSize*m_IndexCount];	
 	m_IsIndexsSelfDelete=true;
+	if(CD3DDevice::IsUseMultiThreadRender())
+	{
+		SAFE_DELETE_ARRAY(m_pIndexBufferR);
+		m_pIndexBufferR=new BYTE[m_VertexFormat.IndexSize*m_IndexCount];
+		m_IndexBufferRSize=m_VertexFormat.IndexSize*m_IndexCount;
+	}
 }
 
-bool CD3DSubMesh::AllocDXIndexBuffer(CD3DDevice * pDevice,DWORD Usage,D3DPOOL Pool)
+bool CD3DSubMesh::AllocDXIndexBuffer(DWORD Usage,D3DPOOL Pool)
 {
+	if(m_pDevice==NULL)
+		return false;
+	SAFE_RELEASE(m_pDXIndexBuffer);
 	D3DFORMAT IndexType=D3DFMT_INDEX16;
 	if(m_VertexFormat.IndexSize==sizeof(DWORD))
 		IndexType=D3DFMT_INDEX32;
-	if(pDevice->GetD3DDevice()->CreateIndexBuffer(
+	HRESULT hResult=m_pDevice->GetD3DDevice()->CreateIndexBuffer(
 		m_VertexFormat.IndexSize*m_IndexCount,
 		Usage,			
 		IndexType,
 		Pool,
 		&m_pDXIndexBuffer,
-		NULL)==D3D_OK)
+		NULL);
+	if(hResult==D3D_OK)
 	{
 		m_IsDXIndexBufferSelfRelease=true;
 		return true;
+	}
+	else
+	{
+		PrintSystemLog(0,"申请索引缓冲失败%X",hResult);
 	}
 	return false;
 }
 
 void CD3DSubMesh::AllocBackupIndexBuffer()
 {
+	SAFE_DELETE_ARRAY(m_pBackupIndexBuffer);
 	m_pBackupIndexBuffer=new BYTE[m_VertexFormat.IndexSize*m_IndexCount];
+}
+
+void CD3DSubMesh::OnPrepareRenderData()
+{
+	if(m_pVertexBufferR)
+	{		
+		memcpy(m_pVertexBufferR+m_VertexFormat.VertexSize*m_StartVertex,
+			m_pVertexBuffer+m_VertexFormat.VertexSize*m_StartVertex,
+			m_VertexFormat.VertexSize*m_VertexCount);
+	}
+	if(m_pIndexBufferR)
+	{		
+		memcpy(m_pIndexBufferR+m_VertexFormat.IndexSize*m_StartIndex,
+			m_pIndexBuffer+m_VertexFormat.IndexSize*m_StartIndex,
+			m_VertexFormat.IndexSize*m_IndexCount);
+	}
 }
 
 bool CD3DSubMesh::SortByName(CD3DSubMesh * pSubMesh1,CD3DSubMesh * pSubMesh2)
@@ -291,15 +604,125 @@ bool CD3DSubMesh::SortByRender(CD3DSubMesh * pSubMesh1,CD3DSubMesh * pSubMesh2)
 	return RenderOrder1<=RenderOrder2;
 }
 
-
-void CD3DSubMesh::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+bool CD3DSubMesh::CloneFrom(CNameObject * pObject,UINT Param)
 {
-	m_Material.PickResource(pObjectSet,Param);
+	if(!pObject->IsKindOf(GET_CLASS_INFO(CD3DSubMesh)))
+		return false;
+	CD3DSubMesh * pSrcSubMesh=(CD3DSubMesh *)pObject;
+
+	Destory();
+
+	m_pDevice=pSrcSubMesh->m_pDevice;
+	m_VertexFormat=pSrcSubMesh->m_VertexFormat;
+	m_PrimitiveType=pSrcSubMesh->m_PrimitiveType;
+	m_PrimitiveCount=pSrcSubMesh->m_PrimitiveCount;
+	
+	m_VertexCount=pSrcSubMesh->m_VertexCount;
+	m_StartVertex=pSrcSubMesh->m_StartVertex;
+	
+	m_IndexCount=pSrcSubMesh->m_IndexCount;
+	m_StartIndex=pSrcSubMesh->m_StartIndex;
+	
+	m_BoundingBox=pSrcSubMesh->m_BoundingBox;
+	m_BoundingSphere=pSrcSubMesh->m_BoundingSphere;
+	m_Property=pSrcSubMesh->m_Property;
+	m_Flag=pSrcSubMesh->m_Flag;
+
+	if(Param&SUBMESH_CLONE_USE_SYSTEM_MEM)
+	{
+		m_RenderBufferUsed=BUFFER_USE_CUSTOM;
+		m_OrginDataBufferUsed=BUFFER_USE_CUSTOM;
+	}
+	else
+	{
+		m_RenderBufferUsed=pSrcSubMesh->m_OrginDataBufferUsed;
+		m_OrginDataBufferUsed=pSrcSubMesh->m_OrginDataBufferUsed;
+	}
+
+	if((Param&SUBMESH_CLONE_NOT_CLONE_MATERIAL)==0)
+	{
+		m_Material.CloneFrom(&(pSrcSubMesh->m_Material),Param);
+	}
+
+	{
+		void * pSrcVertexData=NULL;
+		void * pDestVertexData=NULL;
+		if(pSrcSubMesh->m_OrginDataBufferUsed==BUFFER_USE_DX&&pSrcSubMesh->GetDXVertexBuffer())
+		{
+			pSrcSubMesh->GetDXVertexBuffer()->Lock(0,0,&pSrcVertexData,0);
+		}
+		else
+		{
+			pSrcVertexData=pSrcSubMesh->GetVertexBuffer();
+		}
+
+		if(m_OrginDataBufferUsed==BUFFER_USE_DX)
+		{
+			AllocDXVertexBuffer();
+			GetDXVertexBuffer()->Lock(0,0,&pDestVertexData,0);
+		}
+		else
+		{
+			AllocVertexBuffer();
+			pDestVertexData=GetVertexBuffer();
+		}
+		memcpy(pDestVertexData,pSrcVertexData,m_VertexFormat.VertexSize*m_VertexCount);
+		if(pSrcSubMesh->m_OrginDataBufferUsed==BUFFER_USE_DX&&pSrcSubMesh->GetDXVertexBuffer())
+		{
+			pSrcSubMesh->GetDXVertexBuffer()->Unlock();
+		}
+		if(m_OrginDataBufferUsed==BUFFER_USE_DX)
+		{
+			GetDXVertexBuffer()->Unlock();
+		}
+	}
+
+
+	{
+		void * pSrcIndexData=NULL;
+		void * pDestIndexData=NULL;
+		if(pSrcSubMesh->m_OrginDataBufferUsed==BUFFER_USE_DX&&pSrcSubMesh->GetDXIndexBuffer())
+		{
+			pSrcSubMesh->GetDXIndexBuffer()->Lock(0,0,&pSrcIndexData,0);
+		}
+		else
+		{
+			pSrcIndexData=pSrcSubMesh->GetIndexBuffer();
+		}
+
+		if(m_OrginDataBufferUsed==BUFFER_USE_DX)
+		{
+			AllocDXIndexBuffer();
+			GetDXIndexBuffer()->Lock(0,0,&pDestIndexData,0);
+		}
+		else
+		{
+			AllocIndexBuffer();
+			pDestIndexData=GetIndexBuffer();
+		}
+		memcpy(pDestIndexData,pSrcIndexData,m_VertexFormat.IndexSize*m_IndexCount);
+		if(pSrcSubMesh->m_OrginDataBufferUsed==BUFFER_USE_DX&&pSrcSubMesh->GetDXIndexBuffer())
+		{
+			pSrcSubMesh->GetDXIndexBuffer()->Unlock();
+		}
+		if(m_OrginDataBufferUsed==BUFFER_USE_DX)
+		{
+			GetDXIndexBuffer()->Unlock();
+		}
+	}
+
+	return true;
 }
 
-bool CD3DSubMesh::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+
+void CD3DSubMesh::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::ToSmartStruct(Packet,pUSOFile,Param))
+	m_Material.PickResource(pResourceManager,Param);
+}
+
+bool CD3DSubMesh::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
+{
+	if(!CNameObject::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;
 	if(m_VertexFormat.pVertexDeclaration)
 	{
@@ -369,20 +792,19 @@ bool CD3DSubMesh::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Pa
 		UINT BufferSize;
 		void * pBuffer=Packet.PrepareMember(BufferSize);
 		CSmartStruct SubPacket(pBuffer,BufferSize,true);
-		if(!m_Material.ToSmartStruct(SubPacket,pUSOFile,Param))
+		if(!m_Material.ToSmartStruct(SubPacket,pResourceManager,Param))
 			return false;
 		if(!Packet.FinishMember(SST_D3DSM_MATERIAL,SubPacket.GetDataLen()))
 			return false;
 	}
 	return true;
 }
-bool CD3DSubMesh::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DSubMesh::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	CD3DDevice * pDevice=(CD3DDevice *)Param;
-	if(pDevice==NULL)
+	if(m_pDevice==NULL)
 		return false;
 
-	if(!CNameObject::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	void * Pos=Packet.GetFirstMemberPosition();
@@ -398,7 +820,7 @@ bool CD3DSubMesh::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT 
 		case SST_D3DSM_VERTEX_DECLARATION:
 			{
 				D3DVERTEXELEMENT9* pVertexElements=(D3DVERTEXELEMENT9*)((LPCTSTR)Value);				
-				if(pDevice->GetD3DDevice()->CreateVertexDeclaration(pVertexElements,&(m_VertexFormat.pVertexDeclaration))!=D3D_OK)
+				if(m_pDevice->GetD3DDevice()->CreateVertexDeclaration(pVertexElements,&(m_VertexFormat.pVertexDeclaration))!=D3D_OK)
 					return false;
 			}
 			break;
@@ -432,7 +854,7 @@ bool CD3DSubMesh::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT 
 		case SST_D3DSM_VERTEX:
 			if(m_VertexCount)
 			{
-				AllocDXVertexBuffer(pDevice);
+				AllocDXVertexBuffer();
 
 				int DataSize=m_VertexCount*m_VertexFormat.VertexSize;		
 				BYTE *pDataBuff;
@@ -444,7 +866,7 @@ bool CD3DSubMesh::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT 
 		case SST_D3DSM_INDEX:
 			if(m_IndexCount)
 			{
-				AllocDXIndexBuffer(pDevice);
+				AllocDXIndexBuffer();
 				int DataSize=m_IndexCount*m_VertexFormat.IndexSize;
 				BYTE *pDataBuff;
 				m_pDXIndexBuffer->Lock(0,0,(LPVOID *)&pDataBuff,0);
@@ -455,7 +877,7 @@ bool CD3DSubMesh::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT 
 		case SST_D3DSM_MATERIAL:
 			{
 				CSmartStruct SubPacket=Value;
-				if(!m_Material.FromSmartStruct(SubPacket,pUSOFile,Param))
+				if(!m_Material.FromSmartStruct(SubPacket,pResourceManager,Param))
 					return false;
 			}
 			break;

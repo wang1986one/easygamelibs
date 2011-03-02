@@ -52,7 +52,19 @@ BOOL CDOSObjectProxyService::OnStart()
 		PrintDOSLog(0xff0000,"创建%u大小的消息映射表失败！",
 			((CDOSServer *)GetServer())->GetConfig().MaxProxyGlobalMsgMap);
 		return FALSE;
-	}		
+	}
+
+	if(!Create(IPPROTO_TCP,
+		DEFAULT_SERVER_ACCEPT_QUEUE,
+		DEFAULT_SERVER_RECV_DATA_QUEUE,
+		((CDOSServer *)GetServer())->GetConfig().ProxySendBufferSize,
+		DEFAULT_PARALLEL_ACCEPT,
+		DEFAULT_PARALLEL_RECV,
+		false))
+	{
+		PrintDOSLog(0xffff,"代理服务创建失败！");
+		return FALSE;
+	}
 
 	if(!StartListen(((CDOSServer *)GetServer())->GetConfig().ObjectProxyServiceListenAddress))
 	{
@@ -161,10 +173,10 @@ BOOL CDOSObjectProxyService::PushMessage(CDOSMessagePacket * pPacket)
 	return FALSE;
 }
 
-OBJECT_ID CDOSObjectProxyService::GetGlobalMsgMapObjectID(WORD CmdID)
+OBJECT_ID CDOSObjectProxyService::GetGlobalMsgMapObjectID(MSG_ID_TYPE MsgID)
 {
 	FUNCTION_BEGIN;
-	OBJECT_ID * pObjectID=m_MessageMap.Find(CmdID);
+	OBJECT_ID * pObjectID=m_MessageMap.Find(MsgID);
 	if(pObjectID)
 	{
 		return *pObjectID;
@@ -180,7 +192,7 @@ int CDOSObjectProxyService::DoMessageProcess(int ProcessPacketLimit)
 	CDOSMessagePacket * pPacket;
 	while(m_MsgQueue.PopFront(pPacket))
 	{
-		PrintDOSDebugLog(0,"发送了消息[%u]",pPacket->GetMessage().GetCmdID());
+		//PrintDOSDebugLog(0,"发送了消息[%u]",pPacket->GetMessage().GetMsgID());
 
 		OnMsg(&(pPacket->GetMessage()));
 		if(!((CDOSServer *)GetServer())->ReleaseMessagePacket(pPacket))
@@ -202,47 +214,66 @@ int CDOSObjectProxyService::DoMessageProcess(int ProcessPacketLimit)
 void CDOSObjectProxyService::OnMsg(CDOSMessage * pMessage)
 {
 	FUNCTION_BEGIN;
-	switch(pMessage->GetCmdID())
+	switch(pMessage->GetMsgID())
 	{		
 	case DSM_PROXY_REGISTER_GLOBAL_MSG_MAP:
-		if(pMessage->GetDataLength()>=sizeof(WORD))
+		if(pMessage->GetDataLength()>=sizeof(MSG_ID_TYPE))
 		{
-			int Count=(pMessage->GetDataLength())/sizeof(WORD);
-			WORD * pCmdIDs=(WORD *)(pMessage->GetDataBuffer());
+			int Count=(pMessage->GetDataLength())/sizeof(MSG_ID_TYPE);
+			MSG_ID_TYPE * pMsgIDs=(MSG_ID_TYPE *)(pMessage->GetDataBuffer());
 			for(int i=0;i<Count;i++)
 			{
-				RegisterGlobalMsgMap(pCmdIDs[i],pMessage->GetSenderID());
+				RegisterGlobalMsgMap(pMsgIDs[i],pMessage->GetSenderID());
 			}
 		}
 		break;
 	case DSM_PROXY_UNREGISTER_GLOBAL_MSG_MAP:
-		if(pMessage->GetDataLength()>=sizeof(WORD))
+		if(pMessage->GetDataLength()>=sizeof(MSG_ID_TYPE))
 		{
-			int Count=(pMessage->GetDataLength())/sizeof(WORD);
-			WORD * pCmdIDs=(WORD *)(pMessage->GetDataBuffer());
+			int Count=(pMessage->GetDataLength())/sizeof(MSG_ID_TYPE);
+			MSG_ID_TYPE * pMsgIDs=(MSG_ID_TYPE *)(pMessage->GetDataBuffer());
 			for(int i=0;i<Count;i++)
 			{
-				UnregisterGlobalMsgMap(pCmdIDs[i],pMessage->GetSenderID());
+				UnregisterGlobalMsgMap(pMsgIDs[i],pMessage->GetSenderID());
 			}		
 		}
+		break;
+	case DSM_ROUTE_LINK_LOST:
+		ClearMsgMapByRouterID(pMessage->GetSenderID().RouterID);
 		break;
 	}
 	FUNCTION_END;
 }
 
-BOOL CDOSObjectProxyService::RegisterGlobalMsgMap(WORD CmdID,OBJECT_ID ObjectID)
+BOOL CDOSObjectProxyService::RegisterGlobalMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID)
 {
 	FUNCTION_BEGIN;
-	PrintDOSDebugLog(0xff0000,"0x%llX注册了全局代理消息映射[%u]！",ObjectID.ID,CmdID);
-	return m_MessageMap.Insert(CmdID,ObjectID);
+	PrintDOSDebugLog(0xff0000,"0x%llX注册了全局代理消息映射[%u]！",ObjectID.ID,MsgID);
+	return m_MessageMap.Insert(MsgID,ObjectID);
 	FUNCTION_END;
 	return FALSE;
 }
-BOOL CDOSObjectProxyService::UnregisterGlobalMsgMap(WORD CmdID,OBJECT_ID ObjectID)
+BOOL CDOSObjectProxyService::UnregisterGlobalMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID)
 {
 	FUNCTION_BEGIN;
-	PrintDOSDebugLog(0xff0000,"0x%llX注销了全局代理消息映射[%u]！",ObjectID.ID,CmdID);
-	return m_MessageMap.Delete(CmdID);
+	PrintDOSDebugLog(0xff0000,"0x%llX注销了全局代理消息映射[%u]！",ObjectID.ID,MsgID);
+	return m_MessageMap.Delete(MsgID);
 	FUNCTION_END;
 	return FALSE;
+}
+
+void CDOSObjectProxyService::ClearMsgMapByRouterID(UINT RouterID)
+{
+	FUNCTION_BEGIN;
+	void * Pos=m_MessageMap.GetFirstObjectPos();
+	while(Pos)
+	{
+		MSG_ID_TYPE MsgID;
+		OBJECT_ID * pObjectID=m_MessageMap.GetNextObject(Pos,MsgID);
+		if(pObjectID->RouterID==RouterID)
+		{
+			m_MessageMap.Delete(MsgID);
+		}
+	}
+	FUNCTION_END;
 }

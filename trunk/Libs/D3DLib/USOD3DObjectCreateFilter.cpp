@@ -38,6 +38,10 @@ bool CUSOD3DObjectCreateFilter::OnObjectCreate(CNameObject * pObject)
 {
 	if(m_pD3DDevice)
 	{
+		if(pObject->IsKindOf(GET_CLASS_INFO(CD3DSubMesh)))
+		{
+			((CD3DSubMesh *)pObject)->SetDevice(m_pD3DDevice);			
+		}
 		if(pObject->IsKindOf(GET_CLASS_INFO(CD3DObject)))
 		{
 			((CD3DObject *)pObject)->SetDevice(m_pD3DDevice);			

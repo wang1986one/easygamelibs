@@ -38,7 +38,7 @@ CD3DObjectResourceManager::~CD3DObjectResourceManager(void)
 }
 
 bool CD3DObjectResourceManager::AddResource(CD3DObjectResource * pResource,LPCTSTR ResourceName)
-{
+{	
 	UINT ID=m_ObjectStorage.AddObject(pResource,ResourceName);
 	if(ID)
 	{

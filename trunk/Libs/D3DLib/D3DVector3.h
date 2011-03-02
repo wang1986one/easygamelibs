@@ -30,41 +30,41 @@ public:
 
 	//标准化
 	void Normalize();
-	CD3DVector3 GetNormalize();
+	CD3DVector3 GetNormalize() const;
 
 	//长度
-	FLOAT Length();
-	FLOAT LengthSq();
+	FLOAT Length() const;
+	FLOAT LengthSq() const;
 
 	//点积
-	FLOAT Dot(const D3DXVECTOR3& V2);
+	FLOAT Dot(const D3DXVECTOR3& V2) const;
 
 	//叉积
-	CD3DVector3 Cross(const D3DXVECTOR3& V2);
+	CD3DVector3 Cross(const D3DXVECTOR3& V2) const;
 
 	//矩阵变换
-	CD3DVector3 operator*(const D3DXMATRIX& Mat);
+	CD3DVector3 operator*(const D3DXMATRIX& Mat) const;
 	void operator*=(const D3DXMATRIX& Mat);
 
-	CD3DVector3 operator*(FLOAT Len);
+	CD3DVector3 operator*(FLOAT Len) const;
 	void operator*=(FLOAT Len);
 	void operator=(FLOAT Value);
 
-	CD3DVector3 operator+(const CD3DVector3& V2);
+	CD3DVector3 operator+(const CD3DVector3& V2) const;
 	void operator+=(const CD3DVector3& V2);
 
-	CD3DVector3 operator+(FLOAT Value);
+	CD3DVector3 operator+(FLOAT Value) const;
 	void operator+=(FLOAT Value);
 
-	CD3DVector3 operator-(const CD3DVector3& V2);
+	CD3DVector3 operator-(const CD3DVector3& V2) const;
 	void operator-=(const CD3DVector3& V2);
 
-	CD3DVector3 operator-(FLOAT Value);
+	CD3DVector3 operator-(FLOAT Value) const;
 	void operator-=(FLOAT Value);
 
-	CD3DVector3 operator*(const D3DXVECTOR3& V2);
+	CD3DVector3 operator*(const D3DXVECTOR3& V2) const;
 
-	bool IsValid();
+	bool IsValid() const;
 
 	//插值
 	static CD3DVector3 Lerp(const D3DXVECTOR3& v1,const D3DXVECTOR3& v2,FLOAT s);
@@ -90,30 +90,30 @@ inline void CD3DVector3::Normalize()
 	D3DXVec3Normalize(this,this);
 }
 
-inline CD3DVector3 CD3DVector3::GetNormalize()
+inline CD3DVector3 CD3DVector3::GetNormalize() const
 {
 	CD3DVector3 Vector;
 	D3DXVec3Normalize(&Vector,this);
 	return Vector;
 }
 
-inline FLOAT CD3DVector3::Length()
+inline FLOAT CD3DVector3::Length() const
 {
 	return D3DXVec3Length(this);
 }
 
-inline FLOAT CD3DVector3::LengthSq()
+inline FLOAT CD3DVector3::LengthSq() const
 {
 	return D3DXVec3LengthSq(this);
 }
 
-inline FLOAT CD3DVector3::Dot(const D3DXVECTOR3& V2)
+inline FLOAT CD3DVector3::Dot(const D3DXVECTOR3& V2) const
 {
 	return D3DXVec3Dot(this,&V2);
 }
 
 
-inline CD3DVector3 CD3DVector3::Cross(const D3DXVECTOR3& V2)
+inline CD3DVector3 CD3DVector3::Cross(const D3DXVECTOR3& V2) const
 {
 	CD3DVector3 RetVec;
 
@@ -122,7 +122,7 @@ inline CD3DVector3 CD3DVector3::Cross(const D3DXVECTOR3& V2)
 	return RetVec;
 }
 
-inline CD3DVector3 CD3DVector3::operator*(const D3DXMATRIX& Mat)
+inline CD3DVector3 CD3DVector3::operator*(const D3DXMATRIX& Mat) const
 {
 	D3DXVECTOR4 RetVec;
 	D3DXVec3Transform(&RetVec,this,&Mat);
@@ -134,7 +134,7 @@ inline void CD3DVector3::operator*=(const D3DXMATRIX& Mat)
 	*this=*this*Mat;
 }
 
-inline CD3DVector3 CD3DVector3::operator*(FLOAT Len)
+inline CD3DVector3 CD3DVector3::operator*(FLOAT Len) const
 {
 	return CD3DVector3(x*Len,y*Len,z*Len);
 }
@@ -153,7 +153,7 @@ inline void CD3DVector3::operator=(FLOAT Value)
 	z=Value;
 }
 
-inline CD3DVector3 CD3DVector3::operator+(const CD3DVector3& V2)
+inline CD3DVector3 CD3DVector3::operator+(const CD3DVector3& V2) const
 {
 	CD3DVector3 RetVec;
 
@@ -167,7 +167,7 @@ inline void CD3DVector3::operator+=(const CD3DVector3& V2)
 	D3DXVec3Add(this,this,&V2);
 }
 
-inline CD3DVector3 CD3DVector3::operator*(const D3DXVECTOR3& V2)
+inline CD3DVector3 CD3DVector3::operator*(const D3DXVECTOR3& V2) const
 {
 	CD3DVector3 RetVec;
 	RetVec.x=x*V2.x;
@@ -177,7 +177,7 @@ inline CD3DVector3 CD3DVector3::operator*(const D3DXVECTOR3& V2)
 	return RetVec;
 }
 
-inline CD3DVector3 CD3DVector3::operator+(FLOAT Value)
+inline CD3DVector3 CD3DVector3::operator+(FLOAT Value) const
 {
 	CD3DVector3 RetVec;
 	RetVec.x=x+Value;
@@ -192,7 +192,7 @@ inline void CD3DVector3::operator+=(FLOAT Value)
 	z+=Value;
 }
 
-inline CD3DVector3 CD3DVector3::operator-(const CD3DVector3& V2)
+inline CD3DVector3 CD3DVector3::operator-(const CD3DVector3& V2) const
 {
 	CD3DVector3 RetVec;
 	RetVec.x=x-V2.x;
@@ -208,7 +208,7 @@ inline void CD3DVector3::operator-=(const CD3DVector3& V2)
 	z-=V2.z;
 }
 
-inline CD3DVector3 CD3DVector3::operator-(FLOAT Value)
+inline CD3DVector3 CD3DVector3::operator-(FLOAT Value) const
 {
 	CD3DVector3 RetVec;
 	RetVec.x=x-Value;
@@ -224,7 +224,7 @@ inline void CD3DVector3::operator-=(FLOAT Value)
 	z-=Value;
 }
 
-inline bool CD3DVector3::IsValid()
+inline bool CD3DVector3::IsValid() const
 {
 	return _finite(x)&&_finite(y)&&_finite(x);
 }

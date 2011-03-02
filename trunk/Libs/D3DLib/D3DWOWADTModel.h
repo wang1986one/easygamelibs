@@ -42,26 +42,34 @@ public:
 	virtual bool Restore();
 
 	bool LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask);
+	bool LoadFromResource(CD3DWOWADTModelResource * pModelResource);
+
+	CD3DWOWADTModelResource * GetModelResource();
 public:
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 public:
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 	virtual void Update(FLOAT Time);
 	virtual int GetSubMeshCount();
 	virtual CD3DSubMesh * GetSubMesh(UINT index);
-	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(int index);
+	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(UINT index);
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();
 
-	bool GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT& WaterHeight);
+	bool GetHeightByXZ(const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight,bool IncludeChild=true);
 
 protected:
 	bool LoadObjects();
 	void BuildBoundingBox();
 };
 
+inline CD3DWOWADTModelResource * CD3DWOWADTModel::GetModelResource()
+{
+	return m_pModelResource;
+}
 }

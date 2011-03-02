@@ -46,6 +46,16 @@ enum OPERATOR_TYPE:WORD
 	OPERATOR_AND,
 	OPERATOR_OR,
 	OPERATOR_NOT,
+	OPERATOR_JMP,
+	OPERATOR_JZ,
+	OPERATOR_CALL,
+	OPERATOR_RET,
+	OPERATOR_CLEAR_STACK,
+	OPERATOR_ADD_VAR,
+	OPERATOR_ADD_CALL_PARAM,
+	OPERATOR_EXIT,
+	OPERATOR_NOP,
+	OPERATOR_MAX,
 };
 
 enum VALUE_TYPE:WORD
@@ -59,7 +69,7 @@ enum VALUE_TYPE:WORD
 
 enum SCRIPT_KEYWORDS:WORD
 {		
-	KW_END=0,
+	KW_EXIT=0,
 	KW_IF,
 	KW_THEN,
 	KW_ELSE,
@@ -71,17 +81,33 @@ enum SCRIPT_KEYWORDS:WORD
 	KW_BREAK,
 	KW_CONTINUE,
 	KW_GOTO,
-	KW_IDHEADER,
 	KW_LINEEND,
-	KW_DECLARE,
 	KW_INT,
 	KW_INT64,
 	KW_FLOAT,
 	KW_DOUBLE,
 	KW_STRING,
+	KW_FUNCTION,
+	KW_ENDFUN,
 	KW_MAX,
 };
 
+enum FUNCTION_TYPE
+{
+	FUNCTION_TYPE_SCRIPT,
+	FUNCTION_TYPE_C,
+};
+
+enum IDENTIFIER_TYPE
+{
+	IDENTIFIER_TYPE_UNKNOW,
+	IDENTIFIER_TYPE_JUMP,
+	IDENTIFIER_TYPE_JUMP_DEFINE,
+	IDENTIFIER_TYPE_FUNCTION_DEFINE,
+	IDENTIFIER_TYPE_VARIABLE_DEFINE,
+};
+
+extern LPCTSTR OPERATOR_STRINGS[OPERATOR_MAX];
 extern LPCTSTR KEYWORD_STRINGS[KW_MAX];
 
 
@@ -90,8 +116,9 @@ struct ES_BOLAN
 {
 	BOLAN_TYPE		Type;
 	VALUE_TYPE		ValueType;
-	WORD			Index;
-	WORD			Level;
+	UINT			Index;
+	UINT			Line;
+	UINT			Level;
 	CEasyString		StrValue;
 	union
 	{
@@ -100,7 +127,7 @@ struct ES_BOLAN
 		float		ValueFloat;
 		double		ValueDouble;
 	};
-	WORD			Line;
+	
 
 	ES_BOLAN()
 	{
@@ -111,12 +138,118 @@ struct ES_BOLAN
 		Level=0;
 		Line=0;
 	}
+	ES_BOLAN(char Value)
+	{
+		Type=BOLAN_TYPE_VALUE;
+		ValueType=VALUE_TYPE_INT;
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(unsigned char Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(short Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(unsigned short Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(int Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(unsigned int Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(long Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(unsigned long Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(__int64 Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(unsigned __int64 Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(float Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(double Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
+	ES_BOLAN(LPCTSTR Value)
+	{
+		ValueInt64=0;
+		Index=0;
+		Level=0;
+		Line=0;
+		*this=Value;
+	}
 	ES_BOLAN(const ES_BOLAN& Bolan)
 	{
 		Type=Bolan.Type;
 		ValueType=Bolan.ValueType;
 		ValueInt64=Bolan.ValueInt64;
-		StrValue=Bolan.StrValue;
+		StrValue=Bolan.StrValue;		
 		Index=Bolan.Index;
 		Level=Bolan.Level;
 		Line=Bolan.Line;
@@ -132,6 +265,20 @@ struct ES_BOLAN
 		Line=Bolan.Line;
 		return *this;
 	}
+	void CopyValue(const ES_BOLAN& Bolan)
+	{
+		Type=Bolan.Type;
+		Index=Bolan.Index;
+		ValueType=Bolan.ValueType;
+		if(ValueType==VALUE_TYPE_STRING)
+		{
+			StrValue=Bolan.StrValue;
+		}
+		else
+		{
+			ValueInt64=Bolan.ValueInt64;
+		}
+	}	
 	void Clear()
 	{
 		Type=BOLAN_TYPE_VALUE;
@@ -368,6 +515,20 @@ struct ES_BOLAN
 		ValueInt=Value;
 		return ValueInt;
 	}
+	int operator=(long Value)
+	{
+		Type=BOLAN_TYPE_VALUE;
+		ValueType=VALUE_TYPE_INT;
+		ValueInt=Value;
+		return ValueInt;
+	}
+	unsigned int operator=(unsigned long Value)
+	{
+		Type=BOLAN_TYPE_VALUE;
+		ValueType=VALUE_TYPE_INT;
+		ValueInt=Value;
+		return ValueInt;
+	}
 	__int64 operator=(__int64 Value)
 	{
 		Type=BOLAN_TYPE_VALUE;
@@ -484,30 +645,62 @@ inline void StrToNumber(LPCTSTR szNumberStr,ES_BOLAN& Value)
 inline CEasyString BolanToString(const ES_BOLAN& bolan)
 {
 	CEasyString temp;
-	switch(bolan.ValueType)
-	{
-	case VALUE_TYPE_INT:
-		temp.Format("Int=%d",bolan.ValueInt);
-		break;
-	case VALUE_TYPE_INT64:
-		temp.Format("Int64=%lld",bolan.ValueInt64);
-		break;
-	case VALUE_TYPE_FLOAT:
-		temp.Format("Float=%g",bolan.ValueFloat);
-		break;
-	case VALUE_TYPE_DOUBLE:
-		temp.Format("Double=%g",bolan.ValueDouble);
-		break;
-	case VALUE_TYPE_STRING:
-		temp.Format("Str=%s",(LPCTSTR)bolan.StrValue);
-		break;
-	}
+	
+	
 	switch(bolan.Type)
 	{
-	case BOLAN_TYPE_VALUE:				
+	case BOLAN_TYPE_VALUE:
+		switch(bolan.ValueType)
+		{
+		case VALUE_TYPE_INT:
+			temp.Format("值Int=%d",bolan.ValueInt);
+			break;
+		case VALUE_TYPE_INT64:
+			temp.Format("值Int64=%lld",bolan.ValueInt64);
+			break;
+		case VALUE_TYPE_FLOAT:
+			temp.Format("值Float=%g",bolan.ValueFloat);
+			break;
+		case VALUE_TYPE_DOUBLE:
+			temp.Format("值Double=%g",bolan.ValueDouble);
+			break;
+		case VALUE_TYPE_STRING:
+			temp.Format("值Str=\"%s\"",(LPCTSTR)bolan.StrValue);
+			break;
+		}
 		break;	
+	case BOLAN_TYPE_OPERATOR:
+		switch(bolan.Index)
+		{
+		case OPERATOR_JMP:
+		case OPERATOR_JZ:
+			temp.Format("操作符<%s>%d",
+				OPERATOR_STRINGS[bolan.Index],bolan.Level);
+			break;
+		case OPERATOR_CALL:
+		case OPERATOR_ADD_VAR:
+		case OPERATOR_ADD_CALL_PARAM:
+			temp.Format("操作符<%s>%s",
+				OPERATOR_STRINGS[bolan.Index],(LPCTSTR)bolan.StrValue);
+			break;
+		default:
+			temp.Format("操作符<%s>",
+				OPERATOR_STRINGS[bolan.Index]);
+		}
+		
+		break;
+	case BOLAN_TYPE_FUNCTION:
+		temp.Format("函数(%s)",(LPCTSTR)bolan.StrValue);
+		break;
 	case BOLAN_TYPE_VARIABLE:	
-		temp="Var"+temp;
+		temp.Format("变量(%s)",(LPCTSTR)bolan.StrValue);
+		break;
+	case BOLAN_TYPE_KEYWORD:
+		temp.Format("关键字<%s>(%d)",
+			KEYWORD_STRINGS[bolan.Index],bolan.Level);
+		break;
+	case BOLAN_TYPE_IDENTIFIER:
+		temp.Format("标识符(%s)",(LPCTSTR)bolan.StrValue);
 		break;
 	default:
 		temp="不可解释的符号";

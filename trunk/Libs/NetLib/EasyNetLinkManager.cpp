@@ -102,7 +102,7 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 						int ParallelAcceptCount=DEFAULT_PARALLEL_ACCEPT;
 						UINT AcceptQueueSize=DEFAULT_SERVER_ACCEPT_QUEUE;
 						UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE;
-						UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE;
+						UINT SendQueueSize=0;
 						if(Service.has_attribute("IP"))
 							Address.SetIP(Service.attribute("IP").getvalue().c_str());
 						if(Service.has_attribute("MaxPacketSize"))
@@ -177,7 +177,7 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 						CIPAddress Address;
 						UINT MaxPacketSize=MAX_DATA_PACKET_SIZE;
 						UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE;
-						UINT SendQueueSize=DEFAULT_SERVER_SEND_DATA_QUEUE;
+						UINT SendQueueSize=0;
 						Address.SetIP(Connection.attribute("IP").getvalue().c_str());
 						Address.SetPort((WORD)((long)Connection.attribute("Port")));
 						if(Connection.has_attribute("MaxPacketSize"))

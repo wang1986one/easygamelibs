@@ -441,7 +441,7 @@ void CD3DGUI::SaveToXML(xml_node * pXMLNode)
 	}
 }
 
-bool CD3DGUI::SaveToUSO(CUSOFile * pUSOFile)
+bool CD3DGUI::SaveToUSO(CUSOResourceManager * pResourceManager)
 {
 	CD3DWnd * pWnd;
 	LPVOID pos;
@@ -449,17 +449,17 @@ bool CD3DGUI::SaveToUSO(CUSOFile * pUSOFile)
 	while(pos)
 	{
 		pWnd=m_RootWndList.GetNextObject(pos);
-		pUSOFile->AddObject(pWnd);					
+		pResourceManager->AddObject(pWnd);					
 	}
 	return true;
 }
 
 bool CD3DGUI::SaveToUSOFile(LPCTSTR FileName)
 {
-	CUSOFile USOFile;
+	CUSOResourceManager USOFile;
 	if(SaveToUSO(&USOFile))
 	{
-		return USOFile.Save(FileName);
+		return USOFile.Export(FileName);
 	}
 	return false;
 }

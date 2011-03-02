@@ -21,6 +21,7 @@ CDOSBaseObject::CDOSBaseObject(void)
 	m_pRouter=NULL;
 	m_pManager=NULL;
 	m_pGroup=NULL;
+	m_MsgProcessLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT;
 	FUNCTION_END;
 }
 
@@ -31,12 +32,31 @@ CDOSBaseObject::~CDOSBaseObject(void)
 	FUNCTION_END;
 }
 
+bool CDOSBaseObject::Init(DOS_OBJECT_REGISTER_INFO& ObjectRegisterInfo)
+{
+	FUNCTION_BEGIN;
+	UINT MsgQueueSize=ObjectRegisterInfo.MsgQueueSize;
+	if(MsgQueueSize==0)
+		MsgQueueSize=GetManager()->GetServer()->GetConfig().MaxObjectMsgQueue;
+	if(ObjectRegisterInfo.MsgProcessLimit)
+		m_MsgProcessLimit=ObjectRegisterInfo.MsgProcessLimit;
+	if(!m_MsgQueue.Create(MsgQueueSize))
+	{
+		PrintDOSLog(0,"对象[%llX]创建%u大小的消息队列失败",
+			GetObjectID().ID,MsgQueueSize);
+		return false;
+	}
+	return Initialize();
+	FUNCTION_END;
+	return false;
+}
+
 bool CDOSBaseObject::Initialize()
 {
 	FUNCTION_BEGIN;
-	return m_MsgQueue.Create(GetManager()->GetServer()->GetConfig().MaxObjectMsgQueue);	
+	return TRUE;	
 	FUNCTION_END;
-	return FALSE;
+	return false;
 }
 
 void CDOSBaseObject::Destory()
@@ -49,17 +69,25 @@ void CDOSBaseObject::Destory()
 	FUNCTION_END;
 }
 
+
+UINT CDOSBaseObject::GetRouterID()
+{
+	FUNCTION_BEGIN;
+	return m_pRouter->GetRouterID();
+	FUNCTION_END;
+	return 0;
+}
+
+
 int CDOSBaseObject::DoCycle(int ProcessPacketLimit)
 {
 	FUNCTION_BEGIN;
 	CDOSMessagePacket * pPacket;
 	int ProcessCount=0;
-	int Limit=ProcessPacketLimit;
+	int Limit=m_MsgProcessLimit;
 	while(m_MsgQueue.PopFront(pPacket))
 	{		
-		if(!OnPreTranslateMessage(&(pPacket->GetMessage())))
-			m_MsgManager.DealMsg(&(pPacket->GetMessage()));
-
+		OnMessage(&(pPacket->GetMessage()));
 		if(!ReleaseMessagePacket(pPacket))
 		{
 			PrintDOSLog(0xff0000,"释放消息内存块失败！");
@@ -92,16 +120,16 @@ BOOL CDOSBaseObject::PushMessage(CDOSMessagePacket * pPacket)
 	return FALSE;
 }
 
-BOOL CDOSBaseObject::SendMessage(OBJECT_ID ReceiverID,WORD MsgID,LPCVOID pData,UINT DataSize)
+BOOL CDOSBaseObject::SendMessage(OBJECT_ID ReceiverID,MSG_ID_TYPE MsgID,WORD MsgFlag,LPCVOID pData,UINT DataSize)
 {
 	FUNCTION_BEGIN;
 	if(m_pRouter)
-		return m_pRouter->RouterMessage(GetObjectID(),ReceiverID,MsgID,pData,DataSize);
+		return m_pRouter->RouterMessage(GetObjectID(),ReceiverID,MsgID,MsgFlag,pData,DataSize);
 	FUNCTION_END;
 	return FALSE;
 }
 
-BOOL CDOSBaseObject::SendMessageMulti(OBJECT_ID * pReceiverIDList,UINT ReceiverCount,bool IsSorted,WORD MsgID,LPCVOID pData,UINT DataSize)
+BOOL CDOSBaseObject::SendMessageMulti(OBJECT_ID * pReceiverIDList,UINT ReceiverCount,bool IsSorted,MSG_ID_TYPE MsgID,WORD MsgFlag,LPCVOID pData,UINT DataSize)
 {	
 	FUNCTION_BEGIN;
 	if(pReceiverIDList==NULL||ReceiverCount==0)
@@ -116,9 +144,10 @@ BOOL CDOSBaseObject::SendMessageMulti(OBJECT_ID * pReceiverIDList,UINT ReceiverC
 		PrintDOSLog(0xff0000,"分配消息内存块失败！");
 		return FALSE;
 	}	
-	pNewPacket->GetMessage().SetCmdID(MsgID);
+	pNewPacket->GetMessage().SetMsgID(MsgID);
 	pNewPacket->GetMessage().SetSenderID(GetObjectID());
 	pNewPacket->GetMessage().SetDataLength(DataSize);
+	pNewPacket->GetMessage().SetMsgFlag(MsgFlag);
 	if(pData)
 		memcpy(pNewPacket->GetMessage().GetDataBuffer(),pData,DataSize);
 	pNewPacket->SetTargetIDs(ReceiverCount,pReceiverIDList);
@@ -139,7 +168,7 @@ BOOL CDOSBaseObject::SendMessageMulti(OBJECT_ID * pReceiverIDList,UINT ReceiverC
 CDOSMessagePacket * CDOSBaseObject::NewMessagePacket(UINT DataSize,UINT ReceiverCount)
 {
 	FUNCTION_BEGIN;
-	WORD PacketSize=CDOSMessagePacket::CaculatePacketLength(DataSize,ReceiverCount);
+	MSG_LEN_TYPE PacketSize=CDOSMessagePacket::CaculatePacketLength(DataSize,ReceiverCount);
 	return m_pRouter->GetServer()->NewMessagePacket(PacketSize);		
 	FUNCTION_END;
 	return NULL;
@@ -161,7 +190,51 @@ BOOL CDOSBaseObject::SendMessagePacket(CDOSMessagePacket * pPacket)
 	return FALSE;
 }
 
-BOOL CDOSBaseObject::OnPreTranslateMessage(CDOSMessage * pMessage)
+BOOL CDOSBaseObject::RegisterMsgMap(OBJECT_ID ProxyObjectID,MSG_ID_TYPE * pMsgIDList,int CmdCount)
+{
+	FUNCTION_BEGIN;
+	return SendMessage(ProxyObjectID,DSM_PROXY_REGISTER_MSG_MAP,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE,pMsgIDList,sizeof(MSG_ID_TYPE)*CmdCount);
+	FUNCTION_END;
+	return FALSE;
+}
+
+BOOL CDOSBaseObject::UnregisterMsgMap(OBJECT_ID ProxyObjectID,MSG_ID_TYPE * pMsgIDList,int CmdCount)
+{
+	FUNCTION_BEGIN;
+	return SendMessage(ProxyObjectID,DSM_PROXY_UNREGISTER_MSG_MAP,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE,pMsgIDList,sizeof(MSG_ID_TYPE)*CmdCount);
+	FUNCTION_END;
+	return FALSE;
+}
+
+
+BOOL CDOSBaseObject::RegisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_TYPE * pMsgIDList,int CmdCount)
+{
+	FUNCTION_BEGIN;
+	OBJECT_ID ProxyID;
+	ProxyID.RouterID=ProxyRouterID;
+	ProxyID.ObjectTypeID=DOT_PROXY_OBJECT;
+	ProxyID.GroupIndex=0;
+	ProxyID.ObjectIndex=0;
+	return SendMessage(ProxyID,DSM_PROXY_REGISTER_GLOBAL_MSG_MAP,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE,pMsgIDList,sizeof(MSG_ID_TYPE)*CmdCount);
+	FUNCTION_END;
+	return FALSE;
+}
+
+
+BOOL CDOSBaseObject::UnregisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_TYPE * pMsgIDList,int CmdCount)
+{
+	FUNCTION_BEGIN;
+	OBJECT_ID ProxyID;
+	ProxyID.RouterID=ProxyRouterID;
+	ProxyID.ObjectTypeID=DOT_PROXY_OBJECT;
+	ProxyID.GroupIndex=0;
+	ProxyID.ObjectIndex=0;
+	return SendMessage(ProxyID,DSM_PROXY_UNREGISTER_GLOBAL_MSG_MAP,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE,pMsgIDList,sizeof(MSG_ID_TYPE)*CmdCount);
+	FUNCTION_END;
+	return FALSE;
+}
+
+BOOL CDOSBaseObject::OnMessage(CDOSMessage * pMessage)
 {
 	FUNCTION_BEGIN;
 	FUNCTION_END;
@@ -175,75 +248,4 @@ int CDOSBaseObject::Update(int ProcessPacketLimit)
 	return 0;
 }
 
-UINT CDOSBaseObject::GetRouterID()
-{
-	FUNCTION_BEGIN;
-	return m_pRouter->GetRouterID();
-	FUNCTION_END;
-	return 0;
-}
 
-BOOL CDOSBaseObject::InitMsgProc(int MaxMsgCount)
-{
-	FUNCTION_BEGIN;
-	return m_MsgManager.Init(MaxMsgCount);
-	FUNCTION_END;
-	return FALSE;
-}
-void CDOSBaseObject::RegisterMsgProc(WORD CmdID,DOS_MSG_PROC MsgProc)
-{
-	FUNCTION_BEGIN;
-	m_MsgManager.RegisterMsgProc(true,CmdID,this,MsgProc);
-	FUNCTION_END;
-}
-
-void CDOSBaseObject::UnregisterMsgProc(WORD CmdID,DOS_MSG_PROC MsgProc)
-{
-	FUNCTION_BEGIN;
-	m_MsgManager.RegisterMsgProc(false,CmdID,this,MsgProc);
-	FUNCTION_END;
-}
-
-BOOL CDOSBaseObject::RegisterMsgMap(OBJECT_ID ProxyObjectID,WORD * pCmdIDList,int CmdCount)
-{
-	FUNCTION_BEGIN;
-	return SendMessage(ProxyObjectID,DSM_PROXY_REGISTER_MSG_MAP,pCmdIDList,sizeof(WORD)*CmdCount);
-	FUNCTION_END;
-	return FALSE;
-}
-
-BOOL CDOSBaseObject::UnregisterMsgMap(OBJECT_ID ProxyObjectID,WORD * pCmdIDList,int CmdCount)
-{
-	FUNCTION_BEGIN;
-	return SendMessage(ProxyObjectID,DSM_PROXY_UNREGISTER_MSG_MAP,pCmdIDList,sizeof(WORD)*CmdCount);
-	FUNCTION_END;
-	return FALSE;
-}
-
-
-BOOL CDOSBaseObject::RegisterGlobalMsgMap(WORD ProxyRouterID,WORD * pCmdIDList,int CmdCount)
-{
-	FUNCTION_BEGIN;
-	OBJECT_ID ProxyID;
-	ProxyID.RouterID=ProxyRouterID;
-	ProxyID.ObjectTypeID=DOT_PROXY_OBJECT;
-	ProxyID.GroupIndex=0;
-	ProxyID.ObjectIndex=0;
-	return SendMessage(ProxyID,DSM_PROXY_REGISTER_GLOBAL_MSG_MAP,pCmdIDList,sizeof(WORD)*CmdCount);
-	FUNCTION_END;
-	return FALSE;
-}
-
-
-BOOL CDOSBaseObject::UnregisterGlobalMsgMap(WORD ProxyRouterID,WORD * pCmdIDList,int CmdCount)
-{
-	FUNCTION_BEGIN;
-	OBJECT_ID ProxyID;
-	ProxyID.RouterID=ProxyRouterID;
-	ProxyID.ObjectTypeID=DOT_PROXY_OBJECT;
-	ProxyID.GroupIndex=0;
-	ProxyID.ObjectIndex=0;
-	return SendMessage(ProxyID,DSM_PROXY_UNREGISTER_GLOBAL_MSG_MAP,pCmdIDList,sizeof(WORD)*CmdCount);
-	FUNCTION_END;
-	return FALSE;
-}

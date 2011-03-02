@@ -33,8 +33,7 @@ void CServerThread::Execute()
 {
 	FUNCTION_BEGIN;
 
-	//装载系统配置
-	CSystemConfig::GetInstance()->LoadConfig(MakeModuleFullPath(NULL,GetConfigFileName()));
+	
 
 
 #ifndef _DEBUG
@@ -79,7 +78,8 @@ BOOL CServerThread::OnStart()
 	m_UDPSendCount=0;
 	m_CountTimer.SaveTime();
 
-	
+	//装载系统配置
+	CSystemConfig::GetInstance()->LoadConfig(MakeModuleFullPath(NULL,GetConfigFileName()));
 
 
 	CEasyString LogFileName;
@@ -127,14 +127,14 @@ BOOL CServerThread::OnStart()
 	m_ESFactionList.Create(128);
 	CESFunctionLib::GetInstance()->AddFunction(&m_ESFactionList);
 	m_ESThread.SetVariableList(&m_ESVariableList);
-	m_ESThread.SetFactionList(&m_ESFactionList);
+	m_ESThread.SetFunctionList(&m_ESFactionList);
 	m_ESThread.SetScript(&m_Script);
 
 
-	m_ESFactionList.AddFaction("StartLog",3,this,(LPSCRIPT_FACTION)&CServerThread::StartLog);
-	m_ESFactionList.AddFaction("StopLog",2,this,(LPSCRIPT_FACTION)&CServerThread::StopLog);
-	m_ESFactionList.AddFaction("TestLog",1,this,(LPSCRIPT_FACTION)&CServerThread::TestLog);
-	m_ESFactionList.AddFaction("RebuildUDPControlPort",0,this,(LPSCRIPT_FACTION)&CServerThread::RebuildUDPControlPort);
+	m_ESFactionList.AddCFunction("StartLog",3,this,&CServerThread::StartLog);
+	m_ESFactionList.AddCFunction("StopLog",2,this,&CServerThread::StopLog);
+	m_ESFactionList.AddCFunction("TestLog",1,this,&CServerThread::TestLog);
+	m_ESFactionList.AddCFunction("RebuildUDPControlPort",0,this,&CServerThread::RebuildUDPControlPort);
 
 	if(!CNetServer::OnStart())
 		return FALSE;
@@ -183,6 +183,7 @@ BOOL CServerThread::OnStart()
 	memcpy(Version.Words,g_ProgramVersion,sizeof(ULONG64_CONVERTER));
 
 	SetServerStatus(SC_SST_SS_PROGRAM_VERSION,CSmartValue(Version.QuadPart));
+	SetServerStatusFormat(SC_SST_SS_PROGRAM_VERSION,"服务器版本",SSFT_VERSION);
 	SetServerStatusFormat(SC_SST_SS_CLIENT_COUNT,"客户端数量");
 	SetServerStatusFormat(SC_SST_SS_CYCLE_TIME,"循环时间(毫秒)");
 	SetServerStatusFormat(SC_SST_SS_TCP_RECV_FLOW,"TCP接收流量(Byte/S)",SSFT_FLOW);
@@ -193,7 +194,7 @@ BOOL CServerThread::OnStart()
 	SetServerStatusFormat(SC_SST_SS_TCP_SEND_COUNT,"TCP发送次数(次/S)");
 	SetServerStatusFormat(SC_SST_SS_UDP_RECV_COUNT,"UDP接收次数(次/S)");
 	SetServerStatusFormat(SC_SST_SS_UDP_SEND_COUNT,"UDP发送次数(次/S)");
-	SetServerStatusFormat(SC_SST_SS_PROGRAM_VERSION,"服务器版本");
+	
 
 	Log("服务器成功启动");
 	
@@ -221,7 +222,13 @@ BOOL CServerThread::OnRun()
 {
 	FUNCTION_BEGIN;		
 
-	CNetServer::OnRun();
+	if(!CBaseServer::OnRun())
+		return FALSE;
+
+	if(Update(CSystemConfig::GetInstance()->GetMainThreadProcessLimit())==0)
+	{
+		DoSleep(1);
+	}
 
 	//计算服务器循环时间
 	m_CycleCount++;
@@ -338,7 +345,23 @@ void CServerThread::SetServerStatusFormat(WORD StatusID,LPCTSTR szStatusName,int
 	FUNCTION_END;
 }
 
-int CServerThread::StartLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
+void CServerThread::QueryShowDown()
+{
+	FUNCTION_BEGIN;
+	Log("服务器准备关闭");
+	Terminate();
+	FUNCTION_END;
+}
+
+bool CServerThread::IsServerTerminated()
+{
+	FUNCTION_BEGIN;
+	return IsTerminated();
+	FUNCTION_END;
+	return true;
+}
+
+int CServerThread::StartLog(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	FUNCTION_BEGIN;
 	CServerLogPrinter * pLog=NULL;
@@ -406,7 +429,7 @@ int CServerThread::StartLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN
 	return 0;
 }
 
-int CServerThread::StopLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
+int CServerThread::StopLog(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	FUNCTION_BEGIN;
 	CServerLogPrinter * pLog=NULL;
@@ -460,7 +483,7 @@ int CServerThread::StopLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN*
 	return 0;
 }
 
-int CServerThread::TestLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
+int CServerThread::TestLog(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	FUNCTION_BEGIN;
 	CServerLogPrinter * pLog=NULL;
@@ -489,7 +512,7 @@ int CServerThread::TestLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN*
 	return 0;
 }
 
-int CServerThread::RebuildUDPControlPort(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
+int CServerThread::RebuildUDPControlPort(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	FUNCTION_BEGIN;
 	

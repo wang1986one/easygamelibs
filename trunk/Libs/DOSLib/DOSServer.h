@@ -73,11 +73,12 @@ inline CFastMemoryPool * CDOSServer::GetMemoryPool()
 }
 inline CDOSMessagePacket * CDOSServer::NewMessagePacket(UINT Size)
 {	
-	WORD PacketLen=CDOSMessagePacket::CaculateRealPacketLength(Size);
+	MSG_LEN_TYPE PacketLen=CDOSMessagePacket::CaculateRealPacketLength(Size);
 	CDOSMessagePacket * pPacket=(CDOSMessagePacket *)m_MemoryPool.Alloc(PacketLen);
 	if(pPacket)
 	{
 		pPacket->Init();	
+		pPacket->SetPacketLength(Size);
 		UINT RefCount=pPacket->IncRefCount();
 #ifdef LOG_MEM_CALL_STACK
 		m_MemoryPool.LogMemUse(pPacket,RefCount);

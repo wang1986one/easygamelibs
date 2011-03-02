@@ -22,6 +22,8 @@ CNetConnection::CNetConnection(void)
 	m_SendQueryCount=0;
 	m_UseSendBuffer=0;
 	m_IsRecvPaused=false;
+	m_SendDelay=0;
+	m_SendQueryLimit=0;
 }
 
 CNetConnection::~CNetConnection(void)
@@ -111,6 +113,8 @@ BOOL CNetConnection::Create(UINT RecvQueueSize,UINT SendQueueSize)
 		return FALSE;
 	
 
+	Destory();
+
 	if(m_pIOCPEventRouter==NULL)
 	{
 		m_pIOCPEventRouter=GetServer()->CreateEventRouter();	
@@ -128,6 +132,20 @@ BOOL CNetConnection::Create(UINT RecvQueueSize,UINT SendQueueSize)
 	{
 		m_DataQueue.Create(RecvQueueSize);
 	}
+
+	if(SendQueueSize)
+	{
+		PrintNetLog(0,"启用发送队列，大小为%u",SendQueueSize);
+		m_UseSendBuffer=true;
+		if(m_SendBuffer.GetBufferSize()<SendQueueSize)
+		{
+			m_SendBuffer.Create(SendQueueSize);
+		}
+	}
+	else
+	{
+		m_UseSendBuffer=false;
+	}
 	
 		
 	m_CurProtocol=m_Socket.GetProtocol();	
@@ -143,6 +161,7 @@ BOOL CNetConnection::Create(SOCKET Socket,UINT RecvQueueSize,UINT SendQueueSize)
 	if(GetServer()==NULL)
 		return FALSE;
 		
+	Destory();
 
 	if(m_pIOCPEventRouter==NULL)
 	{
@@ -204,6 +223,11 @@ void CNetConnection::Destory()
 	
 	COverLappedObject * pOverLappedObject;
 	while(m_DataQueue.PopFront(pOverLappedObject))
+	{			
+		GetServer()->DeleteOverLappedObject(pOverLappedObject);		
+	}	
+
+	while(m_SendBuffer.PopFront(pOverLappedObject))
 	{			
 		GetServer()->DeleteOverLappedObject(pOverLappedObject);		
 	}	
@@ -364,31 +388,40 @@ BOOL CNetConnection::Send(LPCVOID pData,UINT Size)
 				PacketSize=MAX_DATA_PACKET_SIZE;
 
 			COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
-			if(pOverLappedObject==NULL)
+			if(pOverLappedObject)
+			{
+				pOverLappedObject->SetType(IO_SEND);
+				pOverLappedObject->GetDataBuff()->SetUsedSize(0);
+
+				if(pOverLappedObject->GetDataBuff()->PushBack(pData,PacketSize))
+				{
+					
+					pData=(char *)pData+PacketSize;
+					Size-=PacketSize;
+					if(m_SendBuffer.PushBack(pOverLappedObject))
+					{
+						continue;
+					}
+					else
+					{
+						PrintNetLog(0,"异常，发送缓冲已满");
+					}
+					
+				}
+				else
+				{
+					PrintNetLog(0xffffffff,"Connection要发送的数据包过大！");
+				}
+				
+				GetServer()->DeleteOverLappedObject(pOverLappedObject);
+			}
+			else
 			{
 				PrintNetLog(0xffffffff,"Connection创建Send用OverLappedObject失败！");
-				Disconnect();
-				return FALSE;
 			}
-
-			pOverLappedObject->SetType(IO_SEND);
-			pOverLappedObject->GetDataBuff()->SetUsedSize(0);
+			Disconnect();
+			return FALSE;
 			
-			if(!pOverLappedObject->GetDataBuff()->PushBack(pData,PacketSize))
-			{
-				GetServer()->DeleteOverLappedObject(pOverLappedObject);
-				PrintNetLog(0xffffffff,"Connection要发送的数据包过大！");
-				Disconnect();
-				return FALSE;
-			}
-			pData=(char *)pData+PacketSize;
-			Size-=PacketSize;
-			if(m_SendBuffer.PushBack(pOverLappedObject)==NULL)
-			{
-				PrintNetLog(0,"异常，发送缓冲已满");
-				Disconnect();
-				return FALSE;
-			}
 		}
 		return TRUE;
 	}
@@ -557,7 +590,19 @@ int CNetConnection::Update(int ProcessPacketLimit)
 	//处理缓冲的发送
 	if(m_UseSendBuffer)
 	{
-		PacketCount+=DoBufferSend(ProcessPacketLimit);
+		if(m_SendDelay)
+		{
+			if(m_SendDelayTimer.IsTimeOut(m_SendDelay))
+			{
+				m_SendDelayTimer.SaveTime();
+				PacketCount+=DoBufferSend(ProcessPacketLimit);
+			}
+		}
+		else
+		{
+			PacketCount+=DoBufferSend(ProcessPacketLimit);
+		}
+		
 	}
 
 	//处理关闭
@@ -598,6 +643,7 @@ bool CNetConnection::StealFrom(CNameObject * pObject,UINT Param)
 			m_pIOCPEventRouter->SetEventHander(this);
 
 		m_IsRecvPaused=pConnection->m_IsRecvPaused;
+		m_SendDelay=pConnection->m_SendDelay;
 
 		m_SendQueryCount=pConnection->m_SendQueryCount;
 		m_UseSendBuffer=pConnection->m_UseSendBuffer;
@@ -627,37 +673,51 @@ int CNetConnection::DoBufferSend(int ProcessPacketLimit)
 {
 	int ProcessCount=0;
 
-	COverLappedObject * pOverLappedObject;
-	while(m_SendBuffer.PopFront(pOverLappedObject))
-	{			
-		pOverLappedObject->SetType(IO_SEND);	
-		pOverLappedObject->SetIOCPEventRouter(m_pIOCPEventRouter);
-		pOverLappedObject->SetParentID(GetID());
-
-		static DWORD NumberOfBytes;
-		static DWORD Flag;
-
-		NumberOfBytes=0;
-		Flag=0;
-
-		AtomicInc(&m_SendQueryCount);
-		if(!m_Socket.SendOverlapped(
-			pOverLappedObject->GetDataBuff()->GetBuffer(),
-			pOverLappedObject->GetDataBuff()->GetUsedSize(),
-			NumberOfBytes,Flag,
-			pOverLappedObject->GetOverlapped()))
+	if(m_Socket.IsConnected())
+	{
+		if(m_SendQueryLimit)
 		{
+			if(GetCurSendQueryCount()>m_SendQueryLimit)
+				return ProcessCount;
+		}
+		COverLappedObject * pOverLappedObject;
+		while(m_SendBuffer.PopFront(pOverLappedObject))
+		{			
+			pOverLappedObject->SetType(IO_SEND);	
+			pOverLappedObject->SetIOCPEventRouter(m_pIOCPEventRouter);
+			pOverLappedObject->SetParentID(GetID());
 
-			AtomicDec(&m_SendQueryCount);
-			PrintNetLog(0xffffffff,"发出Send请求失败！");	
-			GetServer()->DeleteOverLappedObject(pOverLappedObject);
-			Disconnect();
-			break;
-		}		
+			static DWORD NumberOfBytes;
+			static DWORD Flag;
 
-		ProcessCount++;
-		if(ProcessCount>=ProcessPacketLimit)
-			break;
+			NumberOfBytes=0;
+			Flag=0;
+
+			AtomicInc(&m_SendQueryCount);
+			if(!m_Socket.SendOverlapped(
+				pOverLappedObject->GetDataBuff()->GetBuffer(),
+				pOverLappedObject->GetDataBuff()->GetUsedSize(),
+				NumberOfBytes,Flag,
+				pOverLappedObject->GetOverlapped()))
+			{
+
+				AtomicDec(&m_SendQueryCount);
+				PrintNetLog(0xffffffff,"发出Send请求失败！");	
+				GetServer()->DeleteOverLappedObject(pOverLappedObject);
+				Disconnect();
+				break;
+			}
+
+			if(m_SendQueryLimit)
+			{
+				if(GetCurSendQueryCount()>m_SendQueryLimit)
+					return ProcessCount;
+			}
+
+			ProcessCount++;
+			if(ProcessCount>=ProcessPacketLimit)
+				break;
+		}
 	}
 
 	return ProcessCount;

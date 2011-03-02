@@ -145,8 +145,14 @@ void CExceptionParser::ParseException(LPEXCEPTION_POINTERS pException)
 		CurTime.Year(),CurTime.Month(),CurTime.Day(),
 		CurTime.Hour(),CurTime.Minute(),CurTime.Second());
 
+	PrintImportantLog(0,"开始输出异常Log文件:%s.Log",
+		(LPCTSTR)ExceptionLogFileName);
 
-	m_ExceptionLog.Create(ExceptionLogFileName,0);
+	if(!m_ExceptionLog.Create(ExceptionLogFileName,0))
+	{
+		PrintImportantLog(0,"无法创建异常Log文件:%s.Log",
+			(LPCTSTR)ExceptionLogFileName);
+	}
 	
 	
 	LogException("-----------------------------------------------------------------");
@@ -271,8 +277,6 @@ BOOL CExceptionParser::WriteDump(LPEXCEPTION_POINTERS pException)
 	CEasyString DumpFileName;
 	CEasyTime CurTime;
 
-	PrintImportantLog(0xff,"开始制作Dump文件");
-
 	CurTime.FetchLocalTime();
 
 	DumpFileName.Format("%s.Dump%d-%02d-%02d %02d-%02d-%02d.dmp",
@@ -280,12 +284,11 @@ BOOL CExceptionParser::WriteDump(LPEXCEPTION_POINTERS pException)
 		CurTime.Year(),CurTime.Month(),CurTime.Day(),
 		CurTime.Hour(),CurTime.Minute(),CurTime.Second());
 
-	
+	PrintImportantLog(0xff,"开始写入Dump文件%s",(LPCTSTR)DumpFileName);
 
 	if(DumpFile.Open(DumpFileName,IFileAccessor::modeCreateAlways|IFileAccessor::modeWrite))
 	{		
-		PrintImportantLog(0xff,"开始写入Dump文件%s",(LPCTSTR)DumpFileName);
-
+		
 		static DWORD ProcessID=GetCurrentProcessId();
 
 		static MINIDUMP_EXCEPTION_INFORMATION ExceptionInfo;

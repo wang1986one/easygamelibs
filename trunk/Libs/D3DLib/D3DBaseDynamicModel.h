@@ -32,6 +32,7 @@ public:
 	virtual bool Play(bool IsLoop);	
 	virtual bool Stop();
 	virtual bool IsPlaying();
+	virtual void SetPlaySpeed(FLOAT Rate);
 
 };
 

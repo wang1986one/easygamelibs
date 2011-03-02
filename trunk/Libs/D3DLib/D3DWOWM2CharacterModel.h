@@ -110,7 +110,7 @@ public:
 	~CD3DWOWM2CharacterModel(void);
 
 	virtual void Destory();
-	void DestoryModel();
+	
 
 	virtual bool Reset();
 	virtual bool Restore();
@@ -143,17 +143,18 @@ public:
 	bool BuildModel();
 
 	virtual int GetSubMeshCount();
-	virtual CD3DSubMesh * GetSubMesh(UINT index);
-	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(int index);
+	virtual CD3DSubMesh * GetOriginSubMesh(UINT index);
+	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(UINT index);
 
 	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
 
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 
 protected:
+	void DestoryModel();
 	bool FetchCreatureExtraInfo(UINT ExtraInfoID);
 	bool BuildEquipmentModel(bool& HairVisible,bool& Facial1Visible,bool& Facial2Visible,bool& Facial3Visible,bool& EarsVisible);
 	bool RebuildSubMesh(bool HairVisible,bool Facial1Visible,bool Facial2Visible,bool Facial3Visible,bool EarsVisible,bool& HaveSleeve);

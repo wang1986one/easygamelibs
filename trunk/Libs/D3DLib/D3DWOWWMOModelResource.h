@@ -22,6 +22,26 @@ public:
 		SMP_INSIDE=(1<<4),
 		SMP_OUTSIDE=(1<<5),
 	};
+	enum BSP_PLANE_TYPE
+	{
+		BPT_XY=0,
+		BPT_YZ=1,
+		BPT_XZ=2,
+		BPT_LEAF=4,
+	};
+	enum FACE_FLAGS
+	{
+		FF_NO_CAMERA_COLLIDE=0x2,
+		FF_NO_COLLIDE=0x4,
+	};
+	struct MODEL_VERTEXT
+	{
+		CD3DVector3			Pos;
+		CD3DVector3			Normal;		
+		D3DCOLOR			Diffuse;
+		CD3DVector2			TextureCoord;	
+	};
+
 	struct DOODAD_INFO
 	{
 		CD3DWOWM2ModelResource *	pDoodadModel;
@@ -49,14 +69,43 @@ public:
 		CEasyArray<CD3DVector3>		Vertices;		
 	};
 
+	struct BSP_NODE
+	{
+		WORD			PlaneType;
+		short			RightChildIndex;
+		short			LeftChildIndex;
+		WORD			FaceCount;
+		WORD			FirstFace;
+		float			Distance;
+		CD3DBoard *		pFaceBoard;
+	};
+
+	struct RENDER_BATCH_INFO
+	{
+		UINT 				StartIndex;
+		WORD 				IndexCount;
+		WORD 				StartVertex;
+		WORD				VertexCount;
+		CD3DTexture *		pTexture1;
+		CD3DTexture *		pTexture2;
+		CD3DFX *			pFX;
+	};
+
 	struct GROUP_INFO
 	{
-		UINT						Index;
-		CEasyString					Name;
-		UINT						Flags;
-		CD3DBoundingBox				BoundingBox;
-		CEasyArray<CD3DSubMesh *>	GroupSubMeshList;
-		CEasyArray<PORTAL_INFO>		PortalList;
+		UINT							Index;
+		CEasyString						Name;
+		UINT							Flags;
+		CD3DBoundingBox					BoundingBox;
+		CEasyArray<CD3DSubMesh *>		GroupSubMeshList;
+		CEasyArray<PORTAL_INFO>			PortalList;
+		CEasyArray<WORD>				IndexList;
+		CEasyArray<MODEL_VERTEXT>		VertexList;
+		CEasyArray<BSP_NODE>			BSPTree;
+		CEasyArray<WORD>				BSPFaceList;
+		CEasyArray<RENDER_BATCH_INFO>	RenderBatchs;
+		CEasyArray<BYTE>				FaceFlags;
+		
 	};
 	
 protected:
@@ -96,38 +145,59 @@ protected:
 	};
 	enum SST_PORTAL_LIST
 	{
-		SST_PL_GROUP_INDEX=1,
-		SST_PL_FILLER,
-		SST_PL_NORMAL,
-		SST_PL_CENTER,
-		SST_PL_FACTOR,
-		SST_PL_VERTICES,
+		SST_PL_PORTAL_INFO=1,
 	};
+	enum SST_PORTAL_INFO
+	{
+		SST_PI_GROUP_INDEX=1,
+		SST_PI_FILLER,
+		SST_PI_NORMAL,
+		SST_PI_CENTER,
+		SST_PI_FACTOR,
+		SST_PI_VERTICES,
+	};	
+	enum SST_BSP_TREE
+	{
+		SST_BT_BSP_NODE_INFO=1,
+	};
+	enum SST_BSP_NODE
+	{
+		SST_BN_PLANE_TYPE=1,
+		SST_BN_RIGHT_CHILD_INDEX,
+		SST_BN_LEFT_CHILD_INDEX,
+		SST_BN_FACE_COUNT,
+		SST_BN_FIRST_FACE,
+		SST_BN_DISTANCE,
+	};
+	enum SST_RENDER_BATCH_LIST
+	{
+		SST_BRL_RENDER_BATCH_INFO=1,
+	};
+	enum SST_RENDER_BATCH_INFO
+	{
+		SST_RBI_START_INDEX=1,
+		SST_RBI_INDEX_COUNT,
+		SST_RBI_START_VERTEX,
+		SST_RBI_VERTEX_COUNT,
+		SST_RBI_TEXTURE1,
+		SST_RBI_TEXTURE2,
+		SST_RBI_FX,
+	};
+
 	enum SST_GROUP_INFO
 	{
 		SST_GI_INDEX=1,
 		SST_GI_NAME,
 		SST_GI_FLAG,
 		SST_GI_BOUNDING_BOX,
-		SST_GI_SUB_MESH,
-		SST_GI_PORTAL_INFO,
+		SST_GI_PORTAL_LIST,
+		SST_GI_FACE_INDEX_LIST,
+		SST_GI_FACE_VERTEX_LIST,
+		SST_GI_BSP_TREE,
+		SST_GI_BSP_FACE_LIST,
+		SST_GI_RENER_BATCH_LIST,
+		SST_GI_FACE_FLAGS,
 	};
-
-	struct MODEL_VERTEXT
-	{
-		CD3DVector3			Pos;
-		CD3DVector3			Normal;		
-		D3DCOLOR			Diffuse;
-		CD3DVector2			TextureCoord;	
-	};
-
-	struct SUBMESH_INFO
-	{
-		UINT	StartIndex;
-		UINT	IndexCount;
-		UINT	MaterialIndex;
-	};
-
 
 	CEasyArray<DOODAD_INFO>			m_DoodadInfos;
 	CEasyArray<DOODAD_SET_INFO>		m_DoodadSets;
@@ -159,9 +229,9 @@ public:
 
 public:	
 
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 
 protected:
@@ -170,12 +240,13 @@ protected:
 	bool LoadDoodads(UINT DoodadCount,UINT DoodadSetCount,BLZ_CHUNK_MODS * pDoodadSets,BLZ_CHUNK_MODN * pDoodadFileNames,BLZ_CHUNK_MODD * pDoodads);
 	bool LoadGroups(LPCTSTR ModelFileName,UINT GroupCount,BLZ_CHUNK_MOGI * pGroups,BLZ_CHUNK_MOGN * pGroupNames,BLZ_CHUNK_MOMT * pMaterials,UINT MaterialCount,BLZ_CHUNK_MOTX * pTextureNames);
 
-	WORD RebuildVertexIndex(CEasyArray<WORD>& VertexIndexList,WORD VertexIndex);
-	bool MakeMaterial(CD3DSubMeshMaterial& SubMeshMaterial,WMOMaterial& MaterialInfo,BLZ_CHUNK_MOTX * pTextureNames);
+	
+	bool MakeMaterial(RENDER_BATCH_INFO& BatchInfo,WMOMaterial& MaterialInfo,BLZ_CHUNK_MOTX * pTextureNames);
 
 	CD3DFX * BuildFX(UINT BlendMode,UINT TextureFlag);
 
-	void MakeSubMesh(WMOTriangleMaterialInfo * pTriangles,UINT TriangleCount,CEasyArray<SUBMESH_INFO>& SubMeshInfo);
+	
+	void BuildSubMeshs();
 	
 };
 

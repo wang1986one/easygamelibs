@@ -1059,13 +1059,13 @@ bool CD3DWnd::LoadFromFile(LPCTSTR FileName,LPCTSTR WndName)
 
 
 
-//bool CD3DWnd::ToUSOFile(CUSOFile * pUSOFile,UINT Param)
+//bool CD3DWnd::ToUSOFile(CUSOFile * pResourceManager,UINT Param)
 //{	
 //
-//	if(pUSOFile==NULL)
+//	if(pResourceManager==NULL)
 //		return false;	
 //
-//	IFileAccessor * pFile=pUSOFile->GetFile();
+//	IFileAccessor * pFile=pResourceManager->GetFile();
 //	if(pFile==NULL)
 //		return false;
 //
@@ -1101,12 +1101,12 @@ bool CD3DWnd::LoadFromFile(LPCTSTR FileName,LPCTSTR WndName)
 //	return true;
 //}
 //
-//bool CD3DWnd::FromUSOFile(CUSOFile * pUSOFile,UINT Param)
+//bool CD3DWnd::FromUSOFile(CUSOFile * pResourceManager,UINT Param)
 //{
-//	if(pUSOFile==NULL)
+//	if(pResourceManager==NULL)
 //		return false;	
 //
-//	IFileAccessor * pFile=pUSOFile->GetFile();
+//	IFileAccessor * pFile=pResourceManager->GetFile();
 //	if(pFile==NULL)
 //		return false;
 //
@@ -1152,16 +1152,16 @@ bool CD3DWnd::LoadFromFile(LPCTSTR FileName,LPCTSTR WndName)
 //	
 //}
 
-void CD3DWnd::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+void CD3DWnd::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
 	if(m_pTexture)
 	{
-		m_pTexture->PickResource(pObjectSet,Param);
+		m_pTexture->PickResource(pResourceManager,Param);
 	}
 
 	for(int i=0;i<(int)m_ChildWndList.size();i++)
 	{
-		m_ChildWndList[i]->PickResource(pObjectSet,Param);
+		m_ChildWndList[i]->PickResource(pResourceManager,Param);
 	}	
 }
 
@@ -1169,18 +1169,18 @@ void CD3DWnd::OnLoaded()
 {
 }
 
-bool CD3DWnd::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DWnd::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::ToSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_GUI_SCRIPT,(LPCTSTR)m_TempScript,m_TempScript.GetLength()));
 
 	return true;
 }
-bool CD3DWnd::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DWnd::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	LPCTSTR szScript=Packet.GetMember(SST_GUI_SCRIPT);
@@ -1698,9 +1698,9 @@ IUITextRect * CD3DWnd::GetTextRect()
 //	return pHead;
 //}
 //
-//int CD3DWnd::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//int CD3DWnd::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{
-//	int HeadSize=CNameObject::USOWriteHead(pHead,pUSOFile,Param);
+//	int HeadSize=CNameObject::USOWriteHead(pHead,pResourceManager,Param);
 //	if(HeadSize<0)
 //		return -1;
 //
@@ -1732,15 +1732,15 @@ IUITextRect * CD3DWnd::GetTextRect()
 //	return sizeof(STORAGE_STRUCT);
 //}
 //
-//bool CD3DWnd::USOWriteData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//bool CD3DWnd::USOWriteData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{
-//	if(!CNameObject::USOWriteData(pHead,pUSOFile,Param))
+//	if(!CNameObject::USOWriteData(pHead,pResourceManager,Param))
 //		return false;
 //
-//	if(pUSOFile==NULL)
+//	if(pResourceManager==NULL)
 //		return false;	
 //
-//	IFileAccessor * pFile=pUSOFile->GetFile();
+//	IFileAccessor * pFile=pResourceManager->GetFile();
 //	if(pFile==NULL)
 //		return false;
 //
@@ -1756,18 +1756,18 @@ IUITextRect * CD3DWnd::GetTextRect()
 //	return true;
 //}
 //
-//int CD3DWnd::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//int CD3DWnd::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{	
-//	int ReadSize=CNameObject::USOReadHead(pHead,pUSOFile,Param);
+//	int ReadSize=CNameObject::USOReadHead(pHead,pResourceManager,Param);
 //	if(ReadSize<0)
 //		return -1;	
 //
 //	return sizeof(STORAGE_STRUCT);
 //}
 //
-//int CD3DWnd::USOReadData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,BYTE * pData,int DataSize,UINT Param)
+//int CD3DWnd::USOReadData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,BYTE * pData,int DataSize,UINT Param)
 //{
-//	int ReadSize=CNameObject::USOReadData(pHead,pUSOFile,pData,DataSize,Param);
+//	int ReadSize=CNameObject::USOReadData(pHead,pResourceManager,pData,DataSize,Param);
 //
 //	pData+=ReadSize;
 //	DataSize-=ReadSize;

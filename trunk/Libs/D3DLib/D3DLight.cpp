@@ -37,6 +37,9 @@ CD3DLight::CD3DLight(void):CD3DObject()
 	m_LightData.Attenuation2=0.0f;
 	m_LightData.Theta=PI/8;
 	m_LightData.Phi=PI/6;	
+
+	m_BoundingBox.m_Min.SetValue(-0.2f,-0.2f,0.0f);
+	m_BoundingBox.m_Max.SetValue(0.2f,0.2f,1.0f);
 }
 
 CD3DLight::CD3DLight(const CD3DLight& Light)
@@ -44,11 +47,17 @@ CD3DLight::CD3DLight(const CD3DLight& Light)
 	m_LightData=Light.m_LightData;
 	m_LocalMatrix=Light.m_LocalMatrix;
 	m_WorldMatrix=Light.m_WorldMatrix;
+
+	m_BoundingBox.m_Min.SetValue(-0.5f,0.0f,-0.5f);
+	m_BoundingBox.m_Max.SetValue(0.5f,1.0f,0.5f);
 }
 
 CD3DLight::CD3DLight(const D3DLIGHT9& Light)
 {
 	m_LightData=Light;
+
+	m_BoundingBox.m_Min.SetValue(-0.5f,0.0f,-0.5f);
+	m_BoundingBox.m_Max.SetValue(0.5f,1.0f,0.5f);
 }
 
 CD3DLight::~CD3DLight(void)
@@ -60,7 +69,7 @@ void CD3DLight::SetLight(const D3DLIGHT9& Light)
 	m_LightData=Light;
 	CD3DVector3 EndVec=Light.Direction;
 	EndVec.Normalize();
-	CD3DVector3 StartVec(0,-1.0f,0);
+	CD3DVector3 StartVec=LIGHT_START_DIR;
 
 	CD3DVector3 RotateAix=StartVec.Cross(EndVec);
 	RotateAix.Normalize();
@@ -74,7 +83,7 @@ void CD3DLight::SetLight(const D3DLIGHT9& Light)
 	SetLocalMatrix(Mat);
 
 	
-	Update(0);
+	//Update(0);
 }
 
 D3DLIGHT9& CD3DLight::GetLight()
@@ -91,7 +100,7 @@ void CD3DLight::SetDirect(FLOAT x,FLOAT y,FLOAT z)
 {
 	CD3DVector3 EndVec(x,y,z);
 	EndVec.Normalize();
-	CD3DVector3 StartVec(0,-1.0f,0);
+	CD3DVector3 StartVec=LIGHT_START_DIR;
 
 	CD3DVector3 RotateAix=StartVec.Cross(EndVec);
 	RotateAix.Normalize();
@@ -100,16 +109,18 @@ void CD3DLight::SetDirect(FLOAT x,FLOAT y,FLOAT z)
 
 	CD3DQuaternion Rotation=CD3DQuaternion::FromRotationAxis(RotateAix,RotateAngle);
 	
-	CD3DMatrix Mat=CD3DMatrix::FromRotationQuaternion(Rotation);
-	GetLocalMatrix().SetRotation(Mat);
-
-	Update(0);
+	CD3DMatrix Mat=GetLocalMatrix();
+	Mat.SetRotation(CD3DMatrix::FromRotationQuaternion(Rotation));
+	SetLocalMatrix(Mat);
+	//Update(0);
 }
 
 void CD3DLight::SetPosition(FLOAT x,FLOAT y,FLOAT z)
 {
-	GetLocalMatrix().SetTranslation(x,y,z);
-	Update(0);
+	CD3DMatrix Mat=GetLocalMatrix();
+	Mat.SetTranslation(x,y,z);
+	SetLocalMatrix(Mat);
+	//Update(0);
 }
 
 void CD3DLight::Apply(CD3DDevice * pDevice,int Index)
@@ -126,7 +137,67 @@ void CD3DLight::Update(FLOAT Time)
 {
 	CD3DObject::Update(Time);
 	m_LightData.Position=GetWorldMatrix().GetTranslation();
-	m_LightData.Direction=CD3DVector3(0,-1.0f,0)*GetWorldMatrix().GetRotation();
+	m_LightData.Direction=LIGHT_START_DIR*GetWorldMatrix().GetRotation();
+}
+
+bool CD3DLight::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly)
+{
+	if(GetBoundingBox())
+	{
+		CD3DBoundingBox BBox;
+
+
+		BBox=(*GetBoundingBox())*GetWorldMatrix();
+
+		return BBox.RayIntersect(Point,Dir,IntersectPoint,Distance);
+	}
+	
+	return false;
+}
+
+CD3DBoundingBox * CD3DLight::GetBoundingBox()
+{
+	return &m_BoundingBox;
+}
+
+void CD3DLight::ShowBoundingFrame(int Operator)
+{
+	switch(Operator)
+	{
+	case DBFO_HIDE:
+		{
+			if(m_pBoundingFrame)
+				m_pBoundingFrame->SetVisible(false);
+		}
+		break;
+	case DBFO_SHOW:
+		{
+			if(m_pBoundingFrame)
+				m_pBoundingFrame->SetVisible(true);
+			else
+			{
+				if(GetRender()==NULL)
+					return;				
+				m_pBoundingFrame=new CD3DBoundingFrame();
+				m_pBoundingFrame->SetRender(GetRender());
+				m_pBoundingFrame->CreateFromLight(this);
+				m_pBoundingFrame->SetParent(this);
+				GetRender()->AddObject(m_pBoundingFrame);
+			}
+		}
+		break;
+	case DBFO_RELEASE:
+		SAFE_RELEASE(m_pBoundingFrame);
+		break;
+	}
+}
+
+void CD3DLight::UpdateBoundingFrame()
+{
+	if(m_pBoundingFrame)
+	{
+		m_pBoundingFrame->CreateFromLight(this);
+	}
 }
 
 }

@@ -16,6 +16,7 @@ namespace D3DLib{
 class CD3DWOWADTModelResource :
 	public CD3DObjectResource
 {
+
 protected:
 	struct MODEL_VERTEXT
 	{
@@ -86,6 +87,11 @@ public:
 	{
 		TP_ALPHA_MAP=1,
 		TP_SHADOW_MAP=(1<<1),
+	};
+	enum MODEL_FX_TYPE
+	{
+		MODEL_FX_TYPE_NORMAL,
+		MODEL_FX_TYPE_LIQUID,
 	};
 	struct M2_OBJECT_INFO
 	{
@@ -187,14 +193,15 @@ public:
 	bool GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT& WaterHeight);
 public:	
 
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 protected:
-	CD3DFX * BuildFX(UINT Index,UINT LayCount,bool HaveShadowMap);
+	CD3DFX * BuildFX(UINT Index,UINT LayCount,bool HaveShadowMap,bool UseNewShader);
+	CD3DFX * BuildLiquidFX();
 	bool LoadAlphaLayer(TEXTURE_LAYER_INFO& LayInfo,UINT LayerCount,BLZ_CHUNK_MCLY * pMCLY,BLZ_CHUNK_MCAL * pMCAL,UINT ID,bool IsBigAlphaMask);
-	CD3DTexture * CreateAlphaMap(int DataType,LPBYTE pData,UINT DataSize,UINT& ProcessSize,UINT ID);
+	CD3DTexture * CreateAlphaMap(int DataType,LPBYTE pData,UINT DataSize,UINT& ProcessSize,UINT ID,UINT Layer);
 	bool LoadShadowMap(TEXTURE_LAYER_INFO& LayInfo,BLZ_CHUNK_MCSH * pMCSH,UINT ID);
 	CD3DTexture * LoadLiquidTexture(int LiquidType);
 	bool WantRenderWater(BYTE * pRenderMask,int Pos);

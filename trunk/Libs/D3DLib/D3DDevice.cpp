@@ -19,12 +19,14 @@ namespace D3DLib{
 
 IMPLEMENT_CLASS_INFO(CD3DDevice,CNameObject);
 
+
+bool CD3DDevice::m_IsUseMultiThreadRender=false;
+
 CD3DDevice::CD3DDevice():CNameObject()
 {
 	m_pD3D=NULL;
-	m_pd3dDevice=NULL;
-	m_pSavedRenderTarget=NULL;
-	m_pCurRenderTarget=NULL;
+	m_pd3dDevice=NULL;	
+	m_pDefaultDepthStencilBuffer=NULL;
 	m_pTextureManager=NULL;
 	m_pFXManager=NULL;
 	m_pFontManager=NULL;
@@ -51,15 +53,32 @@ bool CD3DDevice::Create(D3DDEVICE_PARAMS& Params)
     if( NULL == ( m_pD3D = Direct3DCreate9( D3D_SDK_VERSION ) ) )
         return false;     
 	
+	if(m_D3DParams.IsUseMultiThreadRender)
+	{
+		m_IsUseMultiThreadRender=true;
+		m_D3DParams.BehaviorFlags|=D3DCREATE_MULTITHREADED;
+	}
 
     if( FAILED( m_pD3D->CreateDevice(m_D3DParams.Adapter,m_D3DParams.DeviceType,m_D3DParams.hFocusWindow,m_D3DParams.BehaviorFlags,&m_D3DParams.PresentParams,&m_pd3dDevice)))
     {
         return false;
     }
 
-	//m_pd3dDevice->SetRenderState(D3DRS_FILLMODE,D3DFILL_WIREFRAME );
-
 	m_pd3dDevice->GetDeviceCaps(&m_D3DCaps);
+
+	if(m_D3DCaps.NumSimultaneousRTs==0)
+	{
+		PrintD3DLog(0,"异常，RenderTarget数量为0");
+		return false;
+	}
+
+	m_DefaultRenderTargetList.Resize(m_D3DCaps.NumSimultaneousRTs);
+
+	for(UINT i=0;i<m_D3DCaps.NumSimultaneousRTs;i++)
+	{
+		m_pd3dDevice->GetRenderTarget(i,&m_DefaultRenderTargetList[i]);
+	}	
+	m_pd3dDevice->GetDepthStencilSurface(&m_pDefaultDepthStencilBuffer);
 
 	m_pTextureManager=new CD3DTextureManager(this,MAX_TEXTURE_STORAGE);	
 	m_pFXManager=new CD3DFXManager(this,MAX_FX_STORAGE);
@@ -91,8 +110,11 @@ bool CD3DDevice::ReleaseObject()
 	SAFE_RELEASE(m_pTextureManager);	
 	SAFE_RELEASE(m_pFontManager);		
 	SAFE_RELEASE(m_pFXManager);	
-	SAFE_RELEASE(m_pSavedRenderTarget);
-	SAFE_RELEASE(m_pCurRenderTarget);
+	for(UINT i=0;i<m_DefaultRenderTargetList.GetCount();i++)
+	{
+		SAFE_RELEASE(m_DefaultRenderTargetList[i]);
+	}	
+	SAFE_RELEASE(m_pDefaultDepthStencilBuffer);
 	SAFE_RELEASE(m_pd3dDevice);
 	SAFE_RELEASE(m_pD3D);
 	
@@ -123,12 +145,12 @@ bool CD3DDevice::StartRender()
 	return false;
 }
 
-bool CD3DDevice::StartRender(D3DCOLOR ClearColor)
+bool CD3DDevice::StartRender(D3DCOLOR ClearColor,UINT ClearFlag)
 {
 	if(m_pd3dDevice)
 	{
-		m_pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER,
-                        ClearColor, 1.0f, 0 );
+		if(m_pd3dDevice->Clear( 0, NULL, ClearFlag, ClearColor, 1.0f, 0 )!=D3D_OK)
+			return false;
 		if(SUCCEEDED(m_pd3dDevice->BeginScene()))
 			return true;
 	}
@@ -146,65 +168,85 @@ void CD3DDevice::EndRender(bool WantPresent)
 }
 
 
-bool CD3DDevice::StartRenderToTexture(CD3DTexture * pTexture)
+bool CD3DDevice::SetRenderTarget(UINT Index,LPDIRECT3DSURFACE9 pRenderTarget)
 {
-	if(pTexture==NULL)
-		return false;
-
-	if(FAILED(m_pd3dDevice->BeginScene()))
-		return false;
-
-	if(FAILED(m_pd3dDevice->GetRenderTarget(0, &m_pSavedRenderTarget)))
+	if(Index<m_D3DCaps.NumSimultaneousRTs)
 	{
-		m_pSavedRenderTarget=NULL;
-		return false;
+		LPDIRECT3DSURFACE9 pOldRenderTarget=NULL;
+		m_pd3dDevice->GetRenderTarget(Index, &pOldRenderTarget);
+		if(m_pd3dDevice->SetRenderTarget(Index, pRenderTarget)==D3D_OK)
+		{
+			SAFE_RELEASE(pOldRenderTarget);
+			return true;
+		}
+		else
+		{
+			if(pOldRenderTarget)
+				m_pd3dDevice->SetRenderTarget(Index, pOldRenderTarget);
+		}
 	}
-	LPDIRECT3DTEXTURE9 pTargetTexture = pTexture->GetD3DTexture();
-	if(pTargetTexture == NULL)
-	{
-		SAFE_RELEASE(m_pSavedRenderTarget);
-		return false;
-	}
-
-
-	if(FAILED(pTargetTexture->GetSurfaceLevel(0, &m_pCurRenderTarget)))
-	{
-		m_pd3dDevice->SetRenderTarget(0, m_pSavedRenderTarget);
-		
-		SAFE_RELEASE(m_pSavedRenderTarget);
-		return false;
-	}
-			
-	if(FAILED(m_pd3dDevice->SetRenderTarget(0, m_pCurRenderTarget)))
-	{
-		m_pd3dDevice->SetRenderTarget(0, m_pSavedRenderTarget);
-					
-		SAFE_RELEASE(m_pSavedRenderTarget);
-		SAFE_RELEASE(m_pCurRenderTarget);
-		return false;
-	}
-		
-
-	
-	return true;
+	return false;
 }
 
-bool CD3DDevice::EndRenderToTexture()
+bool CD3DDevice::SetRenderTarget(UINT Index,CD3DTexture * pTexture,UINT SurfaceLevel)
 {
-	if(m_pSavedRenderTarget)
+	LPDIRECT3DSURFACE9 pRenderTarget=NULL;
+	if(pTexture->GetD3DTexture()->GetSurfaceLevel(SurfaceLevel, &pRenderTarget)==D3D_OK)
 	{
-		m_pd3dDevice->SetRenderTarget(0, m_pSavedRenderTarget);
-		SAFE_RELEASE(m_pSavedRenderTarget);
+		bool Ret=SetRenderTarget(Index,pRenderTarget);
+		SAFE_RELEASE(pRenderTarget);
+		return Ret;
 	}
+	return false;
+}
 
-	if (m_pCurRenderTarget)
-	{		
-		SAFE_RELEASE(m_pCurRenderTarget);
+bool CD3DDevice::SetRenderTarget(UINT Index,CD3DSwapChain * pSwapChain)
+{
+	LPDIRECT3DSURFACE9 pBackBuffer=pSwapChain->GetBackBuffer(0);
+	if(pBackBuffer)
+	{
+		bool Ret=SetRenderTarget(Index,pBackBuffer);
+		SAFE_RELEASE(pBackBuffer);
+		return Ret;
 	}
+	return false;	
+}
 
-	m_pd3dDevice->EndScene();
+LPDIRECT3DSURFACE9 CD3DDevice::GetRenderTarget(UINT Index)
+{
+	LPDIRECT3DSURFACE9 pRenderTarget=NULL;
+	if(Index<m_D3DCaps.NumSimultaneousRTs)
+	{
+		m_pd3dDevice->GetRenderTarget(Index, &pRenderTarget);
+	}
+	return pRenderTarget;
+}
 
-	return true;
+bool CD3DDevice::RestoreRenderTargetToDefault(UINT Index)
+{
+	return SetRenderTarget(Index,m_DefaultRenderTargetList[Index]);
+}
+
+bool CD3DDevice::SetDepthStencilBuffer(LPDIRECT3DSURFACE9 pDepthStencilBuffer)
+{
+	LPDIRECT3DSURFACE9 pOldDepthStencilBuffer=NULL;
+	if(m_pd3dDevice->GetDepthStencilSurface(&pOldDepthStencilBuffer)==D3D_OK)
+	{
+		if(m_pd3dDevice->SetDepthStencilSurface(pDepthStencilBuffer)==D3D_OK)
+		{
+			SAFE_RELEASE(pOldDepthStencilBuffer);
+			return true;
+		}
+		else
+		{
+			m_pd3dDevice->SetDepthStencilSurface(pOldDepthStencilBuffer);
+		}
+	}
+	return false;
+}
+bool CD3DDevice::RestoreDepthStencilBufferToDefault()
+{
+	return SetDepthStencilBuffer(m_pDefaultDepthStencilBuffer);
 }
 
 

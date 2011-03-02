@@ -20,14 +20,6 @@ class CD3DWOWM2Model :
 {
 protected:	
 
-	//struct STORAGE_STRUCT:public CD3DObject::STORAGE_STRUCT
-	//{		
-	//	int				ModelResourceID;
-	//	int				CurAnimationID;
-	//	int				CurSubAnimationID;
-	//	int				ActivedAttachmentCount;
-	//};
-
 	enum SST_MEMBER_ID
 	{
 		SST_D3DWMM_MODEL_RESOURCE=SST_D3DO_MAX,		
@@ -41,11 +33,7 @@ protected:
 		SST_AAI_ATTACHMENT_ID=1,
 		SST_AAI_DUMMY_STORAGE_ID,
 	};
-	//struct STORAGE_STRUCT_ATTACHMENT
-	//{		
-	//	WORD	AttachmentID;
-	//	UINT	DummyStorageID;
-	//};
+	
 	enum INTERIM_STATUS
 	{
 		IS_NONE,
@@ -63,7 +51,9 @@ protected:
 	CD3DWOWM2ModelResource *							m_pModelResource;
 	CEasyArray<CD3DWOWM2ModelResource::BONE_MATRIX>		m_BoneMatrices;
 	CEasyArray<CD3DMatrix>								m_BoneMatList;
+	CEasyArray<CD3DMatrix>								m_BoneMatListR;
 	bool												m_UseSoftSkinMesh;
+	CEasyArray<CD3DSubMesh *>							m_SubMeshListForSoftSkinMesh;
 
 	CEasyArray<CD3DMatrix>								m_InterimBoneMatStart;
 	CEasyArray<CD3DMatrix>								m_InterimBoneMatEnd;
@@ -85,7 +75,6 @@ protected:
 	
 
 	CD3DBoundingBox 									m_CurBoundingBox;
-	//STORAGE_STRUCT_ATTACHMENT *							m_pActivedAttachments;
 	
 
 
@@ -111,12 +100,12 @@ public:
 	
 
 	bool LoadFromFile(LPCTSTR szModelFileName);
-	bool LoadFromFile(LPCTSTR ModelFileName,LPCTSTR SkinFileName);
 	bool LoadFromResource(CD3DWOWM2ModelResource * pModelResource);
+	bool LoadFromXFile(LPCTSTR szModelFileName);
 
 	
 	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
 
 	CD3DWOWM2ModelResource * GetModelResource();
 
@@ -125,20 +114,23 @@ public:
 
 	CD3DDummy * EnableAttachment(UINT ID);
 
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRenderData();
 	virtual int GetSubMeshCount();
 	virtual CD3DSubMesh * GetSubMesh(UINT index);
-	//virtual CD3DSubMesh::MESH_MATERIAL * GetSubMeshMaterial(int index);
+	virtual CD3DSubMeshMaterial  *GetSubMeshMaterial(UINT index);
+	virtual CD3DSubMesh * GetOriginSubMesh(UINT index);
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();
 
-	//virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
-	//virtual bool GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& y);
+	virtual bool CanDoSubMeshViewCull();
+
 	
 
 	virtual void Update(FLOAT Time);
@@ -147,19 +139,11 @@ protected:
 	void CaculateSoftSkinMesh();
 
 	virtual void FetchAnimationFrames(UINT Time);
+	virtual void OnSubMeshChanged();
 
-	//virtual CNameObject::STORAGE_STRUCT * USOCreateHead(UINT Param=0);
-	//virtual int USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);	
-	//virtual bool USOWriteData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);	
-	//virtual int USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	//virtual int USOReadData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,BYTE * pData,int DataSize,UINT Param=0);
-	//virtual bool USOReadFinish(CNameObject::STORAGE_STRUCT * pHead,UINT Param=0);
 };
 
-inline void CD3DWOWM2Model::SetPlaySpeed(FLOAT Rate)
-{
-	m_PlaySpeedRate=Rate;
-}
+
 
 inline int CD3DWOWM2Model::GetCurAnimationID()
 {

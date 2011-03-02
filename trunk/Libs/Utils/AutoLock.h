@@ -45,7 +45,7 @@ public:
 	{
 		m_pSection=&Section;
 		m_pSection->Lock();
-	}
+	}	
 	BOOL TryLock(CEasyCriticalSection& Section)
 	{
 		if(Section.TryLock())

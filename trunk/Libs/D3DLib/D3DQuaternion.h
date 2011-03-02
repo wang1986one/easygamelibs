@@ -48,7 +48,7 @@ public:
 	CD3DQuaternion GetConjugate();
 
 	//»ñÈ¡Å·À­½Ç
-	void GetYawPitchRoll(FLOAT& Yaw,FLOAT& Pitch,FLOAT& Roll);
+	void GetYawPitchRoll(FLOAT& Yaw,FLOAT& Pitch,FLOAT& Roll,bool ReprojectAxis=true);
 	//»ñÈ¡Ðý×ªÖáÐý×ª½Ç
 	void GetAxisAngle(D3DXVECTOR3& Axis,FLOAT& Angle);
 
@@ -142,87 +142,91 @@ inline CD3DQuaternion CD3DQuaternion::GetConjugate()
 }
 
 
-inline void CD3DQuaternion::GetYawPitchRoll(FLOAT& Yaw,FLOAT& Pitch,FLOAT& Roll)
+inline void CD3DQuaternion::GetYawPitchRoll(FLOAT& Yaw,FLOAT& Pitch,FLOAT& Roll,bool ReprojectAxis)
 {
-	float matrix[3][3];
-	float cx,sx;
-	float cy,sy,yr;
-	float cz,sz;
-	///////////////////////////////////////////////////////////////////////////////
-	// CONVERT QUATERNION TO MATRIX - I DON'T REALLY NEED ALL OF IT
-	matrix[0][0] = 1.0f - (2.0f * this->y * this->y) - (2.0f * this->z * this->z);
-	//	matrix[0][1] = (2.0f * this->x * this->y) - (2.0f * this->w * this->z);
-	//	matrix[0][2] = (2.0f * this->x * this->z) + (2.0f * this->w * this->y);
-	matrix[1][0] = (2.0f * this->x * this->y) + (2.0f * this->w * this->z);
-	//	matrix[1][1] = 1.0f - (2.0f * this->x * this->x) - (2.0f * this->z * this->z);
-	//	matrix[1][2] = (2.0f * this->y * this->z) - (2.0f * this->w * this->x);
-	matrix[2][0] = (2.0f * this->x * this->z) - (2.0f * this->w * this->y);
-	matrix[2][1] = (2.0f * this->y * this->z) + (2.0f * this->w * this->x);
-	matrix[2][2] = 1.0f - (2.0f * this->x * this->x) - (2.0f * this->y * this->y);
-
-	sy = -matrix[2][0];
-	cy = sqrt(1 - (sy * sy));
-	yr = (float)atan2(sy,cy);
-	Yaw = yr;////(yr * 180.0f) / (float)D3DX_PI;
-
-	// AVOID DIVIDE BY ZERO ERROR ONLY WHERE Y= +-90 or +-270 
-	// NOT CHECKING cy BECAUSE OF PRECISION ERRORS
-	if (sy != 1.0f && sy != -1.0f)	
+	if (ReprojectAxis)
 	{
-		cx = matrix[2][2] / cy;
-		sx = matrix[2][1] / cy;
-		Pitch = (float)atan2(sx,cx);///((float)atan2(sx,cx) * 180.0f) / (float)D3DX_PI;	// RAD TO DEG
+		// roll = atan2(localx.y, localx.x)
+		// pick parts of xAxis() implementation that we need
+		FLOAT fTx  = 2.0*x;
+		FLOAT fTy  = 2.0*y;
+		FLOAT fTz  = 2.0*z;
+		FLOAT fTwz = fTz*w;
+		FLOAT fTxy = fTy*x;
+		FLOAT fTyy = fTy*y;
+		FLOAT fTzz = fTz*z;
 
-		cz = matrix[0][0] / cy;
-		sz = matrix[1][0] / cy;
-		Roll = (float)atan2(sz,cz);///((float)atan2(sz,cz) * 180.0f) / (float)D3DX_PI;	// RAD TO DEG
+		FLOAT fTwx = fTx*w;
+		FLOAT fTxx = fTx*x;
+		FLOAT fTyz = fTz*y;
+		FLOAT fTwy = fTy*w;
+		FLOAT fTxz = fTz*x;
+
+		// Vector3(1.0-(fTyy+fTzz), fTxy+fTwz, fTxz-fTwy);
+		Yaw=atan2(fTxz+fTwy, 1.0f-(fTxx+fTyy));
+		Pitch=atan2(fTyz+fTwx, 1.0f-(fTxx+fTzz));
+		Roll=atan2(fTxy+fTwz, 1.0f-(fTyy+fTzz));
+
 	}
 	else
 	{
-		// SINCE Cos(Y) IS 0, I AM SCREWED.  ADOPT THE STANDARD Z = 0
-		// I THINK THERE IS A WAY TO FIX THIS BUT I AM NOT SURE.  EULERS SUCK
-		// NEED SOME MORE OF THE MATRIX TERMS NOW
-		matrix[1][1] = 1.0f - (2.0f * this->x * this->x) - (2.0f * this->z * this->z);
-		matrix[1][2] = (2.0f * this->y * this->z) - (2.0f * this->w * this->x);
-		cx = matrix[1][1];
-		sx = -matrix[1][2];
-		Pitch = (float)atan2(sx,cx);////((float)atan2(sx,cx) * 180.0f) / (float)D3DX_PI;	// RAD TO DEG
-
-		cz = 1.0f;
-		sz = 0.0f;
-		Roll = (float)atan2(sz,cz);///((float)atan2(sz,cz) * 180.0f) / (float)D3DX_PI;	// RAD TO DEG
+		Yaw=asin(-2*(x*z - w*y));
+		Pitch=atan2(2*(y*z + w*x), w*w - x*x - y*y + z*z);
+		Roll=atan2(2*(x*y + w*z), w*w + x*x - y*y - z*z);
 	}
+
 	
 
-	//double        r11, r21, r31, r32, r33, r12, r13;
-	//double        q00, q11, q22, q33;
-	//double        tmp;
 
-	//q00 = w * w;
-	//q11 = x * x;
-	//q22 = y * y;
-	//q33 = z * z;
+	//float matrix[3][3];
+	//float cx,sx;
+	//float cy,sy,yr;
+	//float cz,sz;
+	/////////////////////////////////////////////////////////////////////////////////
+	//// CONVERT QUATERNION TO MATRIX - I DON'T REALLY NEED ALL OF IT
+	//matrix[0][0] = 1.0f - (2.0f * this->y * this->y) - (2.0f * this->z * this->z);
+	////	matrix[0][1] = (2.0f * this->x * this->y) - (2.0f * this->w * this->z);
+	////	matrix[0][2] = (2.0f * this->x * this->z) + (2.0f * this->w * this->y);
+	//matrix[1][0] = (2.0f * this->x * this->y) + (2.0f * this->w * this->z);
+	////	matrix[1][1] = 1.0f - (2.0f * this->x * this->x) - (2.0f * this->z * this->z);
+	////	matrix[1][2] = (2.0f * this->y * this->z) - (2.0f * this->w * this->x);
+	//matrix[2][0] = (2.0f * this->x * this->z) - (2.0f * this->w * this->y);
+	//matrix[2][1] = (2.0f * this->y * this->z) + (2.0f * this->w * this->x);
+	//matrix[2][2] = 1.0f - (2.0f * this->x * this->x) - (2.0f * this->y * this->y);
 
-	//r11 = q00 + q11 - q22 - q33;
-	//r21 = 2 * ( x * y + w * z);
-	//r31 = 2 * ( x * z - w * y);
-	//r32 = 2 * ( y * z + w * x);
-	//r33 = q00 - q11 - q22 + q33;
+	//sy = -matrix[2][0];
+	//cy = sqrt(1 - (sy * sy));
+	//yr = (float)atan2(sy,cy);
+	//Yaw = yr;////(yr * 180.0f) / (float)D3DX_PI;
 
-	//tmp = fabs( r31 );
-	//if ( tmp > 0.999999f)
+	//// AVOID DIVIDE BY ZERO ERROR ONLY WHERE Y= +-90 or +-270 
+	//// NOT CHECKING cy BECAUSE OF PRECISION ERRORS
+	//if (sy != 1.0f && sy != -1.0f)	
 	//{
-	//	r12 = 2 * ( x * y  - w * z );
-	//	r13 = 2 * ( x * z  + w * y );
-	//	Roll = 0.0f;                                 // ¹ö×ª½Ç
-	//	Pitch = ( float) ( -(D3DX_PI/2) * r31/tmp );         // ¸©Ñö½Ç
-	//	Yaw = (float) atan2( -r12, -r31 * r13);       // Æ«×ª½Ç			
-	//	return;
-	//}
+	//	cx = matrix[2][2] / cy;
+	//	sx = matrix[2][1] / cy;
+	//	Pitch = (float)atan2(sx,cx);///((float)atan2(sx,cx) * 180.0f) / (float)D3DX_PI;	// RAD TO DEG
 
-	//Yaw = (float) atan2( r32, r33 );                  // ¹ö×ª½Ç
-	//Pitch = (float) asin( -r31 );                       // ¸©Ñö½Ç
-	//Yaw = (float) atan2( r21, r11 );                  // Æ«×ª½Ç
+	//	cz = matrix[0][0] / cy;
+	//	sz = matrix[1][0] / cy;
+	//	Roll = (float)atan2(sz,cz);///((float)atan2(sz,cz) * 180.0f) / (float)D3DX_PI;	// RAD TO DEG
+	//}
+	//else
+	//{
+	//	// SINCE Cos(Y) IS 0, I AM SCREWED.  ADOPT THE STANDARD Z = 0
+	//	// I THINK THERE IS A WAY TO FIX THIS BUT I AM NOT SURE.  EULERS SUCK
+	//	// NEED SOME MORE OF THE MATRIX TERMS NOW
+	//	matrix[1][1] = 1.0f - (2.0f * this->x * this->x) - (2.0f * this->z * this->z);
+	//	matrix[1][2] = (2.0f * this->y * this->z) - (2.0f * this->w * this->x);
+	//	cx = matrix[1][1];
+	//	sx = -matrix[1][2];
+	//	Pitch = (float)atan2(sx,cx);////((float)atan2(sx,cx) * 180.0f) / (float)D3DX_PI;	// RAD TO DEG
+
+	//	cz = 1.0f;
+	//	sz = 0.0f;
+	//	Roll = (float)atan2(sz,cz);///((float)atan2(sz,cz) * 180.0f) / (float)D3DX_PI;	// RAD TO DEG
+	//}
+	//
 }
 
 inline void CD3DQuaternion::GetAxisAngle(D3DXVECTOR3& Axis,FLOAT& Angle)

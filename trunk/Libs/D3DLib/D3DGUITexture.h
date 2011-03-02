@@ -52,9 +52,9 @@ public:
 	}
 
 	
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0)
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0)
 	{
-		pObjectSet->Add((CD3DTexture *)this);
+		pResourceManager->AddResource((CD3DTexture *)this);
 	}
 
 	void AddUseRef()

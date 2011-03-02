@@ -29,17 +29,24 @@ bool CSystemControlPort::Init(IBaseServer * pServer)
 		SetServer(m_pServer->GetServer());
 	}	
 
-	Create(IPPROTO_UDP);	
-	if(!StartListen(CSystemConfig::GetInstance()->GetUDPControlAddress()))
+	if(CSystemConfig::GetInstance()->GetUDPControlAddress().GetPort())
 	{
-		Log("SystemControlPort侦听失败%s:%u",
+		Create(IPPROTO_UDP);	
+		if(!StartListen(CSystemConfig::GetInstance()->GetUDPControlAddress()))
+		{
+			Log("SystemControlPort侦听失败%s:%u",
+				CSystemConfig::GetInstance()->GetUDPControlAddress().GetIPString(),
+				CSystemConfig::GetInstance()->GetUDPControlAddress().GetPort());
+			return false;
+		}
+		Log("SystemControlPort成功侦听于%s:%u",
 			CSystemConfig::GetInstance()->GetUDPControlAddress().GetIPString(),
 			CSystemConfig::GetInstance()->GetUDPControlAddress().GetPort());
-		return false;
 	}
-	Log("SystemControlPort成功侦听于%s:%u",
-		CSystemConfig::GetInstance()->GetUDPControlAddress().GetIPString(),
-		CSystemConfig::GetInstance()->GetUDPControlAddress().GetPort());
+	else
+	{
+		Log("UDP控制端口未启用");
+	}
 	return true;
 }
 

@@ -28,6 +28,11 @@ protected:
 	CD3DMatrix		m_ProjectMatrix;
 	FLOAT			m_Near;
 	FLOAT			m_Far;
+	CD3DFrustum		m_Frustum;
+
+	CD3DMatrix		m_ViewMatrixR;
+	CD3DMatrix		m_ProjectMatrixR;
+	CD3DFrustum		m_FrustumR;
 	
 	//struct STORAGE_STRUCT:public CD3DObject::STORAGE_STRUCT
 	//{
@@ -47,6 +52,11 @@ public:
 
 	CD3DMatrix& GetViewMat();
 	CD3DMatrix& GetProjectMat();	
+	CD3DFrustum& GetFrustum();
+
+	CD3DMatrix& GetViewMatR();
+	CD3DMatrix& GetProjectMatR();	
+	CD3DFrustum& GetFrustumR();
 
 	void LookAt(const CD3DVector3& Eye,const CD3DVector3& At,const CD3DVector3& Up);
 
@@ -65,12 +75,14 @@ public:
 	FLOAT GetNear();
 	FLOAT GetFar();
 
+	virtual void OnPrepareRenderData();
 	virtual void Update(FLOAT Time);
+
 
 protected:
 	//virtual CNameObject::STORAGE_STRUCT * USOCreateHead(UINT Param=0);
-	//virtual int USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	//virtual int USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
+	//virtual int USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param=0);
+	//virtual int USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param=0);
 	
 };
 
@@ -103,6 +115,32 @@ inline CD3DMatrix& CD3DCamera::GetViewMat()
 inline CD3DMatrix& CD3DCamera::GetProjectMat()
 {
 	return m_ProjectMatrix;
+}
+inline CD3DFrustum& CD3DCamera::GetFrustum()
+{
+	return m_Frustum;
+}
+
+inline CD3DMatrix& CD3DCamera::GetViewMatR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender())
+		return m_ViewMatrixR;
+	else
+		return m_ViewMatrix;
+}
+inline CD3DMatrix& CD3DCamera::GetProjectMatR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender())
+		return m_ProjectMatrixR;
+	else
+		return m_ProjectMatrix;
+}
+inline CD3DFrustum& CD3DCamera::GetFrustumR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender())
+		return m_FrustumR;
+	else
+		return m_Frustum;
 }
 
 inline void CD3DCamera::LookAt(const CD3DVector3& Eye,const CD3DVector3& At,const CD3DVector3& Up)
@@ -137,13 +175,21 @@ inline void CD3DCamera::SetRotation(FLOAT Yaw,FLOAT Pitch,FLOAT Roll)
 inline void CD3DCamera::Apply(CD3DDevice* pDevice,int Mode)
 {
 	if(pDevice)
-	{			
-		m_ViewMatrix=GetWorldMatrix().GetInverse();
-
-		if(Mode&D3DCAMERA_APPLY_VIEW)
-			pDevice->GetD3DDevice()->SetTransform(D3DTS_VIEW,&m_ViewMatrix);
-		if(Mode&D3DCAMERA_APPLY_PROJECT)
-			pDevice->GetD3DDevice()->SetTransform(D3DTS_PROJECTION,&m_ProjectMatrix);
+	{
+		if(CD3DDevice::IsUseMultiThreadRender())
+		{
+			if(Mode&D3DCAMERA_APPLY_VIEW)
+				pDevice->GetD3DDevice()->SetTransform(D3DTS_VIEW,&m_ViewMatrixR);
+			if(Mode&D3DCAMERA_APPLY_PROJECT)
+				pDevice->GetD3DDevice()->SetTransform(D3DTS_PROJECTION,&m_ProjectMatrixR);
+		}
+		else
+		{
+			if(Mode&D3DCAMERA_APPLY_VIEW)
+				pDevice->GetD3DDevice()->SetTransform(D3DTS_VIEW,&m_ViewMatrix);
+			if(Mode&D3DCAMERA_APPLY_PROJECT)
+				pDevice->GetD3DDevice()->SetTransform(D3DTS_PROJECTION,&m_ProjectMatrix);
+		}
 	}
 
 }

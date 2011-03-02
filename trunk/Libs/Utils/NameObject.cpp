@@ -71,12 +71,12 @@ void CNameObject::RefreshStorageID()
 	m_StorageID=(UINT)this;
 }
 
-//bool CNameObject::ToUSOFile(CUSOFile * pUSOFile,UINT Param)
+//bool CNameObject::ToUSOFile(CUSOFile * pResourceManager,UINT Param)
 //{
-//	if(pUSOFile==NULL)
+//	if(pResourceManager==NULL)
 //		return false;	
 //
-//	IFileAccessor * pFile=pUSOFile->GetFile();
+//	IFileAccessor * pFile=pResourceManager->GetFile();
 //	if(pFile==NULL)
 //		return false;
 //
@@ -85,7 +85,7 @@ void CNameObject::RefreshStorageID()
 //	UINT ObjectSize=GetSmartStructSize(Param);
 //
 //	CSmartStruct Packet(ObjectSize);
-//	if(!ToSmartStruct(Packet,pUSOFile,Param))
+//	if(!ToSmartStruct(Packet,pResourceManager,Param))
 //		return false;
 //	UINT WriteSize=(UINT)pFile->Write(Packet.GetData(),Packet.GetDataLen());
 //	if(WriteSize<Packet.GetDataLen())
@@ -96,7 +96,7 @@ void CNameObject::RefreshStorageID()
 //	//if(pHead==NULL)
 //	//	return false;
 //	//UINT64 HeadPos=pFile->GetCurPos();
-//	//int HeadSize=USOWriteHead(pHead,pUSOFile,Param);
+//	//int HeadSize=USOWriteHead(pHead,pResourceManager,Param);
 //	//if(HeadSize<0)
 //	//{
 //	//	delete pHead;
@@ -108,7 +108,7 @@ void CNameObject::RefreshStorageID()
 //	//	delete pHead;
 //	//	return false;
 //	//}	
-//	//if(!USOWriteData(pHead,pUSOFile,Param))
+//	//if(!USOWriteData(pHead,pResourceManager,Param))
 //	//{
 //	//	delete pHead;
 //	//	return false;
@@ -119,7 +119,7 @@ void CNameObject::RefreshStorageID()
 //	//	delete pHead;
 //	//	return false;
 //	//}
-//	//if(!USOWriteChild(pHead,pUSOFile,Param))
+//	//if(!USOWriteChild(pHead,pResourceManager,Param))
 //	//{
 //	//	delete pHead;
 //	//	return false;
@@ -132,12 +132,12 @@ void CNameObject::RefreshStorageID()
 //	//delete pHead;
 //	return true;
 //}
-//bool CNameObject::FromUSOFile(CUSOFile * pUSOFile,UINT Param)
+//bool CNameObject::FromUSOFile(CUSOFile * pResourceManager,UINT Param)
 //{
-//	if(pUSOFile==NULL)
+//	if(pResourceManager==NULL)
 //		return false;	
 //
-//	IFileAccessor * pFile=pUSOFile->GetFile();
+//	IFileAccessor * pFile=pResourceManager->GetFile();
 //	if(pFile==NULL)
 //		return false;
 //
@@ -166,7 +166,7 @@ void CNameObject::RefreshStorageID()
 //
 //	Destory();
 //
-//	ReadSize=USOReadHead(pHead,pUSOFile,Param);
+//	ReadSize=USOReadHead(pHead,pResourceManager,Param);
 //	//PrintImportantLog(0,"大小=%u,类型=%s",ReadSize,pHead->Type);
 //
 //	if(ReadSize<0)
@@ -178,14 +178,14 @@ void CNameObject::RefreshStorageID()
 //	BYTE * pData=pBuff+ReadSize;
 //	int DataSize=Size-ReadSize;
 //
-//	ReadSize=USOReadData(pHead,pUSOFile,pData,DataSize,Param);
+//	ReadSize=USOReadData(pHead,pResourceManager,pData,DataSize,Param);
 //	if(ReadSize<0)
 //	{
 //		delete[] pBuff;
 //		return false;
 //	}
 //
-//	if(!USOReadChild(pHead,pUSOFile,Param))
+//	if(!USOReadChild(pHead,pResourceManager,Param))
 //	{
 //		delete[] pBuff;
 //		return false;
@@ -221,11 +221,11 @@ bool CNameObject::StealFrom(CNameObject * pObject,UINT Param)
 	return true;
 }
 
-inline void CNameObject::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+inline void CNameObject::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
 }
 
-bool CNameObject::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CNameObject::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
 	RefreshStorageID();
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_NO_CLASS_NAME,GetClassInfo().ClassName));
@@ -235,7 +235,7 @@ bool CNameObject::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Pa
 	return true;
 }
 
-bool CNameObject::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CNameObject::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
 	void * Pos=Packet.GetFirstMemberPosition();
 	while(Pos)
@@ -278,7 +278,7 @@ bool CNameObject::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT 
 //	pHead->Size=sizeof(STORAGE_STRUCT);
 //	return pHead;
 //}
-//int CNameObject::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//int CNameObject::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{
 //	if(pHead==NULL)
 //		return false;	
@@ -288,11 +288,11 @@ bool CNameObject::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT 
 //	pHead->ID=GetID();
 //	return sizeof(STORAGE_STRUCT);
 //}
-//bool CNameObject::USOWriteData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//bool CNameObject::USOWriteData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{
 //	return true;
 //}
-//bool CNameObject::USOWriteChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//bool CNameObject::USOWriteChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{
 //	return true;
 //}
@@ -301,7 +301,7 @@ bool CNameObject::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT 
 //	return true;
 //}
 //
-//int CNameObject::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//int CNameObject::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{
 //	pHead->Name[MAX_OBJECT_NAME-1]=0;
 //	SetName(pHead->Name);
@@ -309,11 +309,11 @@ bool CNameObject::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT 
 //	SetID(pHead->ID);
 //	return sizeof(STORAGE_STRUCT);
 //}
-//int CNameObject::USOReadData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,BYTE * pData,int DataSize,UINT Param)
+//int CNameObject::USOReadData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,BYTE * pData,int DataSize,UINT Param)
 //{
 //	return 0;
 //}
-//bool CNameObject::USOReadChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//bool CNameObject::USOReadChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{
 //	return true;
 //}

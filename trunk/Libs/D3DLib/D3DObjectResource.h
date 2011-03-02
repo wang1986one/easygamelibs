@@ -18,6 +18,12 @@ class CD3DObjectResourceManager;
 class CD3DObjectResource :
 	public CNameObject
 {
+public:
+	struct MODEL_FX_INFO
+	{
+		int			Type;
+		CD3DFX *	pFX;
+	};
 protected:
 	//struct STORAGE_STRUCT:public CNameObject::STORAGE_STRUCT
 	//{		
@@ -54,14 +60,15 @@ public:
 
 	virtual int GetSubMeshCount();
 	virtual CD3DSubMesh * GetSubMesh(UINT index);
+
 	
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
 
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 
 protected:
@@ -71,12 +78,12 @@ protected:
 	void CreateBounding();
 
 	//virtual CNameObject::STORAGE_STRUCT * USOCreateHead(UINT Param=0);
-	//virtual int USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);	
-	//virtual bool USOWriteChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
+	//virtual int USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param=0);	
+	//virtual bool USOWriteChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param=0);
 	//
 
-	//virtual int USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	//virtual bool USOReadChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
+	//virtual int USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param=0);
+	//virtual bool USOReadChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param=0);
 	//virtual bool USOReadFinish(CNameObject::STORAGE_STRUCT * pHead,UINT Param=0);
 };
 

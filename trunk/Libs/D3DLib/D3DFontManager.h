@@ -17,8 +17,8 @@ class CD3DFontManager :
 	public CNameObject
 {
 protected:
-	CD3DDevice *						m_pD3DDevice;
-	CNameStorage<CD3DBaseFont *>		m_FontStorage;
+	CD3DDevice *								m_pD3DDevice;
+	CNameStorage<CD3DBaseFont *,false,true>		m_FontStorage;
 
 	DECLARE_CLASS_INFO_STATIC(CD3DFontManager)
 public:

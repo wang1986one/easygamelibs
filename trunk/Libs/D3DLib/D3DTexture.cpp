@@ -81,6 +81,10 @@ CD3DTexture::CD3DTexture(CD3DTextureManager * pManager)
 
 CD3DTexture::~CD3DTexture()
 {
+	if(m_pManager)
+	{
+		m_pManager->DeleteTexture(GetID());
+	}
 	Destory();		
 }
 
@@ -88,11 +92,7 @@ void CD3DTexture::Destory()
 {
 	m_TextureOrgInfo.DataSize=0;
 	SAFE_RELEASE(m_pTexture);
-	SAFE_RELEASE(m_pTextureSaveData);
-	if(m_pManager)
-	{
-		m_pManager->DeleteTexture(GetID());
-	}
+	SAFE_RELEASE(m_pTextureSaveData);	
 	CNameObject::Destory();
 }
 
@@ -175,7 +175,7 @@ bool CD3DTexture::LoadTexture(LPCTSTR TextureFileName,UINT MipLevels,bool UseFil
 
 	IFileAccessor * pFile;
 
-	pFile=CFileSystemManager::GetInstance()->CreateFileAccessor(m_FileChannel);
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
@@ -261,9 +261,16 @@ bool CD3DTexture::LoadTextureFromMemory(LPVOID pData,int DataSize,UINT MipLevels
 
 void CD3DTexture::Update(FLOAT Time)
 {
+	if(!CD3DDevice::IsUseMultiThreadRender())
+	{
+		OnPrepareRenderData();
+	}
 }
 
+void CD3DTexture::OnPrepareRenderData()
+{
 
+}
 
 
 bool CD3DTexture::LockBits(UINT Level,D3DLOCKED_RECT* pLockedRect,const RECT* pRect,DWORD Flags)
@@ -293,9 +300,9 @@ bool CD3DTexture::UnlockBits(UINT Level)
 
 
 
-bool CD3DTexture::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DTexture::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::ToSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;	
 	if(m_pTexture)
 	{
@@ -318,9 +325,9 @@ bool CD3DTexture::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Pa
 
 	return true;
 }
-bool CD3DTexture::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DTexture::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	m_TextureOrgInfo.MipLevels=Packet.GetMember(SST_D3DTEX_MIP_LEVEL);

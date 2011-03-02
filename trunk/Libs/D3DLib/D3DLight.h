@@ -17,10 +17,14 @@ class CD3DLight :
 	public CD3DObject
 {
 protected:
-	D3DLIGHT9	m_LightData;
+	
+	D3DLIGHT9		m_LightData;
+	CD3DBoundingBox m_BoundingBox;
 
 	DECLARE_CLASS_INFO(CD3DLight)
 public:
+	
+
 	CD3DLight(void);
 	CD3DLight(const CD3DLight& Light);
 	CD3DLight(const D3DLIGHT9& Light);
@@ -41,6 +45,11 @@ public:
 
 	void Apply(CD3DDevice * pDevice,int Index);
 	virtual void Update(FLOAT Time);
+
+	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
+	virtual CD3DBoundingBox * GetBoundingBox();
+	virtual void ShowBoundingFrame(int Operator);
+	virtual void UpdateBoundingFrame();
 };
 
 inline bool CD3DLight::CanRender()
