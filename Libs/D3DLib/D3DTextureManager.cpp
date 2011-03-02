@@ -86,7 +86,8 @@ bool CD3DTextureManager::AddTexture(CD3DTexture * pTexture,LPCTSTR TextureName)
 	{
 		pTexture->SetID(ID);
 		pTexture->SetName(TextureName);
-		if(pTexture->IsKindOf(GET_CLASS_INFO(CD3DIFLTexture)))
+		if(pTexture->IsKindOf(GET_CLASS_INFO(CD3DIFLTexture))||
+			pTexture->IsKindOf(GET_CLASS_INFO(CD3DTextTexture)))
 		{
 			AddAniTexture(pTexture);
 		}
@@ -103,13 +104,10 @@ bool CD3DTextureManager::DeleteTexture(UINT ID)
 	CD3DTexture ** ppTexture=m_TextureStorage.GetObject(ID);
 	if(ppTexture)
 	{
-		if((*ppTexture)->IsKindOf(GET_CLASS_INFO(CD3DIFLTexture)))
-		{
-			DelAniTexture(*ppTexture);
-		}
+		
+		DelAniTexture(*ppTexture);
 	}
 	return m_TextureStorage.DeleteObject(ID);		
-		
 }
 
 bool CD3DTextureManager::DeleteTexture(LPCTSTR TextureName)
@@ -117,10 +115,7 @@ bool CD3DTextureManager::DeleteTexture(LPCTSTR TextureName)
 	CD3DTexture ** ppTexture=m_TextureStorage.GetObject(TextureName);
 	if(ppTexture)
 	{
-		if((*ppTexture)->IsKindOf(GET_CLASS_INFO(CD3DIFLTexture)))
-		{
-			DelAniTexture(*ppTexture);
-		}
+		DelAniTexture(*ppTexture);
 		m_TextureStorage.DeleteObject((*ppTexture)->GetID());		
 		return true;
 	}
@@ -219,23 +214,32 @@ CD3DTexture * CD3DTextureManager::GetPrev(LPVOID& Pos)
 
 void CD3DTextureManager::Update(FLOAT Time)
 {
-	for(UINT i=0;i<m_AniTextureList.GetCount();i++)
+	for(UINT i=0;i<m_DynamicTextureList.GetCount();i++)
 	{
-		m_AniTextureList[i]->Update(Time);
+		m_DynamicTextureList[i]->Update(Time);
+	}
+}
+
+void CD3DTextureManager::PrepareRenderData()
+{
+	for(UINT i=0;i<m_DynamicTextureList.GetCount();i++)
+	{
+		m_DynamicTextureList[i]->OnPrepareRenderData();
 	}
 }
 
 void CD3DTextureManager::AddAniTexture(CD3DTexture * pTexture)
 {
-	m_AniTextureList.Add(pTexture);
+	m_DynamicTextureList.Add(pTexture);
 }
+
 void CD3DTextureManager::DelAniTexture(CD3DTexture * pTexture)
 {
-	for(UINT i=0;i<m_AniTextureList.GetCount();i++)
+	for(UINT i=0;i<m_DynamicTextureList.GetCount();i++)
 	{
-		if(m_AniTextureList[i]==pTexture)
+		if(m_DynamicTextureList[i]==pTexture)
 		{
-			m_AniTextureList.Delete(i);
+			m_DynamicTextureList.Delete(i);
 			break;
 		}
 	}

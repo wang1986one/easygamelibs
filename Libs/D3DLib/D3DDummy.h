@@ -31,7 +31,7 @@ public:
 
 	void SetBoundingBox(CD3DBoundingBox& BoundingBox);
 
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 };
 
 inline bool CD3DDummy::CanRender()

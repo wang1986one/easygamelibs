@@ -20,9 +20,9 @@ class CD3DTextureManager :
 	public CNameObject
 {
 protected:
-	CD3DDevice *					m_pD3DDevice;
-	CNameStorage<CD3DTexture *>		m_TextureStorage;
-	CEasyArray<CD3DTexture *>		m_AniTextureList;
+	CD3DDevice *							m_pD3DDevice;
+	CNameStorage<CD3DTexture *,false,true>	m_TextureStorage;
+	CEasyArray<CD3DTexture *>				m_DynamicTextureList;
 
 	DECLARE_CLASS_INFO_STATIC(CD3DTextureManager)
 public:
@@ -57,6 +57,7 @@ public:
 	CD3DTexture * GetPrev(LPVOID& Pos);
 
 	void Update(FLOAT Time);
+	void PrepareRenderData();
 
 protected:
 	void AddAniTexture(CD3DTexture * pTexture);

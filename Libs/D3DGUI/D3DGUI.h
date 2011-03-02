@@ -121,7 +121,7 @@ public:
 
 	bool SaveToFile(LPCTSTR FileName);
 	void SaveToXML(xml_node * pXMLNode);
-	bool SaveToUSO(CUSOFile * pUSOFile);
+	bool SaveToUSO(CUSOResourceManager * pResourceManager);
 	bool SaveToUSOFile(LPCTSTR FileName);
 
 	bool LoadFromFile(LPCTSTR FileName);	

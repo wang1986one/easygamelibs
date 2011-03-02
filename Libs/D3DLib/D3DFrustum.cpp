@@ -110,12 +110,12 @@ CD3DFrustum CD3DFrustum::FromCustomViewFace(CD3DMatrix ViewMat,CD3DMatrix PrjMat
 		CornerVertexs[i] =CornerVertexs[i]*ViewMat;
 	}
 
-	Frustum.m_Planes[0] = CD3DPlane::FromPoints(CornerVertexs[0], CornerVertexs[1], CornerVertexs[2]);
-	Frustum.m_Planes[1] = CD3DPlane::FromPoints(CornerVertexs[6], CornerVertexs[5], CornerVertexs[4]);
-	Frustum.m_Planes[2] = CD3DPlane::FromPoints(CornerVertexs[2], CornerVertexs[3], CornerVertexs[6]);
-	Frustum.m_Planes[3] = CD3DPlane::FromPoints(CornerVertexs[4], CornerVertexs[1], CornerVertexs[0]);
-	Frustum.m_Planes[4] = CD3DPlane::FromPoints(CornerVertexs[4], CornerVertexs[0], CornerVertexs[2]);
-	Frustum.m_Planes[5] = CD3DPlane::FromPoints(CornerVertexs[5], CornerVertexs[3], CornerVertexs[1]);
+	Frustum.m_Planes[0] = CD3DPlane::FromPoints(CornerVertexs[0], CornerVertexs[1], CornerVertexs[2]);//near face
+	Frustum.m_Planes[1] = CD3DPlane::FromPoints(CornerVertexs[6], CornerVertexs[5], CornerVertexs[4]);//far face
+	Frustum.m_Planes[2] = CD3DPlane::FromPoints(CornerVertexs[2], CornerVertexs[3], CornerVertexs[6]);//top face
+	Frustum.m_Planes[3] = CD3DPlane::FromPoints(CornerVertexs[4], CornerVertexs[1], CornerVertexs[0]);//bottom face
+	Frustum.m_Planes[4] = CD3DPlane::FromPoints(CornerVertexs[4], CornerVertexs[0], CornerVertexs[2]);//left face
+	Frustum.m_Planes[5] = CD3DPlane::FromPoints(CornerVertexs[5], CornerVertexs[3], CornerVertexs[1]);//right face
 
 	return Frustum;
 }
@@ -131,8 +131,8 @@ int CD3DFrustum::BoxLocation(const D3DXVECTOR3& Min,const D3DXVECTOR3& Max) cons
 	{		
 		float NP = (float)(d.x*fabs(m_Planes[i].a)+d.y*fabs(m_Planes[i].b)+d.z*fabs(m_Planes[i].c));
 		float MP = m.x*m_Planes[i].a+m.y*m_Planes[i].b+m.z*m_Planes[i].c+m_Planes[i].d;
-		if ((MP+NP) < 0.0f) 
-			return 0;					// behind clip plane
+		if ((MP+NP) < 0.0f) 	
+			return 0;					// behind clip plane		
 		if ((MP-NP) < 0.0f) 
 			incount++;
 		i++;									// next plane

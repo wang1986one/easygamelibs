@@ -22,7 +22,7 @@ protected:
 
 	CEasyBuffer									m_AssembleBuffer;		
 	CThreadSafeIDStorage<CDOSMessagePacket *>	m_MsgQueue;
-	CStaticMap<WORD,OBJECT_ID>					m_MessageMap;
+	CStaticMap<MSG_ID_TYPE,OBJECT_ID>			m_MessageMap;
 
 	DECLARE_CLASS_INFO(CDOSProxyConnection);
 public:
@@ -46,17 +46,18 @@ public:
 	virtual int Update(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT);
 protected:
 	CDOSServer * GetServer();	
-	BOOL SendInSideMsg(WORD CmdID,LPVOID pData=NULL,UINT DataSize=0);	
+	BOOL SendInSideMsg(MSG_ID_TYPE MsgID,LPVOID pData=NULL,UINT DataSize=0);	
 	BOOL SendOutSideMsg(CDOSMessagePacket * pPacket);
 	BOOL SendDisconnectNotify();
 
-	OBJECT_ID GetMsgMapObjectID(WORD CmdID);
+	OBJECT_ID GetMsgMapObjectID(MSG_ID_TYPE MsgID);
 
-	BOOL RegisterMsgMap(WORD CmdID,OBJECT_ID ObjectID);
-	BOOL UnregisterMsgMap(WORD CmdID,OBJECT_ID ObjectID);
+	BOOL RegisterMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID);
+	BOOL UnregisterMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID);
 
 	UINT SortTargetObjectID(OBJECT_ID * pObjectIDs,UINT Count);
 	int FindMinObjectID(OBJECT_ID * pObjectIDs,UINT Count);
+	void ClearMsgMapByRouterID(UINT RouterID);
 };
 
 inline OBJECT_ID CDOSProxyConnection::GetObjectID()

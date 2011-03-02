@@ -57,10 +57,10 @@ void CD3DDummy::ShowBoundingFrame(int Operator)
 	}
 }
 
-bool CD3DDummy::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DDummy::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
 	SAFE_RELEASE(m_pBoundingFrame);
-	return CD3DObject::ToSmartStruct(Packet,pUSOFile,Param);
+	return CD3DObject::ToSmartStruct(Packet,pResourceManager,Param);
 }
 
 }

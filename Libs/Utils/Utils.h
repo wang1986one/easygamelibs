@@ -101,6 +101,7 @@ enum EASY_DATA_STORAGE_MODE
 #endif
 
 #include "lzma/LzmaLib.h"
+#include "lzo/\minilzo.h"
 
 
 #include "EasyTime.h"
@@ -116,6 +117,7 @@ enum EASY_DATA_STORAGE_MODE
 #include "ExceptionParser.h"
 #include "PerformanceStatistician.h"
 #include "AutoPerformanceCounter.h"
+#include "ThreadPerformanceCounter.h"
 #endif
 
 
@@ -154,7 +156,7 @@ enum EASY_DATA_STORAGE_MODE
 #endif
 
 #include "USOObjectCreateFilter.h"
-#include "USOFile.h"
+#include "USOResourceManager.h"
 
 
 #include "EasyList.h"
@@ -191,7 +193,7 @@ enum EASY_DATA_STORAGE_MODE
 
 #include "EasyScriptTypes.h"
 #include "ESVariableList.h"
-#include "ESFactionList.h"
+#include "ESFunctionList.h"
 #include "ESBolanStack.h"
 #include "ESThread.h"
 #include "ESFunctionLib.h"

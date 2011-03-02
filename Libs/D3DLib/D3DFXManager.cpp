@@ -20,6 +20,8 @@ IMPLEMENT_CLASS_INFO_STATIC(CD3DFXManager,CNameObject);
 CD3DFXManager::CD3DFXManager(CD3DDevice * pD3DDevice,int StorageSize):CNameObject()
 {
 	m_pD3DDevice=pD3DDevice;
+	m_pEffectPool=NULL;
+	D3DXCreateEffectPool(&m_pEffectPool);
 	m_FXStorage.Create(StorageSize);
 }
 

@@ -18,7 +18,7 @@ class CDOSObjectProxyService :
 protected:
 	CIDStorage<CDOSProxyConnection>				m_ConnectionPool;
 	CThreadSafeIDStorage<CDOSMessagePacket *>	m_MsgQueue;
-	CStaticMap<WORD,OBJECT_ID>					m_MessageMap;
+	CStaticMap<MSG_ID_TYPE,OBJECT_ID>			m_MessageMap;
 	
 
 	DECLARE_CLASS_INFO(CDOSObjectProxyService);
@@ -40,14 +40,16 @@ public:
 
 	BOOL PushMessage(CDOSMessagePacket * pPacket);
 
-	OBJECT_ID GetGlobalMsgMapObjectID(WORD CmdID);
+	OBJECT_ID GetGlobalMsgMapObjectID(MSG_ID_TYPE MsgID);
 protected:
 	int DoMessageProcess(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT);
 
 	void OnMsg(CDOSMessage * pMessage);
 
-	BOOL RegisterGlobalMsgMap(WORD CmdID,OBJECT_ID ObjectID);
-	BOOL UnregisterGlobalMsgMap(WORD CmdID,OBJECT_ID ObjectID);
+	BOOL RegisterGlobalMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID);
+	BOOL UnregisterGlobalMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID);
+
+	void ClearMsgMapByRouterID(UINT RouterID);
 };
 
 inline CDOSProxyConnection * CDOSObjectProxyService::GetConnection(UINT ID)

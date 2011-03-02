@@ -10,6 +10,7 @@
 /*                                                                          */
 /****************************************************************************/
 #include "StdAfx.h"
+#include "ServerAppWin.h"
 
 CServerApp	* m_gAppInstance=NULL;
 

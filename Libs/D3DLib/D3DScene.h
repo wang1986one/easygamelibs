@@ -30,7 +30,7 @@ public:
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 
-	bool GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT& WaterHeight);
+	bool GetHeightByXZ(const CD3DVector3 Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight);
 	
 
 	virtual bool AddChild(CTreeObject* pChild,bool CheckExist=false);

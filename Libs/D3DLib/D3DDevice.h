@@ -20,6 +20,7 @@ class CD3DFontManager;
 class CD3DTexture;
 class CD3DObjectResourceManager;
 class CD3DObjectManager;
+class CD3DSwapChain;
 
 struct D3DDEVICE_PARAMS
 {
@@ -28,6 +29,7 @@ struct D3DDEVICE_PARAMS
 	HWND					hFocusWindow;
 	DWORD					BehaviorFlags;
 	D3DPRESENT_PARAMETERS	PresentParams;
+	bool					IsUseMultiThreadRender;
 	D3DDEVICE_PARAMS()
 	{
 		Adapter=D3DADAPTER_DEFAULT;
@@ -41,6 +43,7 @@ struct D3DDEVICE_PARAMS
 		PresentParams.EnableAutoDepthStencil = TRUE;
 		PresentParams.AutoDepthStencilFormat = D3DFMT_D16;
 		PresentParams.PresentationInterval=D3DPRESENT_INTERVAL_IMMEDIATE;
+		IsUseMultiThreadRender=false;
 	}
 
 };
@@ -49,17 +52,21 @@ class CD3DDevice :
 	public CNameObject
 {
 protected:
-	LPDIRECT3D9				m_pD3D;
-	LPDIRECT3DDEVICE9		m_pd3dDevice;
-	LPDIRECT3DSURFACE9		m_pSavedRenderTarget;
-	LPDIRECT3DSURFACE9		m_pCurRenderTarget;	
-	D3DDEVICE_PARAMS		m_D3DParams;
-	D3DCAPS9				m_D3DCaps;
+	LPDIRECT3D9						m_pD3D;
+	LPDIRECT3DDEVICE9				m_pd3dDevice;
 
-	CD3DTextureManager *		m_pTextureManager;	
-	CD3DFXManager *				m_pFXManager;
-	CD3DFontManager	*			m_pFontManager;
-	CD3DObjectResourceManager * m_pObjectResourceManager;	
+	CEasyArray<LPDIRECT3DSURFACE9>	m_DefaultRenderTargetList;
+	LPDIRECT3DSURFACE9				m_pDefaultDepthStencilBuffer;
+	
+	D3DDEVICE_PARAMS				m_D3DParams;
+	D3DCAPS9						m_D3DCaps;
+
+	CD3DTextureManager *			m_pTextureManager;	
+	CD3DFXManager *					m_pFXManager;
+	CD3DFontManager	*				m_pFontManager;
+	CD3DObjectResourceManager * 	m_pObjectResourceManager;
+
+	static bool						m_IsUseMultiThreadRender;
 
 	DECLARE_CLASS_INFO(CD3DDevice)
 public:
@@ -83,6 +90,10 @@ public:
 	D3DCAPS9& GetDeviceCaps()
 	{
 		return m_D3DCaps;
+	}
+	D3DDEVICE_PARAMS& GetCreateParam()
+	{
+		return m_D3DParams;
 	}
 
 	virtual bool RestoreObject();	
@@ -108,14 +119,24 @@ public:
 		return m_pObjectResourceManager;
 	}	
 
-	bool Clear(D3DCOLOR ClearColor,DWORD Flag);
+	bool Clear(D3DCOLOR ClearColor,DWORD Flag=D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER);
 
 	bool StartRender();
-	bool StartRender(D3DCOLOR ClearColor);
+	bool StartRender(D3DCOLOR ClearColor,UINT ClearFlag=D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER);
 	void EndRender(bool WantPresent=true);
 
-	bool StartRenderToTexture(CD3DTexture * pTexture);
-	bool EndRenderToTexture();
+	UINT GetRenderTargetCount()
+	{
+		return m_DefaultRenderTargetList.GetCount();
+	}
+	bool SetRenderTarget(UINT Index,LPDIRECT3DSURFACE9 pRenderTarget);
+	bool SetRenderTarget(UINT Index,CD3DTexture * pTexture,UINT SurfaceLevel);
+	bool SetRenderTarget(UINT Index,CD3DSwapChain * pSwapChain);
+	LPDIRECT3DSURFACE9 GetRenderTarget(UINT Index);
+	bool RestoreRenderTargetToDefault(UINT Index);
+
+	bool SetDepthStencilBuffer(LPDIRECT3DSURFACE9 pDepthStencilBuffer);
+	bool RestoreDepthStencilBufferToDefault();
 
 	bool SetViewPort(RECT& Rect);
 
@@ -125,6 +146,11 @@ public:
 	}
 
 	bool CheckDeviceFormat(DWORD CheckFormat,DWORD Usage=0,DWORD RType=D3DRTYPE_TEXTURE);
+
+	static bool IsUseMultiThreadRender()
+	{
+		return m_IsUseMultiThreadRender;
+	}
 
 };
 

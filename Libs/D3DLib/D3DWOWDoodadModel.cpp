@@ -28,6 +28,7 @@ CD3DWOWDoodadModel::~CD3DWOWDoodadModel(void)
 
 void CD3DWOWDoodadModel::Destory()
 {
+	CD3DWOWM2Model::Destory();
 	m_GroupIndex=0xffff;
 }
 

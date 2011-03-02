@@ -101,12 +101,26 @@ void CDlgServerStatus::FlushStatus(CSmartStruct& ServerStatus)
 		case CSmartValue::VT_BIGINT:
 			if(FormatType==SSFT_FLOW)
 				ValueStr=FormatNumberWords((INT64)Value,true);
+			else if(FormatType==SSFT_VERSION)
+			{
+				ULONG64_CONVERTER Version;
+				Version.QuadPart=Value;
+				ValueStr.Format("%d.%d.%d.%d",
+					Version.Words[3],Version.Words[2],Version.Words[1],Version.Words[0]);
+			}
 			else
 				ValueStr.Format("%lld",(INT64)Value);
 			break;
 		case CSmartValue::VT_UBIGINT:
 			if(FormatType==SSFT_FLOW)
 				ValueStr=FormatNumberWords((UINT64)Value,true);
+			else if(FormatType==SSFT_VERSION)
+			{
+				ULONG64_CONVERTER Version;
+				Version.QuadPart=Value;
+				ValueStr.Format("%d.%d.%d.%d",
+					Version.Words[3],Version.Words[2],Version.Words[1],Version.Words[0]);
+			}
 			else
 				ValueStr.Format("%llu",(UINT64)Value);
 			break;

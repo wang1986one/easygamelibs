@@ -14,8 +14,6 @@
 #include "DOSDefines.h"
 #include "DOSMessage.h"
 
-#include "DOSMsgManager.h"
-#include "DOSMsgCatcher.h"
 
 #include "DOSBaseObject.h"
 
@@ -30,8 +28,7 @@
 
 #include "DOSServer.h"
 
-#include "DOSClientMsgManager.h"
-#include "DOSClientMsgCatcher.h"
+#include "IDistributedObject.h"
+
 #include "DOSClient.h"
 
-#include "IDistributedObject.h"

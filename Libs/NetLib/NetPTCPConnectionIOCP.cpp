@@ -96,6 +96,8 @@ BOOL CNetPTCPConnection::Create(UINT RecvQueueSize,UINT SendQueueSize)
 	if(GetServer()==NULL)
 		return FALSE;
 
+	Destory();
+
 	if(m_pIOCPEventRouter==NULL)
 	{
 		m_pIOCPEventRouter=GetServer()->CreateEventRouter();	
@@ -111,6 +113,8 @@ BOOL CNetPTCPConnection::Create(SOCKET Socket,UINT RecvQueueSize,UINT SendQueueS
 
 	if(GetServer()==NULL)
 		return FALSE;
+
+	Destory();
 
 	if(m_pIOCPEventRouter==NULL)
 	{

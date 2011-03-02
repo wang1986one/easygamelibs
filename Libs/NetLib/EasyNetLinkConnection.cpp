@@ -167,7 +167,8 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 		(UINT)m_AssembleBuffer.GetUsedSize()>=pMsg->Header.Size&&
 		m_pStealer==NULL)
 	{
-		if(pMsg->Header.Size<sizeof(EASY_NET_LINK_MSG_HEAD))
+		UINT MsgSize=pMsg->Header.Size;
+		if(MsgSize<sizeof(EASY_NET_LINK_MSG_HEAD))
 		{
 			PrintNetLog(0xffffffff,"CEasyNetLinkConnection::OnRecvData 收到大小非法的消息,连接断开");
 			Disconnect();
@@ -176,7 +177,7 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 		switch(pMsg->Header.MsgID)
 		{
 		case EASY_NET_LINK_MSG_LINK_START:
-			if(pMsg->Header.Size>=sizeof(EASY_NET_LINK_MSG_HEAD)+sizeof(EASY_NET_LINK_INFO))
+			if(MsgSize>=sizeof(EASY_NET_LINK_MSG_HEAD)+sizeof(EASY_NET_LINK_INFO))
 			{
 				EASY_NET_LINK_INFO * pInfo=(EASY_NET_LINK_INFO *)pMsg->Data;
 				SetID(pInfo->ID);
@@ -218,7 +219,7 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 
 			break;
 		case EASY_NET_LINK_MSG_USER_DATA:
-			if(pMsg->Header.Size>=sizeof(EASY_NET_LINK_MSG_HEAD))
+			if(MsgSize>=sizeof(EASY_NET_LINK_MSG_HEAD))
 			{
 				CEasyBuffer Data(pMsg->Data,pMsg->Header.Size-sizeof(EASY_NET_LINK_MSG_HEAD));
 				Data.SetUsedSize(Data.GetBufferSize());
@@ -229,9 +230,9 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 			break;
 		default:
 			PrintNetLog(0xffffffff,"CEasyNetLinkConnection::OnRecvData 收到不明消息ID=%u,size=%u",
-				pMsg->Header.MsgID,pMsg->Header.Size);
+				pMsg->Header.MsgID,MsgSize);
 		}
-		m_AssembleBuffer.PopFront(NULL,pMsg->Header.Size);
+		m_AssembleBuffer.PopFront(NULL,MsgSize);
 	}
 }
 
@@ -287,10 +288,10 @@ void CEasyNetLinkConnection::OnDisconnection()
 	}
 }
 
-void CEasyNetLinkConnection::SendLinkMsg(WORD MsgID,LPCVOID pData,int DataSize)
+void CEasyNetLinkConnection::SendLinkMsg(DWORD MsgID,LPCVOID pData,UINT DataSize)
 {
 	EASY_NET_LINK_MSG_HEAD MsgHeader;
-	MsgHeader.Size=(WORD)(sizeof(EASY_NET_LINK_MSG_HEAD)+DataSize);
+	MsgHeader.Size=sizeof(EASY_NET_LINK_MSG_HEAD)+DataSize;
 	MsgHeader.MsgID=MsgID;
 
 	m_SendBuffer.SetUsedSize(0);

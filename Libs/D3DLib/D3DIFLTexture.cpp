@@ -161,17 +161,17 @@ CD3DTexture * CD3DIFLTexture::GetFrameTexture(int FrameIndex)
 	return NULL;
 }
 
-void CD3DIFLTexture::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+void CD3DIFLTexture::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
 	for(int i=0;i<(int)m_TextrueList.GetCount();i++)
 	{
-		pObjectSet->Add(m_TextrueList[i].pTexture);
+		pResourceManager->AddResource(m_TextrueList[i].pTexture);
 	}	
 }
 
-bool CD3DIFLTexture::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DIFLTexture::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::ToSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;	
 
 	for(UINT i=0;i<m_TextrueList.GetCount();i++)
@@ -180,18 +180,17 @@ bool CD3DIFLTexture::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT
 		void * pBuffer=Packet.PrepareMember(BufferSize);
 		CSmartStruct SubPacket(pBuffer,BufferSize,true);
 
-		CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_FI_TIME,m_TextrueList[i].FrameTime));
-		int ResourceID=pUSOFile->ResourceObjectToIndex(m_TextrueList[i].pTexture);
-		CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_FI_TEXTURE,ResourceID));
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_FI_TIME,m_TextrueList[i].FrameTime));		
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_FI_TEXTURE,m_TextrueList[i].pTexture->GetName()));
 		if(!Packet.FinishMember(SST_D3DITEX_FRAME,SubPacket.GetDataLen()))
 			return false;
 	}
 
 	return true;
 }
-bool CD3DIFLTexture::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DIFLTexture::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	void * Pos=Packet.GetFirstMemberPosition();
@@ -205,8 +204,8 @@ bool CD3DIFLTexture::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UI
 			{
 				TEXTURE_FRAME Frame;
 				Frame.FrameTime=Value.GetMember(SST_FI_TIME);
-				int ResourceID=Value.GetMember(SST_FI_TEXTURE);
-				Frame.pTexture=(CD3DTexture *)pUSOFile->ResourceIndexToObject(ResourceID,GET_CLASS_INFO(CD3DTexture));
+				LPCTSTR szResourceName=Value.GetMember(SST_FI_TEXTURE);
+				Frame.pTexture=(CD3DTexture *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DTexture));
 				if(Frame.pTexture)
 				{
 					Frame.pTexture->AddUseRef();
@@ -230,7 +229,7 @@ UINT CD3DIFLTexture::GetSmartStructSize(UINT Param)
 	for(UINT i=0;i<m_TextrueList.GetCount();i++)
 	{
 		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_TextrueList[i].FrameTime));
-		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(int));	
+		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(m_TextrueList[i].pTexture->GetNameLength());	
 		Size+=SMART_STRUCT_STRUCT_MEMBER_SIZE(0);
 	}	
 	return Size;

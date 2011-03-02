@@ -183,9 +183,9 @@ bool CTreeObject::CloneFrom(CNameObject * pObject,UINT Param)
 	return true;
 }
 
-bool CTreeObject::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CTreeObject::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::ToSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;
 	if((Param&OPP_WITHOUT_CHILD)==0)
 	{
@@ -194,7 +194,7 @@ bool CTreeObject::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Pa
 			UINT BufferSize;
 			void * pBuffer=Packet.PrepareMember(BufferSize);
 			CSmartStruct ChildPacket(pBuffer,BufferSize,true);
-			if(!m_ChildList[i]->ToSmartStruct(ChildPacket,pUSOFile,Param))
+			if(!m_ChildList[i]->ToSmartStruct(ChildPacket,pResourceManager,Param))
 				return false;
 			if(!Packet.FinishMember(SST_TO_CHILD,ChildPacket.GetDataLen()))
 				return false;
@@ -202,9 +202,9 @@ bool CTreeObject::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Pa
 	}
 	return true;
 }
-bool CTreeObject::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CTreeObject::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	if((Param&OPP_WITHOUT_CHILD)==0)
@@ -218,7 +218,7 @@ bool CTreeObject::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT 
 			{
 				LPCTSTR ClassName=ChildPacket.GetMember(SST_NO_CLASS_NAME);
 				LPCTSTR ObjectName=ChildPacket.GetMember(SST_NO_OBJECT_NAME);
-				CNameObject * pObject=pUSOFile->CreateObject(ClassName,ObjectName);				
+				CNameObject * pObject=pResourceManager->CreateObject(ClassName,ObjectName);				
 				if(pObject==NULL)
 					return false;
 				if(!pObject->IsKindOf(GET_CLASS_INFO(CTreeObject)))
@@ -226,7 +226,7 @@ bool CTreeObject::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT 
 					SAFE_RELEASE(pObject);
 					return false;
 				}
-				if(!pObject->FromSmartStruct(ChildPacket,pUSOFile,Param))
+				if(!pObject->FromSmartStruct(ChildPacket,pResourceManager,Param))
 					return false;
 				((CTreeObject *)pObject)->SetParent(this);
 			}

@@ -17,7 +17,7 @@ namespace D3DLib{
 class CD3DDevice;
 class CD3DTexture;
 class CD3DFX;
-class CD3DRender;
+class CD3DBaseRender;
 class CD3DMatrix;
 class CD3DLight;
 class CD3DCamera;
@@ -52,17 +52,17 @@ protected:
 	};
 
 	CD3DDevice *				m_pD3DDevice;
-	CD3DRender *				m_pRender;		
-	int							m_Layer;	
+	CD3DBaseRender *			m_pRender;		
 	
 	CD3DMatrix					m_LocalMatrix;
-	CD3DMatrix					m_WorldMatrix;	
-	
-	//bool						m_IsVisible;
-	//bool						m_IsCulled;	
+	CD3DMatrix					m_WorldMatrix;
+		
 	UINT64						m_Flag;
 
 	CD3DBoundingFrame *			m_pBoundingFrame;
+
+	CEasyCriticalSection		m_RenderLock;
+	CD3DMatrix					m_WorldMatrixR;
 
 	DECLARE_CLASS_INFO(CD3DObject)
 
@@ -82,8 +82,8 @@ public:
 	virtual void SetDevice(CD3DDevice * pDevice);
 	CD3DDevice * GetDevice();
 
-	virtual void SetRender(CD3DRender * pRender);
-	CD3DRender * GetRender();
+	virtual void SetRender(CD3DBaseRender * pRender);
+	CD3DBaseRender * GetRender();
 
 	virtual bool CanRender();
 	virtual bool CanDoSubMeshViewCull();
@@ -101,30 +101,33 @@ public:
 	
 	
 
-	CD3DMatrix& GetLocalMatrix();
-	void SetLocalMatrix(CD3DMatrix& Mat);
-	CD3DMatrix& GetWorldMatrix();
-	CD3DMatrix GetWorldMatrixDirect();
+	const CD3DMatrix& GetLocalMatrix();
+	void SetLocalMatrix(const CD3DMatrix& Mat);
+	const CD3DMatrix& GetWorldMatrix();
+	const CD3DMatrix& GetWorldMatrixR();
+	const CD3DMatrix GetWorldMatrixDirect();
+
+	CEasyCriticalSection& GetRenderLock();
 
 	void TransForm(const CD3DMatrix& Mat);
 
 	virtual int GetSubMeshCount();
 	virtual CD3DSubMesh * GetSubMesh(UINT index);
-	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(int index);
+	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(UINT index);
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();
+	CD3DBoundingBox GetWorldBoundingBox();
 	
 	virtual CD3DLight * GetLight(int Index);
 	virtual CD3DLight ** GetLights();
 
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
-	
+	virtual void OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRenderData();
 
 	virtual void Update(FLOAT Time);
 	
-	inline int GetLayer();
-	inline void SetLayer(int Layer);
 
 	virtual void SetVisible(bool IsVisible);
 	virtual void SetVisibleRecursive(bool IsVisible);
@@ -138,17 +141,16 @@ public:
 	bool CheckFlag(UINT64 Flag);
 
 	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
-	//virtual bool GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& y);
 	virtual CD3DObject * PickObject(CD3DVector3 Point,CD3DVector3 Dir,FLOAT& Distance);
 
 	virtual void ShowBoundingFrame(int Operator);
 	virtual void UpdateBoundingFrame();
 	
 	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
 
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 
 protected:
@@ -169,7 +171,7 @@ inline CD3DDevice * CD3DObject::GetDevice()
 	return m_pD3DDevice;
 }
 
-inline CD3DRender * CD3DObject::GetRender()
+inline CD3DBaseRender * CD3DObject::GetRender()
 {
 	return m_pRender;
 }
@@ -217,33 +219,35 @@ inline CD3DObject * CD3DObject::GetChildByStorageIDRecursive(UINT StorageID)
 	return (CD3DObject*)CTreeObject::GetChildByStorageIDRecursive(StorageID);
 }
 
-inline CD3DMatrix& CD3DObject::GetLocalMatrix()
+inline const CD3DMatrix& CD3DObject::GetLocalMatrix()
 {	
 	return m_LocalMatrix;
 }
-inline void CD3DObject::SetLocalMatrix(CD3DMatrix& Mat)
+inline void CD3DObject::SetLocalMatrix(const CD3DMatrix& Mat)
 {
 	m_LocalMatrix=Mat;
 }
-inline CD3DMatrix& CD3DObject::GetWorldMatrix()
+inline const CD3DMatrix& CD3DObject::GetWorldMatrix()
 {
 	return m_WorldMatrix;
 }
 
+inline const CD3DMatrix& CD3DObject::GetWorldMatrixR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender())
+		return m_WorldMatrixR;
+	else
+		return m_WorldMatrix;
+}
 
+inline CEasyCriticalSection& CD3DObject::GetRenderLock()
+{
+	return m_RenderLock;
+}
 
 inline void CD3DObject::TransForm(const CD3DMatrix& Mat)
 {
 	m_LocalMatrix=m_LocalMatrix*Mat;
-}
-
-inline int CD3DObject::GetLayer()
-{
-	return m_Layer;
-}
-inline void CD3DObject::SetLayer(int Layer)
-{
-	m_Layer=Layer;
 }
 
 inline void CD3DObject::AddFlag(UINT64 Flag)

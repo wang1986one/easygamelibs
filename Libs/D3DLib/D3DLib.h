@@ -18,6 +18,8 @@
 #endif
 
 
+
+
 #define LOG_D3D_ERROR_CHANNEL	1202
 
 
@@ -61,9 +63,11 @@ inline BOOL PrintD3DDebugLog(DWORD Color,LPCTSTR Format,...)
 
 #include "Types.h"
 
-#include "BLZFileDefines.h"
+
 
 #include "D3DDevice.h"
+
+#include "D3DSwapChain.h"
 
 #include "D3DFX.h"
 #include "D3DFXManager.h"
@@ -76,10 +80,12 @@ inline BOOL PrintD3DDebugLog(DWORD Color,LPCTSTR Format,...)
 #include "D3DSubMeshMaterial.h"
 #include "D3DSubMesh.h"
 
-#include "D3DRender.h"
-#include "D3DSortedRender.h"
+#include "D3DBaseRender.h"
+#include "D3DUIRender.h"
 #include "D3DSceneRender.h"
+#include "D3DRenderThread.h"
 
+#include "AniDefines.h"
 #include "D3DObject.h"
 
 #include "D3DObjectResource.h"
@@ -90,30 +96,33 @@ inline BOOL PrintD3DDebugLog(DWORD Color,LPCTSTR Format,...)
 
 #include "D3DScene.h"
 
+#include "D3DLine.h"
 #include "D3DBoundingFrame.h"
 #include "D3DBoard.h"
 #include "D3DDummy.h"
 
 #include "D3DBaseStaticModel.h"
-#include "D3DStaticModelResource.h"
-#include "D3DStaticModel.h"
+//#include "D3DStaticModelResource.h"
+//#include "D3DStaticModel.h"
 
 #include "D3DBaseDynamicModel.h"
 
-#include "D3DBonedAniResource.h"
-#include "D3DBonedModelResource.h"
-#include "D3DBonedDynamicModel.h"
+//#include "D3DBonedAniResource.h"
+//#include "D3DBonedModelResource.h"
+//#include "D3DBonedDynamicModel.h"
+//
+//#include "D3DFrameDynamicModel.h"
 
-#include "D3DFrameDynamicModel.h"
-
-
+#include "BLZFileDefines.h"
 #include "BLZChunkFile.h"
 #include "BLZDBCFile.h"
 #include "BLZBLSImporter.h"
 #include "BLZWOWDatabase.h"
+#include "D3DParticleEmitterResource.h"
+#include "D3DBillBoardParticleEmitter.h"
+#include "D3DRibbonEmitterResource.h"
+#include "D3DRibbonEmitter.h"
 #include "D3DWOWM2ModelResource.h"
-#include "D3DWOWM2BillBoardParticleEmitter.h"
-#include "D3DWOWM2RibbonEmitter.h"
 #include "D3DWOWM2Model.h"
 #include "D3DWOWM2CharacterModel.h"
 #include "D3DWOWM2ItemModel.h"

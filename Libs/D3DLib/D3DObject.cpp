@@ -10,7 +10,6 @@
 /*                                                                          */
 /****************************************************************************/
 #include "StdAfx.h"
-#include "d3drender.h"
 
 
 namespace D3DLib{
@@ -30,7 +29,6 @@ CD3DObject::CD3DObject():CTreeObject()
 {
 	m_pD3DDevice=NULL;
 	m_pRender=NULL;		
-	m_Layer=0;
 	m_pParent=NULL;
 	m_LocalMatrix.SetIdentity();
 	m_WorldMatrix.SetIdentity();
@@ -45,13 +43,22 @@ CD3DObject::~CD3DObject(void)
 
 void CD3DObject::Destory()
 {	
-	SAFE_RELEASE(m_pBoundingFrame);
-
-	CTreeObject::Destory();	
 	if(m_pRender)
 		m_pRender->DelObject(this);
 	if(m_pRender)
 		m_pRender->DelRootObject(this);
+
+	m_pRender=NULL;
+
+	CTreeObject::Destory();	
+
+	
+
+	//SAFE_RELEASE(m_pBoundingFrame);
+	m_pBoundingFrame=NULL;
+
+	
+	
 }
 
 bool CD3DObject::Reset()
@@ -68,10 +75,11 @@ bool CD3DObject::Restore()
 	return true;
 }
 
-void CD3DObject::SetRender(CD3DRender * pRender)
+void CD3DObject::SetRender(CD3DBaseRender * pRender)
 {
 	m_pRender=pRender;
-	SetDevice(m_pRender->GetDevice());
+	if(m_pRender)
+		SetDevice(m_pRender->GetDevice());
 }
 
 void CD3DObject::SetParent(CTreeObject* pParent)
@@ -89,7 +97,7 @@ void CD3DObject::SetParent(CTreeObject* pParent)
 	}
 }
 
-CD3DMatrix CD3DObject::GetWorldMatrixDirect()
+const CD3DMatrix CD3DObject::GetWorldMatrixDirect()
 {
 	if(GetParent())
 	{
@@ -112,7 +120,7 @@ CD3DSubMesh *  CD3DObject::GetSubMesh(UINT index)
 	return NULL;
 }
 
-CD3DSubMeshMaterial * CD3DObject::GetSubMeshMaterial(int index)
+CD3DSubMeshMaterial * CD3DObject::GetSubMeshMaterial(UINT index)
 {
 	CD3DSubMesh * pSubMesh=GetSubMesh(index);
 	if(pSubMesh)
@@ -132,15 +140,20 @@ CD3DBoundingSphere * CD3DObject::GetBoundingSphere()
 	return NULL;
 }
 
-//CD3DBoundingBox * CD3DObject::GetWholeBoundingBox()
-//{
-//	return NULL;
-//}
-//
-//CD3DBoundingSphere * CD3DObject::GetWholeBoundingSphere()
-//{
-//	return NULL;
-//}
+CD3DBoundingBox CD3DObject::GetWorldBoundingBox()
+{
+	CD3DBoundingBox BBox;
+	if(GetSubMeshCount())
+	{
+		BBox=GetSubMesh(0)->GetBoundingBoxWithTranform(GetWorldMatrix());
+		for(UINT i=0;i<GetSubMeshCount();i++)
+		{
+			GetSubMesh(i)->AppendBoundingBoxWithTranform(BBox,GetWorldMatrix());			
+		}
+	}
+	return BBox;
+}
+
 
 CD3DLight * CD3DObject::GetLight(int Index)
 {
@@ -152,43 +165,53 @@ CD3DLight ** CD3DObject::GetLights()
 	return NULL;
 }
 
-void CD3DObject::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
+void CD3DObject::OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
+{	
+	//设置变换矩阵
+	if(pCamera)
+		pCamera->Apply(pRender->GetDevice(),D3DCAMERA_APPLY_ALL);
+	pRender->GetDevice()->GetD3DDevice()->SetTransform(D3DTS_WORLD,&GetWorldMatrixR());
+}
+
+void CD3DObject::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
-	if(pSubMesh&&pMaterial)
-	{	
+	//设置材质
 
-		//设置材质
-
-		//如果是被选中的使用特殊材质
-		if(pSubMesh->IsSelected())
-			pDevice->GetD3DDevice()->SetMaterial(&SELECTED_SUBMESH_MATERIAL);
-		else
-			pDevice->GetD3DDevice()->SetMaterial(&(pMaterial->GetMaterial()));
-		
-		//设置纹理
-		if(pMaterial->GetFX())
-		{			
-			pMaterial->GetFX()->SetTexture("TexLay0",pMaterial->GetTexture(0));
-			//pMaterial->GetFX()->SetTexture("TexLay1",pMaterial->GetTexture(1));
-		}	
-	}
+	//如果是被选中的使用特殊材质
+	if(pSubMesh->IsSelected())
+		pRender->GetDevice()->GetD3DDevice()->SetMaterial(&SELECTED_SUBMESH_MATERIAL);
 	else
-	{		
-		//设置变换矩阵
-		pDevice->GetD3DDevice()->SetTransform(D3DTS_WORLD,&GetWorldMatrix());
+		pRender->GetDevice()->GetD3DDevice()->SetMaterial(&(pMaterial->GetMaterial()));
+
+	//设置纹理
+	if(pMaterial->GetFX())
+	{			
+		pMaterial->GetFX()->SetTexture("TexLay0",pMaterial->GetTexture(0));
+	}	
+}
+
+void CD3DObject::OnPrepareRenderData()
+{
+	m_WorldMatrixR=m_WorldMatrix;
+	for(UINT i=0;i<GetSubMeshCount();i++)
+	{
+		CD3DSubMesh * pSubMesh=GetSubMesh(i);
+		if(pSubMesh)
+		{
+			pSubMesh->OnPrepareRenderData();
+		}
 	}
 }
 
 
 void CD3DObject::Update(FLOAT Time)
 {
-	FUNCTION_BEGIN;
 	//更新世界矩阵
 	if(GetParent())
 		m_WorldMatrix=m_LocalMatrix*GetParent()->GetWorldMatrix();
 	else
 		m_WorldMatrix=m_LocalMatrix;
-	FUNCTION_END;
+
 
 	//更新子对象
 	for(UINT i=0;i<GetChildCount();i++)
@@ -242,12 +265,18 @@ bool CD3DObject::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD
 	FLOAT Dis;
 	CD3DVector3 InterPoint;
 
+	CD3DMatrix Mat=GetWorldMatrix().GetInverse();
+	CD3DVector3 RayPos=Point*Mat;
+	CD3DVector3 RayDir=Dir*Mat.GetRotation();
+
+	RayDir.Normalize();
+
 	for(int i=0;i<GetSubMeshCount();i++)
 	{
 		CD3DSubMesh * pSubMesh=GetSubMesh(i);
 		if(pSubMesh)
 		{
-			if(pSubMesh->RayIntersect(GetWorldMatrix(),Point,Dir,InterPoint,Dis,TestOnly))
+			if(pSubMesh->RayIntersect(RayPos,RayDir,InterPoint,Dis,TestOnly))
 			{
 				IsIntersect=true;
 				if(Dis<Distance)
@@ -262,40 +291,13 @@ bool CD3DObject::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD
 			}
 		}
 	}
+	if(IsIntersect)
+	{
+		IntersectPoint*=GetWorldMatrix();
+	}
 	return IsIntersect;
 }
 
-//bool CD3DObject::GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& y)
-//{
-//	CD3DBoundingBox Box=(*GetBoundingBox())*GetWorldMatrix();
-//
-//	if(x<Box.m_Min.x||x>Box.m_Max.x||z<Box.m_Min.z||z>Box.m_Max.z)
-//		return false;
-//	CD3DVector3 Point(x,MAX_HEIGHT,z);
-//	CD3DVector3 Dir(0,-1,0);
-//	CD3DVector3 IntersectPoint;
-//	FLOAT Distance;
-//	FLOAT Height=-MAX_HEIGHT;
-//
-//	for(int i=0;i<GetSubMeshCount();i++)
-//	{
-//		CD3DSubMesh * pSubMesh=GetSubMesh(i);
-//		if(pSubMesh)
-//		{
-//			if(pSubMesh->RayIntersect(GetWorldMatrix(),Point,Dir,IntersectPoint,Distance,false))
-//			{
-//				if(IntersectPoint.y>Height)					
-//					Height=IntersectPoint.y;				
-//			}			
-//		}
-//	}
-//	if(Height>-MAX_HEIGHT)
-//	{
-//		y=Height;
-//		return true;
-//	}
-//	return false;
-//}
 
 CD3DObject * CD3DObject::PickObject(CD3DVector3 Point,CD3DVector3 Dir,FLOAT& Distance)
 {
@@ -312,7 +314,7 @@ CD3DObject * CD3DObject::PickObject(CD3DVector3 Point,CD3DVector3 Dir,FLOAT& Dis
 
 	for(UINT i=0;i<GetChildCount();i++)
 	{
-		if((!GetChildByIndex(i)->IsVisible())||(!GetChildByIndex(i)->CheckFlag(CD3DObject::OBJECT_FLAG_RENDERED)))
+		if((!GetChildByIndex(i)->IsVisible())||(GetChildByIndex(i)->CheckFlag(CD3DObject::OBJECT_FLAG_CULLED)))		
 			continue;
 
 		CD3DObject * pObj=GetChildByIndex(i)->PickObject(Point,Dir,ObjDis);		
@@ -381,7 +383,6 @@ bool CD3DObject::CloneFrom(CNameObject * pObject,UINT Param)
 	CD3DObject * pSource=(CD3DObject *)pObject;
 
 	m_pRender=pSource->m_pRender;		
-	m_Layer=pSource->m_Layer;		
 	m_LocalMatrix=pSource->m_LocalMatrix;
 	m_WorldMatrix=pSource->m_WorldMatrix;		
 	m_Flag=pSource->m_Flag;		
@@ -389,25 +390,25 @@ bool CD3DObject::CloneFrom(CNameObject * pObject,UINT Param)
 	return true;
 }
 
-void CD3DObject::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+void CD3DObject::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
 	for(int i=0;i<GetSubMeshCount();i++)
 	{
 		CD3DSubMesh * pSubMesh=GetSubMesh(i);
 		if(pSubMesh)
 		{
-			pSubMesh->PickResource(pObjectSet,Param);
+			pSubMesh->PickResource(pResourceManager,Param);
 		}
 	}
 	for(UINT i=0;i<GetChildCount();i++)
 	{
-		GetChildByIndex(i)->PickResource(pObjectSet,Param);
+		GetChildByIndex(i)->PickResource(pResourceManager,Param);
 	}
 }
 
-bool CD3DObject::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DObject::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CTreeObject::ToSmartStruct(Packet,pUSOFile,Param))
+	if(!CTreeObject::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;	
 
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DO_LOCAL_MATIRX,(char *)&m_LocalMatrix,sizeof(m_LocalMatrix)));	
@@ -416,9 +417,9 @@ bool CD3DObject::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Par
 	return true;
 }
 
-bool CD3DObject::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DObject::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CTreeObject::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CTreeObject::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	void * Pos=Packet.GetFirstMemberPosition();

@@ -15,6 +15,7 @@ class CSystemConfig :
 	public CStaticObject<CSystemConfig>
 {
 protected:
+	UINT			m_MainThreadProcessLimit;
 	CIPAddress		m_UDPControlAddress;
 	bool			m_LogServerObjectUse;
 	UINT			m_LogLevel;
@@ -26,6 +27,10 @@ public:
 
 	bool LoadConfig(LPCTSTR ConfigFileName);
 
+	UINT GetMainThreadProcessLimit()
+	{
+		return m_MainThreadProcessLimit;
+	}
 	CIPAddress& GetUDPControlAddress()
 	{
 		return m_UDPControlAddress;

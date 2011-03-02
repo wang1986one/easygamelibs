@@ -602,6 +602,7 @@ int CODBCConnection::ODBCCTypeTODBLibType(int Type,UINT& Size)
 	case SQL_C_DOUBLE:		
 		return DB_TYPE_DOUBLE;
 	case SQL_C_BIT:
+	case SQL_C_TINYINT:
 	case SQL_C_STINYINT:
 	case SQL_C_UTINYINT:		
 		return DB_TYPE_TINY;
@@ -685,7 +686,7 @@ int CODBCConnection::DBLibTypeToODBCSQLType(int Type,UINT& Size)
 	case DB_TYPE_GUID:
 		return SQL_GUID;
 	case DB_TYPE_BINARY:
-		return SQL_BINARY;	
+		return SQL_VARBINARY;	
 	}
 	return Type;
 }
@@ -707,7 +708,7 @@ int CODBCConnection::ODBCSQLTypeTOODBCCType(int Type,UINT& Size)
 	case SQL_BIT:
 	case SQL_TINYINT:
 		Size=sizeof(char);
-		return SQL_C_STINYINT;
+		return SQL_C_TINYINT;
 	case SQL_SMALLINT:
 		Size=sizeof(short);
 		return SQL_C_SSHORT;
@@ -876,6 +877,8 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 		return DBERR_PARAMCOUNTFAIL;
 	}
 
+	CEasyBuffer ParamDataLenBuffer;
+
 	if(ParamNum>0)
 	{
 
@@ -884,6 +887,9 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 			return DBERR_NOTENOUGHPARAM;
 		}	
 		
+		ParamDataLenBuffer.Create(sizeof(SQLINTEGER)*ParamNum);
+
+		SQLINTEGER * pParamDataLen=(SQLINTEGER *)ParamDataLenBuffer.GetBuffer();
 
 		//绑定参数
 		for(int i=0;i<ParamNum;i++)
@@ -893,16 +899,28 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 			int DigitalSize=pParamSet->GetParam(i).GetDigitalLength();
 			int ODBCSQLType=DBLibTypeToODBCSQLType(pParamSet->GetParamInfo(i)->Type,Size);
 			int ODBCCType=DBLibTypeToODBCCType(pParamSet->GetParamInfo(i)->Type,Size);
-			SQLINTEGER DataLen;
+
+			SQLSMALLINT tParamType,tParamDigitalSize,tParamCanNull;
+			SQLUINTEGER tParamSize;
+
+			nResult=SQLDescribeParam(m_hStmt,i+1,&tParamType,&tParamSize,&tParamDigitalSize,&tParamCanNull);
+			if ( nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO )
+			{
+				ProcessMessagesODBC(SQL_HANDLE_STMT, m_hStmt,"绑定参数失败！\r\n", TRUE);
+				return DBERR_BINDPARAMFAIL;
+			}
+			
 			if(pParamSet->GetParamInfo(i)->IsNull||pParamSet->GetParam(i).IsNull())
-				DataLen=SQL_NULL_DATA;
+				pParamDataLen[i]=SQL_NULL_DATA;
+			else if(ODBCSQLType==SQL_BINARY||ODBCSQLType==SQL_VARBINARY||ODBCSQLType==SQL_LONGVARBINARY)
+				pParamDataLen[i]=pParamSet->GetParam(i).GetLength();
 			else
-				DataLen=SQL_NTS;
+				pParamDataLen[i]=SQL_NTS;
 			int ColumnSize=0;
 			if(ODBCSQLType==SQL_CHAR||ODBCSQLType==SQL_VARCHAR||ODBCSQLType==SQL_LONGVARCHAR||
 				ODBCSQLType==SQL_BINARY||ODBCSQLType==SQL_VARBINARY||ODBCSQLType==SQL_LONGVARBINARY)
 			{
-				ColumnSize=SQL_DESC_LENGTH;
+				ColumnSize=tParamSize;
 			}
 			if(ODBCSQLType==SQL_DECIMAL||ODBCSQLType==SQL_NUMERIC||ODBCSQLType==SQL_FLOAT||
 				ODBCSQLType==SQL_REAL||ODBCSQLType==SQL_DOUBLE)
@@ -912,7 +930,7 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 			nResult=SQLBindParameter(m_hStmt,i+1,
 				ParamType,ODBCCType,ODBCSQLType,ColumnSize,DigitalSize,
 				(SQLPOINTER)((LPCVOID)pParamSet->GetParam(i)),
-				pParamSet->GetParam(i).GetLength(),&DataLen);
+				pParamSet->GetParam(i).GetLength(),pParamDataLen+i);
 
 
 			if ( nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO )

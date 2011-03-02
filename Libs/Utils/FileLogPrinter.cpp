@@ -58,7 +58,7 @@ bool CFileLogPrinter::Create(LPCTSTR FileName,DWORD Flag)
 	if(m_Flag&FILE_LOG_APPEND)
 		m_FileOpenMode=IFileAccessor::modeOpenAlways|IFileAccessor::modeAppend;
 	else
-		m_FileOpenMode=IFileAccessor::modeCreateAlways|IFileAccessor::modeTruncate;
+		m_FileOpenMode=IFileAccessor::modeCreateAlways;
 	m_FileOpenMode|=IFileAccessor::modeWrite|IFileAccessor::shareShareRead;
 	if(m_Flag&FILE_LOG_SAFE_WRITE)
 		m_FileOpenMode|=IFileAccessor::osWriteThrough;

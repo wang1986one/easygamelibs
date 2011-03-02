@@ -31,13 +31,16 @@ public:
 	virtual bool Initialize();
 	virtual void Destory();
 
-	BOOL RegisterObject(CDOSBaseObject * pObject,OBJECT_ID ObjectID,int Weight=1);
-	BOOL UnregisterObject(CDOSBaseObject * pObject);
+	BOOL RegisterObject(DOS_OBJECT_REGISTER_INFO& ObjectRegisterInfo);
+	BOOL UnregisterObject(OBJECT_ID ObjectID);
 
 	void SetServer(CDOSServer * pServer);
 	CDOSServer * GetServer();
 
 	UINT GetObejctCount();
+	void PrintGroupInfo(UINT LogChannel);
+	UINT GetGroupCount();
+	CDOSObjectGroup * GetGroup(UINT Index);
 	
 	BOOL PushMessage(OBJECT_ID ObjectID,CDOSMessagePacket * pPacket);
 
@@ -65,3 +68,14 @@ inline UINT CDOSObjectManager::GetObejctCount()
 	}
 	return Count;
 }
+inline UINT CDOSObjectManager::GetGroupCount()
+{
+	return m_ObjectGroups.GetCount();
+}
+inline CDOSObjectGroup * CDOSObjectManager::GetGroup(UINT Index)
+{
+	if(Index<m_ObjectGroups.GetCount())
+		return m_ObjectGroups[Index];
+	return NULL;
+}
+

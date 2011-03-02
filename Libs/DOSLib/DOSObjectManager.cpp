@@ -73,27 +73,27 @@ void CDOSObjectManager::Destory()
 	FUNCTION_END;
 }
 
-BOOL CDOSObjectManager::RegisterObject(CDOSBaseObject * pObject,OBJECT_ID ObjectID,int Weight)
+BOOL CDOSObjectManager::RegisterObject(DOS_OBJECT_REGISTER_INFO& ObjectRegisterInfo)
 {
 	FUNCTION_BEGIN;
 	
 
 
-	if(pObject==NULL)
+	if(ObjectRegisterInfo.pObject==NULL)
 	{
 		PrintDOSLog(0xff0000,"空对象无法注册！");
 		return FALSE;
 	}
 
-	if(Weight<=0)
+	if(ObjectRegisterInfo.Weight<=0)
 	{
 		PrintDOSLog(0xff0000,"对象权重必须大于零！");
 		return FALSE;
 	}
 		
 
-	pObject->SetManager(this);
-	pObject->SetRouter(GetServer()->GetRouter());	
+	ObjectRegisterInfo.pObject->SetManager(this);
+	ObjectRegisterInfo.pObject->SetRouter(GetServer()->GetRouter());	
 
 	
 	CDOSObjectGroup * pGroup=SelectGroup();
@@ -103,15 +103,11 @@ BOOL CDOSObjectManager::RegisterObject(CDOSBaseObject * pObject,OBJECT_ID Object
 		PrintDOSLog(0xff0000,"无法分配合适的对象组！");
 		return FALSE;
 	}
+		
+	ObjectRegisterInfo.ObjectID.RouterID=GetServer()->GetRouter()->GetRouterID();
+		
 
-	DOS_OBJECT_INFO ObjectInfo;
-	ObjectInfo.ObjectID.ID=0;
-	ObjectInfo.ObjectID.RouterID=GetServer()->GetRouter()->GetRouterID();
-	ObjectInfo.ObjectID.ObjectTypeID=ObjectID.ObjectTypeID;
-	ObjectInfo.Weight=Weight;
-	ObjectInfo.pObject=pObject;
-
-	if(!pGroup->RegisterObject(ObjectInfo))
+	if(!pGroup->RegisterObject(ObjectRegisterInfo))
 	{
 		PrintDOSLog(0xff0000,"无法将对象添加到对象组！");
 		return FALSE;
@@ -123,18 +119,12 @@ BOOL CDOSObjectManager::RegisterObject(CDOSBaseObject * pObject,OBJECT_ID Object
 
 }
 
-BOOL CDOSObjectManager::UnregisterObject(CDOSBaseObject * pObject)
+BOOL CDOSObjectManager::UnregisterObject(OBJECT_ID ObjectID)
 {
 	FUNCTION_BEGIN;	
 
 
-	if(pObject==NULL)
-	{
-		PrintDOSLog(0xff0000,"空对象无法注销！");
-		return FALSE;
-	}
-
-	UINT GroupIndex=pObject->GetObjectID().GroupIndex;
+	UINT GroupIndex=ObjectID.GroupIndex;
 	if(GroupIndex>=m_ObjectGroups.GetCount())
 	{
 		PrintDOSLog(0xff0000,"对象所在组%u无效",GroupIndex);
@@ -145,7 +135,7 @@ BOOL CDOSObjectManager::UnregisterObject(CDOSBaseObject * pObject)
 	
 	if(pGroup)
 	{
-		if(!pGroup->UnregisterObject(pObject->GetObjectID()))
+		if(!pGroup->UnregisterObject(ObjectID))
 		{
 			PrintDOSLog(0xff0000,"向对象组请求注销对象失败");
 			return FALSE;
@@ -206,4 +196,19 @@ CDOSObjectGroup * CDOSObjectManager::SelectGroup()
 	return pGroup;
 	FUNCTION_END;
 	return NULL;
+}
+
+
+void CDOSObjectManager::PrintGroupInfo(UINT LogChannel)
+{
+	FUNCTION_BEGIN;
+	for(UINT i=0;i<m_ObjectGroups.GetCount();i++)
+	{		
+		CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,
+			"对象组[%u]:对象数[%u],权重[%u],CPU占用率[%0.2f%%],循环时间[%gMS]",
+			i,m_ObjectGroups[i]->GetObjectCount(),m_ObjectGroups[i]->GetWeight(),
+			m_ObjectGroups[i]->GetCPUUsedRate()*100,
+			m_ObjectGroups[i]->GetCycleTime());
+	}
+	FUNCTION_END;
 }

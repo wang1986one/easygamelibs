@@ -23,7 +23,9 @@ namespace D3DLib{
 #define M2_PARTICLE_FX_FILE_NAME			"M2Particle.fx"
 #define M2_RIBBON_FX_FILE_NAME				"M2Ribbon.fx"
 #define WMO_MODEL_FX_FILE_NAME				"WMOModel.fx"
-#define ADT_MODEL_FX_FILE_NAME				"ADTModel.fx"
+#define ADT_MODEL_20_FX_FILE_NAME			"ADTModel20.fx"
+#define ADT_MODEL_30_FX_FILE_NAME			"ADTModel30.fx"
+#define ADT_MODEL_LIQUID_FX_FILE_NAME		"ADTLiquid.fx"
 
 
 
@@ -85,14 +87,14 @@ namespace D3DLib{
 #define WOW_MINI_MAP_FILE_DIR					"Textures\\MiniMap"
 
 
-#define BLZ_ADT_MAP_TILE_SIZE					(33.33333333f)
+#define BLZ_ADT_MAP_TILE_SIZE					(100.0f/3.0f)
 #define BLZ_ADT_MAP_TILE_WIDTH					(16)
 #define BLZ_ADT_MAP_TILE_COUNT					(BLZ_ADT_MAP_TILE_WIDTH*BLZ_ADT_MAP_TILE_WIDTH)
 #define BLZ_ADT_MAP_AREA_SIZE					(BLZ_ADT_MAP_TILE_SIZE*16.0f)
 #define BLZ_ADT_MAP_TRANS_VALUE					(BLZ_ADT_MAP_AREA_SIZE*32.0f)
 #define BLZ_ADT_TEXTURE_LAYER_COUNT				(4)
-#define BLZ_ADT_MAP_TILE_BLOCK_SIZE				(BLZ_ADT_MAP_TILE_SIZE/8)
-#define BLZ_ADT_MAP_TILE_BLOCK_HALF_SIZE		(BLZ_ADT_MAP_TILE_SIZE/16)
+#define BLZ_ADT_MAP_TILE_BLOCK_SIZE				(BLZ_ADT_MAP_TILE_SIZE/8.0f)
+#define BLZ_ADT_MAP_TILE_BLOCK_HALF_SIZE		(BLZ_ADT_MAP_TILE_SIZE/16.0f)
 
 //WMO Root
 #define CHUNK_ID_VERSION						((DWORD)'MVER')
@@ -161,10 +163,10 @@ namespace D3DLib{
 #define CHUNK_ID_WDL_MARE						((DWORD)'MARE')
 #define CHUNK_ID_WDL_MAHO						((DWORD)'MAHO')
 
-//enum BLZ_M2_MODEL_FLAG
-//{
-//	BLZ_M2_MODEL_FLAG_USE_VERTEX_COLOR=0x10,
-//};
+enum BLZ_M2_MODEL_FLAG
+{
+	BLZ_M2_MODEL_FLAG_USE_VERTEX_COLOR=0x8,
+};
 
 enum BLZ_M2_RENDER_FLAG
 {
@@ -189,6 +191,7 @@ enum BLZ_M2_BLENDING_MODE
 enum BLZ_M2_TEXTURE_UNIT_FLAG
 {
 	BLZ_M2_TEXTURE_UNIT_FLAG_USE_VERTEX_ALPHA2=0x100,
+	//BLZ_M2_TEXTURE_UNIT_FLAG_USE_VERTEX_ALPHA1=0x100
 };
 
 enum BLZ_M2_ANIMATION_SEQUENCE_FLAG
@@ -389,12 +392,7 @@ enum CHAR_SUBMESH_PART
 	CSP_SASH=18,
 };
 
-enum PARTICLE_EMITTER_TYPE
-{
-	EMITTER_PLANE=1,
-	EMITTER_SPHERE=2,
-	EMITTER_SPLINE=3,
-};
+
 
 enum PARTICLE_EMITTER_BLENDING_TYPE
 {
@@ -406,17 +404,7 @@ enum PARTICLE_EMITTER_BLENDING_TYPE
 	EBT_ALPHA_MUL=5,
 };
 
-enum PARTICLE_EMITTER_FLAG
-{
-	PEF_GRAVITY_TRANSFORM=(0x8),
-	//PEF_DIR_VERTICAL_TRANS=0x20,//0x1,
-	PEF_HAVE_SPEED_VARIATION=0x02,
-	PED_DIR_NO_HORIZONTAL_TRANS=0x20000,//0x400,
-	PEF_NO_TRAIL=(0x10),	
-	PEF_ACITVE_ON_TIME=(0x400),
-	PEF_NOT_BILLBOARD=0x1000,
-	//PEF_NO_SPEED_VARIATION=0x20000,
-};
+
 
 enum WMO_LIGHT_TYPE 
 {
@@ -1089,7 +1077,8 @@ struct SKIN_SUB_MESH
 	UINT16		StartBones;
 	UINT16		Unknown;		
 	UINT16		RootBone;
-	CD3DVector3	BoundingBox[2];
+	CD3DVector3	CenterMass;
+	CD3DVector3	CenterBoundingBox;
 	FLOAT		Radius;
 };
 
@@ -1496,7 +1485,7 @@ struct BLZ_CHUNK_MOBN:public BLZ_CHUNK_HEADER
 
 struct BLZ_CHUNK_MOBR:public BLZ_CHUNK_HEADER
 {
-	UINT16 TriangleIndices[1];
+	UINT16 BSPFaceIndices[1];
 };
 
 struct BLZ_CHUNK_MOCV:public BLZ_CHUNK_HEADER
@@ -1856,6 +1845,389 @@ inline CD3DQuaternion BLZRotationToD3D(CD3DQuaternion Value)
 {
 	//return CD3DQuaternion(-Value.x, -Value.z, Value.y, Value.w);
 	return CD3DQuaternion(-Value.y, -Value.z, Value.x, Value.w);//.GetInverse();
+}
+
+//void LoadTranslationFrames(BYTE * pData,UINT TimeStampCount,UINT TimeStampOffset,UINT KeyCount,UINT KeyOffset,ANIMATION_FRAME<CD3DVector3>& AniFrame);
+//void LoadRotationFrames(BYTE * pData,UINT TimeStampCount,UINT TimeStampOffset,UINT KeyCount,UINT KeyOffset,ANIMATION_FRAME<CD3DQuaternion>& AniFrame);
+//void LoadScalingFrames(BYTE * pData,UINT TimeStampCount,UINT TimeStampOffset,UINT KeyCount,UINT KeyOffset,ANIMATION_FRAME<CD3DVector3>& AniFrame);
+
+
+//void LoadAniBlockFloat(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<FLOAT>& AniBlock);
+//void LoadAniBlockVector3(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DVector3>& AniBlock);
+//void LoadAniBlockQuaternion(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DQuaternion>& AniBlock);
+//void LoadAniBlockQuaternion2(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DQuaternion>& AniBlock);
+//void LoadAniBlockAlpha(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<FLOAT>& AniBlock);
+//void LoadAniBlockTranslation(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DVector3>& AniBlock);
+//void LoadAniBlockRotation(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DQuaternion>& AniBlock);
+//void LoadAniBlockScaling(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DVector3>& AniBlock);
+//void LoadAniBlockBool(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<bool>& AniBlock);
+//
+//void LoadFakeAniBlockColor(BYTE * pData,M2_MODEL_FAKE_ANIMATION_BLOCK& AniBlockInfo,FAKE_ANIMATION_FRAME<CD3DVector3>& AniBlock);
+//void LoadFakeAniBlockAlpha(BYTE * pData,M2_MODEL_FAKE_ANIMATION_BLOCK& AniBlockInfo,FAKE_ANIMATION_FRAME<FLOAT>& AniBlock);
+//void LoadFakeAniBlockSize(BYTE * pData,M2_MODEL_FAKE_ANIMATION_BLOCK& AniBlockInfo,FAKE_ANIMATION_FRAME<CD3DVector2>& AniBlock);
+//void LoadFakeAniBlockShort(BYTE * pData,M2_MODEL_FAKE_ANIMATION_BLOCK& AniBlockInfo,FAKE_ANIMATION_FRAME<short>& AniBlock);
+
+inline void LoadTranslationFrames(BYTE * pData,UINT TimeStampCount,UINT TimeStampOffset,UINT KeyCount,UINT KeyOffset,ANIMATION_FRAME<CD3DVector3>& AniFrame)
+{
+	UINT32 * pTimeStamps=(UINT *)(pData+TimeStampOffset);
+	AniFrame.TimeStamps.Resize(TimeStampCount);
+	for(UINT k=0;k<TimeStampCount;k++)
+	{				
+		AniFrame.TimeStamps[k]=pTimeStamps[k];
+	}
+	CD3DVector3 * pKeys=(CD3DVector3 *)(pData+KeyOffset);
+	AniFrame.Keys.Resize(KeyCount);
+	for(UINT k=0;k<KeyCount;k++)
+	{
+		AniFrame.Keys[k]=BLZTranslationToD3D(pKeys[k]);
+	}
+}
+inline void LoadRotationFrames(BYTE * pData,UINT TimeStampCount,UINT TimeStampOffset,UINT KeyCount,UINT KeyOffset,ANIMATION_FRAME<CD3DQuaternion>& AniFrame)
+{
+	UINT32 * pTimeStamps=(UINT *)(pData+TimeStampOffset);	
+	AniFrame.TimeStamps.Resize(TimeStampCount);
+	for(UINT k=0;k<TimeStampCount;k++)
+	{				
+		AniFrame.TimeStamps[k]=pTimeStamps[k];
+	}
+	BLZ_SHORT_QUATERNION * pRotations=(BLZ_SHORT_QUATERNION *)(pData+KeyOffset);
+	AniFrame.Keys.Resize(KeyCount);
+	for(UINT k=0;k<KeyCount;k++)
+	{
+		CD3DQuaternion Rotation=BLZRotationToD3D(ShortQuaternionToLongQuaternion(pRotations[k]));
+		Rotation.Normalize();
+		AniFrame.Keys[k]=Rotation;
+	}
+}
+inline void LoadScalingFrames(BYTE * pData,UINT TimeStampCount,UINT TimeStampOffset,UINT KeyCount,UINT KeyOffset,ANIMATION_FRAME<CD3DVector3>& AniFrame)
+{
+	UINT32 * pTimeStamps=(UINT *)(pData+TimeStampOffset);
+	AniFrame.TimeStamps.Resize(TimeStampCount);
+	for(UINT k=0;k<TimeStampCount;k++)
+	{				
+		AniFrame.TimeStamps[k]=pTimeStamps[k];								
+	}
+	CD3DVector3 * pKeys=(CD3DVector3 *)(pData+KeyOffset);
+	AniFrame.Keys.Resize(KeyCount);
+	for(UINT k=0;k<KeyCount;k++)
+	{
+		AniFrame.Keys[k]=BLZScalingToD3D(pKeys[k]);
+	}
+}
+
+inline void LoadAniBlockFloat(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<FLOAT>& AniBlock)
+{
+	AniBlock.InterpolationType=AniBlockInfo.InterpolationType;
+	AniBlock.GlobalSequenceID=AniBlockInfo.GlobalSequenceID;
+
+	M2_MODEL_ANIMATION_PAIR * pTimeStampPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.TimestampsOffset);
+	M2_MODEL_ANIMATION_PAIR * pKeyPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.KeysOffset);
+
+	AniBlock.Animations.Resize(AniBlockInfo.TimestampsCount);
+
+	for(UINT j=0;j<AniBlockInfo.TimestampsCount;j++)
+	{
+		if(pTimeStampPair[j].Count)
+		{			
+			UINT32 * pTimeStamps=(UINT *)(pData+pTimeStampPair[j].Offset);
+			AniBlock.Animations[j].TimeStamps.Resize(pTimeStampPair[j].Count);
+			for(UINT k=0;k<pTimeStampPair[j].Count;k++)
+			{				
+				AniBlock.Animations[j].TimeStamps[k]=pTimeStamps[k];								
+			}
+			float * pKeys=(float *)(pData+pKeyPair[j].Offset);
+			AniBlock.Animations[j].Keys.Resize(pKeyPair[j].Count);
+			for(UINT k=0;k<pKeyPair[j].Count;k++)
+			{
+				AniBlock.Animations[j].Keys[k]=pKeys[k];
+			}
+		}
+
+	}
+}
+
+inline void LoadAniBlockVector3(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DVector3>& AniBlock)
+{
+	AniBlock.InterpolationType=AniBlockInfo.InterpolationType;
+	AniBlock.GlobalSequenceID=AniBlockInfo.GlobalSequenceID;
+
+	M2_MODEL_ANIMATION_PAIR * pTimeStampPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.TimestampsOffset);
+	M2_MODEL_ANIMATION_PAIR * pKeyPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.KeysOffset);
+
+	AniBlock.Animations.Resize(AniBlockInfo.TimestampsCount);
+
+	for(UINT j=0;j<AniBlockInfo.TimestampsCount;j++)
+	{
+		if(pTimeStampPair[j].Count)
+		{					
+			UINT32 * pTimeStamps=(UINT *)(pData+pTimeStampPair[j].Offset);		
+			AniBlock.Animations[j].TimeStamps.Resize(pTimeStampPair[j].Count);
+			for(UINT k=0;k<pTimeStampPair[j].Count;k++)
+			{				
+				AniBlock.Animations[j].TimeStamps[k]=(pTimeStamps[k]);								
+			}
+			CD3DVector3 * pKeys=(CD3DVector3 *)(pData+pKeyPair[j].Offset);
+			AniBlock.Animations[j].Keys.Resize(pKeyPair[j].Count);
+			for(UINT k=0;k<pKeyPair[j].Count;k++)
+			{
+				AniBlock.Animations[j].Keys[k]=(pKeys[k]);
+			}
+		}		
+	}
+}
+
+inline void LoadAniBlockQuaternion(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DQuaternion>& AniBlock)
+{
+	AniBlock.InterpolationType=AniBlockInfo.InterpolationType;
+	AniBlock.GlobalSequenceID=AniBlockInfo.GlobalSequenceID;
+
+	M2_MODEL_ANIMATION_PAIR * pTimeStampPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.TimestampsOffset);
+	M2_MODEL_ANIMATION_PAIR * pKeyPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.KeysOffset);
+
+	AniBlock.Animations.Resize(AniBlockInfo.TimestampsCount);
+	for(UINT j=0;j<AniBlockInfo.TimestampsCount;j++)
+	{		
+
+		if(pTimeStampPair[j].Count)
+		{	
+			UINT32 * pTimeStamps=(UINT *)(pData+pTimeStampPair[j].Offset);		
+			AniBlock.Animations[j].TimeStamps.Resize(pTimeStampPair[j].Count);
+			for(UINT k=0;k<pTimeStampPair[j].Count;k++)
+			{				
+				AniBlock.Animations[j].TimeStamps[k]=(pTimeStamps[k]);								
+			}
+			BLZ_SHORT_QUATERNION * pKeys=(BLZ_SHORT_QUATERNION *)(pData+pKeyPair[j].Offset);
+			AniBlock.Animations[j].Keys.Resize(pKeyPair[j].Count);
+			for(UINT k=0;k<pKeyPair[j].Count;k++)
+			{
+				CD3DQuaternion Rotation=ShortQuaternionToLongQuaternion(pKeys[k]);
+				Rotation.Normalize();
+				AniBlock.Animations[j].Keys[k]=(Rotation);
+			}
+		}				
+	}	
+}
+
+inline void LoadAniBlockQuaternion2(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DQuaternion>& AniBlock)
+{
+	AniBlock.InterpolationType=AniBlockInfo.InterpolationType;
+	AniBlock.GlobalSequenceID=AniBlockInfo.GlobalSequenceID;
+
+	M2_MODEL_ANIMATION_PAIR * pTimeStampPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.TimestampsOffset);
+	M2_MODEL_ANIMATION_PAIR * pKeyPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.KeysOffset);
+
+	AniBlock.Animations.Resize(AniBlockInfo.TimestampsCount);
+	for(UINT j=0;j<AniBlockInfo.TimestampsCount;j++)
+	{		
+
+		if(pTimeStampPair[j].Count)
+		{	
+			UINT32 * pTimeStamps=(UINT *)(pData+pTimeStampPair[j].Offset);		
+			AniBlock.Animations[j].TimeStamps.Resize(pTimeStampPair[j].Count);
+			for(UINT k=0;k<pTimeStampPair[j].Count;k++)
+			{				
+				AniBlock.Animations[j].TimeStamps[k]=(pTimeStamps[k]);								
+			}
+			CD3DQuaternion * pKeys=(CD3DQuaternion *)(pData+pKeyPair[j].Offset);
+			AniBlock.Animations[j].Keys.Resize(pKeyPair[j].Count);
+			for(UINT k=0;k<pKeyPair[j].Count;k++)
+			{
+				CD3DQuaternion Rotation=pKeys[k];
+				Rotation.Normalize();
+				AniBlock.Animations[j].Keys[k]=(Rotation);
+			}
+		}				
+	}	
+}
+
+inline void LoadAniBlockAlpha(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<FLOAT>& AniBlock)
+{
+	AniBlock.InterpolationType=AniBlockInfo.InterpolationType;
+	AniBlock.GlobalSequenceID=AniBlockInfo.GlobalSequenceID;
+
+	M2_MODEL_ANIMATION_PAIR * pTimeStampPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.TimestampsOffset);
+	M2_MODEL_ANIMATION_PAIR * pKeyPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.KeysOffset);
+
+	AniBlock.Animations.Resize(AniBlockInfo.TimestampsCount);
+
+	for(UINT j=0;j<AniBlockInfo.TimestampsCount;j++)
+	{
+		if(pTimeStampPair[j].Count)
+		{					
+
+			UINT32 * pTimeStamps=(UINT *)(pData+pTimeStampPair[j].Offset);							
+			AniBlock.Animations[j].TimeStamps.Resize(pTimeStampPair[j].Count);
+			for(UINT k=0;k<pTimeStampPair[j].Count;k++)
+			{				
+				AniBlock.Animations[j].TimeStamps[k]=(pTimeStamps[k]);								
+			}
+			short * pKeys=(short *)(pData+pKeyPair[j].Offset);
+			AniBlock.Animations[j].Keys.Resize(pKeyPair[j].Count);
+			for(UINT k=0;k<pKeyPair[j].Count;k++)
+			{
+				FLOAT Alpha=(FLOAT)pKeys[k]/0x7FFF;
+				AniBlock.Animations[j].Keys[k]=(Alpha);
+			}
+
+		}		
+	}
+}
+
+inline void LoadAniBlockTranslation(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DVector3>& AniBlock)
+{
+	AniBlock.InterpolationType=AniBlockInfo.InterpolationType;
+	AniBlock.GlobalSequenceID=AniBlockInfo.GlobalSequenceID;
+
+	M2_MODEL_ANIMATION_PAIR * pTimeStampPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.TimestampsOffset);
+	M2_MODEL_ANIMATION_PAIR * pKeyPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.KeysOffset);
+
+	AniBlock.Animations.Resize(AniBlockInfo.TimestampsCount);
+	for(UINT j=0;j<AniBlockInfo.TimestampsCount;j++)
+	{		
+
+		if(pTimeStampPair[j].Count)
+		{			
+			LoadTranslationFrames(pData,pTimeStampPair[j].Count,pTimeStampPair[j].Offset,
+				pKeyPair[j].Count,pKeyPair[j].Offset,AniBlock.Animations[j]);			
+		}				
+	}
+
+}
+
+inline void LoadAniBlockRotation(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DQuaternion>& AniBlock)
+{
+	AniBlock.InterpolationType=AniBlockInfo.InterpolationType;
+	AniBlock.GlobalSequenceID=AniBlockInfo.GlobalSequenceID;
+
+	M2_MODEL_ANIMATION_PAIR * pTimeStampPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.TimestampsOffset);
+	M2_MODEL_ANIMATION_PAIR * pKeyPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.KeysOffset);
+
+	AniBlock.Animations.Resize(AniBlockInfo.TimestampsCount);
+	for(UINT j=0;j<AniBlockInfo.TimestampsCount;j++)
+	{		
+
+		if(pTimeStampPair[j].Count)
+		{	
+			LoadRotationFrames(pData,pTimeStampPair[j].Count,pTimeStampPair[j].Offset,
+				pKeyPair[j].Count,pKeyPair[j].Offset,AniBlock.Animations[j]);
+		}				
+	}	
+}
+
+inline void LoadAniBlockScaling(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<CD3DVector3>& AniBlock)
+{
+	AniBlock.InterpolationType=AniBlockInfo.InterpolationType;
+	AniBlock.GlobalSequenceID=AniBlockInfo.GlobalSequenceID;
+
+	M2_MODEL_ANIMATION_PAIR * pTimeStampPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.TimestampsOffset);
+	M2_MODEL_ANIMATION_PAIR * pKeyPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.KeysOffset);
+
+	AniBlock.Animations.Resize(AniBlockInfo.TimestampsCount);
+	for(UINT j=0;j<AniBlockInfo.TimestampsCount;j++)
+	{		
+
+		if(pTimeStampPair[j].Count)
+		{			
+			LoadScalingFrames(pData,pTimeStampPair[j].Count,pTimeStampPair[j].Offset,
+				pKeyPair[j].Count,pKeyPair[j].Offset,AniBlock.Animations[j]);
+		}				
+	}	
+}
+
+inline void LoadAniBlockBool(BYTE * pData,M2_MODEL_ANIMATION_BLOCK& AniBlockInfo,ANIMATION_BLOCK<bool>& AniBlock)
+{
+	AniBlock.InterpolationType=AniBlockInfo.InterpolationType;
+	AniBlock.GlobalSequenceID=AniBlockInfo.GlobalSequenceID;
+
+	M2_MODEL_ANIMATION_PAIR * pTimeStampPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.TimestampsOffset);
+	M2_MODEL_ANIMATION_PAIR * pKeyPair=(M2_MODEL_ANIMATION_PAIR *)(pData+AniBlockInfo.KeysOffset);
+
+	AniBlock.Animations.Resize(AniBlockInfo.TimestampsCount);
+
+	for(UINT j=0;j<AniBlockInfo.TimestampsCount;j++)
+	{
+		if(pTimeStampPair[j].Count)
+		{					
+
+			UINT32 * pTimeStamps=(UINT *)(pData+pTimeStampPair[j].Offset);							
+			AniBlock.Animations[j].TimeStamps.Resize(pTimeStampPair[j].Count);
+			for(UINT k=0;k<pTimeStampPair[j].Count;k++)
+			{				
+				AniBlock.Animations[j].TimeStamps[k]=(pTimeStamps[k]);								
+			}
+			bool * pKeys=(bool *)(pData+pKeyPair[j].Offset);
+			AniBlock.Animations[j].Keys.Resize(pKeyPair[j].Count);
+			for(UINT k=0;k<pKeyPair[j].Count;k++)
+			{
+				AniBlock.Animations[j].Keys[k]=pKeys[k];
+			}
+
+		}		
+	}
+}
+
+inline void LoadFakeAniBlockColor(BYTE * pData,M2_MODEL_FAKE_ANIMATION_BLOCK& AniBlockInfo,FAKE_ANIMATION_FRAME<CD3DVector3>& AniBlock)
+{
+	short * pTimeStamps=(short *)(pData+AniBlockInfo.TimestampsOffset);
+	AniBlock.TimeStamps.Resize(AniBlockInfo.TimestampsCount);
+	for(UINT k=0;k<AniBlockInfo.TimestampsCount;k++)
+	{				
+		AniBlock.TimeStamps[k]=pTimeStamps[k]/32767.0f;
+	}
+	CD3DVector3 * pKeys=(CD3DVector3 *)(pData+AniBlockInfo.KeysOffset);
+	AniBlock.Keys.Resize(AniBlockInfo.KeysCount);
+	for(UINT k=0;k<AniBlockInfo.KeysCount;k++)
+	{
+		AniBlock.Keys[k]=pKeys[k];
+	}
+
+}
+
+inline void LoadFakeAniBlockAlpha(BYTE * pData,M2_MODEL_FAKE_ANIMATION_BLOCK& AniBlockInfo,FAKE_ANIMATION_FRAME<FLOAT>& AniBlock)
+{
+	short * pTimeStamps=(short *)(pData+AniBlockInfo.TimestampsOffset);	
+	AniBlock.TimeStamps.Resize(AniBlockInfo.TimestampsCount);
+	for(UINT k=0;k<AniBlockInfo.TimestampsCount;k++)
+	{				
+		AniBlock.TimeStamps[k]=pTimeStamps[k]/32767.0f;
+	}
+	WORD * pKeys=(WORD *)(pData+AniBlockInfo.KeysOffset);
+	AniBlock.Keys.Resize(AniBlockInfo.KeysCount);
+	for(UINT k=0;k<AniBlockInfo.KeysCount;k++)
+	{
+		FLOAT Alpha=(FLOAT)pKeys[k]/0x7FFF;
+		AniBlock.Keys[k]=Alpha;
+	}
+}
+inline void LoadFakeAniBlockSize(BYTE * pData,M2_MODEL_FAKE_ANIMATION_BLOCK& AniBlockInfo,FAKE_ANIMATION_FRAME<CD3DVector2>& AniBlock)
+{
+	short * pTimeStamps=(short *)(pData+AniBlockInfo.TimestampsOffset);
+	AniBlock.TimeStamps.Resize(AniBlockInfo.TimestampsCount);
+	for(UINT k=0;k<AniBlockInfo.TimestampsCount;k++)
+	{				
+		AniBlock.TimeStamps[k]=pTimeStamps[k]/32767.0f;
+	}
+	CD3DVector2 * pKeys=(CD3DVector2 *)(pData+AniBlockInfo.KeysOffset);
+	AniBlock.Keys.Resize(AniBlockInfo.KeysCount);
+	for(UINT k=0;k<AniBlockInfo.KeysCount;k++)
+	{
+		AniBlock.Keys[k]=pKeys[k];
+	}
+}
+inline void LoadFakeAniBlockShort(BYTE * pData,M2_MODEL_FAKE_ANIMATION_BLOCK& AniBlockInfo,FAKE_ANIMATION_FRAME<short>& AniBlock)
+{
+	short * pTimeStamps=(short *)(pData+AniBlockInfo.TimestampsOffset);
+	AniBlock.TimeStamps.Resize(AniBlockInfo.TimestampsCount);
+	for(UINT k=0;k<AniBlockInfo.TimestampsCount;k++)
+	{				
+		AniBlock.TimeStamps[k]=pTimeStamps[k]/32767.0f;
+	}
+	short * pKeys=(short *)(pData+AniBlockInfo.KeysOffset);
+	AniBlock.Keys.Resize(AniBlockInfo.KeysCount);
+	for(UINT k=0;k<AniBlockInfo.KeysCount;k++)
+	{
+		AniBlock.Keys[k]=pKeys[k];
+	}
 }
 
 }

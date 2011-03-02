@@ -37,18 +37,21 @@ public:
 	virtual bool Restore();
 
 	bool CreateFromBBox(const CD3DBoundingBox& BBox,D3DCOLOR Color=0xFFFF0000);
+	bool CreateFromLight(CD3DLight * pLight,D3DCOLOR Color=0xFFFF0000);
+
+	void SetColor(D3DCOLOR Color);
 
 	virtual int GetSubMeshCount();
 	virtual CD3DSubMesh * GetSubMesh(UINT index);
 	virtual CD3DBoundingBox * GetBoundingBox();
+	virtual bool CanDoSubMeshViewCull();
 
 	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
 	virtual bool GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& y);
 
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 protected:
-	void BuildRect(BF_VERTEX * pBuff,CD3DVector3 p1,CD3DVector3 p2,CD3DVector3 p3,CD3DVector3 p4,D3DCOLOR Color);
 	void BuildLine(BF_VERTEX * pBuff,CD3DVector3 p1,CD3DVector3 p2,D3DCOLOR Color);
 };
 

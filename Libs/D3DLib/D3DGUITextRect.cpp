@@ -60,11 +60,12 @@ CD3DGUITextRect::CD3DGUITextRect():
 	m_SubMesh.GetVertexFormat().FVF=D3DFVF_RECTVERTEX;
 	m_SubMesh.GetVertexFormat().VertexSize=sizeof(RECTVERTEX);
 	m_SubMesh.GetVertexFormat().IndexSize=sizeof(WORD);
-	m_SubMesh.SetVertices((BYTE *)m_Vertexs);
-	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	m_SubMesh.SetVertexCount(4);
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
-	m_SubMesh.SetPrimitiveCount(2);		
+	m_SubMesh.SetPrimitiveCount(2);	
+	m_SubMesh.SetVertices((BYTE *)m_Vertexs,sizeof(RECTVERTEX)*4);
+	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
+		
 	
 	m_pTexture=NULL;
 
@@ -80,11 +81,12 @@ CD3DGUITextRect::CD3DGUITextRect(FLOAT_RECT& Rect):
 	m_SubMesh.GetVertexFormat().FVF=D3DFVF_RECTVERTEX;
 	m_SubMesh.GetVertexFormat().VertexSize=sizeof(RECTVERTEX);
 	m_SubMesh.GetVertexFormat().IndexSize=sizeof(WORD);
-	m_SubMesh.SetVertices((BYTE *)m_Vertexs);
-	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	m_SubMesh.SetVertexCount(4);
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
 	m_SubMesh.SetPrimitiveCount(2);	
+	m_SubMesh.SetVertices((BYTE *)m_Vertexs,sizeof(RECTVERTEX)*4);
+	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
+	
 
 
 	m_pTexture=NULL;
@@ -99,15 +101,18 @@ CD3DGUITextRect::~CD3DGUITextRect(void)
 	m_pTexture=NULL;	
 }
 
-void CD3DGUITextRect::SetRender(CD3DRender * pRender)
+void CD3DGUITextRect::SetRender(CD3DBaseRender * pRender)
 {
 	m_pRender=pRender;
-	SetDevice(m_pRender->GetDevice());
-	m_pTexture=GetDevice()->GetTextureManager()->CreateTextTexture("TextTexture",NULL,(int)m_Rect.Width(),(int)m_Rect.Height(),1,0xffffffff);
-	if(!m_SubMesh.GetMaterial().SetTexture(0,m_pTexture))
-		m_SubMesh.GetMaterial().AddTexture(m_pTexture,0);
-	SetFXFromMemory("DefaultFXWithTexture",TEXT_RECT_FX,(int)strlen(TEXT_RECT_FX));
-	CreateVertex();
+	if(m_pRender)
+	{
+		SetDevice(m_pRender->GetDevice());
+		m_pTexture=GetDevice()->GetTextureManager()->CreateTextTexture("[TextTexture]",NULL,(int)m_Rect.Width(),(int)m_Rect.Height(),1,0xffffffff);
+		if(!m_SubMesh.GetMaterial().SetTexture(0,m_pTexture))
+			m_SubMesh.GetMaterial().AddTexture(m_pTexture,0);
+		SetFXFromMemory("DefaultFXWithTexture",TEXT_RECT_FX,(int)strlen(TEXT_RECT_FX));
+		CreateVertex();
+	}
 }
 
 void CD3DGUITextRect::SetPos(FLOAT X,FLOAT Y)
@@ -288,6 +293,7 @@ bool CD3DGUITextRect::TranslateTextW(LPCWSTR pSrcText,int StrLen,LPWSTR pDestTex
 
 bool CD3DGUITextRect::SetFX(LPCTSTR FXFileName)
 {
+	D3DLOCK_FOR_OBJECT_MODIFY
 	CD3DFX * pFX=GetDevice()->GetFXManager()->LoadFX(FXFileName);
 	if(pFX)
 	{		
@@ -299,6 +305,7 @@ bool CD3DGUITextRect::SetFX(LPCTSTR FXFileName)
 
 bool CD3DGUITextRect::SetFXFromMemory(LPCTSTR FXName,LPCTSTR FXContent,int Size)
 {
+	D3DLOCK_FOR_OBJECT_MODIFY
 	CD3DFX * pFX=GetDevice()->GetFXManager()->LoadFXFromMemory(FXName,(void *)FXContent,Size);
 	if(pFX)
 	{
@@ -318,9 +325,9 @@ CEasyString CD3DGUITextRect::GetFX()
 void CD3DGUITextRect::TopTo(IUIBaseRect* pRect)		//pWndRect==NULL,提到最高
 {
 	if(pRect)
-		GetRender()->MoveToTop(this,dynamic_cast<CD3DObject *>(pRect));
+		((CD3DUIRender *)GetRender())->MoveToTop(this,dynamic_cast<CD3DObject *>(pRect));
 	else
-		GetRender()->MoveToTop(this);
+		((CD3DUIRender *)GetRender())->MoveToTop(this);
 }
 
 void  CD3DGUITextRect::Release()
@@ -328,19 +335,25 @@ void  CD3DGUITextRect::Release()
 	CD3DObject::Release();
 }
 
-void CD3DGUITextRect::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
+void CD3DGUITextRect::OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
-	if(pSubMesh&&pMaterial)
-	{	
-		//设置纹理
-		if(pMaterial->GetFX())
-		{			
-			pMaterial->GetFX()->SetTexture("TexLay0",pMaterial->GetTexture(0));
-			//pMaterial->GetFX()->SetTexture("TexLay1",pMaterial->GetTexture(1));
-		}	
-	}	
+
+}
+void CD3DGUITextRect::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
+{
+	//设置纹理
+				
+	pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
+	//pFX->SetTexture("TexLay1",pMaterial->GetTexture(1));
+		
 }
 
+
+
+void CD3DGUITextRect::OnPrepareRenderData()
+{
+	CD3DObject::OnPrepareRenderData();	
+}
 
 void CD3DGUITextRect::Update(FLOAT Time)
 {
@@ -351,6 +364,8 @@ void CD3DGUITextRect::Update(FLOAT Time)
 
 void CD3DGUITextRect::CreateVertex()
 {
+	D3DLOCK_FOR_OBJECT_MODIFY
+
 	FLOAT x1,y1,tx1,ty1;
 	FLOAT x2,y2,tx2,ty2;		
 

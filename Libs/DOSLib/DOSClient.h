@@ -13,10 +13,12 @@
 
 
 class CDOSClient :	
-	public CNetConnection
+	public CNetConnection,
+	public IDistributedObjectOperator
 {
 protected:
-	CEasyBuffer								m_AssembleBuffer;	
+	CEasyBuffer		m_AssembleBuffer;	
+	CEasyBuffer		m_SendBuffer;
 
 	DECLARE_CLASS_INFO(CDOSClient);
 public:
@@ -28,10 +30,27 @@ public:
 	BOOL Start(UINT MaxMsgSize,const CIPAddress& Address,DWORD TimeOut=NO_CONNECTION_TIME_OUT);
 	void Close();
 
-	BOOL SendMessage(WORD CmdID,LPVOID pData=NULL,UINT DataSize=0);
+	virtual UINT GetRouterID();
+	virtual OBJECT_ID GetObjectID();
+	virtual BOOL SendMessage(OBJECT_ID ReceiverID,MSG_ID_TYPE MsgID,WORD MsgFlag=0,LPCVOID pData=0,UINT DataSize=0);
+	virtual BOOL SendMessageMulti(OBJECT_ID * pReceiverIDList,UINT ReceiverCount,bool IsSorted,MSG_ID_TYPE MsgID,WORD MsgFlag=0,LPCVOID pData=0,UINT DataSize=0);
+
+	virtual CDOSMessagePacket * NewMessagePacket(UINT DataSize,UINT ReceiverCount);
+	virtual BOOL ReleaseMessagePacket(CDOSMessagePacket * pPacket);
+	virtual BOOL SendMessagePacket(CDOSMessagePacket * pPacket);
+
+	virtual BOOL RegisterMsgMap(OBJECT_ID ProxyObjectID,MSG_ID_TYPE * pMsgIDList,int CmdCount);
+	virtual BOOL UnregisterMsgMap(OBJECT_ID ProxyObjectID,MSG_ID_TYPE * pMsgIDList,int CmdCount);
+	virtual BOOL RegisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_TYPE * pMsgIDList,int CmdCount);
+	virtual BOOL UnregisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_TYPE * pMsgIDList,int CmdCount);
+
+	virtual void PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list vl);
+
+	virtual BOOL RegisterObject(DOS_OBJECT_REGISTER_INFO_EX& ObjectRegisterInfo);
+	virtual void Release();
 
 protected:
 	virtual void OnRecvData(const CEasyBuffer& DataBuffer);
-	virtual void OnMsg(CDOSSimpleMessage * pMessage);
+	virtual BOOL OnDOSMessage(CDOSSimpleMessage * pMessage);
 
 };

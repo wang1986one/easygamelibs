@@ -24,6 +24,9 @@ protected:
 	UINT												m_GroupIndex;
 	CEasyArray<CD3DBoard *>								m_PortalBoards;
 
+	//bool												m_IsSelected;
+	//CD3DLine *											m_pHeightTestLine;
+
 	DECLARE_CLASS_INFO(CD3DWOWWMOGroupModel)
 public:
 	CD3DWOWWMOGroupModel(void);
@@ -38,17 +41,23 @@ public:
 	UINT GetGroupIndex();
 
 public:
-	virtual void PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 	
 
 	virtual int GetSubMeshCount();
 	virtual CD3DSubMesh * GetSubMesh(UINT index);
-	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(int index);
+	virtual CD3DSubMeshMaterial * GetSubMeshMaterial(UINT index);
 
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual CD3DBoundingSphere * GetBoundingSphere();
+
+	bool GetHeightByXZ(const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight);
 protected:
 	void CreatePortalBoard();
+	void CreateBSPBoard(CD3DWOWWMOModelResource::BSP_NODE * pNode);
+	void SetBSPColor(CD3DWOWWMOModelResource::BSP_NODE * pTree,D3DCOLOR Color);
+	CD3DWOWWMOModelResource::BSP_NODE * FindBSPNode(CD3DWOWWMOModelResource::BSP_NODE * pRoot,CD3DVector3 Pos);
 };
 
 inline CD3DWOWWMOModelResource * CD3DWOWWMOGroupModel::GetModelResource()

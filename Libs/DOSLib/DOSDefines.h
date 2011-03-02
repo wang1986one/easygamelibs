@@ -14,6 +14,9 @@
 #include <map>
 
 #define LOG_DOS_CHANNEL				1301
+#define THREAD_CPU_COUNT_TIME		(5000)
+
+typedef WORD	ROUTE_ID_TYPE;
 
 struct OBJECT_ID
 {
@@ -77,6 +80,7 @@ struct DOS_CONFIG
 	UINT										RouterID;	
 	CEasyString									RouterLinkConfigFileName;	
 	UINT										MaxRouterSendMsgQueue;
+	UINT										RouterMsgProcessLimit;
 	
 
 	CIPAddress									ObjectProxyServiceListenAddress;
@@ -86,17 +90,62 @@ struct DOS_CONFIG
 	UINT										MaxProxyGlobalMsgMap;
 	UINT										MaxProxyMsgMap;
 	UINT										MaxProxyMsgSize;
+	UINT										ProxySendBufferSize;
+	UINT										ProxySendDelay;
+	UINT										ProxySendQueryLimit;
 
 	UINT										MemoryPoolBlockSize;
 	UINT										MemoryPoolLeveSize;
 	UINT										MemoryPoolLevelCount;
 
-	//UINT										MaxObjectCount;
 	UINT										ObjectGroupCount;
 	UINT										MaxGroupObjectCount;
 	UINT										MaxObjectMsgQueue;
+
+	DOS_CONFIG()
+	{
+		RouterID=0;	
+		MaxRouterSendMsgQueue=0;
+		RouterMsgProcessLimit=0;
+		MaxProxyConnection=0;	
+		MaxProxyMsgQueue=0;
+		MaxProxyConnectionMsgQueue=0;
+		MaxProxyGlobalMsgMap=0;
+		MaxProxyMsgMap=0;
+		MaxProxyMsgSize=0;
+		ProxySendBufferSize=0;
+		ProxySendDelay=0;
+		ProxySendQueryLimit=0;
+		MemoryPoolBlockSize=0;
+		MemoryPoolLeveSize=0;
+		MemoryPoolLevelCount=0;
+		ObjectGroupCount=0;
+		MaxGroupObjectCount=0;
+		MaxObjectMsgQueue=0;		
+	}
 };
 
+class CDOSBaseObject;
+
+struct DOS_OBJECT_REGISTER_INFO
+{
+	OBJECT_ID			ObjectID;
+	int					Weight;
+	UINT				MsgQueueSize;
+	UINT				MsgProcessLimit;
+	CDOSBaseObject *	pObject;
+	UINT				Param;
+
+	DOS_OBJECT_REGISTER_INFO()
+	{
+		ObjectID=0;
+		Weight=1;
+		MsgQueueSize=0;
+		MsgProcessLimit=0;
+		pObject=NULL;
+		Param=0;
+	}
+};
 
 inline BOOL PrintDOSLog(DWORD Color,LPCTSTR Format,...)
 {

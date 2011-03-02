@@ -54,6 +54,7 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
+				EnablePREfast="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -91,6 +92,7 @@
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -109,10 +111,14 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				InlineFunctionExpansion="1"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				ExceptionHandling="2"
-				BasicRuntimeChecks="3"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="0"
 				FloatingPointExceptions="true"
 				UsePrecompiledHeader="2"
@@ -834,15 +840,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ESFactionList.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ESFunctionLib.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\ESFunctionLib.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ESFunctionList.h"
 				>
 			</File>
 			<File
@@ -859,22 +865,22 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="USO文件"
+			Name="USO资源管理"
 			>
-			<File
-				RelativePath=".\USOFile.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\USOFile.h"
-				>
-			</File>
 			<File
 				RelativePath=".\USOObjectCreateFilter.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\USOObjectCreateFilter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\USOResourceManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\USOResourceManager.h"
 				>
 			</File>
 		</Filter>
@@ -947,6 +953,14 @@
 			</File>
 			<File
 				RelativePath=".\PerformanceStatistician.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ThreadPerformanceCounter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ThreadPerformanceCounter.h"
 				>
 			</File>
 		</Filter>
@@ -1401,11 +1415,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\hppa.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\hpc\hppa.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\hpc\hppa.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\hppa.h"
 					>
 				</File>
 				<File
@@ -1445,11 +1459,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\ibmc\powerpc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\powerpc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\powerpc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\ibmc\powerpc.h"
 					>
 				</File>
 				<File
@@ -1473,11 +1487,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\sparc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\sunc\sparc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\sunc\sparc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\sparc.h"
 					>
 				</File>
 				<File
@@ -1493,11 +1507,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\x86.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\msftc\x86.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\msftc\x86.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\x86.h"
 					>
 				</File>
 				<File
@@ -1515,6 +1529,42 @@
 			</File>
 			<File
 				RelativePath=".\CSVReader.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="LZO"
+			>
+			<File
+				RelativePath=".\LZO\lzoconf.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LZO\lzodefs.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LZO\minilzo.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\LZO\minilzo.h"
 				>
 			</File>
 		</Filter>

@@ -153,6 +153,12 @@ CDBValue::CDBValue(const DB_TIMESTAMP& Value)
 	m_DataSize=0;
 	*this=Value;
 }
+CDBValue::CDBValue(const CEasyTime& Value)
+{
+	m_pData=NULL;
+	m_DataSize=0;
+	*this=Value;
+}
 CDBValue::CDBValue(const DB_GUID& Value)
 {
 	m_pData=NULL;
@@ -878,6 +884,36 @@ CDBValue::operator DB_TIMESTAMP()
 	}
 	return Default;
 }
+CDBValue::operator CEasyTime()
+{
+	CEasyTime Default;
+	ZeroMemory(&Default,sizeof(Default));
+	if(m_pData==NULL)
+		return Default;
+	switch(m_ValueType)
+	{
+	case DB_TYPE_DATE:
+		Default.Year()=((DB_DATE *)m_pData)->year;
+		Default.Month()=((DB_DATE *)m_pData)->month;
+		Default.Day()=((DB_DATE *)m_pData)->day;
+		break;
+	case DB_TYPE_TIME:
+		Default.Hour()=((DB_TIME *)m_pData)->hour;
+		Default.Minute()=((DB_TIME *)m_pData)->minute;
+		Default.Second()=((DB_TIME *)m_pData)->second;
+		break;
+	case DB_TYPE_TIMESTAMP:
+		Default.Year()=((DB_TIMESTAMP *)m_pData)->year;
+		Default.Month()=((DB_TIMESTAMP *)m_pData)->month;
+		Default.Day()=((DB_TIMESTAMP *)m_pData)->day;
+		Default.Hour()=((DB_TIMESTAMP *)m_pData)->hour;
+		Default.Minute()=((DB_TIMESTAMP *)m_pData)->minute;
+		Default.Second()=((DB_TIMESTAMP *)m_pData)->second;
+		Default.Milliseconds()=((DB_TIMESTAMP *)m_pData)->fraction;
+		break;
+	}
+	return Default;
+}
 CDBValue::operator DB_GUID()
 {
 	DB_GUID Default;
@@ -1023,7 +1059,19 @@ void CDBValue::operator=(const DB_TIMESTAMP& Value)
 	Destory();	
 	SetValue(DB_TYPE_TIMESTAMP,&Value,sizeof(DB_TIMESTAMP),0);
 }
-
+void CDBValue::operator=(const CEasyTime& Value)
+{
+	Destory();	
+	DB_TIMESTAMP DBValue;
+	DBValue.year=((CEasyTime)Value).Year();
+	DBValue.month=((CEasyTime)Value).Month();
+	DBValue.day=((CEasyTime)Value).Day();
+	DBValue.hour=((CEasyTime)Value).Hour();
+	DBValue.minute=((CEasyTime)Value).Minute();
+	DBValue.second=((CEasyTime)Value).Second();
+	DBValue.fraction=((CEasyTime)Value).Milliseconds();
+	SetValue(DB_TYPE_TIMESTAMP,&DBValue,sizeof(DB_TIMESTAMP),0);
+}
 void CDBValue::operator=(const DB_GUID& Value)
 {
 	Destory();	

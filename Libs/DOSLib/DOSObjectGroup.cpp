@@ -18,7 +18,7 @@ CDOSObjectGroup::CDOSObjectGroup(void)
 	FUNCTION_BEGIN;
 	m_pManager=NULL;
 	m_Index=0;
-	m_Weight=0;
+	m_Weight=0;	
 	FUNCTION_END;
 }
 
@@ -63,11 +63,11 @@ bool CDOSObjectGroup::Initialize(CDOSObjectManager * pManager,UINT Index)
 void CDOSObjectGroup::Destory()
 {
 	FUNCTION_BEGIN;
-	DOS_OBJECT_INFO ObjectInfo;
-	while(m_ObjectRegisterQueue.PopFront(ObjectInfo))
+	DOS_OBJECT_REGISTER_INFO ObjectRegisterInfo;
+	while(m_ObjectRegisterQueue.PopFront(ObjectRegisterInfo))
 	{
-		ObjectInfo.pObject->Destory();
-		SAFE_RELEASE(ObjectInfo.pObject);
+		ObjectRegisterInfo.pObject->Destory();
+		SAFE_RELEASE(ObjectRegisterInfo.pObject);
 	}
 	m_ObjectUnregisterQueue.Clear();
 	void * Pos=m_ObjectPool.GetFirstObjectPos();
@@ -85,18 +85,18 @@ void CDOSObjectGroup::Destory()
 }
 
 
-BOOL CDOSObjectGroup::RegisterObject(DOS_OBJECT_INFO& ObjectInfo)
+BOOL CDOSObjectGroup::RegisterObject(DOS_OBJECT_REGISTER_INFO& ObjectRegisterInfo)
 {
 	FUNCTION_BEGIN;
-	ObjectInfo.pObject->AddUseRef();
-	if(m_ObjectRegisterQueue.PushBack(ObjectInfo))
+	ObjectRegisterInfo.pObject->AddUseRef();
+	if(m_ObjectRegisterQueue.PushBack(ObjectRegisterInfo))
 	{
-		m_Weight+=ObjectInfo.Weight;		
+		m_Weight+=ObjectRegisterInfo.Weight;		
 		return TRUE;
 	}
 	else
 	{
-		SAFE_RELEASE(ObjectInfo.pObject);
+		SAFE_RELEASE(ObjectRegisterInfo.pObject);
 		return FALSE;
 	}
 	FUNCTION_END;
@@ -114,6 +114,10 @@ BOOL CDOSObjectGroup::UnregisterObject(OBJECT_ID ObjectID)
 BOOL CDOSObjectGroup::OnStart()
 {
 	FUNCTION_BEGIN;
+	if(!CEasyThread::OnStart())
+		return FALSE;
+
+	m_ThreadPerformanceCounter.Init(GetThreadHandle(),THREAD_CPU_COUNT_TIME);
 	
 	return TRUE;
 	FUNCTION_END;
@@ -124,6 +128,9 @@ BOOL CDOSObjectGroup::OnRun()
 {
 	FUNCTION_BEGIN;
 	
+	if(!CEasyThread::OnRun())
+		return FALSE;
+
 	int ProcessCount=0;
 	
 
@@ -140,6 +147,8 @@ BOOL CDOSObjectGroup::OnRun()
 	}
 
 	ProcessCount+=ProcessObjectUnregister();
+
+	m_ThreadPerformanceCounter.DoPerformanceCount();
 	
 	
 	if(ProcessCount==0)
@@ -194,28 +203,31 @@ int CDOSObjectGroup::ProcessObjectRegister(int ProcessLimit)
 	CAutoLock Lock(m_EasyCriticalSection);
 
 	int ProcessCount=0;
-	DOS_OBJECT_INFO ObjectInfo;
-	while(m_ObjectRegisterQueue.PopFront(ObjectInfo))
+	DOS_OBJECT_REGISTER_INFO ObjectRegisterInfo;
+	while(m_ObjectRegisterQueue.PopFront(ObjectRegisterInfo))
 	{
 		UINT ID;
 		DOS_OBJECT_INFO * pObjectInfo=NULL;
 		ID=m_ObjectPool.NewObject(&pObjectInfo);
 		if(pObjectInfo)
-		{
-			*pObjectInfo=ObjectInfo;
+		{			
+			pObjectInfo->ObjectID=ObjectRegisterInfo.ObjectID;
 			pObjectInfo->ObjectID.GroupIndex=m_Index;
 			pObjectInfo->ObjectID.ObjectIndex=ID;
+			pObjectInfo->Weight=ObjectRegisterInfo.Weight;
+			pObjectInfo->Param=ObjectRegisterInfo.Param;
+			pObjectInfo->pObject=ObjectRegisterInfo.pObject;
 			pObjectInfo->pObject->SetObjectID(pObjectInfo->ObjectID);
-			if(!pObjectInfo->pObject->Initialize())
+			if(!pObjectInfo->pObject->Init(ObjectRegisterInfo))
 			{
 				UnregisterObject(pObjectInfo->ObjectID);
 			}
 		}
 		else
 		{
-			m_Weight-=ObjectInfo.Weight;
-			ObjectInfo.pObject->Destory();
-			SAFE_RELEASE(ObjectInfo.pObject);
+			m_Weight-=ObjectRegisterInfo.Weight;
+			ObjectRegisterInfo.pObject->Destory();
+			SAFE_RELEASE(ObjectRegisterInfo.pObject);
 		}		
 		ProcessLimit--;
 		ProcessCount++;
@@ -245,7 +257,7 @@ int CDOSObjectGroup::ProcessObjectUnregister(int ProcessLimit)
 		}
 		else
 		{
-			PrintDOSLog(0,"对象[%llX]无法找到",UnregisterObjectID.ID);
+			PrintDOSLog(0,"注销对象时，对象[%llX]无法找到",UnregisterObjectID.ID);
 		}
 		ProcessLimit--;
 		ProcessCount++;

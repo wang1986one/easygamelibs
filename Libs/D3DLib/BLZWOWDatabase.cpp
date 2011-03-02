@@ -1706,9 +1706,9 @@ bool CBLZWOWDatabase::LoadMiniMapInfo(LPCTSTR FileName)
 			if(Pos>=0)
 			{
 				CEasyString Key=Line.Left(Pos);
-				CEasyString FileName=Line.Right(Line.GetLength()-Pos-1);
+				CEasyString MiniMapFileName=Line.Right(Line.GetLength()-Pos-1);
 				Key.MakeUpper();
-				m_MiniMapFileInfos.Insert(Key,FileName);
+				m_MiniMapFileInfos.Insert(Key,MiniMapFileName);
 			}
 		}
 	}

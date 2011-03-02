@@ -45,6 +45,9 @@ void CNetServer::ShutDown(DWORD Milliseconds)
 
 BOOL CNetServer::OnStart()
 {
+	if(!CBaseServer::OnStart())
+		return FALSE;
+
 	if(m_hIOCP!=NULL)
 		return FALSE;
 
@@ -80,6 +83,9 @@ BOOL CNetServer::OnStart()
 
 BOOL CNetServer::OnRun()
 {
+	if(!CBaseServer::OnRun())
+		return FALSE;
+
 	if(Update()==0)
 	{
 		DoSleep(1);

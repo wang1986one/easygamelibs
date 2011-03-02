@@ -95,24 +95,47 @@ void CD3DSubMeshMaterial::ClearAllTexture()
 	m_TextureList.Clear();
 }
 
-void CD3DSubMeshMaterial::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+bool CD3DSubMeshMaterial::CloneFrom(CNameObject * pObject,UINT Param)
+{
+	if(!pObject->IsKindOf(GET_CLASS_INFO(CD3DSubMeshMaterial)))
+		return false;
+	CD3DSubMeshMaterial * pSrcObject=(CD3DSubMeshMaterial *)pObject;
+	m_Material=pSrcObject->m_Material;
+	m_GlobalColor=pSrcObject->m_GlobalColor;
+	m_TextureList=pSrcObject->m_TextureList;
+	m_pFX=pSrcObject->m_pFX;
+
+	for(UINT i=0;i<m_TextureList.GetCount();i++)
+	{
+		if(m_TextureList[i].pTexture)
+			m_TextureList[i].pTexture->AddUseRef();
+	}
+
+	if(m_pFX)
+		m_pFX->AddUseRef();
+
+	return true;
+	
+}
+
+void CD3DSubMeshMaterial::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
 	if(m_pFX)
-		pObjectSet->Add(m_pFX);
+		pResourceManager->AddResource(m_pFX);
 	for(size_t i=0;i<m_TextureList.GetCount();i++)
 	{
 		if(m_TextureList[i].pTexture)
 		{
-			m_TextureList[i].pTexture->PickResource(pObjectSet,Param);
-			pObjectSet->Add(m_TextureList[i].pTexture);
+			m_TextureList[i].pTexture->PickResource(pResourceManager,Param);
+			pResourceManager->AddResource(m_TextureList[i].pTexture);
 		}
 	}
 }
 
 
-bool CD3DSubMeshMaterial::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DSubMeshMaterial::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::ToSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;	
 
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DSMM_MATERIAL,(char *)&m_Material,sizeof(m_Material)));
@@ -121,22 +144,21 @@ bool CD3DSubMeshMaterial::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile
 		UINT BufferSize;
 		void * pBuffer=Packet.PrepareMember(BufferSize);
 		CSmartStruct SubPacket(pBuffer,BufferSize,true);
-		int ResourceID=pUSOFile->ResourceObjectToIndex(m_TextureList[i].pTexture);
-		CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_TEX_TEXTURE,ResourceID));
+		if(m_TextureList[i].pTexture)
+			CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_TEX_TEXTURE,m_TextureList[i].pTexture->GetName()));
 		CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_TEX_PROPERTY,m_TextureList[i].Property));
 		if(!Packet.FinishMember(SST_D3DSMM_TEXTURE,SubPacket.GetDataLen()))
 			return false;
 	}
 	if(m_pFX)
 	{
-		int ResourceID=pUSOFile->ResourceObjectToIndex(m_pFX);
-		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DSMM_FX,ResourceID));		
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DSMM_FX,m_pFX->GetName()));		
 	}
 	return true;
 }
-bool CD3DSubMeshMaterial::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DSubMeshMaterial::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	void * Pos=Packet.GetFirstMemberPosition();
@@ -152,9 +174,9 @@ bool CD3DSubMeshMaterial::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFi
 		case SST_D3DSMM_TEXTURE:
 			{
 				CSmartStruct SubPacket=Value;
-				int ResourceID=SubPacket.GetMember(SST_TEX_TEXTURE);				
+				LPCTSTR szResourceName=SubPacket.GetMember(SST_TEX_TEXTURE);				
 				UINT64 TextureProperty=SubPacket.GetMember(SST_TEX_PROPERTY);
-				CD3DTexture * pTexture=(CD3DTexture *)pUSOFile->ResourceIndexToObject(ResourceID,GET_CLASS_INFO(CD3DTexture));
+				CD3DTexture * pTexture=(CD3DTexture *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DTexture));
 				if(pTexture)
 				{
 					pTexture->AddUseRef();					
@@ -164,8 +186,8 @@ bool CD3DSubMeshMaterial::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFi
 			break;
 		case SST_D3DSMM_FX:			
 			{
-				int ResourceID=Value;
-				m_pFX=(CD3DFX *)pUSOFile->ResourceIndexToObject(ResourceID,GET_CLASS_INFO(CD3DFX));
+				LPCTSTR szResourceName=Value;
+				m_pFX=(CD3DFX *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DFX));
 				if(m_pFX)
 				{
 					m_pFX->AddUseRef();
@@ -183,13 +205,14 @@ UINT CD3DSubMeshMaterial::GetSmartStructSize(UINT Param)
 	Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_Material));
 	for(UINT i=0;i<m_TextureList.GetCount();i++)
 	{
-		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(int));
-		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_TextureList[i].Property));
+		if(m_TextureList[i].pTexture)
+			Size+=SMART_STRUCT_FIX_MEMBER_SIZE(m_TextureList[i].pTexture->GetNameLength());
+		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_TextureList[i].Property));
 		Size+=SMART_STRUCT_STRUCT_MEMBER_SIZE(0);
 	}
 	if(m_pFX)
 	{
-		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(int));
+		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(m_pFX->GetNameLength());
 	}	
 	return Size;
 }

@@ -24,7 +24,7 @@ public:
 	virtual int U2X(FLOAT U)=0;
 	virtual int V2X(FLOAT V)=0;
 
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0)=0;
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0)=0;
 
 	virtual void Release()=0;
 

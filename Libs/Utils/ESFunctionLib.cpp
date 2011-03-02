@@ -20,29 +20,29 @@ CESFunctionLib::~CESFunctionLib(void)
 {
 }
 
-void CESFunctionLib::AddFunction(CESFactionList * pFunctionList)
+void CESFunctionLib::AddFunction(CESFunctionList * pFunctionList)
 {
-	pFunctionList->AddFaction("Sin",1,this,(LPSCRIPT_FACTION)&CESFunctionLib::SinFN);
-	pFunctionList->AddFaction("Cos",1,this,(LPSCRIPT_FACTION)&CESFunctionLib::CosFN);
-	pFunctionList->AddFaction("Round",2,this,(LPSCRIPT_FACTION)&CESFunctionLib::RoundFN);
-	pFunctionList->AddFaction("StrCmp",2,this,(LPSCRIPT_FACTION)&CESFunctionLib::StrCmpFN);
-	pFunctionList->AddFaction("NumToStr",1,this,(LPSCRIPT_FACTION)&CESFunctionLib::NumToStrFN);
-	pFunctionList->AddFaction("Random",1,this,(LPSCRIPT_FACTION)&CESFunctionLib::RandomFN);
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,SinFN,"Sin",1,pFunctionList,this);
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,CosFN,"Cos",1,pFunctionList,this);
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,RoundFN,"Round",1,pFunctionList,this);
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,StrCmpFN,"StrCmp",1,pFunctionList,this);
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,NumToStrFN,"NumToStr",1,pFunctionList,this);
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,RandomFN,"Random",1,pFunctionList,this);	
 }
 
-int CESFunctionLib::SinFN(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
+int CESFunctionLib::SinFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	*pResult=sin((double)pParams[0]);
 	return 0;	
 }
 
-int CESFunctionLib::CosFN(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
+int CESFunctionLib::CosFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	*pResult=cos((double)pParams[0]);
 	return 0;
 }
 
-int CESFunctionLib::RoundFN(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
+int CESFunctionLib::RoundFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	pResult->ValueType=VALUE_TYPE_DOUBLE;
 	pResult->Level=0;
@@ -53,13 +53,13 @@ int CESFunctionLib::RoundFN(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN
 	return 0;
 }
 
-int CESFunctionLib::StrCmpFN(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
+int CESFunctionLib::StrCmpFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	*pResult=strcmp(pParams[0].StrValue,pParams[1].StrValue);
 	return 0;
 }
 
-int CESFunctionLib::NumToStrFN(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
+int CESFunctionLib::NumToStrFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	pResult->ValueType=VALUE_TYPE_STRING;
 	switch(pParams[0].ValueType)
@@ -81,7 +81,7 @@ int CESFunctionLib::NumToStrFN(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BO
 	return 0;
 }
 
-int CESFunctionLib::RandomFN(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
+int CESFunctionLib::RandomFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
 	*pResult=rand()%(int)pParams[0];
 	return 0;

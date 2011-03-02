@@ -63,7 +63,7 @@ public:
 		m_DataLen=0;
 		m_IsSelfData=true;
 		m_AllowChange=true;
-		Attach(Struct.GetData(),Struct.GetDataLen(),false);
+		Attach(Struct.GetData(),Struct.GetBufferLen(),false);
 	}
 	CSmartStructBase(const CSmartValue& Value)
 	{
@@ -89,7 +89,7 @@ public:
 
 	bool Attach(LPVOID pData,LENGTH_TYPE DataLen,bool IsEmpty);	
 
-	bool CloneFrom(CSmartStructBase& Value)
+	bool CloneFrom(const CSmartStructBase& Value)
 	{
 		if(Value.GetData()==NULL)
 			return false;
@@ -125,7 +125,7 @@ public:
 	{
 		if(m_pData)
 			*((LENGTH_TYPE *)(m_pData+1))=0;
-	}
+	}	
 
 	operator CSmartValue()
 	{
@@ -138,7 +138,7 @@ public:
 		m_DataLen=0;
 		m_IsSelfData=true;
 		m_AllowChange=true;
-		Attach(Struct.GetData(),Struct.GetDataLen(),false);
+		Attach(Struct.GetData(),Struct.GetBufferLen(),false);
 	}
 
 
@@ -429,7 +429,7 @@ public:
 		*((LENGTH_TYPE *)(m_pData+1))+=NeedSize;
 		return true;
 	}
-	int GetMemberCount()
+	int GetMemberCount() const
 	{
 		if(m_pData==NULL)
 			return 0;
@@ -448,7 +448,7 @@ public:
 		}
 		return MemberCount;
 	}
-	CSmartValue GetMemberByIndex(LENGTH_TYPE Index)
+	CSmartValue GetMemberByIndex(LENGTH_TYPE Index) const
 	{
 		CSmartValue Value;
 
@@ -473,7 +473,7 @@ public:
 		return Value;
 
 	}
-	CSmartValue GetMember(ID_TYPE ID)
+	CSmartValue GetMember(ID_TYPE ID) const
 	{
 		CSmartValue Value;
 
@@ -497,7 +497,7 @@ public:
 		Value.Destory();
 		return Value;
 	}
-	bool IsMemberExist(ID_TYPE ID)
+	bool IsMemberExist(ID_TYPE ID) const
 	{
 		if(IDToIndex(ID)==INVALID_MEMBER_ID)
 		{
@@ -505,7 +505,7 @@ public:
 		}
 		return true;
 	}
-	LENGTH_TYPE IDToIndex(ID_TYPE ID)
+	LENGTH_TYPE IDToIndex(ID_TYPE ID) const
 	{
 		CSmartValue Value;
 
@@ -531,7 +531,7 @@ public:
 		}
 		return INVALID_MEMBER_ID;
 	}
-	ID_TYPE IndexToID(LENGTH_TYPE Index)
+	ID_TYPE IndexToID(LENGTH_TYPE Index) const
 	{
 		CSmartValue Value;
 
@@ -556,18 +556,22 @@ public:
 		}
 		return 0;
 	}
-	LPVOID GetFirstMemberPosition()
+	LPVOID GetFirstMemberPosition() const
 	{
 		if(m_pData==NULL)
 			return NULL;
 
 
 		char * pHead=m_pData;
+		char * pTail=m_pData+GetDataLen();
 		pHead+=sizeof(BYTE)+sizeof(LENGTH_TYPE);
 
-		return pHead;
+		if(pHead<pTail)
+			return pHead;
+		else
+			return NULL;
 	}
-	CSmartValue GetNextMember(void *& Pos,ID_TYPE& MemberID)
+	CSmartValue GetNextMember(void *& Pos,ID_TYPE& MemberID) const
 	{
 		CSmartValue Value;
 
@@ -613,6 +617,11 @@ public:
 		if(pData==NULL||DataSize<HEAD_SIZE)
 			return 0;
 		return *((LENGTH_TYPE *)((BYTE *)pData+1))+HEAD_SIZE;
+	}
+
+	static LENGTH_TYPE GetEmptyStructSize()
+	{
+		return sizeof(BYTE)+sizeof(LENGTH_TYPE);
 	}
 
 	static LENGTH_TYPE GetFixMemberSize(LENGTH_TYPE TypeLen)

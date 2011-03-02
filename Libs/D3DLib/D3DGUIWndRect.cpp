@@ -98,12 +98,12 @@ CD3DGUIWndRect::CD3DGUIWndRect():
 	m_SubMesh.GetVertexFormat().FVF=D3DFVF_RECTVERTEX;
 	m_SubMesh.GetVertexFormat().VertexSize=sizeof(RECTVERTEX);
 	m_SubMesh.GetVertexFormat().IndexSize=sizeof(WORD);
-	m_SubMesh.SetVertices((BYTE *)m_Vertexs);
-	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	m_SubMesh.SetVertexCount(4);
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
 	m_SubMesh.SetPrimitiveCount(2);	
-
+	m_SubMesh.SetVertices((BYTE *)m_Vertexs,sizeof(RECTVERTEX)*4);
+	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
+	
 	m_VertexColor=D3DCOLOR_XRGB(255, 255, 255);
 	Restore();
 	CreateVertex();
@@ -117,11 +117,12 @@ CD3DGUIWndRect::CD3DGUIWndRect(FLOAT_RECT& Rect):
 	m_SubMesh.GetVertexFormat().FVF=D3DFVF_RECTVERTEX;
 	m_SubMesh.GetVertexFormat().VertexSize=sizeof(RECTVERTEX);
 	m_SubMesh.GetVertexFormat().IndexSize=sizeof(WORD);
-	m_SubMesh.SetVertices((BYTE *)m_Vertexs);
-	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	m_SubMesh.SetVertexCount(4);
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
 	m_SubMesh.SetPrimitiveCount(2);	
+	m_SubMesh.SetVertices((BYTE *)m_Vertexs,sizeof(RECTVERTEX)*4);
+	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
+	
 
 
 	m_VertexColor=D3DCOLOR_XRGB(255, 255, 255);
@@ -134,11 +135,14 @@ CD3DGUIWndRect::~CD3DGUIWndRect(void)
 	//m_SubMesh.Destory();
 }
 
-void CD3DGUIWndRect::SetRender(CD3DRender * pRender)
+void CD3DGUIWndRect::SetRender(CD3DBaseRender * pRender)
 {
 	m_pRender=pRender;
-	SetDevice(m_pRender->GetDevice());
-	SetFXFromMemory("DefaultFX",DEFAULT_UI_WIN_RECT_FX_NT,(int)strlen(DEFAULT_UI_WIN_RECT_FX_NT));	
+	if(m_pRender)
+	{
+		SetDevice(m_pRender->GetDevice());
+		SetFXFromMemory("DefaultFX",DEFAULT_UI_WIN_RECT_FX_NT,(int)strlen(DEFAULT_UI_WIN_RECT_FX_NT));	
+	}
 }
 
 void CD3DGUIWndRect::SetPos(FLOAT X,FLOAT Y)
@@ -217,6 +221,7 @@ DWORD CD3DGUIWndRect::GetColor()
 
 void CD3DGUIWndRect::SetTexture(IUITexture * pTexture)
 {	
+	D3DLOCK_FOR_OBJECT_MODIFY
 	CD3DTexture * pTex=dynamic_cast<CD3DTexture *>(pTexture);
 	if(!m_SubMesh.GetMaterial().SetTexture(0,pTex))
 		m_SubMesh.GetMaterial().AddTexture(pTex,0);
@@ -245,6 +250,7 @@ FLOAT_RECT CD3DGUIWndRect::GetUV()
 
 bool CD3DGUIWndRect::SetFX(LPCTSTR FXFileName)
 {
+	D3DLOCK_FOR_OBJECT_MODIFY
 	CD3DFX * pFX=GetDevice()->GetFXManager()->LoadFX(FXFileName);
 	if(pFX)
 	{		
@@ -256,6 +262,7 @@ bool CD3DGUIWndRect::SetFX(LPCTSTR FXFileName)
 
 bool CD3DGUIWndRect::SetFXFromMemory(LPCTSTR FXName,LPCTSTR FXContent,int Size)
 {
+	D3DLOCK_FOR_OBJECT_MODIFY
 	CD3DFX * pFX=GetDevice()->GetFXManager()->LoadFXFromMemory(FXName,(void *)FXContent,Size);
 	if(pFX)
 	{
@@ -275,9 +282,9 @@ CEasyString CD3DGUIWndRect::GetFX()
 void CD3DGUIWndRect::TopTo(IUIBaseRect* pRect)		//pWndRect==NULL,提到最高
 {
 	if(pRect)
-		GetRender()->MoveToTop(this,dynamic_cast<CD3DObject *>(pRect));
+		((CD3DUIRender *)GetRender())->MoveToTop(this,dynamic_cast<CD3DObject *>(pRect));
 	else
-		GetRender()->MoveToTop(this);
+		((CD3DUIRender *)GetRender())->MoveToTop(this);
 }
 
 void  CD3DGUIWndRect::Release()
@@ -285,17 +292,14 @@ void  CD3DGUIWndRect::Release()
 	CD3DObject::Release();
 }
 
-void CD3DGUIWndRect::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
+void CD3DGUIWndRect::OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
-	if(pSubMesh&&pMaterial)
-	{	
-		//设置纹理
-		if(pMaterial->GetFX())
-		{			
-			pMaterial->GetFX()->SetTexture("TexLay0",pMaterial->GetTexture(0));
-			//pMaterial->GetFX()->SetTexture("TexLay1",pMaterial->GetTexture(1));
-		}	
-	}	
+
+}
+void CD3DGUIWndRect::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
+{
+	pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
+	//pFX->SetTexture("TexLay1",pMaterial->GetTexture(1));
 }
 
 
@@ -308,6 +312,8 @@ void CD3DGUIWndRect::Update(FLOAT Time)
 
 void CD3DGUIWndRect::CreateVertex()
 {
+	D3DLOCK_FOR_OBJECT_MODIFY
+
 	FLOAT x1,y1,tx1,ty1;
 	FLOAT x2,y2,tx2,ty2;		
 

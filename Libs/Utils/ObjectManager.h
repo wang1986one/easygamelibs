@@ -16,7 +16,7 @@ template < class T>
 class CObjectManager : public CNameObject
 {
 protected:
-	CNameStorage<T>	m_ObjectStorage;
+	CNameStorage<T,false,true>	m_ObjectStorage;
 public:
 	CObjectManager(int StorageSize)
 	{

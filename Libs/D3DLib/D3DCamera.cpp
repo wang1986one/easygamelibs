@@ -54,115 +54,31 @@ void CD3DCamera::GetPickRay(int ScreenX,int ScreenY,int ScreenWidth,int ScreenHe
 		Point,Dir);
 }
 
+void CD3DCamera::OnPrepareRenderData()
+{
+	m_ViewMatrixR=m_ViewMatrix;
+	m_ProjectMatrixR=m_ProjectMatrix;
+	m_FrustumR=m_Frustum;
+	CD3DObject::OnPrepareRenderData();
+}
+
 void CD3DCamera::Update(FLOAT Time)
 {
 	//更新世界矩阵
-	FUNCTION_BEGIN;
+	
 	m_WorldMatrix=m_LocalMatrix;
 	if(GetParent())
 	{
 		m_WorldMatrix*=GetParent()->GetWorldMatrix().GetRotation();
 		m_WorldMatrix*=CD3DMatrix::FromTranslation(GetParent()->GetWorldMatrix().GetTranslation());
 	}
+	m_ViewMatrix=GetWorldMatrix().GetInverse();
+	m_Frustum=CD3DFrustum::FromMatrixs(m_ViewMatrix,m_ProjectMatrix);
 	
-	FUNCTION_END;
-
 	//更新子对象
 	for(UINT i=0;i<GetChildCount();i++)
 		GetChildByIndex(i)->Update(Time);
 }
 
-
-
-//bool CD3DCamera::ToUSOFile(CUSOFile * pUSOFile,UINT Param)
-//{
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//	STORAGE_STRUCT Data;
-//	
-//	Data.ObjectHead.Size=sizeof(STORAGE_STRUCT);
-//	strncpy_0(Data.ObjectHead.Type,USO_FILE_MAX_TYPE_LEN,GetClassInfo().ClassName,USO_FILE_MAX_TYPE_LEN);		
-//	strncpy_0(Data.ObjectHead.Name,USO_FILE_MAX_OBJECT_NAME,GetName(),USO_FILE_MAX_OBJECT_NAME);
-//	Data.ObjectHead.StorageID=GetStorageID();
-//	Data.LocalMatrix=GetLocalMatrix();
-//	Data.ProjMatrix=GetProjectMat();
-//
-//	pFile->Write(&Data,sizeof(Data));
-//	
-//	return true;
-//}
-//
-//bool CD3DCamera::FromUSOFile(CUSOFile * pUSOFile,UINT Param)
-//{
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//	STORAGE_STRUCT * pData;
-//	BYTE * pBuff;
-//	UINT Size;
-//
-//	pFile->Read(&Size,sizeof(UINT));
-//	pBuff=new BYTE[Size];
-//	pFile->Read(pBuff+sizeof(UINT),Size-sizeof(UINT));
-//	pData=(STORAGE_STRUCT *)pBuff;
-//	pData->ObjectHead.Size=Size;
-//	
-//	
-//	if((!GetClassInfo().IsKindOf(pData->ObjectHead.Type))||
-//		pData->ObjectHead.Size<sizeof(STORAGE_STRUCT))
-//	{	
-//		delete[] pBuff;
-//		return false;
-//	}
-//	pData->ObjectHead.Name[USO_FILE_MAX_OBJECT_NAME-1]=0;
-//	SetName(pData->ObjectHead.Name);
-//	SetStorageID(pData->ObjectHead.StorageID);
-//	SetLocalMatrix(pData->LocalMatrix);
-//	SetProjectMat(pData->ProjMatrix);
-//	delete[] pBuff;
-//	return true;
-//}
-
-//CNameObject::STORAGE_STRUCT * CD3DCamera::USOCreateHead(UINT Param)
-//{
-//	STORAGE_STRUCT * pHead=new STORAGE_STRUCT;
-//	ZeroMemory(pHead,sizeof(STORAGE_STRUCT));
-//	pHead->Size=sizeof(STORAGE_STRUCT);
-//	return pHead;
-//}
-//
-//int CD3DCamera::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{
-//	UINT HeadSize=CD3DObject::USOWriteHead(pHead,pUSOFile,Param);
-//	if(HeadSize<0)
-//		return -1;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//
-//	pLocalHead->ProjMatrix=GetProjectMat();
-//
-//	return sizeof(STORAGE_STRUCT);
-//}
-//
-//int CD3DCamera::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{
-//	int ReadSize=CD3DObject::USOReadHead(pHead,pUSOFile,Param);
-//	if(ReadSize<0)
-//		return -1;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//
-//	SetProjectMat(pLocalHead->ProjMatrix);
-//	return sizeof(STORAGE_STRUCT);
-//}
 
 }

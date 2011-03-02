@@ -26,21 +26,36 @@ CD3DScene::~CD3DScene(void)
 }
 
 
-bool CD3DScene::GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT& WaterHeight)
+bool CD3DScene::GetHeightByXZ(const CD3DVector3 Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight)
 {	
+	bool HaveHeight=false;
+	FLOAT FinalHeight=-1E38,FinalWaterHeight=-1E38;
 	for(UINT i=0;i<GetChildCount();i++)
 	{
 		if(GetChildByIndex(i)->IsKindOf(GET_CLASS_INFO(CD3DWOWADTModel)))
 		{
+			FLOAT ADTHeight,ADTWaterHeight;
 			CD3DWOWADTModel * pModel=(CD3DWOWADTModel *)GetChildByIndex(i);
-			if(pModel->GetHeightByXZ(x,z,Height,WaterHeight))
-			{
-				return true;
+			if(pModel->GetHeightByXZ(Pos,MinHeight,MaxHeight,ADTHeight,ADTWaterHeight))
+			{				
+				HaveHeight=true;
+				if(ADTHeight>FinalHeight)
+					FinalHeight=ADTHeight;
+				if(ADTWaterHeight>FinalWaterHeight)
+					FinalWaterHeight=ADTWaterHeight;
 			}
 		}
 	}	
-	return false;
+
+	if(HaveHeight)
+	{
+		Height=FinalHeight;
+		WaterHeight=FinalWaterHeight;
+	}
+	return HaveHeight;
 }
+
+
 
 bool CD3DScene::AddChild(CTreeObject* pChild,bool CheckExist)
 {

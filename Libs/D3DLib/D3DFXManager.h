@@ -17,8 +17,9 @@ class CD3DFXManager :
 	public CNameObject
 {
 protected:
-	CD3DDevice *					m_pD3DDevice;
-	CNameStorage<CD3DFX *>		m_FXStorage;
+	CD3DDevice *						m_pD3DDevice;
+	LPD3DXEFFECTPOOL					m_pEffectPool;
+	CNameStorage<CD3DFX *,false,true>	m_FXStorage;
 
 	DECLARE_CLASS_INFO_STATIC(CD3DFXManager)
 public:
@@ -47,6 +48,8 @@ public:
 	LPVOID GetLastPos();
 	CD3DFX * GetNext(LPVOID& Pos);
 	CD3DFX * GetPrev(LPVOID& Pos);
+
+	LPD3DXEFFECTPOOL GetEffectPool();
 };
 
 inline CD3DDevice * CD3DFXManager::GetDevice()
@@ -70,6 +73,11 @@ inline CD3DFX * CD3DFXManager::GetFX(LPCTSTR FXName)
 		return *ppFX;
 	else
 		return NULL;
+}
+
+inline LPD3DXEFFECTPOOL CD3DFXManager::GetEffectPool()
+{
+	return m_pEffectPool;
 }
 
 }

@@ -15,7 +15,7 @@ namespace D3DGUI{
 
 IMPLEMENT_CLASS_INFO_STATIC(CD3DGUIObjectCreator,CNameObject);
 
-CD3DGUIObjectCreator::CD3DGUIObjectCreator(CD3DRender *	pRender)
+CD3DGUIObjectCreator::CD3DGUIObjectCreator(CD3DUIRender *	pRender)
 {
 	m_pRender=pRender;
 	m_pDevice=pRender->GetDevice();

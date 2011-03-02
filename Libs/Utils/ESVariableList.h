@@ -17,7 +17,7 @@ public:
 	UINT		ID;
 	CEasyString	Name;
 	VALUE_TYPE	Type;
-	CEasyString	StrValue;
+	CEasyString	StrValue;	
 	union
 	{
 		int			ValueInt;
@@ -53,11 +53,12 @@ public:
 class CESVariableList
 {
 protected:
+	UINT								m_IDStart;
 	CStaticMap<CEasyString,ES_VARIABLE>	m_Map;
 public:
 	CESVariableList()
 	{
-
+		m_IDStart=0;
 	}
 	~CESVariableList()
 	{
@@ -67,7 +68,15 @@ public:
 	{
 		return m_Map.Create(Size);
 	}
-	UINT AddVariable(LPCTSTR VarName,int Value)
+	void SetIDStart(UINT IDStart)
+	{
+		m_IDStart=IDStart;
+	}
+	void Clear()
+	{
+		m_Map.Clear();
+	}	
+	ES_VARIABLE * AddEmptyVariable(LPCTSTR VarName,VALUE_TYPE Type)
 	{
 		CEasyString Key(VarName);
 		Key.MakeUpper();
@@ -75,14 +84,30 @@ public:
 		UINT ID=m_Map.New(Key,&pVar);
 		if(pVar)
 		{
-			pVar->ID=ID;
+			pVar->ID=ID+m_IDStart;
+			pVar->Name=VarName;
+			pVar->Type=Type;
+			pVar->ValueInt64=0;
+			pVar->StrValue.Clear();
+		}
+		return pVar;
+	}
+	ES_VARIABLE * AddVariable(LPCTSTR VarName,int Value)
+	{
+		CEasyString Key(VarName);
+		Key.MakeUpper();
+		ES_VARIABLE * pVar=NULL;
+		UINT ID=m_Map.New(Key,&pVar);
+		if(pVar)
+		{
+			pVar->ID=ID+m_IDStart;
 			pVar->Name=VarName;
 			pVar->Type=VALUE_TYPE_INT;
 			pVar->ValueInt=Value;
 		}
-		return 0;
+		return pVar;
 	}
-	UINT AddVariable(LPCTSTR VarName,INT64 Value)
+	ES_VARIABLE * AddVariable(LPCTSTR VarName,INT64 Value)
 	{
 		CEasyString Key(VarName);
 		Key.MakeUpper();
@@ -90,14 +115,14 @@ public:
 		UINT ID=m_Map.New(Key,&pVar);
 		if(pVar)
 		{
-			pVar->ID=ID;
+			pVar->ID=ID+m_IDStart;
 			pVar->Name=VarName;
 			pVar->Type=VALUE_TYPE_INT64;
 			pVar->ValueInt64=Value;
 		}
-		return 0;
+		return pVar;
 	}
-	UINT AddVariable(LPCTSTR VarName,float Value)
+	ES_VARIABLE * AddVariable(LPCTSTR VarName,float Value)
 	{
 		CEasyString Key(VarName);
 		Key.MakeUpper();
@@ -105,14 +130,14 @@ public:
 		UINT ID=m_Map.New(Key,&pVar);
 		if(pVar)
 		{
-			pVar->ID=ID;
+			pVar->ID=ID+m_IDStart;
 			pVar->Name=VarName;
 			pVar->Type=VALUE_TYPE_FLOAT;
 			pVar->ValueFloat=Value;
 		}
-		return 0;
+		return pVar;
 	}
-	UINT AddVariable(LPCTSTR VarName,double Value)
+	ES_VARIABLE * AddVariable(LPCTSTR VarName,double Value)
 	{
 		CEasyString Key(VarName);
 		Key.MakeUpper();
@@ -120,14 +145,14 @@ public:
 		UINT ID=m_Map.New(Key,&pVar);
 		if(pVar)
 		{
-			pVar->ID=ID;
+			pVar->ID=ID+m_IDStart;
 			pVar->Name=VarName;
 			pVar->Type=VALUE_TYPE_DOUBLE;
 			pVar->ValueDouble=Value;
 		}
-		return 0;
+		return pVar;
 	}
-	UINT AddVariable(LPCTSTR VarName,LPCTSTR Value)
+	ES_VARIABLE * AddVariable(LPCTSTR VarName,LPCTSTR Value)
 	{
 		CEasyString Key(VarName);
 		Key.MakeUpper();
@@ -135,12 +160,12 @@ public:
 		UINT ID=m_Map.New(Key,&pVar);
 		if(pVar)
 		{
-			pVar->ID=ID;
+			pVar->ID=ID+m_IDStart;
 			pVar->Name=VarName;
 			pVar->Type=VALUE_TYPE_STRING;
 			pVar->StrValue=Value;
 		}
-		return 0;
+		return pVar;
 	}
 	bool EditVariable(LPCTSTR VarName, int Value)
 	{
@@ -194,7 +219,7 @@ public:
 	}
 	ES_VARIABLE * FindVariable(UINT VarID)
 	{
-		return m_Map.GetObject(VarID);
+		return m_Map.GetObject(VarID-m_IDStart);
 	}
 	ES_VARIABLE * FindVariable(LPCTSTR VarName)
 	{
@@ -207,5 +232,9 @@ public:
 		CEasyString Key(VarName);
 		Key.MakeUpper();
 		return m_Map.Delete(Key);
+	}
+	BOOL DelVariable(UINT VarID)
+	{
+		return m_Map.DeleteByID(VarID-m_IDStart);
 	}
 };

@@ -70,6 +70,7 @@ CD3DTextTexture::CD3DTextTexture():CD3DTexture()
 	m_pFX=NULL;
 	m_CharSpace=0;
 	m_LineSpace=0;
+	m_WantUpdate=false;
 
 }
 
@@ -90,6 +91,7 @@ CD3DTextTexture::CD3DTextTexture(CD3DTextureManager * pManager):CD3DTexture(pMan
 	m_pFX=NULL;
 	m_CharSpace=0;
 	m_LineSpace=0;
+	m_WantUpdate=false;
 
 }
 
@@ -124,13 +126,13 @@ bool CD3DTextTexture::Create(LOGFONT * pLogFont,int Width,int Height,int MipLeve
 {
 	//HRESULT hr;
 
-
 	if(pLogFont)
 	{	
 		if(!SetFont(pLogFont))
 			return false;		
 	}
 
+	SAFE_RELEASE(m_pTexture);
 	
 	if(!CreateTexture(Width,Height,D3DFMT_DXT5,D3DUSAGE_RENDERTARGET,D3DPOOL_DEFAULT,MipLevels))
 		return false;	
@@ -142,8 +144,9 @@ bool CD3DTextTexture::Create(LOGFONT * pLogFont,int Width,int Height,int MipLeve
 	m_Height=Height;
 	m_Color=FontColor;
 	m_MipLevels=MipLevels;
+	m_WantUpdate=true;
 
-	UpdateTexture();
+	//UpdateTexture();
 	return true;
 }
 
@@ -172,7 +175,8 @@ bool CD3DTextTexture::SetFont(const LOGFONT* pLogFont)
 		m_pD3DFont=pNewFont;
 		if(pLogFont)
 			m_LogFont=*pLogFont;
-		UpdateTexture();
+		m_WantUpdate=true;
+		//UpdateTexture();
 		return true;
 	}
 	return false;
@@ -185,7 +189,8 @@ void CD3DTextTexture::SetColor(D3DCOLOR Color)
 	if(m_Color!=Color)
 	{
 		m_Color=Color;
-		UpdateTexture();
+		m_WantUpdate=true;
+		//UpdateTexture();
 	}
 }
 
@@ -197,7 +202,8 @@ void CD3DTextTexture::SetText(LPCTSTR szText)
 	if(m_Text!=NewText)
 	{
 		m_Text=NewText;
-		UpdateTexture();
+		m_WantUpdate=true;
+		//UpdateTexture();
 	}
 }
 
@@ -207,7 +213,8 @@ void CD3DTextTexture::SetTextW(LPCWSTR szText)
 	if(m_Text!=szText)
 	{
 		m_Text=szText;
-		UpdateTexture();
+		m_WantUpdate=true;
+		//UpdateTexture();
 	}
 }
 
@@ -217,7 +224,8 @@ void CD3DTextTexture::SetAlign(DWORD dwAlign)
 	if(m_Align!=dwAlign)
 	{
 		m_Align=dwAlign;
-		UpdateTexture();
+		m_WantUpdate=true;
+		//UpdateTexture();
 	}
 }
 void CD3DTextTexture::SetShadowMode(DWORD ShadowMode)
@@ -226,7 +234,8 @@ void CD3DTextTexture::SetShadowMode(DWORD ShadowMode)
 	if(m_ShadowMode!=ShadowMode)
 	{
 		m_ShadowMode=ShadowMode;
-		UpdateTexture();
+		m_WantUpdate=true;
+		//UpdateTexture();
 	}
 }
 void CD3DTextTexture::SetShadowColor(D3DCOLOR ShadowColor)
@@ -235,7 +244,8 @@ void CD3DTextTexture::SetShadowColor(D3DCOLOR ShadowColor)
 	if(m_ShadowColor!=ShadowColor)
 	{
 		m_ShadowColor=ShadowColor;
-		UpdateTexture();
+		m_WantUpdate=true;
+		//UpdateTexture();
 	}
 }
 void CD3DTextTexture::SetShadowWidth(int Width)
@@ -244,7 +254,8 @@ void CD3DTextTexture::SetShadowWidth(int Width)
 	if(m_ShadowWidth!=Width)
 	{
 		m_ShadowWidth=Width;
-		UpdateTexture();
+		m_WantUpdate=true;
+		//UpdateTexture();
 	}
 }
 
@@ -254,7 +265,8 @@ void CD3DTextTexture::SetBKColor(D3DCOLOR Color)
 	if(m_BKColor!=Color)
 	{
 		m_BKColor=Color;
-		UpdateTexture();
+		m_WantUpdate=true;
+		//UpdateTexture();
 	}
 }
 
@@ -264,7 +276,8 @@ void CD3DTextTexture::SetCharSpace(int Space)
 	{
 		m_pD3DFont->SetCharSpace(Space);
 		m_CharSpace=m_pD3DFont->GetCharSpace();
-		UpdateTexture();
+		m_WantUpdate=true;
+		//UpdateTexture();
 	}
 }
 
@@ -274,15 +287,16 @@ void CD3DTextTexture::SetLineSpace(int Space)
 	{
 		m_pD3DFont->SetLineSpace(Space);
 		m_LineSpace=m_pD3DFont->GetLineSpace();
-		UpdateTexture();
+		m_WantUpdate=true;
+		//UpdateTexture();
 	}
 }
 
 void CD3DTextTexture::EnableUpdate(bool AllowUpdate)
 {
-	m_AllowUpdate=AllowUpdate;
-	if(m_AllowUpdate)
-		UpdateTexture();
+	m_AllowUpdate=AllowUpdate;	
+	//if(m_AllowUpdate)
+	//	UpdateTexture();
 }
 
 HDC CD3DTextTexture::GetDC()
@@ -292,9 +306,18 @@ HDC CD3DTextTexture::GetDC()
 	return NULL;
 }
 
-bool CD3DTextTexture::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+
+void CD3DTextTexture::OnPrepareRenderData()
 {
-	if(!CNameObject::ToSmartStruct(Packet,pUSOFile,Param))
+	if(m_WantUpdate&&m_AllowUpdate)
+	{
+		UpdateTexture();
+	}
+}
+
+bool CD3DTextTexture::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
+{
+	if(!CNameObject::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;	
 	
 
@@ -316,9 +339,9 @@ bool CD3DTextTexture::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UIN
 
 	return true;
 }
-bool CD3DTextTexture::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DTextTexture::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	void * Pos=Packet.GetFirstMemberPosition();
@@ -372,7 +395,7 @@ bool CD3DTextTexture::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,U
 	if(!Create(&m_LogFont,m_Width,m_Height,m_MipLevels,m_Color))
 		return false;
 
-	UpdateTexture();
+	//UpdateTexture();
 
 	if(m_pManager)
 		m_pManager->AddTexture(this,GetName());
@@ -406,17 +429,28 @@ void CD3DTextTexture::UpdateTexture()
 	//这里将文字渲染到纹理
 	if(!m_AllowUpdate)
 		return;
-
+	
 	
 	if(m_pTexture==NULL)	
 		return;
 
-	if(!m_pManager->GetDevice()->StartRenderToTexture(this))
-		return;
+	CEasyArray<LPDIRECT3DSURFACE9> SavedRenderTarget;
+ 	SavedRenderTarget.Resize(m_pManager->GetDevice()->GetRenderTargetCount());
 
-	m_pManager->GetDevice()->Clear(m_BKColor,D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER);
+	for(UINT i=0;i<m_pManager->GetDevice()->GetRenderTargetCount();i++)
+	{
+		SavedRenderTarget[i]=m_pManager->GetDevice()->GetRenderTarget(i);
+		if(i)
+		{
+			m_pManager->GetDevice()->SetRenderTarget(i,(LPDIRECT3DSURFACE9)NULL);
+		}
+		else
+		{
+			m_pManager->GetDevice()->SetRenderTarget(i,this,0);
+		}
+	}
 
-	
+	m_pManager->GetDevice()->StartRender(m_BKColor);
 
 	if(!m_Text.IsEmpty()&&m_pD3DFont&&m_pFX) 
 	{
@@ -513,168 +547,22 @@ void CD3DTextTexture::UpdateTexture()
 			m_pFX->EndPass(i);
 		}
 		m_pFX->End();
-	}		
+	}	
 
-	m_pManager->GetDevice()->EndRenderToTexture();
+	m_pManager->GetDevice()->EndRender(false);
+
+	for(UINT i=0;i<m_pManager->GetDevice()->GetRenderTargetCount();i++)
+	{		
+		m_pManager->GetDevice()->SetRenderTarget(i,SavedRenderTarget[i]);		
+		SAFE_RELEASE(SavedRenderTarget[i]);
+	}
+
+	m_WantUpdate=false;
 	
     return;
 }
 
 
 
-//bool CD3DTextTexture::ToUSOFile(CUSOFile * pUSOFile,UINT Param)
-//{	
-//
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;	
-//
-//	STORAGE_STRUCT Data;
-//
-//	strncpy_0(Data.ObjectHead.Type,USO_FILE_MAX_TYPE_LEN,GetClassInfo().ClassName,USO_FILE_MAX_TYPE_LEN);	
-//	strncpy_0(Data.ObjectHead.Name,USO_FILE_MAX_OBJECT_NAME,GetName(),USO_FILE_MAX_OBJECT_NAME);
-//	Data.ObjectHead.Size=sizeof(STORAGE_STRUCT);
-//
-//	Data.LogFont=m_LogFont;
-//	Data.Color=m_Color;
-//	Data.BKColor=m_BKColor;
-//	Data.ShadowMode=m_ShadowMode;
-//	Data.ShadowWidth=m_ShadowWidth;
-//	Data.Align=m_Align;
-//	Data.CharSpace=m_CharSpace;
-//	Data.MipLevels=m_MipLevels;
-//	Data.Width=m_Width;
-//	Data.Height=m_Height;
-//	strncpy_0(Data.Text,TEXT_TEXTURE_MAX_TEXT_LEN,(LPCWSTR)m_Text,TEXT_TEXTURE_MAX_TEXT_LEN);
-//	Data.Text[255]=0;
-//
-//
-//	pFile->Write(&Data,sizeof(STORAGE_STRUCT));
-//	
-//
-//
-//	return true;
-//}
-//
-//bool CD3DTextTexture::FromUSOFile(CUSOFile * pUSOFile,UINT Param)
-//{
-//	if(pUSOFile==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pUSOFile->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//	STORAGE_STRUCT * pData;
-//	BYTE * pBuff;
-//	UINT Size;
-//
-//	pFile->Read(&Size,sizeof(UINT));
-//	pBuff=new BYTE[Size];
-//	pFile->Read(pBuff+sizeof(UINT),Size-sizeof(UINT));
-//	pData=(STORAGE_STRUCT *)pBuff;
-//	pData->ObjectHead.Size=Size;
-//	
-//
-//	if((!GetClassInfo().IsKindOf(pData->ObjectHead.Type))||
-//		pData->ObjectHead.Size<sizeof(STORAGE_STRUCT))
-//	{	
-//		delete[] pBuff;
-//		return false;
-//	}
-//	pData->ObjectHead.Name[USO_FILE_MAX_OBJECT_NAME-1]=0;
-//	SetName(pData->ObjectHead.Name);
-//	if(m_pManager)
-//		m_pManager->AddTexture(this,GetName());
-//
-//	m_LogFont=pData->LogFont;
-//	m_Color=pData->Color;
-//	m_BKColor=pData->BKColor;
-//	m_ShadowMode=pData->ShadowMode;
-//	m_ShadowWidth=pData->ShadowWidth;
-//	m_Align=pData->Align;
-//	m_CharSpace=pData->CharSpace;
-//	m_MipLevels=pData->MipLevels;
-//	m_Width=pData->Width;
-//	m_Height=pData->Height;
-//	pData->Text[255]=0;
-//	m_Text=pData->Text;	
-//	
-//	delete[] pBuff;
-//
-//	return Restore();
-//
-//}
-
-//CNameObject::STORAGE_STRUCT * CD3DTextTexture::USOCreateHead(UINT Param)
-//{
-//	STORAGE_STRUCT * pHead=new STORAGE_STRUCT;
-//	ZeroMemory(pHead,sizeof(STORAGE_STRUCT));
-//	pHead->Size=sizeof(STORAGE_STRUCT);
-//	return pHead;
-//}
-//
-//int CD3DTextTexture::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{
-//	int HeadSize=CNameObject::USOWriteHead(pHead,pUSOFile,Param);
-//	if(HeadSize<0)
-//		return -1;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;	
-//
-//	pLocalHead->LogFont=m_LogFont;
-//	pLocalHead->Color=m_Color;
-//	pLocalHead->BKColor=m_BKColor;
-//	pLocalHead->ShadowMode=m_ShadowMode;
-//	pLocalHead->ShadowWidth=m_ShadowWidth;
-//	pLocalHead->Align=m_Align;
-//	pLocalHead->CharSpace=m_CharSpace;
-//	pLocalHead->MipLevels=m_MipLevels;
-//	pLocalHead->Width=m_Width;
-//	pLocalHead->Height=m_Height;
-//	strncpy_0(pLocalHead->Text,TEXT_TEXTURE_MAX_TEXT_LEN,(LPCWSTR)m_Text,TEXT_TEXTURE_MAX_TEXT_LEN);
-//
-//	return sizeof(STORAGE_STRUCT);
-//}
-//
-//int CD3DTextTexture::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
-//{	
-//	int ReadSize=CNameObject::USOReadHead(pHead,pUSOFile,Param);
-//	if(ReadSize<0)
-//		return -1;
-//
-//	if(pHead->Size<sizeof(STORAGE_STRUCT))
-//		return false;
-//
-//	STORAGE_STRUCT * pLocalHead=(STORAGE_STRUCT *)pHead;
-//
-//	m_LogFont=pLocalHead->LogFont;
-//	m_Color=pLocalHead->Color;
-//	m_BKColor=pLocalHead->BKColor;
-//	m_ShadowMode=pLocalHead->ShadowMode;
-//	m_ShadowWidth=pLocalHead->ShadowWidth;
-//	m_Align=pLocalHead->Align;
-//	m_CharSpace=pLocalHead->CharSpace;
-//	m_MipLevels=pLocalHead->MipLevels;
-//	m_Width=pLocalHead->Width;
-//	m_Height=pLocalHead->Height;
-//	pLocalHead->Text[TEXT_TEXTURE_MAX_TEXT_LEN-1]=0;
-//	m_Text=pLocalHead->Text;	
-//
-//	return sizeof(STORAGE_STRUCT);
-//}
-//
-//bool CD3DTextTexture::USOReadFinish(CNameObject::STORAGE_STRUCT * pHead,UINT Param)
-//{
-//	if(!CNameObject::USOReadFinish(pHead,Param))
-//		return false;
-//
-//	if(m_pManager)
-//		m_pManager->AddTexture(this,GetName());
-//	return true;
-//}
 
 }

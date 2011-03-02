@@ -308,65 +308,62 @@ public:
 		if(ClearType==VT_UNKNOWN)
 		{
 			DataType=GetType();
-			BinaryDataLen=GetLength();
+			BinaryDataLen=GetLength();			
+		}		
 
-			switch(DataType)
-			{
-			case VT_CHAR:
-			case VT_UCHAR:
-				m_DataLen=sizeof(char)+sizeof(BYTE);
-				break;
-			case VT_SHORT:
-			case VT_USHORT:
-				m_DataLen=sizeof(short)+sizeof(BYTE);
-				break;
-			case VT_INT:
-			case VT_UINT:
-				m_DataLen=sizeof(int)+sizeof(BYTE);
-				break;
-			case VT_BIGINT:
-			case VT_UBIGINT:
-				m_DataLen=sizeof(__int64)+sizeof(BYTE);
-				break;
-			case VT_FLOAT:
-				m_DataLen=sizeof(float)+sizeof(BYTE);
-				break;
-			case VT_DOUBLE:
-				m_DataLen=sizeof(double)+sizeof(BYTE);
-				break;
-			case VT_STRING:
-				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT)+sizeof(char);
-				break;
-			case VT_USTRING:
-				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT)+sizeof(wchar_t);
-				break;
-			case VT_STRUCT:
-				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT);
-				break;
-			case VT_STRING_TINY:
-				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD)+sizeof(char);
-				break;
-			case VT_USTRING_TINY:
-				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD)+sizeof(wchar_t);
-				break;
-			case VT_STRUCT_TINY:
-				m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD);
-				break;
-			}
-		}
-		else
+		switch(DataType)
 		{
-			m_DataLen=DataLen;
+		case VT_CHAR:
+		case VT_UCHAR:
+			m_DataLen=sizeof(char)+sizeof(BYTE);
+			break;
+		case VT_SHORT:
+		case VT_USHORT:
+			m_DataLen=sizeof(short)+sizeof(BYTE);
+			break;
+		case VT_INT:
+		case VT_UINT:
+			m_DataLen=sizeof(int)+sizeof(BYTE);
+			break;
+		case VT_BIGINT:
+		case VT_UBIGINT:
+			m_DataLen=sizeof(__int64)+sizeof(BYTE);
+			break;
+		case VT_FLOAT:
+			m_DataLen=sizeof(float)+sizeof(BYTE);
+			break;
+		case VT_DOUBLE:
+			m_DataLen=sizeof(double)+sizeof(BYTE);
+			break;
+		case VT_STRING:
+			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT)+sizeof(char);
+			break;
+		case VT_USTRING:
+			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT)+sizeof(wchar_t);
+			break;
+		case VT_STRUCT:
+			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(UINT);
+			break;
+		case VT_STRING_TINY:
+			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD)+sizeof(char);
+			break;
+		case VT_USTRING_TINY:
+			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD)+sizeof(wchar_t);
+			break;
+		case VT_STRUCT_TINY:
+			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD);
+			break;
+		default:
+			return false;
 		}
-
-		
 
 		if(DataLen<m_DataLen)
 		{
 			Destory();
 			return false;
 		}
-		
+
+		m_DataLen=DataLen;
 
 		if(ClearType==VT_UNKNOWN)
 		{

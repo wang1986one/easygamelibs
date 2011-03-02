@@ -21,11 +21,12 @@ CD3DFontCharClip::CD3DFontCharClip(void):CD3DObject()
 	m_SubMesh.GetVertexFormat().FVF=D3DFVF_RECTVERTEX;
 	m_SubMesh.GetVertexFormat().VertexSize=sizeof(RECTVERTEX);
 	m_SubMesh.GetVertexFormat().IndexSize=sizeof(WORD);
-	m_SubMesh.SetVertices((BYTE *)m_Vertexs);
-	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	m_SubMesh.SetVertexCount(4);
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
-	m_SubMesh.SetPrimitiveCount(2);	
+	m_SubMesh.SetPrimitiveCount(2);
+	m_SubMesh.SetVertices((BYTE *)m_Vertexs,sizeof(RECTVERTEX)*4);
+	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
+		
 
 	m_Rect.left=0;
 	m_Rect.top=0;
@@ -106,12 +107,12 @@ void CD3DFontCharClip::SetVertexColor(DWORD Color)
 
 bool CD3DFontCharClip::MoveToTop()
 {
-	return GetRender()->MoveToTop(this);	
+	return ((CD3DUIRender *)GetRender())->MoveToTop(this);	
 }
 
 bool CD3DFontCharClip::MoveToTop(CD3DObject *before)
 {
-	return GetRender()->MoveToTop(this,before);
+	return ((CD3DUIRender *)GetRender())->MoveToTop(this,before);
 }
 
 

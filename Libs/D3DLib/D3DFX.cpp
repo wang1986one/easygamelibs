@@ -74,12 +74,12 @@ bool CD3DFX::LoadFromFile(LPCTSTR FileName)
 
 
 	CEasyString FxFileName=FindFileOne(FileName);
-	pFile=CFileSystemManager::GetInstance()->CreateFileAccessor(0);
+	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
 
 	PrintD3DDebugLog(0,"装载FX<%s>.....",(LPCTSTR)FxFileName);
-	if(pFile->Open(FileName,IFileAccessor::modeRead))
+	if(pFile->Open(FxFileName,IFileAccessor::modeRead))
 	{
 		UINT64 Size=pFile->GetSize();
 
@@ -92,11 +92,14 @@ bool CD3DFX::LoadFromFile(LPCTSTR FileName)
 		pFile->Release();
 		
 		if(LoadFromMemory(NULL,0))
+		{
+			PrintD3DDebugLog(0,"装载FX<%s>成功",(LPCTSTR)FxFileName);
 			return true;
+		}
 	}
 	else
 		pFile->Release();
-	PrintD3DLog(0,"装载FX<%s>失败",FileName);
+	PrintD3DLog(0,"装载FX<%s>失败%d",(LPCTSTR)FxFileName,GetLastError());
 	return false;
 }
 
@@ -106,9 +109,11 @@ bool CD3DFX::LoadFromFileDirect(LPCTSTR FileName)
 {
 	HRESULT hr;
 	LPD3DXBUFFER pErrors=NULL;
-
+	LPD3DXEFFECTPOOL pEffectPool=NULL;
 	Reset();
 
+	if(m_pManager)
+		pEffectPool=m_pManager->GetEffectPool();
 	CEasyString FxFileName=FindFileOne(FileName);
 	hr=D3DXCreateEffectFromFile(
 		m_pManager->GetDevice()->GetD3DDevice(),
@@ -116,7 +121,7 @@ bool CD3DFX::LoadFromFileDirect(LPCTSTR FileName)
 		NULL,
 		NULL,
 		D3DXSHADER_DEBUG|D3DXSHADER_FORCE_VS_SOFTWARE_NOOPT,
-		NULL,
+		pEffectPool,
 		&m_pEffect,
 		&pErrors);
 	if(m_pEffect==NULL)
@@ -147,9 +152,11 @@ bool CD3DFX::LoadFromMemory(const void * pData,int DataSize)
 		m_EffectData.PushConstBack(0,1);
 	}
 
-
+	
 	LPD3DXEFFECTCOMPILER pCompiler=NULL;
 	LPD3DXBUFFER pErrors=NULL;
+
+	
 	if(D3DXCreateEffectCompiler((LPCTSTR)m_EffectData.GetBuffer(),m_EffectData.GetUsedSize(),
 		NULL,NULL,
 		0,
@@ -495,12 +502,27 @@ bool CD3DFX::GetBool(LPCTSTR ParamName,BOOL& Value)
 	return false;
 }
 
+bool CD3DFX::CommitChanges()
+{
+	HRESULT	hr;
+	hr=m_pEffect->CommitChanges();
+	if(SUCCEEDED(hr))
+	{
+		return true;
+	} 
+	return false;
+}
+
 bool CD3DFX::LoadFXDirect(const void * pData,int DataSize)
 {
 	HRESULT hr;
 	LPD3DXBUFFER pErrors=NULL;
+	LPD3DXEFFECTPOOL pEffectPool=NULL;
 
 	Reset();
+
+	if(m_pManager)
+		pEffectPool=m_pManager->GetEffectPool();
 
 	hr=D3DXCreateEffect(
 		m_pManager->GetDevice()->GetD3DDevice(),
@@ -513,7 +535,7 @@ bool CD3DFX::LoadFXDirect(const void * pData,int DataSize)
 #else
 		D3DXSHADER_SKIPVALIDATION,
 #endif
-		NULL,
+		pEffectPool,
 		&m_pEffect,
 		&pErrors);
 	if(m_pEffect==NULL)
@@ -533,9 +555,9 @@ bool CD3DFX::LoadFXDirect(const void * pData,int DataSize)
 
 
 
-bool CD3DFX::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DFX::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::ToSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;	
 	if(m_EffectData.GetUsedSize())
 	{
@@ -549,9 +571,9 @@ bool CD3DFX::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
 	
 	return true;
 }
-bool CD3DFX::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DFX::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	CSmartValue EffectData=Packet.GetMember(SST_D3DFX_EFFECT_DATA);

@@ -12,6 +12,11 @@
 #pragma once
 namespace D3DLib{
 
+enum SUBMESH_CLONE_PARAM
+{
+	SUBMESH_CLONE_USE_SYSTEM_MEM=(1<<1),
+	SUBMESH_CLONE_NOT_CLONE_MATERIAL=(1<<2),
+};
 	
 class CD3DDevice;
 	
@@ -30,11 +35,13 @@ public:
 	{
 		SMF_IS_VISIBLE=1,
 		SMF_IS_TRANSPARENT=(1<<1),		
+		SMF_IS_ANI_MESH=(1<<2),
+		SMF_HAVE_COLLIDE=(1<<3),
 	};
 	enum SUB_MESH_FLAGS
 	{		
 		SMF_IS_CULLED=1,
-		SMF_IS_SELECTED=(1<<1),
+		SMF_IS_SELECTED=(1<<1),	
 	};
 	enum BUFFER_USED
 	{
@@ -42,23 +49,7 @@ public:
 		BUFFER_USE_CUSTOM,
 		BUFFER_USE_BACKUP,
 	};
-	//struct STORAGE_VERTEX_FORMAT
-	//{
-	//	DWORD			FVF;
-	//	WORD			VertexSize;
-	//	WORD			IndexSize;
-	//};
-	//struct STORAGE_STRUCT:public CNameObject::STORAGE_STRUCT
-	//{		
-	//	STORAGE_VERTEX_FORMAT	VertexFormat;
-	//	int						PrimitiveType;
-	//	int						PrimitiveCount;
-	//	int						VertexCount;	
-	//	int						IndexCount;			
-	//	CD3DBoundingBox			BoundingBox;
-	//	CD3DBoundingSphere		BoundingSphere;
-	//	UINT64					Property;		
-	//};
+	
 	enum SST_MEMBER_ID
 	{
 		SST_D3DSM_FVF=SST_NO_MAX,
@@ -79,6 +70,7 @@ public:
 	};
 	
 protected:
+	CD3DDevice *			m_pDevice;
 	VERTEX_FORMAT			m_VertexFormat;
 	UINT					m_PrimitiveType;
 	UINT					m_PrimitiveCount;
@@ -104,6 +96,11 @@ protected:
 	UINT					m_RenderBufferUsed;
 	UINT					m_OrginDataBufferUsed;
 
+	BYTE*					m_pVertexBufferR;
+	UINT					m_VertexBufferRSize;
+	BYTE*					m_pIndexBufferR;
+	UINT					m_IndexBufferRSize;
+
 	////以下给渲染器使用
 	//bool					m_IsTransparent;
 	//bool					m_IsCulled;
@@ -111,6 +108,7 @@ protected:
 public:
 
 	CD3DSubMesh(void);
+	CD3DSubMesh(CD3DDevice * pDevice);
 	virtual ~CD3DSubMesh(void);
 
 	virtual void Destory();
@@ -119,12 +117,21 @@ public:
 	bool Reset();
 	bool Restore();
 
-	void CreateBounding();
+	void SetDevice(CD3DDevice * pDevice);
+	CD3DDevice * GetDevice();
 
-	bool RayIntersect(const CD3DMatrix& WorldMatrix,const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
+	void CreateBounding();
+	void CreateBoundingBox();
+	void CreateBoundingSphere();
+	CD3DBoundingBox GetBoundingBoxWithTranform(const CD3DMatrix& TransformMat);
+	void AppendBoundingBoxWithTranform(CD3DBoundingBox& BBox,const CD3DMatrix& TransformMat);
+
+	bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
+	bool LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
+	bool GetHeightByXZ(const CD3DMatrix& WorldMatrix,const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight);
 
 	VERTEX_FORMAT& GetVertexFormat();
-	bool DeclareVertexFormat(CD3DDevice * pDevice,D3DVERTEXELEMENT9* pVertexElements,WORD VertexSize,WORD IndexSize);
+	bool DeclareVertexFormat(D3DVERTEXELEMENT9* pVertexElements,WORD VertexSize,WORD IndexSize);
 
 	UINT GetPrimitiveType();
 	void SetPrimitiveType(UINT Type);
@@ -132,11 +139,11 @@ public:
 	void SetPrimitiveCount(UINT Count);
 
 	BYTE * GetVertexBuffer();
-	void SetVertices(BYTE * pVertexBuffer,bool IsSelfDelete=false);
+	void SetVertices(BYTE * pVertexBuffer,UINT BufferSize,bool IsSelfDelete=false);
 	void AllocVertexBuffer();
 	LPDIRECT3DVERTEXBUFFER9 GetDXVertexBuffer();
 	void SetDXVertexBuffer(LPDIRECT3DVERTEXBUFFER9 pDXVertexBuffer,bool IsSelfRelease=false);
-	bool AllocDXVertexBuffer(CD3DDevice * pDevice,DWORD Usage=0,D3DPOOL Pool=D3DPOOL_MANAGED);	
+	bool AllocDXVertexBuffer(DWORD Usage=0,D3DPOOL Pool=D3DPOOL_MANAGED);	
 	UINT GetVertexCount();
 	void SetVertexCount(UINT Count);
 	UINT GetVertexStart();
@@ -145,11 +152,11 @@ public:
 	BYTE * GetBackupVertexBuffer();
 
 	BYTE * GetIndexBuffer();
-	void SetIndices(BYTE * pIndexBuffer,bool IsSelfDelete=false);
+	void SetIndices(BYTE * pIndexBuffer,UINT BufferSize,bool IsSelfDelete=false);
 	void AllocIndexBuffer();
 	LPDIRECT3DINDEXBUFFER9 GetDXIndexBuffer();
 	void SetDXIndexBuffer(LPDIRECT3DINDEXBUFFER9 pDXIndexBuffer,bool IsSelfRelease=false);
-	bool AllocDXIndexBuffer(CD3DDevice * pDevice,DWORD Usage=0,D3DPOOL Pool=D3DPOOL_MANAGED);
+	bool AllocDXIndexBuffer(DWORD Usage=0,D3DPOOL Pool=D3DPOOL_MANAGED);
 	UINT GetIndexCount();
 	void SetIndexCount(UINT Count);
 	UINT GetIndexStart();
@@ -159,15 +166,22 @@ public:
 
 	CD3DSubMeshMaterial& GetMaterial();
 	CD3DBoundingBox& GetBoundingBox();
+	void SetBoundingBox(const CD3DBoundingBox& BoundingBox);
 	CD3DBoundingSphere& GetBoundingSphere();
+	void SetBoundingSphere(const CD3DBoundingSphere& BoundingSphere);
 
 	UINT64 GetProperty();
 	void SetProperty(UINT64 Property);
 	void AddProperty(UINT64 Property);
 	void RemoveProperty(UINT64 Property);
 	bool CheckProperty(UINT64 Property);
+
 	UINT64 GetFlag();
 	void SetFlag(UINT64 Flag);
+	void AddFlag(UINT64 Flag);
+	void RemoveFlag(UINT64 Flag);
+	bool CheckFlag(UINT64 Flag);
+
 	bool IsTransparent();
 	void SetTransparent(bool Enable);
 	bool IsCulled();
@@ -182,26 +196,34 @@ public:
 	UINT GetOrginDataBufferUsed();
 	void SetOrginDataBufferUsed(UINT Which);
 
+	BYTE * GetVertexBufferR();
+	BYTE * GetIndexBufferR();
+
+	void OnPrepareRenderData();
+
 
 	static bool SortByName(CD3DSubMesh * pSubMesh1,CD3DSubMesh * pSubMesh2);
 	static bool SortByRender(CD3DSubMesh * pSubMesh1,CD3DSubMesh * pSubMesh2);
 
-	virtual void PickResource(CNameObjectSet * pObjectSet,UINT Param=0);
+	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
 
-	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
-	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param=0);
+	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
+
+	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
+	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
 protected:
-	//virtual CNameObject::STORAGE_STRUCT * USOCreateHead(UINT Param=0);
-	//virtual int USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	//virtual bool USOWriteData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	//bool USOWriteChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-
-	//virtual int USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	//virtual int USOReadData(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,BYTE * pData,int DataSize,UINT Param=0);
-	//virtual bool USOReadChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param=0);
-	//virtual bool USOReadFinish(CNameObject::STORAGE_STRUCT * pHead,UINT Param=0);
+	
 };
+
+inline void CD3DSubMesh::SetDevice(CD3DDevice * pDevice)
+{
+	m_pDevice=pDevice;
+}
+inline CD3DDevice * CD3DSubMesh::GetDevice()
+{
+	return m_pDevice;
+}
 
 
 inline CD3DSubMesh::VERTEX_FORMAT& CD3DSubMesh::GetVertexFormat()
@@ -230,11 +252,7 @@ inline BYTE * CD3DSubMesh::GetVertexBuffer()
 {
 	return m_pVertexBuffer;
 }
-inline void CD3DSubMesh::SetVertices(BYTE * pVertexBuffer,bool IsSelfDelete)
-{
-	m_pVertexBuffer=pVertexBuffer;
-	m_IsVertexsSelfDelete=IsSelfDelete;
-}
+
 inline LPDIRECT3DVERTEXBUFFER9 CD3DSubMesh::GetDXVertexBuffer()
 {
 	return m_pDXVertexBuffer;
@@ -270,11 +288,7 @@ inline BYTE * CD3DSubMesh::GetIndexBuffer()
 {
 	return m_pIndexBuffer;
 }
-inline void CD3DSubMesh::SetIndices(BYTE * pIndexBuffer,bool IsSelfDelete)
-{
-	m_pIndexBuffer=pIndexBuffer;
-	m_IsIndexsSelfDelete=IsSelfDelete;
-}
+
 inline LPDIRECT3DINDEXBUFFER9 CD3DSubMesh::GetDXIndexBuffer()
 {
 	return m_pDXIndexBuffer;
@@ -314,9 +328,17 @@ inline CD3DBoundingBox& CD3DSubMesh::GetBoundingBox()
 {
 	return m_BoundingBox;
 }
+inline void CD3DSubMesh::SetBoundingBox(const CD3DBoundingBox& BoundingBox)
+{
+	m_BoundingBox=BoundingBox;
+}
 inline CD3DBoundingSphere& CD3DSubMesh::GetBoundingSphere()
 {
 	return m_BoundingSphere;
+}
+inline void CD3DSubMesh::SetBoundingSphere(const CD3DBoundingSphere& BoundingSphere)
+{
+	m_BoundingSphere=BoundingSphere;
 }
 
 inline UINT64 CD3DSubMesh::GetProperty()
@@ -347,6 +369,20 @@ inline void CD3DSubMesh::SetFlag(UINT64 Flag)
 {
 	m_Flag=Flag;
 }
+inline void CD3DSubMesh::AddFlag(UINT64 Flag)
+{
+	m_Flag|=Flag;
+}
+inline void CD3DSubMesh::RemoveFlag(UINT64 Flag)
+{
+	m_Flag&=~Flag;
+}
+inline bool CD3DSubMesh::CheckFlag(UINT64 Flag)
+{
+	return (m_Flag&Flag)!=0;
+}
+
+
 inline bool CD3DSubMesh::IsTransparent()
 {
 	return (m_Property&SMF_IS_TRANSPARENT)!=0;
@@ -409,5 +445,20 @@ inline UINT CD3DSubMesh::GetOrginDataBufferUsed()
 inline void CD3DSubMesh::SetOrginDataBufferUsed(UINT Which)
 {
 	m_OrginDataBufferUsed=Which;
+}
+
+inline BYTE * CD3DSubMesh::GetVertexBufferR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender()&&m_pVertexBufferR)
+		return m_pVertexBufferR;
+	else
+		return m_pVertexBuffer;
+}
+inline BYTE * CD3DSubMesh::GetIndexBufferR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender()&&m_pIndexBufferR)
+		return m_pIndexBufferR;
+	else
+		return m_pIndexBuffer;
 }
 }

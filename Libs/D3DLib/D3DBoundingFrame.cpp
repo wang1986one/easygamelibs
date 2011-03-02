@@ -57,8 +57,10 @@ CD3DBoundingFrame::~CD3DBoundingFrame(void)
 
 void CD3DBoundingFrame::Destory()
 {
-	SAFE_RELEASE(m_pSubMesh);	
 	CD3DObject::Destory();
+
+	SAFE_RELEASE(m_pSubMesh);	
+	
 }
 
 bool CD3DBoundingFrame::Reset()
@@ -81,7 +83,7 @@ bool CD3DBoundingFrame::CreateFromBBox(const CD3DBoundingBox& BBox,D3DCOLOR Colo
 
 	m_BoundingBox=BBox;
 
-	m_pSubMesh=new CD3DSubMesh;
+	m_pSubMesh=new CD3DSubMesh(GetDevice());
 
 	m_pSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE;
 	m_pSubMesh->GetVertexFormat().VertexSize=sizeof(BF_VERTEX);
@@ -90,19 +92,9 @@ bool CD3DBoundingFrame::CreateFromBBox(const CD3DBoundingBox& BBox,D3DCOLOR Colo
 	m_pSubMesh->SetPrimitiveType(D3DPT_LINELIST);
 	m_pSubMesh->GetBoundingBox()=BBox;
 
-	m_pSubMesh->AllocDXVertexBuffer(GetDevice());
-	
-	
+	m_pSubMesh->AllocDXVertexBuffer();	
 
-	//D3DCOLORVALUE WhiteColor={1.0f,1.0f,1.0f,1.0f};
-	//D3DCOLORVALUE BlackColor={0.0f,0.0f,0.0f,1.0f};
-	//D3DCOLORVALUE RedColor={1.0f,0.0f,0.0f,1.0f};
-
-	//m_pSubMesh->Material.Material.Ambient=RedColor;
-	//m_pSubMesh->Material.Material.Diffuse=RedColor;
-	//m_pSubMesh->Material.Material.Specular=BlackColor;
-	//m_pSubMesh->Material.Material.Emissive=RedColor;
-	//m_pSubMesh->Material.Material.Power=100.0f;
+	
 	m_pSubMesh->GetMaterial().SetFX(
 		GetDevice()->GetFXManager()->LoadFXFromMemory("DEFAULT_BOUND_FRAME_FX_NT",(void *)DEFAULT_BOUND_FRAME_FX_NT,(int)strlen(DEFAULT_BOUND_FRAME_FX_NT)));
 
@@ -182,6 +174,105 @@ bool CD3DBoundingFrame::CreateFromBBox(const CD3DBoundingBox& BBox,D3DCOLOR Colo
 	return true;
 }
 
+bool CD3DBoundingFrame::CreateFromLight(CD3DLight * pLight,D3DCOLOR Color)
+{
+	if(GetDevice()==NULL)
+		return false;
+
+	Destory();
+
+	m_BoundingBox=*(pLight->GetBoundingBox());
+	
+	
+
+	m_pSubMesh=new CD3DSubMesh(GetDevice());
+
+	m_pSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE;
+	m_pSubMesh->GetVertexFormat().VertexSize=sizeof(BF_VERTEX);
+	m_pSubMesh->SetVertexCount(8*2);
+	m_pSubMesh->SetPrimitiveCount(8);
+	m_pSubMesh->SetPrimitiveType(D3DPT_LINELIST);
+	m_pSubMesh->GetBoundingBox()=m_BoundingBox;
+
+	m_pSubMesh->AllocDXVertexBuffer();	
+
+
+	m_pSubMesh->GetMaterial().SetFX(
+		GetDevice()->GetFXManager()->LoadFXFromMemory("DEFAULT_BOUND_FRAME_FX_NT",(void *)DEFAULT_BOUND_FRAME_FX_NT,(int)strlen(DEFAULT_BOUND_FRAME_FX_NT)));
+
+
+	BF_VERTEX * pBuff;
+
+
+
+
+	m_pSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pBuff,0);
+
+
+	BuildLine(pBuff,
+		CD3DVector3( 0.0f, 0.0f, 0.0f),
+		CD3DVector3(-0.2f,-0.2f, 1.0f),Color);
+	pBuff+=2;
+
+	BuildLine(pBuff,
+		CD3DVector3( 0.0f, 0.0f, 0.0f),
+		CD3DVector3(-0.2f, 0.2f, 1.0f),Color);
+	pBuff+=2;
+
+	BuildLine(pBuff,
+		CD3DVector3( 0.0f, 0.0f, 0.0f),
+		CD3DVector3( 0.2f,-0.2f, 1.0f),Color);
+	pBuff+=2;
+
+	BuildLine(pBuff,
+		CD3DVector3( 0.0f, 0.0f, 0.0f),
+		CD3DVector3( 0.2f, 0.2f, 1.0f),Color);
+	pBuff+=2;
+
+
+	BuildLine(pBuff,
+		CD3DVector3( 0.2f, 0.2f, 1.0f),
+		CD3DVector3( 0.2f,-0.2f, 1.0f),Color);
+	pBuff+=2;
+
+	BuildLine(pBuff,
+		CD3DVector3( 0.2f, 0.2f, 1.0f),
+		CD3DVector3(-0.2f, 0.2f, 1.0f),Color);
+	pBuff+=2;
+
+	BuildLine(pBuff,
+		CD3DVector3(-0.2f,-0.2f, 1.0f),
+		CD3DVector3( 0.2f,-0.2f, 1.0f),Color);
+	pBuff+=2;
+
+	BuildLine(pBuff,
+		CD3DVector3(-0.2f,-0.2f, 1.0f),
+		CD3DVector3(-0.2f, 0.2f, 1.0f),Color);
+	pBuff+=2;
+
+	
+	
+
+	m_pSubMesh->GetDXVertexBuffer()->Unlock();
+
+
+	return true;
+}
+
+void CD3DBoundingFrame::SetColor(D3DCOLOR Color)
+{
+	if(m_pSubMesh->GetDXVertexBuffer())
+	{
+		BF_VERTEX * pBuff;
+		m_pSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pBuff,0);
+		for(UINT i=0;i<m_pSubMesh->GetVertexCount();i++)
+		{
+			pBuff[i].Color=Color;
+		}
+		m_pSubMesh->GetDXVertexBuffer()->Unlock();
+	}
+}
+
 int CD3DBoundingFrame::GetSubMeshCount()
 {
 	return 1;
@@ -197,6 +288,11 @@ CD3DBoundingBox * CD3DBoundingFrame::GetBoundingBox()
 	return &m_BoundingBox;
 }
 
+bool CD3DBoundingFrame::CanDoSubMeshViewCull()
+{
+	return false;
+}
+
 bool CD3DBoundingFrame::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly)
 {
 	return false;
@@ -206,21 +302,6 @@ bool CD3DBoundingFrame::GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& y)
 	return false;
 }
 
-void CD3DBoundingFrame::BuildRect(BF_VERTEX * pBuff,CD3DVector3 p1,CD3DVector3 p2,CD3DVector3 p3,CD3DVector3 p4,D3DCOLOR Color)
-{
-	pBuff[0].Pos=p1;
-	pBuff[1].Pos=p2;
-	pBuff[2].Pos=p4;
-	pBuff[3].Pos=p2;
-	pBuff[4].Pos=p3;
-	pBuff[5].Pos=p4;
-
-	
-	for(int i=0;i<6;i++)
-	{
-		pBuff[i].Color=Color;
-	}
-}
 
 void CD3DBoundingFrame::BuildLine(BF_VERTEX * pBuff,CD3DVector3 p1,CD3DVector3 p2,D3DCOLOR Color)
 {
@@ -232,10 +313,10 @@ void CD3DBoundingFrame::BuildLine(BF_VERTEX * pBuff,CD3DVector3 p1,CD3DVector3 p
 	}
 }
 
-bool CD3DBoundingFrame::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DBoundingFrame::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
 	PrintSystemLog(0,"CD3DBoundingFrame±»±£´æ");
-	return CD3DObject::ToSmartStruct(Packet,pUSOFile,Param);
+	return CD3DObject::ToSmartStruct(Packet,pResourceManager,Param);
 }
 
 UINT CD3DBoundingFrame::GetSmartStructSize(UINT Param)

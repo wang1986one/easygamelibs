@@ -107,6 +107,8 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 		return false;	
 	}
 
+	SetName(ModelFileName);
+
 	CBLZChunkFile ADTChunk;
 
 	if(!ADTChunk.Load(pFile))
@@ -207,7 +209,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 		}
 
 
-		CD3DSubMesh * pD3DSubMesh=new CD3DSubMesh;
+		CD3DSubMesh * pD3DSubMesh=new CD3DSubMesh(m_pManager->GetDevice());
 
 
 		UINT IndexCount=3*4*64;
@@ -222,8 +224,8 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 		pD3DSubMesh->SetVertexCount(VertexCount);
 		pD3DSubMesh->SetIndexCount(IndexCount);
 
-		pD3DSubMesh->AllocDXIndexBuffer(m_pManager->GetDevice());
-		pD3DSubMesh->AllocDXVertexBuffer(m_pManager->GetDevice());
+		pD3DSubMesh->AllocDXIndexBuffer();
+		pD3DSubMesh->AllocDXVertexBuffer();
 
 		D3DCOLORVALUE WhiteColor={1.0f,1.0f,1.0f,1.0f};
 		D3DCOLORVALUE GrayColor={0.8f,0.8f,0.8f,1.0f};
@@ -235,7 +237,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 		pD3DSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
 		pD3DSubMesh->GetMaterial().GetMaterial().Power=40.0f;
 
-		CD3DFX * pFX=BuildFX(i,TextureLayerInfos[i].LayerCount,TextureLayerInfos[i].pShadowMap!=NULL);
+		CD3DFX * pFX=BuildFX(i,TextureLayerInfos[i].LayerCount,TextureLayerInfos[i].pShadowMap!=NULL,IsBigAlphaMask);
 		pD3DSubMesh->GetMaterial().SetFX(pFX);
 
 		
@@ -418,6 +420,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 
 		pD3DSubMesh->SetID(i);
 		CEasyString SubMeshName;
+		//SubMeshName.Format("%s\\%d",ModelFileName,i);
 		SubMeshName.Format("%d",i);
 		pD3DSubMesh->SetName(SubMeshName);
 
@@ -432,7 +435,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 			UINT LayerCount=pMH2O->Header[i].LayerCount;
 			for(UINT l=0;l<LayerCount;l++)
 			{
-				CD3DSubMesh * pWaterSubMesh=new CD3DSubMesh;
+				CD3DSubMesh * pWaterSubMesh=new CD3DSubMesh(m_pManager->GetDevice());
 
 				IndexCount=pWaterInfo[l].Width*pWaterInfo[l].Height*2*3;
 
@@ -446,8 +449,8 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 				pWaterSubMesh->SetVertexCount(VertexCount);
 				pWaterSubMesh->SetIndexCount(IndexCount);
 
-				pWaterSubMesh->AllocDXIndexBuffer(m_pManager->GetDevice());
-				pWaterSubMesh->AllocDXVertexBuffer(m_pManager->GetDevice());
+				pWaterSubMesh->AllocDXIndexBuffer();
+				pWaterSubMesh->AllocDXVertexBuffer();
 
 
 				pWaterSubMesh->GetMaterial().GetMaterial().Ambient=WhiteColor;
@@ -456,7 +459,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 				pWaterSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
 				pWaterSubMesh->GetMaterial().GetMaterial().Power=40.0f;
 
-				pFX=m_pManager->GetDevice()->GetFXManager()->LoadFX("ADTLiquid.fx");
+				pFX=BuildLiquidFX();
 				pWaterSubMesh->GetMaterial().SetFX(pFX);
 				pWaterSubMesh->SetTransparent(true);
 
@@ -572,6 +575,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 
 				pWaterSubMesh->SetProperty(pWaterSubMesh->GetProperty()|SMP_IS_WATER);
 
+				//SubMeshName.Format("%s\\W%d-%d",ModelFileName,i,l);
 				SubMeshName.Format("W%d-%d",i,l);
 				pWaterSubMesh->SetName(SubMeshName);
 
@@ -585,7 +589,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 			m_TerrainHeightInfo[i].HaveWater=true;
 			memset(m_TerrainHeightInfo[i].WaterHeight,0xFF,sizeof(m_TerrainHeightInfo[i].WaterHeight));
 
-			CD3DSubMesh * pWaterSubMesh=new CD3DSubMesh;
+			CD3DSubMesh * pWaterSubMesh=new CD3DSubMesh(m_pManager->GetDevice());
 
 
 			IndexCount=8*8*2*3;
@@ -600,8 +604,8 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 			pWaterSubMesh->SetVertexCount(VertexCount);
 			pWaterSubMesh->SetIndexCount(IndexCount);
 
-			pWaterSubMesh->AllocDXIndexBuffer(m_pManager->GetDevice());
-			pWaterSubMesh->AllocDXVertexBuffer(m_pManager->GetDevice());
+			pWaterSubMesh->AllocDXIndexBuffer();
+			pWaterSubMesh->AllocDXVertexBuffer();
 			
 
 			pWaterSubMesh->GetMaterial().GetMaterial().Ambient=WhiteColor;
@@ -610,7 +614,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 			pWaterSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
 			pWaterSubMesh->GetMaterial().GetMaterial().Power=40.0f;
 
-			pFX=m_pManager->GetDevice()->GetFXManager()->LoadFX("ADTLiquid.fx");
+			pFX=BuildLiquidFX();
 			pWaterSubMesh->GetMaterial().SetFX(pFX);
 			pWaterSubMesh->SetTransparent(true);
 
@@ -715,6 +719,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 			pWaterSubMesh->SetID(1000+i);
 			pWaterSubMesh->SetProperty(pWaterSubMesh->GetProperty()|SMP_IS_WATER);
 
+			//SubMeshName.Format("%s\\L%d",ModelFileName,i);
 			SubMeshName.Format("L%d",i);
 			pWaterSubMesh->SetName(SubMeshName);
 
@@ -740,26 +745,22 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 	{
 		m_M2ObjectList[i].ID=pMDDF->M2Objects[i].ID;
 		m_M2ObjectList[i].pModelResource=NULL;
-		CEasyString ModelFileName=pMMDX->M2FileNames+pMMID->M2FileNameIndices[pMDDF->M2Objects[i].Index];
-		CEasyString SkinFileName;
-		int Pos=ModelFileName.ReverseFind('.');
+		CEasyString ObjectFileName=pMMDX->M2FileNames+pMMID->M2FileNameIndices[pMDDF->M2Objects[i].Index];
+		int Pos=ObjectFileName.ReverseFind('.');
 		if(Pos>=0)
 		{
-			ModelFileName=ModelFileName.Left(Pos);
-			SkinFileName=ModelFileName+"00.skin";
-			ModelFileName+=".m2";
-
-			CEasyString ObjectName=ModelFileName+"_"+GetPathFileName(SkinFileName);
+			ObjectFileName=ObjectFileName.Left(Pos);
+			ObjectFileName+=".m2";
 
 			CD3DWOWM2ModelResource* pResource=
-				dynamic_cast<CD3DWOWM2ModelResource*>(m_pManager->GetResource(ObjectName));
+				dynamic_cast<CD3DWOWM2ModelResource*>(m_pManager->GetResource(ObjectFileName));
 			if(!pResource)
 			{
 				pResource=new CD3DWOWM2ModelResource(m_pManager);
-				if(pResource->LoadFromFile(ModelFileName,SkinFileName))
+				if(pResource->LoadFromFile(ObjectFileName))
 				{
-					//PrintSystemLog(0,"加载了[%s]",(LPCTSTR)ModelFileName);
-					if(!m_pManager->AddResource(pResource,ObjectName))
+					//PrintSystemLog(0,"加载了[%s]",(LPCTSTR)ObjectFileName);
+					if(!m_pManager->AddResource(pResource,ObjectFileName))
 					{
 						pResource->Release();
 						pResource=NULL;
@@ -767,7 +768,7 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 				}
 				else
 				{
-					PrintD3DLog(0,"加载M2文件%s失败",(LPCTSTR)ModelFileName);
+					PrintD3DLog(0,"加载M2文件%s失败",(LPCTSTR)ObjectFileName);
 					pResource->Release();
 					pResource=NULL;
 				}						
@@ -871,8 +872,8 @@ bool CD3DWOWADTModelResource::GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT&
 	}
 	FLOAT dx=x-m_Position.x;
 	FLOAT dz=m_Position.z-z;
-	UINT Col=dx/BLZ_ADT_MAP_TILE_SIZE;
-	UINT Row=dz/BLZ_ADT_MAP_TILE_SIZE;
+	UINT Col=(UINT)(dx/BLZ_ADT_MAP_TILE_SIZE);
+	UINT Row=(UINT)(dz/BLZ_ADT_MAP_TILE_SIZE);
 	UINT BlockIndex=Row*BLZ_ADT_MAP_TILE_WIDTH+Col;
 	if(BlockIndex>=BLZ_ADT_MAP_TILE_COUNT)
 	{
@@ -880,8 +881,8 @@ bool CD3DWOWADTModelResource::GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT&
 	}
 	dx=dx-Col*BLZ_ADT_MAP_TILE_SIZE;
 	dz=dz-Row*BLZ_ADT_MAP_TILE_SIZE;
-	Col=dx/BLZ_ADT_MAP_TILE_BLOCK_SIZE;
-	Row=dz/BLZ_ADT_MAP_TILE_BLOCK_SIZE;
+	Col=(UINT)(dx/BLZ_ADT_MAP_TILE_BLOCK_SIZE);
+	Row=(UINT)(dz/BLZ_ADT_MAP_TILE_BLOCK_SIZE);
 
 	FLOAT h1=m_TerrainHeightInfo[BlockIndex].TerrainHeight[Row*17+Col];
 	FLOAT h2=m_TerrainHeightInfo[BlockIndex].TerrainHeight[Row*17+Col+1];
@@ -964,30 +965,30 @@ bool CD3DWOWADTModelResource::GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT&
 }
 
 
-void CD3DWOWADTModelResource::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+void CD3DWOWADTModelResource::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
-	CD3DObjectResource::PickResource(pObjectSet,Param);	
+	CD3DObjectResource::PickResource(pResourceManager,Param);	
 	for(UINT i=0;i<m_M2ObjectList.GetCount();i++)
 	{
 		if(m_M2ObjectList[i].pModelResource)
 		{
-			m_M2ObjectList[i].pModelResource->PickResource(pObjectSet,Param);
-			pObjectSet->Add(m_M2ObjectList[i].pModelResource);
+			m_M2ObjectList[i].pModelResource->PickResource(pResourceManager,Param);
+			pResourceManager->AddResource(m_M2ObjectList[i].pModelResource);
 		}
 	}
 	for(UINT i=0;i<m_WMOObjectList.GetCount();i++)
 	{
 		if(m_WMOObjectList[i].pModelResource)
 		{
-			m_WMOObjectList[i].pModelResource->PickResource(pObjectSet,Param);
-			pObjectSet->Add(m_WMOObjectList[i].pModelResource);
+			m_WMOObjectList[i].pModelResource->PickResource(pResourceManager,Param);
+			pResourceManager->AddResource(m_WMOObjectList[i].pModelResource);
 		}
 	}
 }
 
-bool CD3DWOWADTModelResource::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DWOWADTModelResource::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CD3DObjectResource::ToSmartStruct(Packet,pUSOFile,Param))
+	if(!CD3DObjectResource::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	{
@@ -1000,8 +1001,7 @@ bool CD3DWOWADTModelResource::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSO
 			CSmartStruct M2ObjectInfo(pBuffer,BufferSize,true);
 
 			CHECK_SMART_STRUCT_ADD_AND_RETURN(M2ObjectInfo.AddMember(SST_MOI_ID,m_M2ObjectList[i].ID));
-			int ResourceID=pUSOFile->ResourceObjectToIndex(m_M2ObjectList[i].pModelResource);
-			CHECK_SMART_STRUCT_ADD_AND_RETURN(M2ObjectInfo.AddMember(SST_MOI_MODEL_RESOURCE,ResourceID));
+			CHECK_SMART_STRUCT_ADD_AND_RETURN(M2ObjectInfo.AddMember(SST_MOI_MODEL_RESOURCE,m_M2ObjectList[i].pModelResource->GetName()));
 			CHECK_SMART_STRUCT_ADD_AND_RETURN(M2ObjectInfo.AddMember(SST_MOI_POSITION,
 				(LPCTSTR)(&m_M2ObjectList[i].Position),sizeof(m_M2ObjectList[i].Position)));
 			CHECK_SMART_STRUCT_ADD_AND_RETURN(M2ObjectInfo.AddMember(SST_MOI_ORIENTATION,
@@ -1026,8 +1026,7 @@ bool CD3DWOWADTModelResource::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSO
 			CSmartStruct WMOObjectInfo(pBuffer,BufferSize,true);
 
 			CHECK_SMART_STRUCT_ADD_AND_RETURN(WMOObjectInfo.AddMember(SST_WOI_ID,m_WMOObjectList[i].ID));
-			int ResourceID=pUSOFile->ResourceObjectToIndex(m_WMOObjectList[i].pModelResource);
-			CHECK_SMART_STRUCT_ADD_AND_RETURN(WMOObjectInfo.AddMember(SST_WOI_MODEL_RESOURCE,ResourceID));
+			CHECK_SMART_STRUCT_ADD_AND_RETURN(WMOObjectInfo.AddMember(SST_WOI_MODEL_RESOURCE,m_WMOObjectList[i].pModelResource->GetName()));
 			CHECK_SMART_STRUCT_ADD_AND_RETURN(WMOObjectInfo.AddMember(SST_WOI_POSITION,
 				(LPCTSTR)(&m_WMOObjectList[i].Position),sizeof(m_WMOObjectList[i].Position)));
 			CHECK_SMART_STRUCT_ADD_AND_RETURN(WMOObjectInfo.AddMember(SST_WOI_ORIENTATION,
@@ -1071,11 +1070,11 @@ bool CD3DWOWADTModelResource::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSO
 	return true;
 }
 
-bool CD3DWOWADTModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DWOWADTModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
 	Destory();
 
-	if(!CD3DObjectResource::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CD3DObjectResource::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	UINT M2ObjectCount=0;
@@ -1129,8 +1128,8 @@ bool CD3DWOWADTModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pU
 					if(SubMemberID==SST_MOL_M2_OBJECT_INFO)
 					{
 						m_M2ObjectList[M2ObjectCount].ID=M2ObjectInfo.GetMember(SST_MOI_ID);
-						int ResourceID=M2ObjectInfo.GetMember(SST_MOI_MODEL_RESOURCE);
-						m_M2ObjectList[M2ObjectCount].pModelResource=(CD3DWOWM2ModelResource *)pUSOFile->ResourceIndexToObject(ResourceID,GET_CLASS_INFO(CD3DWOWM2ModelResource));
+						LPCTSTR szResourceName=M2ObjectInfo.GetMember(SST_MOI_MODEL_RESOURCE);
+						m_M2ObjectList[M2ObjectCount].pModelResource=(CD3DWOWM2ModelResource *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DWOWM2ModelResource));
 						if(m_M2ObjectList[M2ObjectCount].pModelResource)
 							m_M2ObjectList[M2ObjectCount].pModelResource->AddUseRef();
 						memcpy(&(m_M2ObjectList[M2ObjectCount].Position),(LPCTSTR)M2ObjectInfo.GetMember(SST_MOI_POSITION),
@@ -1155,8 +1154,8 @@ bool CD3DWOWADTModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pU
 					if(SubMemberID==SST_WOL_WMO_OBJECT_INFO)
 					{
 						m_WMOObjectList[WMOObjectCount].ID=WMOObjectInfo.GetMember(SST_WOI_ID);
-						int ResourceID=WMOObjectInfo.GetMember(SST_WOI_MODEL_RESOURCE);
-						m_WMOObjectList[WMOObjectCount].pModelResource=(CD3DWOWWMOModelResource *)pUSOFile->ResourceIndexToObject(ResourceID,GET_CLASS_INFO(CD3DWOWWMOModelResource));
+						LPCTSTR szResourceName=WMOObjectInfo.GetMember(SST_WOI_MODEL_RESOURCE);
+						m_WMOObjectList[WMOObjectCount].pModelResource=(CD3DWOWWMOModelResource *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DWOWWMOModelResource));
 						if(m_WMOObjectList[WMOObjectCount].pModelResource)
 							m_WMOObjectList[WMOObjectCount].pModelResource->AddUseRef();
 						memcpy(&(m_WMOObjectList[WMOObjectCount].Position),(LPCTSTR)WMOObjectInfo.GetMember(SST_WOI_POSITION),
@@ -1179,7 +1178,7 @@ bool CD3DWOWADTModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pU
 					CSmartStruct HeightInfo=SubPacket.GetNextMember(SubPos,SubMemberID);
 					if(SubMemberID==SST_HIL_HEIGHT_INFO)
 					{
-						m_TerrainHeightInfo[HeightInfoCount].HaveWater=(BYTE)HeightInfo.GetMember(SST_HI_HAVE_WATER);
+						m_TerrainHeightInfo[HeightInfoCount].HaveWater=((BYTE)HeightInfo.GetMember(SST_HI_HAVE_WATER))!=0;
 						memcpy(m_TerrainHeightInfo[HeightInfoCount].TerrainHeight,
 							(LPCTSTR)HeightInfo.GetMember(SST_HI_TERRAIN_HEIGHT),
 							sizeof(m_TerrainHeightInfo[HeightInfoCount].TerrainHeight));
@@ -1211,7 +1210,7 @@ UINT CD3DWOWADTModelResource::GetSmartStructSize(UINT Param)
 	for(UINT i=0;i<m_M2ObjectList.GetCount();i++)
 	{
 		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_M2ObjectList[i].ID));
-		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(int));		
+		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(m_M2ObjectList[i].pModelResource->GetNameLength());		
 		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_M2ObjectList[i].Position));
 		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_M2ObjectList[i].Orientation));
 		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_M2ObjectList[i].Scale));		
@@ -1221,7 +1220,7 @@ UINT CD3DWOWADTModelResource::GetSmartStructSize(UINT Param)
 	for(UINT i=0;i<m_WMOObjectList.GetCount();i++)
 	{
 		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_WMOObjectList[i].ID));
-		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(int));		
+		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(m_WMOObjectList[i].pModelResource->GetNameLength());		
 		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_WMOObjectList[i].Position));
 		Size+=SMART_STRUCT_STRING_MEMBER_SIZE(sizeof(m_WMOObjectList[i].Orientation));
 		Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_WMOObjectList[i].DoodadSet));		
@@ -1245,13 +1244,13 @@ UINT CD3DWOWADTModelResource::GetSmartStructSize(UINT Param)
 }
 
 
-CD3DFX * CD3DWOWADTModelResource::BuildFX(UINT Index,UINT LayCount,bool HaveShadowMap)
+CD3DFX * CD3DWOWADTModelResource::BuildFX(UINT Index,UINT LayCount,bool HaveShadowMap,bool UseNewShader)
 {
 	CEasyString FXName;
 	CEasyString PSFunction;
 	
 
-	FXName.Format("ADTModel_0x%X%s",
+	FXName.Format("ADTModel\\0x%X%s",
 		LayCount,HaveShadowMap?"S":"");
 
 	if(HaveShadowMap)
@@ -1296,14 +1295,30 @@ CD3DFX * CD3DWOWADTModelResource::BuildFX(UINT Index,UINT LayCount,bool HaveShad
 	CEasyString FxContent;
 
 
-	pFile=CD3DWOWM2Model::CreateFileAccessor();
+	pFile=CD3DFX::CreateFileAccessor();
 	if(pFile==NULL)
 		return NULL;
-	if(!pFile->Open(ADT_MODEL_FX_FILE_NAME,IFileAccessor::modeRead))
+	if(UseNewShader)
 	{
-		pFile->Release();
-		return NULL;	
+		CEasyString FXFileName=CD3DFX::FindFileOne(ADT_MODEL_30_FX_FILE_NAME);
+		if(!pFile->Open(FXFileName,IFileAccessor::modeRead))
+		{
+			PrintD3DLog(0,"文件%s打开失败%d",(LPCTSTR)FXFileName,GetLastError());
+			pFile->Release();
+			return NULL;	
+		}
 	}
+	else
+	{
+		CEasyString FXFileName=CD3DFX::FindFileOne(ADT_MODEL_20_FX_FILE_NAME);
+		if(!pFile->Open(FXFileName,IFileAccessor::modeRead))
+		{
+			PrintD3DLog(0,"文件%s打开失败%d",(LPCTSTR)FXFileName,GetLastError());
+			pFile->Release();
+			return NULL;	
+		}
+	}
+	
 	int FileSize=(int)pFile->GetSize();	
 	FxContent.Resize(FileSize);
 	pFile->Read((LPVOID)FxContent.GetBuffer(),FileSize);	
@@ -1313,6 +1328,12 @@ CD3DFX * CD3DWOWADTModelResource::BuildFX(UINT Index,UINT LayCount,bool HaveShad
 	
 
 	CD3DFX * pFX=m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory(FXName,FxContent.GetBuffer(),FxContent.GetLength());	
+	return pFX;
+}
+
+CD3DFX * CD3DWOWADTModelResource::BuildLiquidFX()
+{
+	CD3DFX * pFX=m_pManager->GetDevice()->GetFXManager()->LoadFX(ADT_MODEL_LIQUID_FX_FILE_NAME);
 	return pFX;
 }
 
@@ -1340,11 +1361,10 @@ bool CD3DWOWADTModelResource::LoadAlphaLayer(TEXTURE_LAYER_INFO& LayInfo,UINT La
 				else
 					AlphaDataType=ADT_UNCOMPRESS_2048;				
 			}
-			UINT ID1=ID*100+i;
 			UINT ProcessSize=0;
 			LPBYTE pAlphaData=pMCAL->AlphaMapData+pMCLY->Layers[i].MCALOffset;
 			UINT AlphaDataSize=pMCAL->ChunkSize-pMCLY->Layers[i].MCALOffset;
-			LayInfo.Layers[i].pAlphaMap=CreateAlphaMap(AlphaDataType,pAlphaData,AlphaDataSize,ProcessSize,ID1);
+			LayInfo.Layers[i].pAlphaMap=CreateAlphaMap(AlphaDataType,pAlphaData,AlphaDataSize,ProcessSize,ID,i);
 			if(LayInfo.Layers[i].pAlphaMap==NULL)
 				return false;
 			
@@ -1353,13 +1373,17 @@ bool CD3DWOWADTModelResource::LoadAlphaLayer(TEXTURE_LAYER_INFO& LayInfo,UINT La
 	return true;
 }
 
-CD3DTexture * CD3DWOWADTModelResource::CreateAlphaMap(int DataType,LPBYTE pData,UINT DataSize,UINT& ProcessSize,UINT ID)
+CD3DTexture * CD3DWOWADTModelResource::CreateAlphaMap(int DataType,LPBYTE pData,UINT DataSize,UINT& ProcessSize,UINT ID,UINT Layer)
 {
 	ProcessSize=0;	
 
 	CSmartPtr<CD3DTexture>  pAlphaMap=new CD3DTexture(m_pManager->GetDevice()->GetTextureManager());
 	if(!pAlphaMap->CreateTexture(64,64,D3DFMT_A8))
 		return NULL;
+
+	CEasyString Name;
+	Name.Format("%s\\LYA_%d_%d",GetName(),ID,Layer);
+	pAlphaMap->SetName(Name);
 	
 	switch(DataType)
 	{
@@ -1482,6 +1506,9 @@ bool CD3DWOWADTModelResource::LoadShadowMap(TEXTURE_LAYER_INFO& LayInfo,BLZ_CHUN
 	if(!pAlphaMap->CreateTexture(64,64,D3DFMT_A8))
 		return false;
 
+	CEasyString Name;
+	Name.Format("%s\\SHW_%d",GetName(),ID);
+	pAlphaMap->SetName(Name);
 
 	D3DLOCKED_RECT LockedRect;
 	if(pAlphaMap->LockBits(0,&LockedRect,NULL,0))

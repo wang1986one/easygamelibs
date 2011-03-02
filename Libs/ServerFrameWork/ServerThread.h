@@ -19,7 +19,7 @@ class CServerThread :
 {
 protected:	
 	CESVariableList				m_ESVariableList;
-	CESFactionList				m_ESFactionList;
+	CESFunctionList				m_ESFactionList;
 	CESBolanStack				m_Script;
 	CESThread					m_ESThread;
 	CEasyScriptExecutor			m_ScriptExecutor;
@@ -63,6 +63,9 @@ public:
 		return m_ServerStatus;
 	}
 
+	virtual void QueryShowDown();
+	virtual bool IsServerTerminated();
+
 protected:
 
 	virtual void Execute();
@@ -89,8 +92,8 @@ protected:
 		return m_pSysNetLinkManager;
 	}
 
-	int StartLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
-	int StopLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
-	int TestLog(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);	
-	int RebuildUDPControlPort(CESVariableList* pVarList,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
+	int StartLog(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
+	int StopLog(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
+	int TestLog(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);	
+	int RebuildUDPControlPort(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
 };

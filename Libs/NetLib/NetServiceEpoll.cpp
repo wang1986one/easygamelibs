@@ -65,6 +65,8 @@ BOOL CNetService::Create(int Protocol,int AcceptQueueSize,int RecvQueueSize,int 
 	if(GetServer()==NULL)
 		return FALSE;
 
+	Destory();
+
 	if(m_pEpollEventRouter==NULL)
 	{
 		m_pEpollEventRouter=GetServer()->CreateEventRouter();

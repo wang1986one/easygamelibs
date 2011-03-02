@@ -38,7 +38,7 @@ void CD3DObjectResource::Destory()
 	{
 		SAFE_RELEASE(m_SubMeshList[i]);
 	}
-	m_SubMeshList.Clear();
+	m_SubMeshList.Clear();	
 	CNameObject::Destory();
 }
 
@@ -76,7 +76,6 @@ CD3DSubMesh * CD3DObjectResource::GetSubMesh(UINT index)
 }
 
 
-
 CD3DBoundingBox * CD3DObjectResource::GetBoundingBox()
 {
 	return &m_BoundingBox;
@@ -87,21 +86,21 @@ CD3DBoundingSphere * CD3DObjectResource::GetBoundingSphere()
 	return &m_BoundingSphere;
 }
 
-void CD3DObjectResource::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+void CD3DObjectResource::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
 	for(int i=0;i<GetSubMeshCount();i++)
 	{
 		CD3DSubMesh * pSubMesh=GetSubMesh(i);
 		if(pSubMesh)
 		{
-			pSubMesh->PickResource(pObjectSet,Param);
+			pSubMesh->PickResource(pResourceManager,Param);
 		}
 	}	
 }
 
-bool CD3DObjectResource::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DObjectResource::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::ToSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::ToSmartStruct(Packet,pResourceManager,Param))
 		return false;	
 
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DOR_BOUDING_BOX,(char *)&m_BoundingBox,sizeof(m_BoundingBox)));	
@@ -113,7 +112,7 @@ bool CD3DObjectResource::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,
 		UINT BufferSize;
 		void * pBuffer=Packet.PrepareMember(BufferSize);
 		CSmartStruct SubPacket(pBuffer,BufferSize,true);
-		if(!m_SubMeshList[i]->ToSmartStruct(SubPacket,pUSOFile,Param))
+		if(!m_SubMeshList[i]->ToSmartStruct(SubPacket,pResourceManager,Param))
 			return false;
 		if(!Packet.FinishMember(SST_D3DOR_SUB_MESH,SubPacket.GetDataLen()))
 			return false;
@@ -122,9 +121,9 @@ bool CD3DObjectResource::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,
 	return true;
 }
 
-bool CD3DObjectResource::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DObjectResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CNameObject::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CNameObject::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 
 	void * Pos=Packet.GetFirstMemberPosition();
@@ -145,7 +144,7 @@ bool CD3DObjectResource::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFil
 				CSmartStruct SubPacket=Value;
 				LPCTSTR ClassName=SubPacket.GetMember(SST_NO_CLASS_NAME);
 				LPCTSTR ObjectName=SubPacket.GetMember(SST_NO_OBJECT_NAME);
-				CNameObject * pObject=pUSOFile->CreateObject(ClassName,ObjectName);
+				CNameObject * pObject=pResourceManager->CreateObject(ClassName,ObjectName);
 				if(pObject==NULL)
 					return false;
 				if(!pObject->IsKindOf(GET_CLASS_INFO(CD3DSubMesh)))
@@ -153,7 +152,7 @@ bool CD3DObjectResource::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFil
 					SAFE_RELEASE(pObject);
 					return false;
 				}
-				if(!pObject->FromSmartStruct(SubPacket,pUSOFile,(UINT)(m_pManager->GetDevice())))
+				if(!pObject->FromSmartStruct(SubPacket,pResourceManager,(UINT)(m_pManager->GetDevice())))
 					return false;
 				m_SubMeshList.Add((CD3DSubMesh *)pObject);
 			}
@@ -208,9 +207,9 @@ void CD3DObjectResource::CreateBounding()
 //	return pHead;
 //}
 //
-//int CD3DObjectResource::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//int CD3DObjectResource::USOWriteHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{
-//	int HeadSize=CNameObject::USOWriteHead(pHead,pUSOFile,Param);
+//	int HeadSize=CNameObject::USOWriteHead(pHead,pResourceManager,Param);
 //	if(HeadSize<0)
 //		return -1;
 //
@@ -223,20 +222,20 @@ void CD3DObjectResource::CreateBounding()
 //	return sizeof(STORAGE_STRUCT);
 //}
 //
-//bool CD3DObjectResource::USOWriteChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//bool CD3DObjectResource::USOWriteChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{
-//	if(!CNameObject::USOWriteChild(pHead,pUSOFile,Param))
+//	if(!CNameObject::USOWriteChild(pHead,pResourceManager,Param))
 //		return false;
-//	if(pUSOFile==NULL)
+//	if(pResourceManager==NULL)
 //		return false;	
 //
-//	IFileAccessor * pFile=pUSOFile->GetFile();
+//	IFileAccessor * pFile=pResourceManager->GetFile();
 //	if(pFile==NULL)
 //		return false;
 //
 //	for(UINT i=0;i<m_SubMeshList.GetCount();i++)
 //	{
-//		if(!m_SubMeshList[i]->ToUSOFile(pUSOFile,(UINT)(m_pManager->GetDevice())))
+//		if(!m_SubMeshList[i]->ToUSOFile(pResourceManager,(UINT)(m_pManager->GetDevice())))
 //			return false;		
 //	}
 //
@@ -244,9 +243,9 @@ void CD3DObjectResource::CreateBounding()
 //}
 //
 //
-//int CD3DObjectResource::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//int CD3DObjectResource::USOReadHead(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{	
-//	int ReadSize=CNameObject::USOReadHead(pHead,pUSOFile,Param);
+//	int ReadSize=CNameObject::USOReadHead(pHead,pResourceManager,Param);
 //	if(ReadSize<0)
 //		return -1;
 //
@@ -263,15 +262,15 @@ void CD3DObjectResource::CreateBounding()
 //}
 //
 //
-//bool CD3DObjectResource::USOReadChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pUSOFile,UINT Param)
+//bool CD3DObjectResource::USOReadChild(CNameObject::STORAGE_STRUCT * pHead,CUSOFile * pResourceManager,UINT Param)
 //{	
-//	if(!CNameObject::USOReadChild(pHead,pUSOFile,Param))
+//	if(!CNameObject::USOReadChild(pHead,pResourceManager,Param))
 //		return false;
 //
-//	if(pUSOFile==NULL)
+//	if(pResourceManager==NULL)
 //		return false;	
 //
-//	IFileAccessor * pFile=pUSOFile->GetFile();
+//	IFileAccessor * pFile=pResourceManager->GetFile();
 //	if(pFile==NULL)
 //		return false;
 //
@@ -283,7 +282,7 @@ void CD3DObjectResource::CreateBounding()
 //	{
 //		CD3DSubMesh * pD3DSubMesh=new CD3DSubMesh;
 //		m_SubMeshList.Add(pD3DSubMesh);
-//		if(!pD3DSubMesh->FromUSOFile(pUSOFile,(UINT)(m_pManager->GetDevice())))
+//		if(!pD3DSubMesh->FromUSOFile(pResourceManager,(UINT)(m_pManager->GetDevice())))
 //		{			
 //			return false;
 //		}

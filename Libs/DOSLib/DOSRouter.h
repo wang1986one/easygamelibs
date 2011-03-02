@@ -21,12 +21,14 @@ protected:
 	
 	CDOSServer										*m_pServer;
 	CThreadSafeIDStorage<CDOSMessagePacket *>		m_MsgQueue;
+	UINT											m_MsgProcessLimit;
 
 	volatile UINT									m_RouteInMsgCount;
 	volatile UINT									m_RouteInMsgFlow;
 	volatile UINT									m_RouteOutMsgCount;
 	volatile UINT									m_RouteOutMsgFlow;
 	
+	CThreadPerformanceCounter						m_ThreadPerformanceCounter;
 
 	DECLARE_CLASS_INFO(CDOSRouter);
 public:
@@ -44,7 +46,7 @@ public:
 	virtual void OnLinkEnd(CEasyNetLinkConnection * pConnection);	
 	
 
-	BOOL RouterMessage(OBJECT_ID SenderID,OBJECT_ID ReceiverID,WORD MsgID,LPCVOID pData,UINT DataSize);
+	BOOL RouterMessage(OBJECT_ID SenderID,OBJECT_ID ReceiverID,MSG_ID_TYPE MsgID,WORD MsgFlag,LPCVOID pData,UINT DataSize);
 
 	BOOL RouterMessage(CDOSMessagePacket * pPacket);
 
@@ -55,6 +57,7 @@ public:
 	UINT GetInMsgFlow();
 	UINT GetOutMsgCount();
 	UINT GetOutMsgFlow();
+	float GetCycleTime();
 	void ResetStatData();
 protected:
 	int DoMessageRoute(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT);	
@@ -85,10 +88,14 @@ inline UINT CDOSRouter::GetOutMsgFlow()
 {
 	return m_RouteOutMsgFlow;
 }
+inline float CDOSRouter::GetCycleTime()
+{
+	return m_ThreadPerformanceCounter.GetCycleTime();
+}
 inline void CDOSRouter::ResetStatData()
 {
 	m_RouteInMsgCount=0;
 	m_RouteInMsgFlow=0;
 	m_RouteOutMsgCount=0;
-	m_RouteOutMsgFlow=0;
+	m_RouteOutMsgFlow=0;	
 }

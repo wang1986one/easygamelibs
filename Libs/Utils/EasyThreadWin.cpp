@@ -35,9 +35,8 @@ BOOL CEasyThread::Start(BOOL IsSuspended,DWORD StartWaitTime)
 
 	if(IsWorking())
 		return FALSE;	
-
-	if (IsSuspended)
-		Flag = CREATE_SUSPENDED;		
+	
+	Flag = CREATE_SUSPENDED;		
 
 	m_Status=THREAD_STATUS_STARTING;
 	m_WantTerminate=FALSE;
@@ -52,14 +51,17 @@ BOOL CEasyThread::Start(BOOL IsSuspended,DWORD StartWaitTime)
 	if (hThread == 0)
 		return FALSE;
 
-	if (IsSuspended)
-		m_Status=THREAD_STATUS_SUSPENDED;
-	else
-		WaitForWorking(StartWaitTime);
-
-	//m_ThreadID = ThreadID;
 	m_hThread = hThread;
 
+	if (IsSuspended)
+	{
+		m_Status=THREAD_STATUS_SUSPENDED;
+	}
+	else
+	{
+		Resume();
+		WaitForWorking(StartWaitTime);
+	}
 	
 	return TRUE;
 }

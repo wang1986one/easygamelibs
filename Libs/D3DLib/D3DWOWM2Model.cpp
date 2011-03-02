@@ -34,7 +34,6 @@ CD3DWOWM2Model::CD3DWOWM2Model(void)
 	m_CurPlayTime=0;
 	m_PlaySpeedRate=1.0f;
 
-	AddFlag(CD3DObject::OBJECT_FLAG_RENDERED);
 
 	//m_pActivedAttachments=NULL;	
 }
@@ -47,19 +46,24 @@ CD3DWOWM2Model::~CD3DWOWM2Model(void)
 
 void CD3DWOWM2Model::Destory()
 {
-	for(UINT i=0;i<m_BoneMatrices.GetCount();i++)
+	CD3DBaseDynamicModel::Destory();
+
+	for(UINT i=0;i<m_SubMeshListForSoftSkinMesh.GetCount();i++)
 	{
-		if(m_BoneMatrices[i].pAttachObject)
-		{	
-			SAFE_RELEASE(m_BoneMatrices[i].pAttachObject);
-		}
+		SAFE_RELEASE(m_SubMeshListForSoftSkinMesh[i]);
 	}
+	m_SubMeshListForSoftSkinMesh.Clear();
+	//for(UINT i=0;i<m_BoneMatrices.GetCount();i++)
+	//{
+	//	if(m_BoneMatrices[i].pAttachObject)
+	//	{	
+	//		SAFE_RELEASE(m_BoneMatrices[i].pAttachObject);
+	//	}
+	//}
 	m_BoneMatrices.Clear();
 	m_AdditionalBoneMatrix.Clear();
 	m_InterimBoneMatStart.Clear();
-	m_InterimBoneMatEnd.Clear();
-	m_InterimStatus=IS_NONE;
-	m_InterimTime=0;
+	m_InterimBoneMatEnd.Clear();	
 	SAFE_RELEASE(m_pModelResource);
 	m_CurAnimationID=-1;
 	m_CurSubAnimationID=-1;
@@ -74,7 +78,7 @@ void CD3DWOWM2Model::Destory()
 	m_CurPlayTime=0;
 	m_PlaySpeedRate=1.0f;
 
-	CD3DBaseDynamicModel::Destory();
+	
 }
 
 bool CD3DWOWM2Model::Reset()
@@ -120,19 +124,30 @@ bool CD3DWOWM2Model::Play(bool IsLoop)
 		m_IsLoop=IsLoop;
 		m_IsPlaying=true;
 		m_PlayStartTime=-1.0f;
-		m_CurPlayTime=0;
+		m_CurPlayTime=0;		
 		if(m_InterimTime>0.000001f)
 		{
 			m_InterimStatus=IS_INIT;
-			m_InterimBoneMatStart.Resize(m_BoneMatrices.GetCount());
-			for(UINT i=0;i<m_BoneMatrices.GetCount();i++)
-			{
-				m_InterimBoneMatStart[i]=m_BoneMatrices[i].Matrix;
-			}
+			//m_InterimBoneMatStart.Resize(m_BoneMatrices.GetCount());
+			//for(UINT i=0;i<m_BoneMatrices.GetCount();i++)
+			//{
+			//	m_InterimBoneMatStart[i]=m_BoneMatrices[i].Matrix;
+			//}
 		}
 		else
 		{
-			FetchAnimationFrames(0);
+			m_InterimStatus=IS_NONE;
+			//FetchAnimationFrames(0);
+		}
+		for(UINT i=0;i<m_BoneMatrices.GetCount();i++)
+		{
+			if(m_BoneMatrices[i].pAttachObject)
+			{
+				if(m_BoneMatrices[i].pAttachObject->IsKindOf(GET_CLASS_INFO(CD3DBaseDynamicModel)))
+				{
+					((CD3DBaseDynamicModel *)m_BoneMatrices[i].pAttachObject)->Play(IsLoop);
+				}
+			}
 		}
 	}
 	return false;
@@ -140,11 +155,36 @@ bool CD3DWOWM2Model::Play(bool IsLoop)
 bool CD3DWOWM2Model::Stop()
 {
 	m_IsPlaying=false;
+	for(UINT i=0;i<m_BoneMatrices.GetCount();i++)
+	{
+		if(m_BoneMatrices[i].pAttachObject)
+		{
+			if(m_BoneMatrices[i].pAttachObject->IsKindOf(GET_CLASS_INFO(CD3DBaseDynamicModel)))
+			{
+				//if(!m_BoneMatrices[i].HaveGlobalSequence)
+					((CD3DBaseDynamicModel *)m_BoneMatrices[i].pAttachObject)->Stop();
+			}
+		}
+	}
 	return true;
 }
 bool CD3DWOWM2Model::IsPlaying()
 {
 	return m_IsPlaying;
+}
+void CD3DWOWM2Model::SetPlaySpeed(FLOAT Rate)
+{
+	m_PlaySpeedRate=Rate;
+	for(UINT i=0;i<m_BoneMatrices.GetCount();i++)
+	{
+		if(m_BoneMatrices[i].pAttachObject)
+		{
+			if(m_BoneMatrices[i].pAttachObject->IsKindOf(GET_CLASS_INFO(CD3DBaseDynamicModel)))
+			{				
+				((CD3DBaseDynamicModel *)m_BoneMatrices[i].pAttachObject)->SetPlaySpeed(Rate);
+			}			
+		}
+	}
 }
 
 bool CD3DWOWM2Model::AddBoneTrans(int KeyBone,CD3DMatrix& Matrix)
@@ -168,38 +208,20 @@ void CD3DWOWM2Model::ClearAdditionalBoneTrans()
 
 bool CD3DWOWM2Model::LoadFromFile(LPCTSTR szModelFileName)
 {
-	CEasyString ModelFileName=szModelFileName;
-	CEasyString SkinFileName;
-	int Pos=ModelFileName.ReverseFind('.');
-	if(Pos>=0)
-	{
-		SkinFileName=ModelFileName.Left(Pos);
-		SkinFileName=SkinFileName+"00.skin";
-		return LoadFromFile(ModelFileName,SkinFileName);
-	}		
-	return false;
-}
-bool CD3DWOWM2Model::LoadFromFile(LPCTSTR ModelFileName,LPCTSTR SkinFileName)
-{
 	if(GetDevice()==NULL)
 		return false;
 
-	Destory();
-
-	CEasyString ModelName=ModelFileName;
-	ModelName+="_"+GetPathFileName(SkinFileName);
-
 	CD3DWOWM2ModelResource* pResource=
-		dynamic_cast<CD3DWOWM2ModelResource*>(GetDevice()->GetObjectResourceManager()->GetResource(ModelName));
+		dynamic_cast<CD3DWOWM2ModelResource*>(GetDevice()->GetObjectResourceManager()->GetResource(szModelFileName));
 	if(!pResource)
 	{
 		pResource=new CD3DWOWM2ModelResource(GetDevice()->GetObjectResourceManager());
-		if(!pResource->LoadFromFile(ModelFileName,SkinFileName))
+		if(!pResource->LoadFromFile(szModelFileName))
 		{
 			pResource->Release();
 			return false;
 		}
-		if(!GetDevice()->GetObjectResourceManager()->AddResource(pResource,ModelName))
+		if(!GetDevice()->GetObjectResourceManager()->AddResource(pResource,szModelFileName))
 		{
 			pResource->Release();
 			return false;
@@ -208,7 +230,7 @@ bool CD3DWOWM2Model::LoadFromFile(LPCTSTR ModelFileName,LPCTSTR SkinFileName)
 	else
 	{
 		pResource->AddUseRef();
-	}	
+	}
 	bool Ret=LoadFromResource(pResource);
 	SAFE_RELEASE(pResource);
 	return Ret;
@@ -233,10 +255,14 @@ bool CD3DWOWM2Model::LoadFromResource(CD3DWOWM2ModelResource * pModelResource)
 		m_BoneMatList[i].SetIdentity();
 	}
 
-	if(m_pModelResource->GetSkinMeshBoneCount()>MAX_BONE_NUM)
+	if(m_pModelResource->GetSkinMeshBoneCount()>MAX_SHADER_BONE_NUM)
 	{
 		m_UseSoftSkinMesh=true;
 		PrepareSoftSkinMesh();
+	}
+	else if(m_pModelResource->GetBoneCount()==0)
+	{
+		m_UseSoftSkinMesh=true;
 	}
 	else
 	{
@@ -245,48 +271,76 @@ bool CD3DWOWM2Model::LoadFromResource(CD3DWOWM2ModelResource * pModelResource)
 
 	for(UINT i=0;i<m_pModelResource->GetParticleEmitterCount();i++)
 	{
-		CD3DWOWM2ModelResource::PARTICLE_EMITTER_INFO * pParticleEmitterInfo=m_pModelResource->GetParticleEmitterInfo(i);
+		CD3DWOWM2ModelResource::PARTICLE_EMITTER_BIND_INFO * pParticleEmitterInfo=m_pModelResource->GetParticleEmitterInfo(i);
 		if(pParticleEmitterInfo)
 		{
-			m_BoneMatrices[pParticleEmitterInfo->Bone].AttachmentType=CD3DWOWM2ModelResource::MAT_PARTICLE_EMITTER;
-			m_BoneMatrices[pParticleEmitterInfo->Bone].AttachmentID=i;			
-			m_BoneMatrices[pParticleEmitterInfo->Bone].AttachTransform=
-				CD3DMatrix::FromTranslation(pParticleEmitterInfo->Position);			
-			CD3DWOWM2BillBoardParticleEmitter * pParticleEmitter=new CD3DWOWM2BillBoardParticleEmitter();
+			m_BoneMatrices[pParticleEmitterInfo->BindBone].AttachmentType=CD3DWOWM2ModelResource::MAT_PARTICLE_EMITTER;
+			m_BoneMatrices[pParticleEmitterInfo->BindBone].AttachmentID=i;			
+			m_BoneMatrices[pParticleEmitterInfo->BindBone].AttachTransform=
+				CD3DMatrix::FromTranslation(pParticleEmitterInfo->BindPosition);			
+			CD3DBillBoardParticleEmitter * pParticleEmitter=new CD3DBillBoardParticleEmitter();
 
 			pParticleEmitter->SetDevice(GetDevice());
-			pParticleEmitter->Init(m_pModelResource,i,0);
+			pParticleEmitter->LoadFromResource(pParticleEmitterInfo->pModelResource,0);
 			pParticleEmitter->SetParent(this);
-			pParticleEmitter->SetLocalMatrix(m_BoneMatrices[pParticleEmitterInfo->Bone].AttachTransform);
+			pParticleEmitter->SetLocalMatrix(m_BoneMatrices[pParticleEmitterInfo->BindBone].AttachTransform);
 
-			m_BoneMatrices[pParticleEmitterInfo->Bone].pAttachObject=pParticleEmitter;
+			m_BoneMatrices[pParticleEmitterInfo->BindBone].pAttachObject=pParticleEmitter;			
 		}
 	}
 
 	for(UINT i=0;i<m_pModelResource->GetRibbonEmitterCount();i++)
 	{
-		CD3DWOWM2ModelResource::RIBBON_EMITTER_INFO * pRibbonEmitterInfo=m_pModelResource->GetRibbonEmitterInfo(i);
+		CD3DWOWM2ModelResource::RIBBON_EMITTER_BIND_INFO * pRibbonEmitterInfo=m_pModelResource->GetRibbonEmitterInfo(i);
 		if(pRibbonEmitterInfo)
 		{
-			m_BoneMatrices[pRibbonEmitterInfo->BoneID].AttachmentType=CD3DWOWM2ModelResource::MAT_RIBBON_EMITTER;
-			m_BoneMatrices[pRibbonEmitterInfo->BoneID].AttachmentID=i;
-			m_BoneMatrices[pRibbonEmitterInfo->BoneID].AttachTransform=
-				CD3DMatrix::FromTranslation(pRibbonEmitterInfo->Position);
-			CD3DWOWM2RibbonEmitter * pRibbonEmitter=new CD3DWOWM2RibbonEmitter();
+			m_BoneMatrices[pRibbonEmitterInfo->BindBone].AttachmentType=CD3DWOWM2ModelResource::MAT_RIBBON_EMITTER;
+			m_BoneMatrices[pRibbonEmitterInfo->BindBone].AttachmentID=i;
+			m_BoneMatrices[pRibbonEmitterInfo->BindBone].AttachTransform=
+				CD3DMatrix::FromTranslation(pRibbonEmitterInfo->BindPosition);
+			CD3DRibbonEmitter * pRibbonEmitter=new CD3DRibbonEmitter();
 
 			pRibbonEmitter->SetDevice(GetDevice());
-			pRibbonEmitter->Init(m_pModelResource,i);
+			pRibbonEmitter->LoadFromResource(pRibbonEmitterInfo->pModelResource);
 			pRibbonEmitter->SetParent(this);
-			pRibbonEmitter->SetLocalMatrix(m_BoneMatrices[pRibbonEmitterInfo->BoneID].AttachTransform);
+			pRibbonEmitter->SetLocalMatrix(m_BoneMatrices[pRibbonEmitterInfo->BindBone].AttachTransform);
 
-			m_BoneMatrices[pRibbonEmitterInfo->BoneID].pAttachObject=pRibbonEmitter;
+			m_BoneMatrices[pRibbonEmitterInfo->BindBone].pAttachObject=pRibbonEmitter;			
 		}
 	}
 
-	SetName(m_pModelResource->GetName());
-
 	m_CurBoundingBox=*m_pModelResource->GetBoundingBox();
 	return true;
+}
+
+bool CD3DWOWM2Model::LoadFromXFile(LPCTSTR szModelFileName)
+{
+	if(GetDevice()==NULL)
+		return false;
+
+	CD3DWOWM2ModelResource* pResource=
+		dynamic_cast<CD3DWOWM2ModelResource*>(GetDevice()->GetObjectResourceManager()->GetResource(szModelFileName));
+	if(!pResource)
+	{
+		pResource=new CD3DWOWM2ModelResource(GetDevice()->GetObjectResourceManager());
+		if(!pResource->LoadFromXFile(szModelFileName))
+		{
+			pResource->Release();
+			return false;
+		}
+		if(!GetDevice()->GetObjectResourceManager()->AddResource(pResource,szModelFileName))
+		{
+			pResource->Release();
+			return false;
+		}
+	}
+	else
+	{
+		pResource->AddUseRef();
+	}	
+	bool Ret=LoadFromResource(pResource);
+	SAFE_RELEASE(pResource);
+	return Ret;
 }
 
 
@@ -296,9 +350,11 @@ bool CD3DWOWM2Model::CloneFrom(CNameObject * pObject,UINT Param)
 		return false;
 
 	Destory();
+	
 
 	if(!CD3DBaseDynamicModel::CloneFrom(pObject,Param))
 		return false;
+	
 
 	CD3DWOWM2Model * pSrcObject=(CD3DWOWM2Model *)pObject;
 	m_pModelResource=pSrcObject->m_pModelResource;
@@ -331,22 +387,25 @@ bool CD3DWOWM2Model::CloneFrom(CNameObject * pObject,UINT Param)
 		}
 	}
 
+	if(m_UseSoftSkinMesh)
+		PrepareSoftSkinMesh();
+
 	return true;
 }
 
-void CD3DWOWM2Model::PickResource(CNameObjectSet * pObjectSet,UINT Param)
+void CD3DWOWM2Model::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
 	if(m_pModelResource)
 	{
-		m_pModelResource->PickResource(pObjectSet);
-		pObjectSet->Add(m_pModelResource);
+		m_pModelResource->PickResource(pResourceManager);
+		pResourceManager->AddResource(m_pModelResource);
 	}
 	for(UINT i=0;i<GetChildCount();i++)
 	{
-		if((!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DWOWM2BillBoardParticleEmitter)))&&
-			(!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DWOWM2RibbonEmitter))))
+		if((!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DBillBoardParticleEmitter)))&&
+			(!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DRibbonEmitter))))
 		{
-			GetChildByIndex(i)->PickResource(pObjectSet,Param);
+			GetChildByIndex(i)->PickResource(pResourceManager,Param);
 		}
 	}
 }
@@ -371,39 +430,39 @@ CD3DDummy * CD3DWOWM2Model::EnableAttachment(UINT ID)
 			m_BoneMatrices[pAttachment->Bone].AttachmentType=CD3DWOWM2ModelResource::MAT_DUMMY;
 			CD3DDummy * pDummy=new CD3DDummy;			
 			pDummy->SetName(pAttachment->Name);
-			pDummy->SetDevice(GetDevice());
-			if(GetRender())
-			{
-				GetRender()->AddObject(pDummy);
-			}
+			pDummy->SetDevice(GetDevice());			
 			pDummy->SetBoundingBox(BoundingBox);
 			pDummy->SetParent(this);
 			pDummy->SetLocalMatrix(m_BoneMatrices[pAttachment->Bone].AttachTransform);
 			m_BoneMatrices[pAttachment->Bone].pAttachObject=pDummy;
+			if(GetRender())
+			{
+				GetRender()->AddObject(pDummy);
+			}
 		}
 		return (CD3DDummy *)m_BoneMatrices[pAttachment->Bone].pAttachObject;
 	}
 	return NULL;
 }
 
-bool CD3DWOWM2Model::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DWOWM2Model::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
 	SAFE_RELEASE(m_pBoundingFrame);
 
-	if(!CD3DObject::ToSmartStruct(Packet,pUSOFile,Param|OPP_WITHOUT_CHILD))
+	if(!CD3DBaseDynamicModel::ToSmartStruct(Packet,pResourceManager,Param|OPP_WITHOUT_CHILD))
 		return false;	
 
 	if((Param&OPP_WITHOUT_CHILD)==0)
 	{
 		for(UINT i=0;i<m_ChildList.GetCount();i++)
 		{
-			if((!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DWOWM2BillBoardParticleEmitter)))&&
-				(!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DWOWM2RibbonEmitter))))
+			if((!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DBillBoardParticleEmitter)))&&
+				(!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DRibbonEmitter))))
 			{
 				UINT BufferSize;
 				void * pBuffer=Packet.PrepareMember(BufferSize);
 				CSmartStruct ChildPacket(pBuffer,BufferSize,true);
-				if(!m_ChildList[i]->ToSmartStruct(ChildPacket,pUSOFile,Param))
+				if(!m_ChildList[i]->ToSmartStruct(ChildPacket,pResourceManager,Param))
 					return false;
 				if(!Packet.FinishMember(SST_TO_CHILD,ChildPacket.GetDataLen()))
 					return false;
@@ -411,8 +470,7 @@ bool CD3DWOWM2Model::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT
 		}
 	}
 
-	int ResourceID=pUSOFile->ResourceObjectToIndex(m_pModelResource);
-	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMM_MODEL_RESOURCE,ResourceID));
+	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMM_MODEL_RESOURCE,m_pModelResource->GetName()));
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMM_CUR_ANI_ID,m_CurAnimationID));
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMM_CUR_SUB_ANI_ID,m_CurSubAnimationID));
 	for(UINT i=0;i<m_BoneMatrices.GetCount();i++)
@@ -435,9 +493,9 @@ bool CD3DWOWM2Model::ToSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT
 	
 	return true;
 }
-bool CD3DWOWM2Model::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UINT Param)
+bool CD3DWOWM2Model::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	if(!CD3DObject::FromSmartStruct(Packet,pUSOFile,Param))
+	if(!CD3DBaseDynamicModel::FromSmartStruct(Packet,pResourceManager,Param))
 		return false;
 	void * Pos=Packet.GetFirstMemberPosition();
 	while(Pos)
@@ -448,24 +506,11 @@ bool CD3DWOWM2Model::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UI
 		{	
 		case SST_D3DWMM_MODEL_RESOURCE:
 			{
-				int ResourceID=Value;
-				m_pModelResource=(CD3DWOWM2ModelResource *)pUSOFile->ResourceIndexToObject(ResourceID,GET_CLASS_INFO(CD3DWOWM2ModelResource));
-				if(m_pModelResource)
+				LPCTSTR szResourceName=Value;
+				CD3DWOWM2ModelResource * pModelResource=(CD3DWOWM2ModelResource *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DWOWM2ModelResource));
+				if(pModelResource)
 				{
-					m_pModelResource->AddUseRef();
-
-					m_BoneMatrices.Resize(m_pModelResource->GetBoneCount());
-					m_BoneMatList.Resize(m_pModelResource->GetBoneCount());
-
-					if(m_pModelResource->GetSkinMeshBoneCount()>MAX_BONE_NUM)
-					{
-						m_UseSoftSkinMesh=true;
-						PrepareSoftSkinMesh();
-					}
-					else
-					{
-						m_UseSoftSkinMesh=false;
-					}
+					LoadFromResource(pModelResource);					
 				}
 			}
 			break;
@@ -501,57 +546,16 @@ bool CD3DWOWM2Model::FromSmartStruct(CSmartStruct& Packet,CUSOFile * pUSOFile,UI
 		}
 	}
 	
-	if(m_pModelResource)
-	{
-		for(UINT i=0;i<m_pModelResource->GetParticleEmitterCount();i++)
-		{
-			CD3DWOWM2ModelResource::PARTICLE_EMITTER_INFO * pParticleEmitterInfo=m_pModelResource->GetParticleEmitterInfo(i);
-			if(pParticleEmitterInfo)
-			{
-				m_BoneMatrices[pParticleEmitterInfo->Bone].AttachmentType=CD3DWOWM2ModelResource::MAT_PARTICLE_EMITTER;
-				m_BoneMatrices[pParticleEmitterInfo->Bone].AttachmentID=i;
-				m_BoneMatrices[pParticleEmitterInfo->Bone].AttachTransform=
-					//CD3DMatrix::FromScale(pParticleEmitterInfo->Scale)*
-					CD3DMatrix::FromTranslation(pParticleEmitterInfo->Position);
-				CD3DWOWM2BillBoardParticleEmitter * pParticleEmitter=new CD3DWOWM2BillBoardParticleEmitter();
-				pParticleEmitter->SetDevice(GetDevice());
-				pParticleEmitter->Init(m_pModelResource,i,0);
-				pParticleEmitter->SetParent(this);
-				pParticleEmitter->SetLocalMatrix(m_BoneMatrices[pParticleEmitterInfo->Bone].AttachTransform);
-
-				m_BoneMatrices[pParticleEmitterInfo->Bone].pAttachObject=pParticleEmitter;
-			}
-		}
-
-		for(UINT i=0;i<m_pModelResource->GetRibbonEmitterCount();i++)
-		{
-			CD3DWOWM2ModelResource::RIBBON_EMITTER_INFO * pRibbonEmitterInfo=m_pModelResource->GetRibbonEmitterInfo(i);
-			if(pRibbonEmitterInfo)
-			{
-				m_BoneMatrices[pRibbonEmitterInfo->BoneID].AttachmentType=CD3DWOWM2ModelResource::MAT_RIBBON_EMITTER;
-				m_BoneMatrices[pRibbonEmitterInfo->BoneID].AttachmentID=i;
-				m_BoneMatrices[pRibbonEmitterInfo->BoneID].AttachTransform=
-					CD3DMatrix::FromTranslation(pRibbonEmitterInfo->Position);
-				CD3DWOWM2RibbonEmitter * pRibbonEmitter=new CD3DWOWM2RibbonEmitter();
-				pRibbonEmitter->SetDevice(GetDevice());
-				pRibbonEmitter->Init(m_pModelResource,i);
-				pRibbonEmitter->SetParent(this);
-				pRibbonEmitter->SetLocalMatrix(m_BoneMatrices[pRibbonEmitterInfo->BoneID].AttachTransform);
-
-				m_BoneMatrices[pRibbonEmitterInfo->BoneID].pAttachObject=pRibbonEmitter;
-			}
-		}
-	}
-
+	
 	Play(m_CurAnimationID,m_CurSubAnimationID,0,true);
 	return true;
 }
 
 UINT CD3DWOWM2Model::GetSmartStructSize(UINT Param)
 {
-	UINT Size=CD3DObject::GetSmartStructSize(Param|OPP_WITHOUT_CHILD);
+	UINT Size=CD3DBaseDynamicModel::GetSmartStructSize(Param|OPP_WITHOUT_CHILD);
 
-	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(int));
+	Size+=SMART_STRUCT_STRING_MEMBER_SIZE(m_pModelResource->GetNameLength());
 	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_CurAnimationID));
 	Size+=SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_CurSubAnimationID));
 	
@@ -569,8 +573,8 @@ UINT CD3DWOWM2Model::GetSmartStructSize(UINT Param)
 	{
 		for(UINT i=0;i<m_ChildList.GetCount();i++)
 		{
-			if((!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DWOWM2BillBoardParticleEmitter)))&&
-				(!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DWOWM2RibbonEmitter))))
+			if((!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DBillBoardParticleEmitter)))&&
+				(!m_ChildList[i]->IsKindOf(GET_CLASS_INFO(CD3DRibbonEmitter))))
 			{
 				Size+=SMART_STRUCT_STRUCT_MEMBER_SIZE(m_ChildList[i]->GetSmartStructSize(Param));
 			}
@@ -579,104 +583,156 @@ UINT CD3DWOWM2Model::GetSmartStructSize(UINT Param)
 	return Size;
 }
 
-void CD3DWOWM2Model::PrepareRender(CD3DDevice * pDevice,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
+void CD3DWOWM2Model::OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
-	FUNCTION_BEGIN;
- 	if(pSubMesh&&pMaterial)
-	{	
-
-		if(pMaterial->GetFX())
+	//设置灯光
+	if(LightList.GetCount())
+	{		
+		D3DLIGHT9	Light;
+		char		szParamName[32];
+		pFX->SetInt("LightCount",LightList.GetCount());
+		for(UINT i=0;i<LightList.GetCount();i++)
 		{
-			//设置灯光
-			if(LightList.GetCount())
-			{		
-				D3DLIGHT9	Light;
-				char		szParamName[32];
-				pMaterial->GetFX()->SetInt("LightCount",LightList.GetCount());
-				for(UINT i=0;i<LightList.GetCount();i++)
-				{
-					LightList[i]->GetCurLight(Light);
-					sprintf_s(szParamName,32,"LightType[%d]",i);
-					pMaterial->GetFX()->SetInt(szParamName,Light.Type);
-					sprintf_s(szParamName,32,"LightPos[%d]",i);
-					pMaterial->GetFX()->SetVector(szParamName,CD3DVector3(Light.Position));
-					sprintf_s(szParamName,32,"LightDir[%d]",i);
-					pMaterial->GetFX()->SetVector(szParamName,CD3DVector3(Light.Direction));
-					sprintf_s(szParamName,32,"LightAmbient[%d]",i);
-					pMaterial->GetFX()->SetColor(szParamName,Light.Ambient);
-					sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
-					pMaterial->GetFX()->SetColor(szParamName,Light.Diffuse);
-					sprintf_s(szParamName,32,"LightSpecular[%d]",i);
-					pMaterial->GetFX()->SetColor(szParamName,Light.Specular);
-					sprintf_s(szParamName,32,"LightRange[%d]",i);
-					pMaterial->GetFX()->SetFloat(szParamName,Light.Range);
-					sprintf_s(szParamName,32,"LightAtn0[%d]",i);
-					pMaterial->GetFX()->SetFloat(szParamName,Light.Attenuation0);
-					sprintf_s(szParamName,32,"LightAtn1[%d]",i);
-					pMaterial->GetFX()->SetFloat(szParamName,Light.Attenuation1);
-					sprintf_s(szParamName,32,"LightAtn2[%d]",i);
-					pMaterial->GetFX()->SetFloat(szParamName,Light.Attenuation2);
-					//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
-					//pMaterial->GetFX()->SetFloat(szParamName,Light.Falloff);
-					//sprintf_s(szParamName,32,"LightTheta[%d]",i);
-					//pMaterial->GetFX()->SetFloat(szParamName,Light.Theta);
-					//sprintf_s(szParamName,32,"LightPhi[%d]",i);
-					//pMaterial->GetFX()->SetFloat(szParamName,Light.Phi);
+			LightList[i]->GetCurLight(Light);
+			sprintf_s(szParamName,32,"LightType[%d]",i);
+			pFX->SetInt(szParamName,Light.Type);
+			sprintf_s(szParamName,32,"LightPos[%d]",i);
+			pFX->SetVector(szParamName,CD3DVector3(Light.Position));
+			sprintf_s(szParamName,32,"LightDir[%d]",i);
+			pFX->SetVector(szParamName,CD3DVector3(Light.Direction));
+			sprintf_s(szParamName,32,"LightAmbient[%d]",i);
+			pFX->SetColor(szParamName,Light.Ambient);
+			sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
+			pFX->SetColor(szParamName,Light.Diffuse);
+			sprintf_s(szParamName,32,"LightSpecular[%d]",i);
+			pFX->SetColor(szParamName,Light.Specular);
+			sprintf_s(szParamName,32,"LightRange[%d]",i);
+			pFX->SetFloat(szParamName,Light.Range);
+			sprintf_s(szParamName,32,"LightAtn0[%d]",i);
+			pFX->SetFloat(szParamName,Light.Attenuation0);
+			sprintf_s(szParamName,32,"LightAtn1[%d]",i);
+			pFX->SetFloat(szParamName,Light.Attenuation1);
+			sprintf_s(szParamName,32,"LightAtn2[%d]",i);
+			pFX->SetFloat(szParamName,Light.Attenuation2);
+			//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
+			//pFX->SetFloat(szParamName,Light.Falloff);
+			//sprintf_s(szParamName,32,"LightTheta[%d]",i);
+			//pFX->SetFloat(szParamName,Light.Theta);
+			//sprintf_s(szParamName,32,"LightPhi[%d]",i);
+			//pFX->SetFloat(szParamName,Light.Phi);
+		}
 
-				}
-
-			}
-			//设置雾
-			pMaterial->GetFX()->SetColor("FogColor",GetRender()->GetFogColor());
-			pMaterial->GetFX()->SetFloat("FogNear",GetRender()->GetFogNear());
-			pMaterial->GetFX()->SetFloat("FogFar",GetRender()->GetFogFar());
-
-			//设置材质
-			D3DMATERIAL9 * pD3DMaterial;
-			if(pSubMesh->IsSelected())
-				pD3DMaterial=&SELECTED_SUBMESH_MATERIAL;
-			else
-				pD3DMaterial=&(pMaterial->GetMaterial());
-			pMaterial->GetFX()->SetColor("MaterialAmbient",pD3DMaterial->Ambient);
-			pMaterial->GetFX()->SetColor("MaterialDiffuse",pD3DMaterial->Diffuse);
-			pMaterial->GetFX()->SetColor("MaterialSpecular",pD3DMaterial->Specular);
-			pMaterial->GetFX()->SetColor("MaterialEmissive",pD3DMaterial->Emissive);
-			pMaterial->GetFX()->SetFloat("MaterialPower",pD3DMaterial->Power);
-
-			//设置纹理
-			for(UINT i=0;i<pMaterial->GetTextureLayerCount();i++)
-			{
-				char szTexName[64];
-				sprintf_s(szTexName,64,"TexLay%d",i);
-				pMaterial->GetFX()->SetTexture(szTexName,pMaterial->GetTexture(i));
-			}			
-			pMaterial->GetFX()->SetMatrix("UVMatrix0",pMaterial->GetTextureUVTransform(0));
-
-			//设置全局色
-			pMaterial->GetFX()->SetColor("GlobalColor",pMaterial->GetGlobalColor());
+	}
+	////设置雾
+	//CD3DSceneRender * pRender=(CD3DSceneRender *)GetRender();
+	//if(pRender)
+	//{
+	//	pFX->SetColor("FogColor",pRender->GetFogColor());
+	//	pFX->SetFloat("FogNear",pRender->GetFogNear());
+	//	pFX->SetFloat("FogFar",pRender->GetFogFar());
+	//}
 
 
-			CD3DMatrix Mat;			
-			Mat=GetWorldMatrix()*pCamera->GetViewMat();
-			pMaterial->GetFX()->SetMatrix("WorldViewMatrix",Mat);
-			pMaterial->GetFX()->SetMatrix("PrjMatrix",pCamera->GetProjectMat());
 
-			pMaterial->GetFX()->SetVector("CameraPos",pCamera->GetWorldMatrix().GetTranslation());
-			
+	//pFX->SetMatrix("PrjMatrix",pCamera->GetProjectMatR());
 
-			if((!m_UseSoftSkinMesh)&&m_BoneMatList.GetCount())
-			{
-				UINT BoneNum=m_pModelResource->GetSkinMeshBoneCount();
-				//设置骨骼矩阵
-				pMaterial->GetFX()->SetMatrixArray("BoneMatrixArray",&(m_BoneMatList[0]),BoneNum);
-			}
-		}	
+	//pFX->SetVector("CameraPos",pCamera->GetWorldMatrixR().GetTranslation());
+	//pFX->SetFloat("CameraNear",pCamera->GetNear());
+	//pFX->SetFloat("CameraFar",pCamera->GetFar());
+
+
+
+
+					
+
+	if(CD3DDevice::IsUseMultiThreadRender())
+	{
+		UINT BoneNum=m_pModelResource->GetSkinMeshBoneCount();
+		if(BoneNum>m_BoneMatListR.GetCount())
+			BoneNum=m_BoneMatListR.GetCount();
+		if((!m_UseSoftSkinMesh)&&BoneNum)
+		{
+			//设置骨骼矩阵
+			pFX->SetMatrixArray("BoneMatrixArray",&(m_BoneMatListR[0]),BoneNum);
+		}
 	}
 	else
 	{
-
+		UINT BoneNum=m_pModelResource->GetSkinMeshBoneCount();
+		if(BoneNum>m_BoneMatList.GetCount())
+			BoneNum=m_BoneMatList.GetCount();
+		if((!m_UseSoftSkinMesh)&&BoneNum)
+		{
+			//设置骨骼矩阵
+			pFX->SetMatrixArray("BoneMatrixArray",&(m_BoneMatList[0]),BoneNum);
+		}
 	}
-	FUNCTION_END;
+}
+void CD3DWOWM2Model::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
+{
+	////设置材质
+	//D3DMATERIAL9 * pD3DMaterial=&(pMaterial->GetMaterial());			
+	//pFX->SetColor("MaterialAmbient",pD3DMaterial->Ambient);
+	//pFX->SetColor("MaterialDiffuse",pD3DMaterial->Diffuse);
+	//pFX->SetColor("MaterialSpecular",pD3DMaterial->Specular);
+	//pFX->SetColor("MaterialEmissive",pD3DMaterial->Emissive);
+	//pFX->SetFloat("MaterialPower",pD3DMaterial->Power);
+
+	//设置纹理
+	for(UINT i=0;i<pMaterial->GetTextureLayerCount();i++)
+	{
+		char szTexName[64];
+		sprintf_s(szTexName,64,"TexLay%d",i);
+		pFX->SetTexture(szTexName,pMaterial->GetTexture(i));
+	}			
+	UINT TextureFlag=pMaterial->GetTextureProperty(0)>>CD3DWOWM2ModelResource::TF_TEXTURE_FLAG_SHIFT;
+	if(TextureFlag&D3D_TEX_FLAG_UV_ANI)
+	{
+		pFX->SetMatrix("UVMatrix0",pMaterial->GetTextureUVTransform(0));
+	}
+
+
+	//设置全局色
+	D3DCOLORVALUE GlobalColor=pMaterial->GetGlobalColor();
+	if(pSubMesh->IsSelected())			
+	{
+		GlobalColor.b=0.0f;
+		GlobalColor.g=0.0f;
+		GlobalColor.r=1.0f;
+	}
+	pFX->SetColor("GlobalColor",GlobalColor);
+
+	CD3DMatrix WorldMat,WorldViewMat;			
+	WorldMat=GetWorldMatrixR();
+	WorldViewMat=WorldMat*pCamera->GetViewMatR();
+
+	UINT RenderFlag=pSubMesh->GetProperty()>>CD3DWOWM2ModelResource::SMP_RENDER_FLAG_SHIFT;
+	if(RenderFlag&D3D_RENDER_FLAG_BILL_BOARD)
+	{
+		WorldMat=WorldMat.GetScaleTranslation();
+		WorldViewMat=WorldViewMat.GetScaleTranslation();
+	}
+	pFX->SetMatrix("WorldMatrix",WorldMat);
+	pFX->SetMatrix("WorldViewMatrix",WorldViewMat);
+}
+
+void CD3DWOWM2Model::OnPrepareRenderData()
+{
+	CD3DBaseDynamicModel::OnPrepareRenderData();
+
+	if(!m_UseSoftSkinMesh)
+	{
+		if(m_BoneMatListR.GetCount()<m_BoneMatList.GetCount())
+		{
+			m_BoneMatListR.Resize(m_BoneMatList.GetCount());
+		}
+		for(UINT i=0;i<m_BoneMatList.GetCount();i++)
+		{
+			m_BoneMatListR[i]=m_BoneMatList[i];
+		}
+
+		
+	}
 }
 
 int CD3DWOWM2Model::GetSubMeshCount()
@@ -690,10 +746,38 @@ int CD3DWOWM2Model::GetSubMeshCount()
 
 CD3DSubMesh * CD3DWOWM2Model::GetSubMesh(UINT index)
 {
+	if(m_UseSoftSkinMesh)
+	{
+		if(index<m_SubMeshListForSoftSkinMesh.GetCount())
+			return m_SubMeshListForSoftSkinMesh[index];
+		else
+			return NULL;
+	}
+	else
+	{
+		return GetOriginSubMesh(index);
+	}
+}
+
+CD3DSubMeshMaterial  * CD3DWOWM2Model::GetSubMeshMaterial(UINT index)
+{
+	if(m_pModelResource)
+	{
+		CD3DSubMesh * pSubMesh=GetOriginSubMesh(index);
+		if(pSubMesh)
+		{
+			return &(pSubMesh->GetMaterial());
+		}
+	}
+	return NULL;
+}
+
+CD3DSubMesh * CD3DWOWM2Model::GetOriginSubMesh(UINT index)
+{
 	if(m_pModelResource)
 		return m_pModelResource->GetSubMesh(index);
 	else
-	return NULL;
+		return NULL;	
 }
 
 CD3DBoundingBox * CD3DWOWM2Model::GetBoundingBox()
@@ -711,11 +795,14 @@ CD3DBoundingSphere * CD3DWOWM2Model::GetBoundingSphere()
 	return NULL;
 }
 
+bool CD3DWOWM2Model::CanDoSubMeshViewCull()
+{
+	return true;
+}
 
 
 void CD3DWOWM2Model::Update(FLOAT Time)
 {
-	FUNCTION_BEGIN;
 
 	
 	//更新世界矩阵
@@ -724,29 +811,35 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 	else
 		m_WorldMatrix=m_LocalMatrix;
 
-	if(CheckFlag(CD3DObject::OBJECT_FLAG_RENDERED))
+	
+	if(m_IsPlaying&&m_PlayStartTime<0)	
 	{
-		if(m_IsPlaying)	
-		{
-			if(m_PlayStartTime<0)
-			{
-				m_PlayStartTime=Time;
-			}
-			m_CurPlayTime=Time-m_PlayStartTime;
-			if(!m_IsLoop)
-			{
-				if(m_CurPlayTime>=m_CurAnimationLength)
-				{
-					m_CurPlayTime=m_CurAnimationLength-0.001;
-					m_IsPlaying=false;
-				}
-			}		
-		}	
+		m_PlayStartTime=Time;
+	}	
+	if(m_PlayStartTime>=0)
+	{
+		m_CurPlayTime=(Time-m_PlayStartTime)*m_PlaySpeedRate;
+	}
 
-		UINT CurTime=(UINT)(m_CurPlayTime*1000.0f*m_PlaySpeedRate);
+	if(!m_IsLoop&&m_IsPlaying&&m_CurPlayTime>=m_CurAnimationLength)
+	{
+		Stop();
+	}	
+	if(m_IsPlaying&&IsVisible()&&(!CheckFlag(CD3DObject::OBJECT_FLAG_CULLED)))
+	{
+		UINT CurTime=(UINT)(m_CurPlayTime*1000.0f);
 
 		if(m_pModelResource->HasBoneAni())
 		{
+
+			if(m_InterimStatus==IS_INIT)
+			{		
+				m_InterimBoneMatStart.Resize(m_BoneMatrices.GetCount());
+				for(UINT i=0;i<m_BoneMatrices.GetCount();i++)
+				{
+					m_InterimBoneMatStart[i]=m_BoneMatrices[i].Matrix;
+				}
+			}
 
 			if(m_InterimStatus!=IS_DOING)
 			{
@@ -772,24 +865,32 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 			{
 				for(UINT i=0;i<m_BoneMatList.GetCount();i++)
 				{
-					FLOAT S=m_CurPlayTime/m_InterimTime;
+					FLOAT S=0.0f;					
+					S=m_CurPlayTime/m_InterimTime;
 					if(S>1.0f)
 						S=1.0f;
-					CD3DVector3 ScalingStart=m_InterimBoneMatStart[i].GetScale();
-					CD3DVector3 ScalingEnd=m_InterimBoneMatEnd[i].GetScale();
-					ScalingEnd=CD3DVector3::Lerp(ScalingStart,ScalingEnd,S);
+					if(S<0.0f)
+						S=0.0f;
+	
 
-					CD3DQuaternion RotationStart=m_InterimBoneMatStart[i].GetRotationOnQuaternion();
-					CD3DQuaternion RotationEnd=m_InterimBoneMatEnd[i].GetRotationOnQuaternion();
-					RotationEnd=CD3DQuaternion::SLerp(RotationStart,RotationEnd,S);
+					CD3DVector3 ScalingStart,ScalingEnd;
+					CD3DQuaternion RotationStart,RotationEnd;
+					CD3DVector3 TranslationStart,TranslationEnd;
 
-					CD3DVector3 TranslationStart=m_InterimBoneMatStart[i].GetTranslation();
-					CD3DVector3 TranslationEnd=m_InterimBoneMatEnd[i].GetTranslation();
-					TranslationEnd=CD3DVector3::Lerp(TranslationStart,TranslationEnd,S);
+					m_InterimBoneMatStart[i].GetTransformation(&ScalingStart,&RotationStart,&TranslationStart);
+					m_InterimBoneMatEnd[i].GetTransformation(&ScalingEnd,&RotationEnd,&TranslationEnd);					
+					
+					CD3DVector3 Scaling=CD3DVector3::Lerp(ScalingStart,ScalingEnd,S);
+					CD3DQuaternion Rotation=CD3DQuaternion::SLerp(RotationStart,RotationEnd,S);
+					CD3DVector3 Translation=CD3DVector3::Lerp(TranslationStart,TranslationEnd,S);
+				
 
-					m_BoneMatList[i]=CD3DMatrix::FromScale(ScalingEnd)*CD3DMatrix::FromRotationQuaternion(RotationEnd)*
-						CD3DMatrix::FromTranslation(TranslationEnd);
-				}
+					m_BoneMatList[i].SetTransformation(&Scaling,&Rotation,&Translation);						
+					m_BoneMatList[i]=CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint*(-1.0f))*
+						m_BoneMatList[i]*
+						CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint);
+				}					
+				
 				if(m_CurPlayTime>m_InterimTime)
 				{
 					m_InterimStatus=IS_NONE;
@@ -801,44 +902,61 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 			{
 				for(UINT i=0;i<m_BoneMatList.GetCount();i++)
 				{			
-					m_BoneMatList[i]=m_BoneMatrices[i].Matrix;			
+					m_BoneMatList[i]=CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint*(-1.0f))*
+						m_BoneMatrices[i].Matrix*
+						CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint);			
 				}
-			}
+			}			
 
+			
 			for(UINT i=0;i<m_BoneMatList.GetCount();i++)
 			{
 				if(m_BoneMatrices[i].ParentID>=0)		
 				{
 					m_BoneMatList[i]=m_BoneMatList[i]*m_BoneMatList[m_BoneMatrices[i].ParentID];
+
+					m_BoneMatrices[i].Flags|=m_BoneMatrices[m_BoneMatrices[i].ParentID].Flags&
+						(CD3DWOWM2ModelResource::BONE_FLAG_BILLBOARD|CD3DWOWM2ModelResource::BONE_FLAG_BILLBOARD_HORIZONTAL);
 				}
-			}
+			}	
+			
 
 			for(UINT i=0;i<m_BoneMatList.GetCount();i++)
-			{
+			{				
+				CD3DSceneRender * pRender=dynamic_cast<CD3DSceneRender *>(GetRender());
+				if(pRender&&pRender->GetCamera())
+				{
+					if(m_BoneMatrices[i].Flags&CD3DWOWM2ModelResource::BONE_FLAG_BILLBOARD)
+					{
+						CD3DMatrix BillBoardMat=CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint*(-1.0f))*
+							pRender->GetCamera()->GetWorldMatrixDirect().GetRotation()*
+							GetWorldMatrix().GetRotation().GetInverse()*m_BoneMatList[i].GetRotation().GetInverse()*
+							CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint);
+
+						m_BoneMatList[i]=BillBoardMat*m_BoneMatList[i];//*GetWorldMatrix().GetRotation().GetInverse();
+					}
+					else if(m_BoneMatrices[i].Flags&CD3DWOWM2ModelResource::BONE_FLAG_BILLBOARD_HORIZONTAL)
+					{
+						CD3DMatrix BillBoardMat=pRender->GetCamera()->GetWorldMatrixDirect().GetRotation()*
+							GetWorldMatrix().GetRotation().GetInverse();
+
+						BillBoardMat._12=0.0f;
+						BillBoardMat._21=0.0f;
+						BillBoardMat._22=1.0f;
+						BillBoardMat._23=0.0f;
+						BillBoardMat._32=0.0f;						
+
+						BillBoardMat=CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint*(-1.0f))*
+							BillBoardMat*
+							CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint);
+
+						m_BoneMatList[i]=BillBoardMat*m_BoneMatList[i];
+					}					
+				}
 				if(m_BoneMatrices[i].pAttachObject)
 				{	
 					CD3DMatrix Mat=m_BoneMatrices[i].AttachTransform*m_BoneMatList[i];
 					m_BoneMatrices[i].pAttachObject->SetLocalMatrix(Mat);				
-				}
-
-				if((m_BoneMatrices[i].Flags&CD3DWOWM2ModelResource::BONE_FLAG_BILLBOARD)&&GetRender()&&GetRender()->GetCamera())
-				{
-					//m_BoneMatList[i]=m_BoneMatList[i]*GetWorldMatrix();
-					
-
-
-					CD3DMatrix BillBoardMat=CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint*(-1.0f))*
-						GetRender()->GetCamera()->GetWorldMatrixDirect().GetRotation()*
-						GetWorldMatrix().GetRotation().GetInverse()*
-						CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint);
-
-			
-
-					m_BoneMatList[i]=BillBoardMat*m_BoneMatList[i];//*GetWorldMatrix().GetRotation().GetInverse();
-				}
-				else
-				{
-					m_BoneMatList[i]=m_BoneMatList[i];
 				}
 
 			}
@@ -851,22 +969,46 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 		}
 		else
 		{
-
 			for(UINT i=0;i<m_BoneMatList.GetCount();i++)
 			{			
 				m_BoneMatList[i].SetIdentity();
-				if((m_BoneMatrices[i].Flags&CD3DWOWM2ModelResource::BONE_FLAG_BILLBOARD)&&GetRender()&&GetRender()->GetCamera())
+				CD3DSceneRender * pRender=dynamic_cast<CD3DSceneRender *>(GetRender());
+				if(pRender&&pRender->GetCamera())
 				{
-					CD3DMatrix BillBoardMat=CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint*(-1.0f))*
-						GetRender()->GetCamera()->GetWorldMatrixDirect().GetRotation()*
-						GetWorldMatrix().GetRotation().GetInverse()*
-						CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint);		
-					m_BoneMatList[i]=BillBoardMat*m_BoneMatList[i]*GetWorldMatrix().GetInverse();
-				}			
+					if(m_BoneMatrices[i].Flags&CD3DWOWM2ModelResource::BONE_FLAG_BILLBOARD)
+					{
+						CD3DMatrix BillBoardMat=CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint*(-1.0f))*
+							pRender->GetCamera()->GetWorldMatrixDirect().GetRotation()*
+							GetWorldMatrix().GetRotation().GetInverse()**m_BoneMatList[i].GetRotation().GetInverse()*
+							CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint);		
+						m_BoneMatList[i]=BillBoardMat*m_BoneMatList[i];//*GetWorldMatrix().GetInverse();
+					}	
+					else if(m_BoneMatrices[i].Flags&CD3DWOWM2ModelResource::BONE_FLAG_BILLBOARD_HORIZONTAL)
+					{
+						CD3DMatrix BillBoardMat=pRender->GetCamera()->GetWorldMatrixDirect().GetRotation()*
+							GetWorldMatrix().GetRotation().GetInverse()*m_BoneMatList[i].GetRotation().GetInverse();
+
+						BillBoardMat._12=0.0f;
+						BillBoardMat._21=0.0f;
+						BillBoardMat._22=1.0f;
+						BillBoardMat._23=0.0f;
+						BillBoardMat._32=0.0f;		
+
+						BillBoardMat=CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint*(-1.0f))*
+							BillBoardMat*
+							CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint);
+
+						m_BoneMatList[i]=BillBoardMat*m_BoneMatList[i];//*GetWorldMatrix().GetInverse();
+					}
+
+					if(m_BoneMatrices[i].pAttachObject)
+					{	
+						CD3DMatrix Mat=m_BoneMatrices[i].AttachTransform*m_BoneMatList[i];
+						m_BoneMatrices[i].pAttachObject->SetLocalMatrix(Mat);				
+					}
+				}
 			}
-
 		}
-
 
 		if(m_pModelResource->HasMaterialAni())
 		{
@@ -874,141 +1016,139 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 			//设置颜色动画和纹理动画
 			for(int i=0;i<GetSubMeshCount();i++)		
 			{			
+				CD3DSubMesh * pSubMesh=GetSubMesh(i);
 				CD3DSubMeshMaterial * pMaterial=GetSubMeshMaterial(i);
-				if(pMaterial)
+				if(pSubMesh&&pMaterial)
 				{
-					if(pMaterial->GetTextureLayerCount()>0)
+					D3DCOLORVALUE GlobalColor={1.0f,1.0f,1.0f,1.0f};
+
+					UINT64 SubMeshProperty=pSubMesh->GetProperty();
+					BYTE ColorAniIndex=(SubMeshProperty&CD3DWOWM2ModelResource::SMP_COLOR_ANI_INDEX_MASK)>>
+						CD3DWOWM2ModelResource::SMP_COLOR_ANI_INDEX_SHIFT;
+					BYTE TransparencyAniIndex=(SubMeshProperty&CD3DWOWM2ModelResource::SMP_TRANSPARENCY_ANI_INDEX_MASK)>>
+						CD3DWOWM2ModelResource::SMP_TRANSPARENCY_ANI_INDEX_SHIFT;
+
+					if(ColorAniIndex)
 					{
-						D3DCOLORVALUE GlobalColor={1.0f,1.0f,1.0f,1.0f};
-
-						UINT64 TextureProperty=pMaterial->GetTextureProperty(0);
-						signed char ColorAniIndex=(signed char)((TextureProperty&CD3DWOWM2ModelResource::SMP_COLOR_ANI_INDEX)>>24);
-						signed char TransparencyAniIndex=(signed char)((TextureProperty&CD3DWOWM2ModelResource::SMP_TRANSPARENCY_ANI_INDEX)>>32);
-
-						if(ColorAniIndex>=0)
+						m_pModelResource->MakeColorAnimationFrame(ColorAniIndex-1,CurTime,m_IsLoop,GlobalColor);
+					}
+					if(TransparencyAniIndex)
+					{
+						FLOAT Alpha=1.0f;
+						if(m_pModelResource->MakeTransparencyAnimationFrame(TransparencyAniIndex-1,CurTime,m_IsLoop,Alpha))
 						{
-							m_pModelResource->MakeColorAnimationFrame(ColorAniIndex,CurTime,GlobalColor);
+							GlobalColor.a*=Alpha;
 						}
-						if(TransparencyAniIndex>=0)
-						{
-							FLOAT Alpha=1.0f;
-							if(m_pModelResource->MakeTransparencyAnimationFrame(TransparencyAniIndex,CurTime,Alpha))
-							{
-								GlobalColor.a*=Alpha;
-							}
-						}
-						pMaterial->SetGlobalColor(GlobalColor);
+					}
+					pMaterial->SetGlobalColor(GlobalColor);
 
-						for(UINT j=0;j<pMaterial->GetTextureLayerCount();j++)
+					for(UINT j=0;j<pMaterial->GetTextureLayerCount();j++)
+					{
+						UINT64 TextureProperty=pMaterial->GetTextureProperty(j);
+						BYTE UVAniIndex=(TextureProperty&CD3DWOWM2ModelResource::TF_UV_ANI_INDEX_MASK)>>
+							CD3DWOWM2ModelResource::TF_UV_ANI_INDEX_SHIFT;
+						if(UVAniIndex)
 						{
-							UINT64 TextureProperty=pMaterial->GetTextureProperty(j);
-							signed char UVAniIndex=(signed char)((TextureProperty&CD3DWOWM2ModelResource::SMP_UV_ANI_INDEX)>>40);
-							if(UVAniIndex>=0)
-							{
-								CD3DMatrix UVTransform;
-								if(m_pModelResource->MakeTextureUVAniFrame(UVAniIndex,CurTime,UVTransform))
-								{								
-									pMaterial->SetTextureUVTransform(j,UVTransform);
-								}
+							CD3DMatrix UVTransform;
+							if(m_pModelResource->MakeTextureUVAniFrame(UVAniIndex-1,CurTime,m_IsLoop,UVTransform))
+							{								
+								pMaterial->SetTextureUVTransform(j,UVTransform);
 							}
 						}
 					}
+					
 				}			
 			}
-
 		}
 	}
-	
-	
+		
 	//更新子对象
 	for(UINT i=0;i<GetChildCount();i++)
 		GetChildByIndex(i)->Update(Time);
 
 	
 
-	FUNCTION_END;
 }
 
 void CD3DWOWM2Model::PrepareSoftSkinMesh()
-{
-	if(m_pModelResource)
+{	
+	for(UINT i=0;i<m_SubMeshListForSoftSkinMesh.GetCount();i++)
 	{
-		for(int i=0;i<m_pModelResource->GetSubMeshCount();i++)
-		{
-			CD3DSubMesh * pSubMesh=m_pModelResource->GetSubMesh(i);
-			pSubMesh->AllocVertexBuffer();
-			pSubMesh->AllocIndexBuffer();
-			pSubMesh->AllocBackupVertexBuffer();
-			BYTE * pModelVertices;
-			pSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pModelVertices,0);
-			memcpy(pSubMesh->GetVertexBuffer(),pModelVertices,pSubMesh->GetVertexFormat().VertexSize*pSubMesh->GetVertexCount());
-			memcpy(pSubMesh->GetBackupVertexBuffer(),pModelVertices,pSubMesh->GetVertexFormat().VertexSize*pSubMesh->GetVertexCount());
-			pSubMesh->GetDXVertexBuffer()->Unlock();
-			BYTE * pModelIndices;
-			pSubMesh->GetDXIndexBuffer()->Lock(0,0,(LPVOID *)&pModelIndices,0);
-			memcpy(pSubMesh->GetIndexBuffer(),pModelIndices,pSubMesh->GetVertexFormat().IndexSize*pSubMesh->GetIndexCount());
-			pSubMesh->GetDXIndexBuffer()->Unlock();
-			pSubMesh->SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
-			//if(m_pModelResource->GetSubMesh(i)->GetMaterial().pFX)
-			//{
-			//	m_pModelResource->GetSubMesh(i)->GetMaterial().pFX->SetActiveTechnique("TecNormal");
-			//}
-		}
+		SAFE_RELEASE(m_SubMeshListForSoftSkinMesh[i]);
 	}
+	m_SubMeshListForSoftSkinMesh.Clear();
+
+	for(int i=0;i<GetSubMeshCount();i++)
+	{
+		CD3DSubMesh * pSubMesh=GetOriginSubMesh(i);
+		if(pSubMesh)
+		{
+			CD3DSubMesh * pNewSubMesh=new CD3DSubMesh(GetDevice());
+			
+			pNewSubMesh->CloneFrom(pSubMesh,SUBMESH_CLONE_USE_SYSTEM_MEM|SUBMESH_CLONE_NOT_CLONE_MATERIAL);
+			
+			pNewSubMesh->AllocBackupVertexBuffer();
+						
+			memcpy(pNewSubMesh->GetBackupVertexBuffer(),pNewSubMesh->GetVertexBuffer(),pSubMesh->GetVertexFormat().VertexSize*pSubMesh->GetVertexCount());
+
+			m_SubMeshListForSoftSkinMesh.Add(pNewSubMesh);
+		}		
+	}
+	
 }
 
 void CD3DWOWM2Model::CaculateSoftSkinMesh()
 {
-	if(m_pModelResource)
+	for(int s=0;s<m_SubMeshListForSoftSkinMesh.GetCount();s++)
 	{
-		for(int s=0;s<m_pModelResource->GetSubMeshCount();s++)
+		CD3DSubMesh * pSubMesh=m_SubMeshListForSoftSkinMesh[s];
+
+		
+		CD3DWOWM2ModelResource::MODEL_VERTEXT * pDestVertices=(CD3DWOWM2ModelResource::MODEL_VERTEXT *)pSubMesh->GetVertexBuffer();
+
+		CD3DWOWM2ModelResource::MODEL_VERTEXT * pSrcVertices=(CD3DWOWM2ModelResource::MODEL_VERTEXT *)pSubMesh->GetBackupVertexBuffer();
+
+
+		for(UINT i=0;i<pSubMesh->GetVertexCount();i++)
 		{
-			CD3DSubMesh * pSubMesh=m_pModelResource->GetSubMesh(s);
-
-			if(pSubMesh->IsVisible()&&(!pSubMesh->IsCulled()))			
+			pDestVertices[i].Pos=0.0f;
+			pDestVertices[i].Normal=0.0f;
+			for(int b=0;b<MAX_VERTEX_BONE_BIND;b++)
 			{
-				CD3DWOWM2ModelResource::MODEL_VERTEXT * pDestVertices=(CD3DWOWM2ModelResource::MODEL_VERTEXT *)pSubMesh->GetVertexBuffer();
-
-				CD3DWOWM2ModelResource::MODEL_VERTEXT * pSrcVertices=(CD3DWOWM2ModelResource::MODEL_VERTEXT *)pSubMesh->GetBackupVertexBuffer();
-
-
-				for(UINT i=0;i<pSubMesh->GetVertexCount();i++)
+				if(pSrcVertices[i].BoneWeight[b]>0.000001f)
 				{
-					pDestVertices[i].Pos=0.0f;
-					pDestVertices[i].Normal=0.0f;
-					for(int b=0;b<MAX_VERTEX_BONE_BIND;b++)
+					if(m_InterimStatus==IS_DOING)
 					{
-						if(pSrcVertices[i].BoneWeight[b]>0.000001f)
+						if(pSrcVertices[i].BoneID[b]==48)
 						{
-							pDestVertices[i].Pos+=pSrcVertices[i].Pos*
-								m_BoneMatList[pSrcVertices[i].BoneID[b]]*pSrcVertices[i].BoneWeight[b];
-							pDestVertices[i].Normal+=pSrcVertices[i].Normal*
-								m_BoneMatList[pSrcVertices[i].BoneID[b]].GetScaleRotation()*pSrcVertices[i].BoneWeight[b];
-						}							
-					}			
-				}
-				
-			}
-		}		
-	}
+							int err=1;
+						}
+					}
+					pDestVertices[i].Pos+=pSrcVertices[i].Pos*
+						m_BoneMatList[pSrcVertices[i].BoneID[b]]*pSrcVertices[i].BoneWeight[b];
+					pDestVertices[i].Normal+=pSrcVertices[i].Normal*
+						m_BoneMatList[pSrcVertices[i].BoneID[b]].GetScaleRotation()*pSrcVertices[i].BoneWeight[b];
+				}							
+			}			
+		}
+	}		
+	
 }
 
 
 void CD3DWOWM2Model::FetchAnimationFrames(UINT Time)
 {
-	FUNCTION_BEGIN;
 	if(m_pModelResource)
-	{
-		if(m_CurAnimationID==37)
-		{
-			int err=1;
-		}
-		m_pModelResource->MakeAnimationBoneFrame(m_CurAnimationIndex,Time,
+	{		
+		m_pModelResource->MakeAnimationBoneFrame(m_CurAnimationIndex,Time,m_IsLoop,
 			m_BoneMatrices.GetBuffer(),m_BoneMatrices.GetCount());
 	}
-	FUNCTION_END;
 }
 
-
+void CD3DWOWM2Model::OnSubMeshChanged()
+{
+	if(m_UseSoftSkinMesh)
+		PrepareSoftSkinMesh();
+}
 
 }

@@ -17,15 +17,26 @@ class CDOSObjectGroup :
 	public CEasyThread
 {
 protected:
-	CDOSObjectManager *						m_pManager;
-	UINT									m_Index;
-	volatile int							m_Weight;
-	CThreadSafeIDStorage<DOS_OBJECT_INFO>	m_ObjectRegisterQueue;
-	CThreadSafeIDStorage<OBJECT_ID>			m_ObjectUnregisterQueue;
+	struct DOS_OBJECT_INFO
+	{
+		OBJECT_ID			ObjectID;
+		CDOSBaseObject *	pObject;
+		int					Weight;
+		UINT				Param;
+	};
+	CDOSObjectManager *								m_pManager;
+	UINT											m_Index;
+	volatile int									m_Weight;
 
-	CIDStorage<DOS_OBJECT_INFO>				m_ObjectPool;
+	CThreadPerformanceCounter						m_ThreadPerformanceCounter;
 
-	CEasyCriticalSection					m_EasyCriticalSection;
+
+	CThreadSafeIDStorage<DOS_OBJECT_REGISTER_INFO>	m_ObjectRegisterQueue;
+	CThreadSafeIDStorage<OBJECT_ID>					m_ObjectUnregisterQueue;
+
+	CIDStorage<DOS_OBJECT_INFO>						m_ObjectPool;
+
+	CEasyCriticalSection							m_EasyCriticalSection;
 	DECLARE_CLASS_INFO(CDOSObjectGroup);
 public:
 	CDOSObjectGroup(void);
@@ -37,11 +48,13 @@ public:
 	
 	CDOSObjectManager * GetManager();
 
-	BOOL RegisterObject(DOS_OBJECT_INFO& ObjectInfo);
+	BOOL RegisterObject(DOS_OBJECT_REGISTER_INFO& ObjectRegisterInfo);
 	BOOL UnregisterObject(OBJECT_ID ObjectID);
 	UINT GetObjectCount();
 
 	int GetWeight();
+	float GetCPUUsedRate();
+	float GetCycleTime();
 
 	virtual BOOL OnStart();
 	virtual BOOL OnRun();
@@ -65,4 +78,13 @@ inline UINT CDOSObjectGroup::GetObjectCount()
 inline int CDOSObjectGroup::GetWeight()
 {
 	return m_Weight;
+}
+inline float CDOSObjectGroup::GetCPUUsedRate()
+{
+	return m_ThreadPerformanceCounter.GetCPUUsedRate();
+}
+
+inline float CDOSObjectGroup::GetCycleTime()
+{
+	return m_ThreadPerformanceCounter.GetCycleTime();
 }

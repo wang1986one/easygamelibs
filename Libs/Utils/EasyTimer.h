@@ -21,6 +21,9 @@ inline DWORD	GetTimeToTime(DWORD t1,DWORD t2 )
 
 class CEasyTimer
 {
+protected:
+	DWORD	m_dwSavedTime;
+	DWORD	m_dwTimeoutTime;
 public:
 	CEasyTimer():m_dwSavedTime(0),m_dwTimeoutTime(0)
 	{
@@ -88,6 +91,14 @@ public:
 			return TRUE;
 		return FALSE;
 	}
+	void Reset(DWORD dwCurTime)
+	{
+		m_dwSavedTime=dwCurTime;
+	}
+	void Reset()
+	{
+		Reset(CEasyTimer::GetTime());
+	}
 	DWORD	GetLeftTime(DWORD dwCurTime)
 	{
 		DWORD dwTime = GetTimeToTime( m_dwSavedTime, dwCurTime );
@@ -108,7 +119,5 @@ public:
 	}
 	DWORD	GetTimeOut(){ return m_dwTimeoutTime;}
 	DWORD	GetSavedTime(){ return m_dwSavedTime;}
-private:
-	DWORD	m_dwSavedTime;
-	DWORD	m_dwTimeoutTime;
+
 };

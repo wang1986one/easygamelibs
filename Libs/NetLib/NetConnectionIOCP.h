@@ -32,6 +32,10 @@ protected:
 	CIDStorage<COverLappedObject *>				m_SendBuffer;
 
 	volatile bool								m_IsRecvPaused;
+
+	UINT										m_SendDelay;
+	CEasyTimer									m_SendDelayTimer;
+	UINT										m_SendQueryLimit;
 	
 
 	DECLARE_CLASS_INFO_STATIC(CNetConnection);
@@ -80,6 +84,9 @@ public:
 
 	UINT GetSendBufferSize();
 	UINT GetUsedSendBufferSize();
+
+	void SetSendDelay(UINT Delay);
+	void SetSendQueryLimit(UINT Limit);
 private:
 	BOOL QuerySend(LPCVOID pData,UINT Size);
 protected:
@@ -107,4 +114,12 @@ inline UINT CNetConnection::GetSendBufferSize()
 inline UINT CNetConnection::GetUsedSendBufferSize()
 {
 	return m_SendBuffer.GetObjectCount();
+}
+inline void CNetConnection::SetSendDelay(UINT Delay)
+{
+	m_SendDelay=Delay;
+}
+inline void CNetConnection::SetSendQueryLimit(UINT Limit)
+{
+	m_SendQueryLimit=Limit;
 }

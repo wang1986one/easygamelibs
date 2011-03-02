@@ -35,16 +35,24 @@ inline size_t UnicodeToAnsi(const wchar_t * SrcStr,size_t SrcLen,char * DestStr,
 
 inline int strncpy_0(char *strDest,size_t DestSize, const char *strSource, size_t count)
 {
-	int Ret=strncpy_s(strDest,DestSize,strSource,count-1);
-	strDest[count-1]=0;
-	return Ret;
+	if(strDest&&strSource)
+	{
+		int Ret=strncpy_s(strDest,DestSize,strSource,count-1);
+		strDest[count-1]=0;
+		return Ret;
+	}
+	return 0;
 }
 
 inline int strncpy_0( wchar_t *strDest,size_t DestSize, const wchar_t *strSource, size_t count )
 {
-	int Ret=wcsncpy_s(strDest,DestSize,strSource,count-1);
-	strDest[count-1]=0;
-	return Ret;
+	if(strDest&&strSource)
+	{
+		int Ret=wcsncpy_s(strDest,DestSize,strSource,count-1);
+		strDest[count-1]=0;
+		return Ret;
+	}
+	return 0;
 }
 
 inline int CompareString(const char * pStr1,const char * pStr2)
@@ -474,8 +482,22 @@ public:
 			return *this;
 		return CEasyStringT<T>(m_pBuffer+m_StringLength-Number,Number);
 	}
-	void Format(const char * pFormat,...);
-	void Format(const wchar_t * pFormat,...);
+	void Format(const char * pFormat,...)
+	{
+		va_list	vl;
+		va_start(vl,pFormat);
+		FormatVL(pFormat,vl);
+		va_end( vl);
+	}
+	void Format(const wchar_t * pFormat,...)
+	{
+		va_list	vl;
+		va_start(vl,pFormat);
+		FormatVL(pFormat,vl);
+		va_end( vl);
+	}
+	void FormatVL(const char * pFormat,va_list vl);
+	void FormatVL(const wchar_t * pFormat,va_list vl);
 	void MakeUpper();
 	void MakeLower();
 	int Find(const char * pDestStr,size_t StartPos=0)
@@ -816,53 +838,41 @@ inline void CEasyStringT<wchar_t>::AppendString(const char * pStr,size_t Size)
 }
 
 template<>
-inline void CEasyStringT<char>::Format(const char * pFormat,...)
-{
-	va_list	vl;
-	va_start(vl,pFormat);
+inline void CEasyStringT<char>::FormatVL(const char * pFormat,va_list vl)
+{	
 	size_t Len=_vscprintf(pFormat,vl);
 	Resize(Len,false);
 	vsprintf_s(m_pBuffer,m_BufferSize,pFormat,vl);
-	m_StringLength=Len;
-	va_end( vl);
+	m_StringLength=Len;	
 }
 
 template<>
-inline void CEasyStringT<wchar_t>::Format(const wchar_t * pFormat,...)
+inline void CEasyStringT<wchar_t>::FormatVL(const wchar_t * pFormat,va_list vl)
 {
-	va_list	vl;
-	va_start(vl,pFormat);
 	size_t Len=_vscwprintf(pFormat,vl);
 	Resize(Len,false);
 	vswprintf_s(m_pBuffer,m_BufferSize,pFormat,vl);
 	m_StringLength=Len;
-	va_end( vl);
 }
 
 template<>
-inline void CEasyStringT<char>::Format(const wchar_t * pFormat,...)
+inline void CEasyStringT<char>::FormatVL(const wchar_t * pFormat,va_list vl)
 {
-	va_list	vl;
-	va_start(vl,pFormat);
 	size_t Len=_vscwprintf(pFormat,vl);
 	wchar_t * pBuffer=new wchar_t [Len];
 	vswprintf_s(pBuffer,Len,pFormat,vl);
 	SetString(pBuffer,Len);
 	SAFE_DELETE_ARRAY(pBuffer);
-	va_end( vl);
 }
 
 template<>
-inline void CEasyStringT<wchar_t>::Format(const char * pFormat,...)
+inline void CEasyStringT<wchar_t>::FormatVL(const char * pFormat,va_list vl)
 {
-	va_list	vl;
-	va_start(vl,pFormat);
 	size_t Len=_vscprintf(pFormat,vl);
 	char * pBuffer=new char [Len];
 	vsprintf_s(pBuffer,Len,pFormat,vl);
 	SetString(pBuffer,Len);
 	SAFE_DELETE_ARRAY(pBuffer);
-	va_end( vl);
 }
 
 template<>

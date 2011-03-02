@@ -33,6 +33,9 @@ protected:
 	volatile UINT	m_Status;
 	volatile BOOL	m_WantTerminate;
 
+	
+
+
 	DECLARE_CLASS_INFO_STATIC(CEasyThread)
 public:
 	CEasyThread();
@@ -75,11 +78,13 @@ public:
 
 	HANDLE GetThreadHandle();
 	UINT GetThreadID();
+
 protected:
 	virtual BOOL OnStart();
 	virtual void Execute();
 	virtual BOOL OnRun();
 	virtual void OnTerminate();
+
 
 	///Ïß³ÌÀý³Ì
 	static UINT __stdcall ThreadProc(LPVOID pParam);

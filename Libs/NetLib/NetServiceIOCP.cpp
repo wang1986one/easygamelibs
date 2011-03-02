@@ -145,6 +145,8 @@ BOOL CNetService::Create(int Protocol,int AcceptQueueSize,int RecvQueueSize,int 
 	if(GetServer()==NULL)
 		return FALSE;
 
+	Destory();
+
 	if(m_pIOCPEventRouter==NULL)
 	{
 		m_pIOCPEventRouter=GetServer()->CreateEventRouter();
