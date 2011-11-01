@@ -93,6 +93,7 @@ struct DOS_CONFIG
 	UINT										ProxySendBufferSize;
 	UINT										ProxySendDelay;
 	UINT										ProxySendQueryLimit;
+	UINT										ProxyKeepAliveTime;
 
 	UINT										MemoryPoolBlockSize;
 	UINT										MemoryPoolLeveSize;
@@ -100,7 +101,9 @@ struct DOS_CONFIG
 
 	UINT										ObjectGroupCount;
 	UINT										MaxGroupObjectCount;
-	UINT										MaxObjectMsgQueue;
+	UINT										MaxObjectMsgQueue;	
+	UINT										ObjectAliveTestTime;
+	UINT										ObjectKeepAliveCount;
 
 	DOS_CONFIG()
 	{
@@ -116,12 +119,15 @@ struct DOS_CONFIG
 		ProxySendBufferSize=0;
 		ProxySendDelay=0;
 		ProxySendQueryLimit=0;
+		ProxyKeepAliveTime=3*60*1000;
 		MemoryPoolBlockSize=0;
 		MemoryPoolLeveSize=0;
 		MemoryPoolLevelCount=0;
 		ObjectGroupCount=0;
 		MaxGroupObjectCount=0;
-		MaxObjectMsgQueue=0;		
+		MaxObjectMsgQueue=0;
+		ObjectAliveTestTime=20*1000;
+		ObjectKeepAliveCount=5;
 	}
 };
 

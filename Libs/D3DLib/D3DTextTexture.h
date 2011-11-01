@@ -111,8 +111,8 @@ public:
 	bool SetSize(int Width,int Height);
 	bool SetFont(const LOGFONT* pLogFont);	
 	void SetColor(D3DCOLOR Color);	
-	void SetText(LPCTSTR szText);
-	void SetTextW(LPCWSTR szText);
+	void SetText(LPCTSTR szText,int StrLen);
+	void SetTextW(LPCWSTR szText,int StrLen);
 	void SetAlign(DWORD dwAlign);//对齐模式，值同ID3DXFont的DrawText中的参数
 	void SetShadowMode(DWORD ShadowMode);
 	void SetShadowColor(D3DCOLOR ShadowColor);
@@ -180,10 +180,10 @@ public:
 	}	
 
 	virtual FLOAT GetUS()
-	{return (FLOAT)m_Width/m_TextureSurfaceInfo.Width;}
+	{return (FLOAT)(m_Width-0.5f)/m_TextureSurfaceInfo.Width;}
 
 	virtual FLOAT GetVS()
-	{return (FLOAT)m_Height/m_TextureSurfaceInfo.Height;}
+	{return (FLOAT)(m_Height-0.5f)/m_TextureSurfaceInfo.Height;}
 	
 	HDC GetDC();
 

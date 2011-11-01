@@ -125,6 +125,7 @@ public:
 		{
 			BoneID=0;
 			ParentID=0;
+			Flags=0;
 			AttachmentType=0;
 			AttachmentID=0;
 			pAttachObject=NULL;
@@ -158,6 +159,19 @@ public:
 		ANIMATION_TRANSLATION_BLOCK		Translations;
 		ANIMATION_ROTATION_BLOCK		Rotations;
 		ANIMATION_SCALING_BLOCK			Scalings;
+	};
+
+	struct CAMERA_INFO
+	{
+		UINT						Type;
+		FLOAT						FOV;
+		FLOAT						FarClipping;	
+		FLOAT						NearClipping;	
+		CD3DVector3					Position;
+		CD3DVector3					Target;
+		ANIMATION_TRANSLATION_BLOCK	TranslationPos;	
+		ANIMATION_TRANSLATION_BLOCK	TranslationTar;
+		ANIMATION_SCALING_BLOCK		Scaling;		
 	};
 
 protected:
@@ -259,10 +273,9 @@ protected:
 		CEasyArray<BONE_ANI_CACHE_FRAME>	Bones;
 	};
 
-	
 
-		
-
+	CEasyString									m_ModelFilePath;
+	CEasyArray<CEasyString>						m_SkinFiles;
 	CEasyArray<ANIMATION_SEQUENCE>				m_AnimationSequence;
 	CEasyArray<COLOR_ANIMATION_INFO>			m_ColorAnimations;
 	CEasyArray<TRANSPARENCY_ANIMATION_INFO>		m_TransparencyAnimations;	
@@ -288,6 +301,11 @@ protected:
 	CEasyArray<BONE_ANI_CACHE>					m_GlobalBoneAniCache;
 	UINT										m_Flag;
 	UINT										m_Version;
+	CEasyArray<CAMERA_INFO>						m_CameraInfos;
+
+	CEasyArray<MODEL_VERTEXT>					m_Vertices;
+	CEasyArray<WORD>							m_Indices;
+
 	
 
 	
@@ -297,7 +315,7 @@ public:
 	
 
 	CD3DWOWM2ModelResource(void);
-	CD3DWOWM2ModelResource(CD3DObjectResourceManager* pManager);	
+	CD3DWOWM2ModelResource(CD3DObjectResourceManager* pManager);
 	~CD3DWOWM2ModelResource(void);
 
 	virtual void Destory();
@@ -308,6 +326,8 @@ public:
 	bool LoadFromFile(LPCTSTR szModelFileName);
 
 	bool LoadFromXFile(LPCTSTR szModelFileName);
+
+	bool ChangeSkin(UINT Index);
 
 public:	
 
@@ -359,6 +379,17 @@ public:
 
 	UINT GetFlag();
 	UINT GetVersion();
+
+	UINT GetCameraCount();
+	CAMERA_INFO * GetCameraInfo(UINT Index);
+
+	UINT GetVertexCount();
+	MODEL_VERTEXT * GetVertices();
+	UINT GetIndexCount();
+	WORD * GetIndices();
+
+	UINT GetSkinCount();
+	LPCTSTR GetSkinFileName(UINT Index);
 	
 
 protected:
@@ -380,9 +411,11 @@ protected:
 
 
 
-	WORD RebuildVertexIndex(CEasyArray<WORD>& VertexIndexList,WORD VertexIndex);
+	//WORD RebuildVertexIndex(CEasyArray<WORD>& VertexIndexList,WORD VertexIndex);
+	void BuildSubMeshData();
 
 	bool LoadAttachments(BYTE * pModelData);
+	bool LoadCameraInfos(BYTE * pModelData);
 
 	void BuildFX(CD3DSubMesh * pSubMesh);
 
@@ -397,6 +430,7 @@ protected:
 	void CheckAni();
 
 	bool IsAniBone(UINT Bone);
+	void CheckSkins(LPCTSTR szModelPath);
 
 	
 };
@@ -421,4 +455,33 @@ inline UINT CD3DWOWM2ModelResource::GetVersion()
 {
 	return m_Version;
 }
+
+inline UINT CD3DWOWM2ModelResource::GetVertexCount()
+{
+	return m_Vertices.GetCount();
+}
+inline CD3DWOWM2ModelResource::MODEL_VERTEXT * CD3DWOWM2ModelResource::GetVertices()
+{
+	return m_Vertices.GetBuffer();
+}
+inline UINT CD3DWOWM2ModelResource::GetIndexCount()
+{
+	return m_Indices.GetCount();
+}
+inline WORD * CD3DWOWM2ModelResource::GetIndices()
+{
+	return m_Indices.GetBuffer();
+}
+
+inline UINT CD3DWOWM2ModelResource::GetSkinCount()
+{
+	return m_SkinFiles.GetCount();
+}
+inline LPCTSTR CD3DWOWM2ModelResource::GetSkinFileName(UINT Index)
+{
+	if(Index<m_SkinFiles.GetCount())
+		return m_SkinFiles[Index];
+	return NULL;
+}
+
 }

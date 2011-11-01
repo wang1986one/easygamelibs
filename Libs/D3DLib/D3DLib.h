@@ -61,6 +61,8 @@ inline BOOL PrintD3DDebugLog(DWORD Color,LPCTSTR Format,...)
 #include "D3DBoundingSphere.h"
 #include "D3DFrustum.h"
 
+#include "Shaders.h"
+
 #include "Types.h"
 
 
@@ -70,6 +72,7 @@ inline BOOL PrintD3DDebugLog(DWORD Color,LPCTSTR Format,...)
 #include "D3DSwapChain.h"
 
 #include "D3DFX.h"
+#include "D3DBuildInFXIncludeParser.h"
 #include "D3DFXManager.h"
 
 #include "D3DTexture.h"
@@ -135,8 +138,12 @@ inline BOOL PrintD3DDebugLog(DWORD Color,LPCTSTR Format,...)
 #include "D3DWOWADTModelResource.h"
 #include "D3DWOWADTModel.h"
 
+#include "D3DWOWWDLModelResource.h"
+#include "D3DWOWWDLModel.h"
+
 #include "BLZWDTFile.h"
-#include "BLZWDLFile.h"
+
+#include "BLZWOWSceneLoader.h"
 
 #include "D3DBaseFont.h"
 #include "D3DDX9Font.h"

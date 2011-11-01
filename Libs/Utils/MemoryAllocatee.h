@@ -20,7 +20,7 @@ protected:
 	struct ALLOC_INFO
 	{
 		int				AllocSize;
-		const char *	FileName;
+		LPCTSTR			FileName;
 		int				Line;
 	};
 
@@ -32,8 +32,8 @@ public:
 	CMemoryAllocatee(void);
 	~CMemoryAllocatee(void);
 
-	void * Alloc(int Size,const char * FileName,int Line);
-	void * Realloc(void * pBlock,int Size,const char * FileName,int Line);
+	void * Alloc(int Size,LPCTSTR FileName,int Line);
+	void * Realloc(void * pBlock,int Size,LPCTSTR FileName,int Line);
 	void Free(void * pBlock);
 
 	static CMemoryAllocatee * GetInstance();

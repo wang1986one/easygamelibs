@@ -24,7 +24,8 @@ CD3DFontCharClip::CD3DFontCharClip(void):CD3DObject()
 	m_SubMesh.SetVertexCount(4);
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
 	m_SubMesh.SetPrimitiveCount(2);
-	m_SubMesh.SetVertices((BYTE *)m_Vertexs,sizeof(RECTVERTEX)*4);
+	m_SubMesh.SetVertices((BYTE *)m_Vertexs);
+	m_SubMesh.AllocVertexBufferR();
 	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 		
 
@@ -72,6 +73,7 @@ void CD3DFontCharClip::CreateVertex()
 	m_Vertexs[1] = InitRECTVertex( D3DXVECTOR4(x2,y1,0.9f,1.0f), m_VertexColor, tx2, ty1 );
 	m_Vertexs[2] = InitRECTVertex( D3DXVECTOR4(x1,y2,0.9f,1.0f), m_VertexColor, tx1, ty2 );
 	m_Vertexs[3] = InitRECTVertex( D3DXVECTOR4(x2,y2,0.9f,1.0f), m_VertexColor, tx2, ty2 );
+	m_IsRenderDataChanged=true;
 
 }
 
@@ -107,7 +109,7 @@ void CD3DFontCharClip::SetVertexColor(DWORD Color)
 
 bool CD3DFontCharClip::MoveToTop()
 {
-	return ((CD3DUIRender *)GetRender())->MoveToTop(this);	
+	return ((CD3DUIRender *)GetRender())->MoveToTop(this,NULL);	
 }
 
 bool CD3DFontCharClip::MoveToTop(CD3DObject *before)

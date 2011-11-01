@@ -53,11 +53,20 @@ public:
 	virtual CD3DBoundingSphere * GetBoundingSphere();
 
 	bool GetHeightByXZ(const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight);
+	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly);
+	bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,UINT TestMode,bool TestOnly);
+	bool LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,UINT TestMode);
+
 protected:
 	void CreatePortalBoard();
 	void CreateBSPBoard(CD3DWOWWMOModelResource::BSP_NODE * pNode);
+	void CreateBSPBox(CD3DBoundingBox Box);
 	void SetBSPColor(CD3DWOWWMOModelResource::BSP_NODE * pTree,D3DCOLOR Color);
 	CD3DWOWWMOModelResource::BSP_NODE * FindBSPNode(CD3DWOWWMOModelResource::BSP_NODE * pRoot,CD3DVector3 Pos);
+	void FindBSPNode(CD3DWOWWMOModelResource::BSP_NODE * pRoot,CD3DBoundingBox SpaceBox,CD3DVector3 Point,CD3DVector3 Dir,CEasyArray<CD3DWOWWMOModelResource::BSP_NODE *>& NodeList);
+	bool CanTestCollide(UINT FaceFlag,UINT TestMode);
+
+	void WalkBSPNode(CD3DWOWWMOModelResource::BSP_NODE * pRoot,CD3DBoundingBox SpaceBox);
 };
 
 inline CD3DWOWWMOModelResource * CD3DWOWWMOGroupModel::GetModelResource()

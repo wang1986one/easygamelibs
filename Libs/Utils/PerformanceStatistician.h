@@ -11,6 +11,7 @@
 /****************************************************************************/
 #pragma once
 #define MAX_PERFORMANCE_FUNCTION_NUM	2048
+#define PERFORMANCE_UNIT				0xFF
 
 extern TCHAR PERFORMANCE_STATISTICIAN_INSTANCE[];
 

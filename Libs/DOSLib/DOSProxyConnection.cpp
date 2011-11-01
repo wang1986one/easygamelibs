@@ -239,6 +239,13 @@ inline BOOL CDOSProxyConnection::SendOutSideMsg(CDOSMessagePacket * pPacket)
 	case DSM_ROUTE_LINK_LOST:
 		ClearMsgMapByRouterID(pPacket->GetMessage().GetSenderID().RouterID);
 		return TRUE;
+	case DSM_OBJECT_ALIVE_TEST:
+		{
+			BYTE IsEcho=1;
+			GetServer()->GetRouter()->RouterMessage(m_ObjectID,pPacket->GetMessage().GetSenderID(),
+				DSM_OBJECT_ALIVE_TEST,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE,&IsEcho,sizeof(IsEcho));
+		}
+		return TRUE;
 	default:
 		{
 			CDOSSimpleMessage * pSimpleMessage=pPacket->GetMessage().MakeSimpleMessage();
@@ -264,6 +271,7 @@ BOOL CDOSProxyConnection::SendDisconnectNotify()
 	
 	pNewPacket->SetTargetIDs(0,NULL);
 	pNewPacket->GetMessage().SetMsgID(DSM_PROXY_DISCONNECT);
+	pNewPacket->GetMessage().SetMsgFlag(DOS_MESSAGE_FLAG_SYSTEM_MESSAGE);
 	pNewPacket->GetMessage().SetSenderID(m_ObjectID);
 	OBJECT_ID * pTargetObjectIDs=pNewPacket->GetTargetIDs();
 

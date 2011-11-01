@@ -124,115 +124,98 @@ protected:
 	};
 
 	typedef _StorageNode<StorageMode,T> StorageNode;
-	StorageNode * m_pObjectBuff;
-	StorageNode * m_pFreeListHead;
-	StorageNode * m_pFreeListTail;
-	StorageNode * m_pObjectListHead;
-	StorageNode * m_pObjectListTail;
-	UINT m_ObjectCount;
-	UINT m_ObjectBuffSize;	
+
+	struct OBJECT_BUFF_PAGE_INFO
+	{
+		StorageNode *	pObjectBuffer;
+		UINT			BufferSize;
+	};
+
+	CEasyArray<OBJECT_BUFF_PAGE_INFO>	m_ObjectBuffPages;
+	StorageNode *						m_pFreeListHead;
+	StorageNode *						m_pFreeListTail;
+	StorageNode *						m_pObjectListHead;
+	StorageNode *						m_pObjectListTail;
+	UINT								m_ObjectCount;
+	UINT								m_GrowSize;
+	UINT								m_GrowLimit;
 public:
 	CIDStorage()
 	{
-		m_pObjectBuff=NULL;
 		m_pFreeListHead=NULL;
 		m_pFreeListTail=NULL;
 		m_pObjectListHead=NULL;
 		m_pObjectListTail=NULL;
 		m_ObjectCount=0;
-		m_ObjectBuffSize=0;		
+		m_GrowSize=0;
+		m_GrowLimit=0;
 	}
 	~CIDStorage()
 	{
 		Destory();
 	}
-	bool Create(UINT Size)
+	bool Create(UINT Size,UINT GrowSize=0,UINT GrowLimit=0)
 	{		
 		Destory();
-		m_ObjectBuffSize=Size;
-		m_pObjectBuff=new StorageNode[m_ObjectBuffSize];
-		for(UINT i=0;i<m_ObjectBuffSize;i++)
-		{
-			m_pObjectBuff[i].ID=i+1;			
-			if(i==0)
-			{
-				m_pFreeListHead=m_pObjectBuff;
-				m_pObjectBuff[i].pPrev=NULL;
-			}
-			else
-			{
-				m_pObjectBuff[i].pPrev=&(m_pObjectBuff[i-1]);
-			}
-			if(i==m_ObjectBuffSize-1)
-			{
-				m_pFreeListTail=m_pObjectBuff+i;
-				m_pObjectBuff[i].pNext=NULL;
-			}
-			else
-			{
-				m_pObjectBuff[i].pNext=&(m_pObjectBuff[i+1]);
-			}				
-			m_pObjectBuff[i].IsFree=true;
-			m_pObjectBuff[i].InitObject();
-		}
-		
-		m_pObjectListHead=NULL;
-		m_pObjectListTail=NULL;
-		m_ObjectCount=0;		
-		return true;
-
+		m_GrowSize=GrowSize;
+		m_GrowLimit=GrowLimit;
+		return CreateBufferPage(Size);
 	}
 	UINT GetBufferSize()
 	{
-		return m_ObjectBuffSize;
+		UINT BufferSize=0;
+		for(UINT i=0;i<m_ObjectBuffPages.GetCount();i++)
+		{
+			BufferSize+=m_ObjectBuffPages[i].BufferSize;
+		}
+		return BufferSize;
 	}
 	BOOL IsCreated()
 	{
-		return m_pObjectBuff!=NULL;
+		return m_ObjectBuffPages.GetCount()!=0;
 	}
 	void Destory()
 	{
-		for(UINT i=0;i<m_ObjectBuffSize;i++)
-		{			
-			m_pObjectBuff[i].FinalReleaseObject();
+		for(UINT i=0;i<m_ObjectBuffPages.GetCount();i++)
+		{
+			for(UINT j=0;j<m_ObjectBuffPages[i].BufferSize;j++)
+			{			
+				m_ObjectBuffPages[i].pObjectBuffer[j].FinalReleaseObject();
+			}
+			SAFE_DELETE_ARRAY(m_ObjectBuffPages[i].pObjectBuffer);
 		}
-		SAFE_DELETE_ARRAY(m_pObjectBuff);
+		m_ObjectBuffPages.Clear();
 		m_pFreeListHead=NULL;
 		m_pFreeListTail=NULL;
 		m_pObjectListHead=NULL;
 		m_pObjectListTail=NULL;
 		m_ObjectCount=0;
-		m_ObjectBuffSize=0;		
+		m_GrowSize=0;
+		m_GrowLimit=0;
 	}
 	void Clear()
 	{
-		for(UINT i=0;i<m_ObjectBuffSize;i++)
-		{
-			m_pObjectBuff[i].ID=i+1;			
-			if(i==0)
-			{
-				m_pFreeListHead=m_pObjectBuff;
-				m_pObjectBuff[i].pPrev=NULL;
-			}
-			else
-			{
-				m_pObjectBuff[i].pPrev=&(m_pObjectBuff[i-1]);
-			}
-			if(i==m_ObjectBuffSize-1)
-			{
-				m_pFreeListTail=m_pObjectBuff+i;
-				m_pObjectBuff[i].pNext=NULL;
-			}
-			else
-			{
-				m_pObjectBuff[i].pNext=&(m_pObjectBuff[i+1]);
-			}
-			m_pObjectBuff[i].IsFree=true;
-			m_pObjectBuff[i].DeleteObject();
-		}		
+		m_pFreeListHead=NULL;
+		m_pFreeListTail=NULL;
 		m_pObjectListHead=NULL;
 		m_pObjectListTail=NULL;
-		m_ObjectCount=0;	
+		m_ObjectCount=0;
+
+		UINT IDStart=1;
+		for(UINT i=0;i<m_ObjectBuffPages.GetCount();i++)
+		{
+			ClearBuffer(m_ObjectBuffPages[i],IDStart,false);
+			IDStart+=m_ObjectBuffPages[i].BufferSize;
+		}					
+	}
+	bool Grow()
+	{
+		if(m_GrowSize)
+		{
+			CreateBufferPage(m_GrowSize);
+			return true;
+		}
+		return NULL;
 	}
 	UINT NewObject(T** ppObject)
 	{
@@ -272,7 +255,7 @@ public:
 		}
 		return 0;
 	}
-	LPVOID InsertAfter(LPVOID Pos)
+	LPVOID InsertAfter(LPVOID Pos=NULL)
 	{
 		StorageNode * pNode=NewNode();
 		if(pNode)
@@ -282,7 +265,7 @@ public:
 		}
 		return NULL;
 	}
-	LPVOID InsertAfter(const T& Object,LPVOID Pos)
+	LPVOID InsertAfter(const T& Object,LPVOID Pos=NULL)
 	{
 		StorageNode * pNode=(StorageNode *)InsertAfter(Pos);
 		if(pNode)
@@ -292,7 +275,7 @@ public:
 		}
 		return NULL;
 	}
-	LPVOID InsertBefore(LPVOID Pos)
+	LPVOID InsertBefore(LPVOID Pos=NULL)
 	{
 		StorageNode * pNode=NewNode();
 		if(pNode)
@@ -302,7 +285,7 @@ public:
 		}
 		return NULL;
 	}
-	LPVOID InsertBefore(const T& Object,LPVOID Pos)
+	LPVOID InsertBefore(const T& Object,LPVOID Pos=NULL)
 	{
 		StorageNode * pNode=(StorageNode *)InsertNodeBefore(Pos);
 		if(pNode)
@@ -337,12 +320,20 @@ public:
 	}
 	LPVOID GetObjectPos(UINT ID)
 	{
-		if(ID>0&&ID<=m_ObjectBuffSize)
+		if(ID==0)
+			return NULL;
+
+		UINT IDStart=1;
+		for(UINT i=0;i<m_ObjectBuffPages.GetCount();i++)
 		{
-			ID--;
-			if(!m_pObjectBuff[ID].IsFree)
-				return &(m_pObjectBuff[ID]);
-		}
+			if(ID<IDStart+m_ObjectBuffPages[i].BufferSize)
+			{
+				ID-=IDStart;
+				if(!m_ObjectBuffPages[i].pObjectBuffer[ID].IsFree)
+					return &(m_ObjectBuffPages[i].pObjectBuffer[ID]);
+			}
+			IDStart+=m_ObjectBuffPages[i].BufferSize;
+		}		
 		return NULL;
 	}
 	T* GetObject(LPVOID Pos)
@@ -366,7 +357,7 @@ public:
 			return 0;
 	}
 	
-	bool DeleteObject(UINT ID)
+	BOOL DeleteObject(UINT ID)
 	{
 		StorageNode * pNode=(StorageNode *)GetObjectPos(ID);
 		if(pNode)
@@ -413,26 +404,49 @@ public:
 		}
 		return NULL;
 	}
-	BOOL MoveBeforeTo(LPVOID Pos,LPVOID Before)
+	BOOL MoveToBefore(LPVOID Pos,LPVOID Target)
 	{
-		if(Pos&&Pos!=Before&&m_ObjectCount>1)
+		if(Pos&&Pos!=Target&&m_ObjectCount>1)
 		{
 			StorageNode * pNode=(StorageNode *)Pos;
-			StorageNode * pBefore=(StorageNode *)Before;
+			StorageNode * pBefore=(StorageNode *)Target;
 			PickNode(pNode);
 			InsertNodeBefore(pNode,pBefore);
 			return TRUE;
 		}
 		return FALSE;
 	}
-	BOOL MoveAfterTo(LPVOID Pos,LPVOID After)
+	BOOL MoveToAfter(LPVOID Pos,LPVOID Target)
 	{
-		if(Pos&&Pos!=After&&m_ObjectCount>1)
+		if(Pos&&Pos!=Target&&m_ObjectCount>1)
 		{
 			StorageNode * pNode=(StorageNode *)Pos;
-			StorageNode * pAfter=(StorageNode *)After;
+			StorageNode * pAfter=(StorageNode *)Target;
 			PickNode(pNode);
 			InsertNodeAfter(pNode,pAfter);
+			return TRUE;
+		}
+		return FALSE;
+	}
+	BOOL MoveSorted(LPVOID Pos)
+	{
+		StorageNode * pNode=(StorageNode *)Pos;
+		if(pNode)
+		{	
+			PickNode(pNode);
+			StorageNode * pHead=m_pObjectListHead;
+			while(pHead&&pHead->GetObjectRef()<pNode->GetObjectRef())
+			{
+				pHead=pHead->pNext;
+			}
+			if(pHead)
+			{
+				InsertNodeBefore(pNode,pHead);
+			}
+			else
+			{
+				InsertNodeAfter(pNode,pHead);
+			}
 			return TRUE;
 		}
 		return FALSE;
@@ -503,10 +517,88 @@ public:
 		}
 		return FALSE;
 	}
+	LPVOID Find(const T& Object)
+	{
+		StorageNode * pNode=m_pObjectListHead;
+		while(pNode)
+		{
+			if(pNode->Object==Object)
+				return pNode;
+			pNode=pNode->pNext;
+		}
+		return NULL;
+	}
 
 protected:
+	bool CreateBufferPage(UINT Size)
+	{
+		if(m_GrowLimit)
+		{
+			if(m_ObjectBuffPages.GetCount()>=m_GrowLimit)
+				return false;
+		}
+		OBJECT_BUFF_PAGE_INFO PageInfo;
+		PageInfo.BufferSize=Size;		
+		PageInfo.pObjectBuffer=new StorageNode[Size];
+		UINT IDStart=GetBufferSize()+1;
+		ClearBuffer(PageInfo,IDStart,true);
+		m_ObjectBuffPages.Add(PageInfo);
+		return true;
+	}
+	void ClearBuffer(OBJECT_BUFF_PAGE_INFO& PageInfo,UINT IDStart,bool IsInit)
+	{
+		StorageNode * pFreeListHead=NULL;
+		StorageNode * pFreeListTail=NULL;
+
+		assert(PageInfo.BufferSize!=0);
+		if(PageInfo.BufferSize==0)
+			return;
+		
+		for(UINT i=0;i<PageInfo.BufferSize;i++)
+		{
+			PageInfo.pObjectBuffer[i].ID=i+IDStart;			
+			if(i==0)
+			{
+				pFreeListHead=PageInfo.pObjectBuffer;
+				PageInfo.pObjectBuffer[i].pPrev=NULL;
+			}
+			else
+			{
+				PageInfo.pObjectBuffer[i].pPrev=&(PageInfo.pObjectBuffer[i-1]);
+			}
+			if(i==PageInfo.BufferSize-1)
+			{
+				pFreeListTail=PageInfo.pObjectBuffer+i;
+				PageInfo.pObjectBuffer[i].pNext=NULL;
+			}
+			else
+			{
+				PageInfo.pObjectBuffer[i].pNext=&(PageInfo.pObjectBuffer[i+1]);
+			}				
+			PageInfo.pObjectBuffer[i].IsFree=true;
+			if(IsInit)
+				PageInfo.pObjectBuffer[i].InitObject();
+			else
+				PageInfo.pObjectBuffer[i].DeleteObject();
+		}
+		if(m_pFreeListTail)
+		{
+			m_pFreeListTail->pNext=pFreeListHead;
+			pFreeListHead->pPrev=m_pFreeListTail;
+			m_pFreeListTail=pFreeListTail;
+		}
+		else
+		{
+			m_pFreeListHead=pFreeListHead;
+			m_pFreeListTail=pFreeListTail;
+		}
+	}
 	StorageNode * NewNode()
 	{
+		if(m_pFreeListHead==NULL&&m_GrowSize)
+		{
+			CreateBufferPage(m_GrowSize);
+		}
 		if(m_pFreeListHead)
 		{			
 			StorageNode * pNode;			
@@ -615,16 +707,17 @@ protected:
 	{
 		UsedCount=0;
 		FreeCount=0;
+		UINT ObjectBuffSize=GetBufferSize();
 
 		StorageNode * pNode=m_pObjectListHead;
-		while(pNode&&UsedCount<m_ObjectBuffSize)
+		while(pNode&&UsedCount<ObjectBuffSize)
 		{
 			pNode=pNode->pNext;
 			UsedCount++;
 		}
 
 		pNode=m_pFreeListHead;
-		while(pNode&&FreeCount<m_ObjectBuffSize)
+		while(pNode&&FreeCount<ObjectBuffSize)
 		{
 			pNode=pNode->pNext;
 			FreeCount++;

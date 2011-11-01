@@ -25,6 +25,8 @@ public:
 	CD3DDummy(void);
 	virtual ~CD3DDummy(void);
 
+	virtual void Destory();
+
 	virtual bool CanRender();
 
 	virtual void ShowBoundingFrame(int Operator);	
@@ -34,10 +36,7 @@ public:
 	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 };
 
-inline bool CD3DDummy::CanRender()
-{
-	return false;
-}
+
 
 inline void CD3DDummy::SetBoundingBox(CD3DBoundingBox& BoundingBox)
 {

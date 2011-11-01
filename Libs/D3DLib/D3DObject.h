@@ -29,6 +29,13 @@ enum D3DOBJ_BOUNDING_FRAME_OPT
 	DBFO_RELEASE,
 };
 
+enum RAY_INTERSECT_TEST_MODE
+{
+	RITM_INCLUDE_NO_COLLIDE_FACE=1,	
+	RITM_INCLUDE_COLLIDE_ONLY_FACE=(1<<1),
+	RITM_CAMERA=(1<<2),
+};
+
 class CD3DBoundingFrame;
 
 class CD3DObject :
@@ -41,6 +48,7 @@ public:
 		OBJECT_FLAG_CULLED=(1<<1),
 		OBJECT_FLAG_PREPARE_RENDERED=(1<<2),
 		OBJECT_FLAG_RENDERED=(1<<3),
+		OBJECT_FLAG_CHECKED=(1<<4),
 	};
 protected:	
 
@@ -56,6 +64,8 @@ protected:
 	
 	CD3DMatrix					m_LocalMatrix;
 	CD3DMatrix					m_WorldMatrix;
+	bool						m_IsMatrixChanged;
+	volatile bool				m_IsRenderDataChanged;
 		
 	UINT64						m_Flag;
 
@@ -69,6 +79,8 @@ protected:
 public:	
 
 	static D3DMATERIAL9		SELECTED_SUBMESH_MATERIAL;
+	static UINT				m_UpdateCount;
+	static UINT				m_RenderDataUpdateCount;
 
 
 	CD3DObject();
@@ -106,6 +118,7 @@ public:
 	const CD3DMatrix& GetWorldMatrix();
 	const CD3DMatrix& GetWorldMatrixR();
 	const CD3DMatrix GetWorldMatrixDirect();
+	bool IsMatrixChanged();
 
 	CEasyCriticalSection& GetRenderLock();
 
@@ -127,6 +140,7 @@ public:
 	virtual void OnPrepareRenderData();
 
 	virtual void Update(FLOAT Time);
+	virtual bool NeedUpdateAni();
 	
 
 	virtual void SetVisible(bool IsVisible);
@@ -140,7 +154,8 @@ public:
 	UINT64 GetFlag();
 	bool CheckFlag(UINT64 Flag);
 
-	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
+	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly);
+	virtual bool LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance);
 	virtual CD3DObject * PickObject(CD3DVector3 Point,CD3DVector3 Dir,FLOAT& Distance);
 
 	virtual void ShowBoundingFrame(int Operator);
@@ -226,6 +241,7 @@ inline const CD3DMatrix& CD3DObject::GetLocalMatrix()
 inline void CD3DObject::SetLocalMatrix(const CD3DMatrix& Mat)
 {
 	m_LocalMatrix=Mat;
+	m_IsMatrixChanged=true;
 }
 inline const CD3DMatrix& CD3DObject::GetWorldMatrix()
 {
@@ -238,6 +254,11 @@ inline const CD3DMatrix& CD3DObject::GetWorldMatrixR()
 		return m_WorldMatrixR;
 	else
 		return m_WorldMatrix;
+}
+
+inline bool CD3DObject::IsMatrixChanged()
+{
+	return m_IsMatrixChanged;
 }
 
 inline CEasyCriticalSection& CD3DObject::GetRenderLock()

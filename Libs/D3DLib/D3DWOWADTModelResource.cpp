@@ -20,38 +20,13 @@ const WORD	ADT_HOLE_MASK[4][4]={	{0x1,	0x2,	0x4,	0x8},
 									{0x1000,0x2000,	0x4000,	0x8000}};
 
 
-static LPCTSTR DEFAULT_NORMAL_FX_NT=
-"texture TexLay0 < string name = \"test.jpg\"; >;	\r\n"
-"texture TexLay1 < string name = \"test1.jpg\"; >;	\r\n"
-"technique tec0										\r\n"
-"{													\r\n"
-"    pass p0										\r\n"
-"    {												\r\n"
-"		MultiSampleAntialias = false;				\r\n"	
-"		Lighting = false;							\r\n"
-"		zenable = true;								\r\n"
-"		zwriteenable = true;						\r\n"
-"		CullMode = none;							\r\n"
-"		fogenable = false;							\r\n"
-"		Texture[0] = <TexLay0>;						\r\n"
-"		AlphaTestEnable = false;					\r\n"
-"		AlphaBlendEnable = false;					\r\n"
-"     	ColorOp[0] = SelectArg1;					\r\n"
-"       ColorArg1[0] = Diffuse;						\r\n"      	
-"       AlphaOp[0] = disable;						\r\n"
-"		ColorOp[1] = disable;						\r\n"
-"		AlphaOp[1] = disable;						\r\n"
-"		VertexShader = NULL;						\r\n"
-"		PixelShader  = NULL;						\r\n"
-"    }												\r\n"
-"}													\r\n";
-
 
 IMPLEMENT_CLASS_INFO(CD3DWOWADTModelResource,CD3DObjectResource);
 
 CD3DWOWADTModelResource::CD3DWOWADTModelResource(void)
 {
 	ZeroMemory(m_TerrainHeightInfo,sizeof(m_TerrainHeightInfo));
+	ZeroMemory(m_TerrainHoleInfo,sizeof(m_TerrainHoleInfo));
 	m_Position=0;
 }
 
@@ -59,6 +34,7 @@ CD3DWOWADTModelResource::CD3DWOWADTModelResource(CD3DObjectResourceManager* pMan
 	:CD3DObjectResource(pManager)
 {
 	ZeroMemory(m_TerrainHeightInfo,sizeof(m_TerrainHeightInfo));
+	ZeroMemory(m_TerrainHoleInfo,sizeof(m_TerrainHoleInfo));
 	m_Position=0;
 }
 
@@ -92,7 +68,7 @@ bool CD3DWOWADTModelResource::Restore()
 	return CD3DObjectResource::Restore();
 }
 
-bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask)
+bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask,bool BeLoadObject)
 {
 	IFileAccessor * pFile;	
 
@@ -284,6 +260,8 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 			m_TerrainHeightInfo[i].TerrainHeight[h]=pMCVT->Heights[h]+Pos.y;
 		}
 
+		m_TerrainHoleInfo[i]=pMCNK->Holes;
+
 		//CD3DSubMesh * pNormalSubMesh=new CD3DSubMesh;
 
 		//pNormalSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE;
@@ -417,6 +395,8 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 		pD3DSubMesh->GetDXVertexBuffer()->Unlock();
 
 		pD3DSubMesh->GetDXIndexBuffer()->Unlock();
+
+		pD3DSubMesh->AddProperty(CD3DSubMesh::SMF_HAVE_COLLIDE);
 
 		pD3DSubMesh->SetID(i);
 		CEasyString SubMeshName;
@@ -752,43 +732,53 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 			ObjectFileName=ObjectFileName.Left(Pos);
 			ObjectFileName+=".m2";
 
-			CD3DWOWM2ModelResource* pResource=
-				dynamic_cast<CD3DWOWM2ModelResource*>(m_pManager->GetResource(ObjectFileName));
-			if(!pResource)
+
+			m_M2ObjectList[i].pModelResource=NULL;
+			m_M2ObjectList[i].ModelFilePath=ObjectFileName;
+			m_M2ObjectList[i].Position.x=pMDDF->M2Objects[i].Position.x;
+			m_M2ObjectList[i].Position.y=pMDDF->M2Objects[i].Position.y;
+			m_M2ObjectList[i].Position.z=-pMDDF->M2Objects[i].Position.z;					
+			m_M2ObjectList[i].Orientation=CD3DQuaternion::FromRotationYawPitchRoll(
+				-pMDDF->M2Objects[i].Orientation.y*PI/180.0f,
+				-pMDDF->M2Objects[i].Orientation.x*PI/180.0f,
+				pMDDF->M2Objects[i].Orientation.z*PI/180.0f);
+			m_M2ObjectList[i].Orientation.Normalize();
+			m_M2ObjectList[i].Scale=pMDDF->M2Objects[i].Scale/1024.0f;
+			m_M2ObjectList[i].Flag=pMDDF->M2Objects[i].Flags;
+			
+			if(BeLoadObject)
 			{
-				pResource=new CD3DWOWM2ModelResource(m_pManager);
-				if(pResource->LoadFromFile(ObjectFileName))
+				CD3DWOWM2ModelResource* pResource=
+					dynamic_cast<CD3DWOWM2ModelResource*>(m_pManager->GetResource(ObjectFileName));
+				if(!pResource)
 				{
-					//PrintSystemLog(0,"加载了[%s]",(LPCTSTR)ObjectFileName);
-					if(!m_pManager->AddResource(pResource,ObjectFileName))
+					pResource=new CD3DWOWM2ModelResource(m_pManager);
+					if(pResource->LoadFromFile(ObjectFileName))
 					{
+						//PrintSystemLog(0,"加载了[%s]",(LPCTSTR)ObjectFileName);
+						if(!m_pManager->AddResource(pResource,ObjectFileName))
+						{
+							pResource->Release();
+							pResource=NULL;
+						}
+					}
+					else
+					{
+						PrintD3DLog(0,"加载M2文件%s失败",(LPCTSTR)ObjectFileName);
 						pResource->Release();
 						pResource=NULL;
-					}
+					}						
 				}
 				else
 				{
-					PrintD3DLog(0,"加载M2文件%s失败",(LPCTSTR)ObjectFileName);
-					pResource->Release();
-					pResource=NULL;
-				}						
+					pResource->AddUseRef();
+				}	
+				m_M2ObjectList[i].pModelResource=pResource;
 			}
-			else
-			{
-				pResource->AddUseRef();
-			}	
-			m_M2ObjectList[i].pModelResource=pResource;
+			
 		}			
 		
-		m_M2ObjectList[i].Position.x=pMDDF->M2Objects[i].Position.x;
-		m_M2ObjectList[i].Position.y=pMDDF->M2Objects[i].Position.y;
-		m_M2ObjectList[i].Position.z=-pMDDF->M2Objects[i].Position.z;					
-		m_M2ObjectList[i].Orientation=CD3DQuaternion::FromRotationYawPitchRoll(
-			-pMDDF->M2Objects[i].Orientation.y*PI/180.0f,
-			-pMDDF->M2Objects[i].Orientation.x*PI/180.0f,
-			pMDDF->M2Objects[i].Orientation.z*PI/180.0f);
-		m_M2ObjectList[i].Orientation.Normalize();
-		m_M2ObjectList[i].Scale=pMDDF->M2Objects[i].Scale/1024.0f;
+		
 	}
 
 
@@ -798,47 +788,55 @@ bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlpha
 	{
 		m_WMOObjectList[i].ID=pMODF->WMOObjects[i].ID;
 		CEasyString FileName=pMWMO->WMOFileNames+pMWID->WMOFileNameIndices[pMODF->WMOObjects[i].Index];
-		FileName.MakeUpper();
-		FileName.Replace(".MDX",".M2");		
+		//FileName.MakeUpper();
+		//FileName.Replace(".MDX",".M2");
 
-		CD3DWOWWMOModelResource* pResource=
-			dynamic_cast<CD3DWOWWMOModelResource*>(m_pManager->GetResource(FileName));
-		if(!pResource)
-		{
-			pResource=new CD3DWOWWMOModelResource(m_pManager);
-			if(pResource->LoadFromFile(FileName))
-			{
-				//PrintSystemLog(0,"加载了[%s]",(LPCTSTR)FileName);
-				if(!m_pManager->AddResource(pResource,FileName))
-				{
-					pResource->Release();
-					pResource=NULL;
-				}
-			}
-			else
-			{
-				PrintD3DLog(0,"加载WMO文件%s失败",(LPCTSTR)FileName);
-				pResource->Release();
-				pResource=NULL;
-			}						
-		}
-		else
-		{
-			pResource->AddUseRef();
-		}	
-
-		m_WMOObjectList[i].pModelResource=pResource;
+		m_WMOObjectList[i].pModelResource=NULL;
 		
+		m_WMOObjectList[i].ModelFilePath=FileName;
 		m_WMOObjectList[i].Position.x=pMODF->WMOObjects[i].Position.x;
 		m_WMOObjectList[i].Position.y=pMODF->WMOObjects[i].Position.y;
 		m_WMOObjectList[i].Position.z=-pMODF->WMOObjects[i].Position.z;		
-			
+
 		m_WMOObjectList[i].Orientation=CD3DQuaternion::FromRotationYawPitchRoll(
 			-pMODF->WMOObjects[i].Orientation.y*PI/180.0f,
 			-pMODF->WMOObjects[i].Orientation.x*PI/180.0f,
 			pMODF->WMOObjects[i].Orientation.z*PI/180.0f);
 		m_WMOObjectList[i].Orientation.Normalize();
 		m_WMOObjectList[i].DoodadSet=pMODF->WMOObjects[i].DoodadSet;
+		m_WMOObjectList[i].Flag=pMODF->WMOObjects[i].Flags;
+
+		if(BeLoadObject)
+		{
+			CD3DWOWWMOModelResource* pResource=
+				dynamic_cast<CD3DWOWWMOModelResource*>(m_pManager->GetResource(FileName));
+			if(!pResource)
+			{
+				pResource=new CD3DWOWWMOModelResource(m_pManager);
+				if(pResource->LoadFromFile(FileName))
+				{
+					//PrintSystemLog(0,"加载了[%s]",(LPCTSTR)FileName);
+					if(!m_pManager->AddResource(pResource,FileName))
+					{
+						pResource->Release();
+						pResource=NULL;
+					}
+				}
+				else
+				{
+					PrintD3DLog(0,"加载WMO文件%s失败",(LPCTSTR)FileName);
+					pResource->Release();
+					pResource=NULL;
+				}						
+			}
+			else
+			{
+				pResource->AddUseRef();
+			}
+
+			m_WMOObjectList[i].pModelResource=pResource;
+		}
+					
 	}
 
 	CreateBounding();
@@ -883,6 +881,11 @@ bool CD3DWOWADTModelResource::GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT&
 	dz=dz-Row*BLZ_ADT_MAP_TILE_SIZE;
 	Col=(UINT)(dx/BLZ_ADT_MAP_TILE_BLOCK_SIZE);
 	Row=(UINT)(dz/BLZ_ADT_MAP_TILE_BLOCK_SIZE);
+
+	if((ADT_HOLE_MASK[Row/2][Col/2]&((WORD)m_TerrainHoleInfo[BlockIndex]))!=0)
+	{
+		return false;
+	}
 
 	FLOAT h1=m_TerrainHeightInfo[BlockIndex].TerrainHeight[Row*17+Col];
 	FLOAT h2=m_TerrainHeightInfo[BlockIndex].TerrainHeight[Row*17+Col+1];
@@ -1288,42 +1291,17 @@ CD3DFX * CD3DWOWADTModelResource::BuildFX(UINT Index,UINT LayCount,bool HaveShad
 		}
 	}
 
-	
-
-	IFileAccessor * pFile;
-
 	CEasyString FxContent;
-
-
-	pFile=CD3DFX::CreateFileAccessor();
-	if(pFile==NULL)
-		return NULL;
+	
 	if(UseNewShader)
 	{
-		CEasyString FXFileName=CD3DFX::FindFileOne(ADT_MODEL_30_FX_FILE_NAME);
-		if(!pFile->Open(FXFileName,IFileAccessor::modeRead))
-		{
-			PrintD3DLog(0,"文件%s打开失败%d",(LPCTSTR)FXFileName,GetLastError());
-			pFile->Release();
-			return NULL;	
-		}
+		FxContent=ADT_MODEL_30_FX;		
 	}
 	else
 	{
-		CEasyString FXFileName=CD3DFX::FindFileOne(ADT_MODEL_20_FX_FILE_NAME);
-		if(!pFile->Open(FXFileName,IFileAccessor::modeRead))
-		{
-			PrintD3DLog(0,"文件%s打开失败%d",(LPCTSTR)FXFileName,GetLastError());
-			pFile->Release();
-			return NULL;	
-		}
+		FxContent=ADT_MODEL_20_FX;		
 	}
-	
-	int FileSize=(int)pFile->GetSize();	
-	FxContent.Resize(FileSize);
-	pFile->Read((LPVOID)FxContent.GetBuffer(),FileSize);	
-	FxContent.SetLength(FileSize);
-	pFile->Release();
+
 	FxContent.Replace("<PSFunction>",PSFunction);
 	
 
@@ -1333,7 +1311,7 @@ CD3DFX * CD3DWOWADTModelResource::BuildFX(UINT Index,UINT LayCount,bool HaveShad
 
 CD3DFX * CD3DWOWADTModelResource::BuildLiquidFX()
 {
-	CD3DFX * pFX=m_pManager->GetDevice()->GetFXManager()->LoadFX(ADT_MODEL_LIQUID_FX_FILE_NAME);
+	CD3DFX * pFX=m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory("ADT_LIQUID_FX",ADT_LIQUID_FX,strlen(ADT_LIQUID_FX));	
 	return pFX;
 }
 
@@ -1521,9 +1499,9 @@ bool CD3DWOWADTModelResource::LoadShadowMap(TEXTURE_LAYER_INFO& LayInfo,BLZ_CHUN
 			for(int x=0;x<64;x++)
 			{
 				if(ShadowData&1)
-					Buffer.PushConstBack(0xB0,1);
+					Buffer.PushConstBack(0xFF,1);
 				else
-					Buffer.PushConstBack(0xff,1);				
+					Buffer.PushConstBack(0x00,1);				
 				ShadowData=ShadowData>>1;
 			}
 		}		

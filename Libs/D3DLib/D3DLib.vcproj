@@ -110,8 +110,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				InlineFunctionExpansion="1"
+				Optimization="0"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="false"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				BasicRuntimeChecks="3"
 				RuntimeLibrary="0"
 				TreatWChar_tAsBuiltInType="true"
 				RuntimeTypeInfo="true"
@@ -119,6 +124,7 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
+				EnablePREfast="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -264,6 +270,14 @@
 				Name="FX"
 				>
 				<File
+					RelativePath=".\D3DBuildInFXIncludeParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\D3DBuildInFXIncludeParser.h"
+					>
+				</File>
+				<File
 					RelativePath=".\D3DFX.cpp"
 					>
 				</File>
@@ -316,18 +330,6 @@
 					</File>
 					<File
 						RelativePath=".\D3DSceneRender.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="渲染线程"
-					>
-					<File
-						RelativePath=".\D3DRenderThread.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DRenderThread.h"
 						>
 					</File>
 				</Filter>
@@ -545,86 +547,6 @@
 				<Filter
 					Name="WOW模型"
 					>
-					<File
-						RelativePath=".\D3DWOWADTModel.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWADTModel.h"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWADTModelResource.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWADTModelResource.h"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWDoodadModel.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWDoodadModel.h"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWM2CharacterModel.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWM2CharacterModel.h"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWM2ItemModel.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWM2ItemModel.h"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWM2Model.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWM2Model.h"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWM2ModelResource.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWM2ModelResource.h"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWWMOGroupModel.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWWMOGroupModel.h"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWWMOModel.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWWMOModel.h"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWWMOModelResource.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\D3DWOWWMOModelResource.h"
-						>
-					</File>
 					<Filter
 						Name="ChunkFile"
 						>
@@ -688,16 +610,124 @@
 							RelativePath=".\BLZWDTFile.h"
 							>
 						</File>
+						<File
+							RelativePath=".\BLZWOWSceneLoader.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\BLZWOWSceneLoader.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="ADT"
+						>
+						<File
+							RelativePath=".\D3DWOWADTModel.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWADTModel.h"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWADTModelResource.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWADTModelResource.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="M2"
+						>
+						<File
+							RelativePath=".\D3DWOWDoodadModel.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWDoodadModel.h"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWM2CharacterModel.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWM2CharacterModel.h"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWM2ItemModel.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWM2ItemModel.h"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWM2Model.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWM2Model.h"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWM2ModelResource.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWM2ModelResource.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="WMO"
+						>
+						<File
+							RelativePath=".\D3DWOWWMOGroupModel.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWWMOGroupModel.h"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWWMOModel.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWWMOModel.h"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWWMOModelResource.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWWMOModelResource.h"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="WDL"
 						>
 						<File
-							RelativePath=".\BLZWDLFile.cpp"
+							RelativePath=".\D3DWOWWDLModel.cpp"
 							>
 						</File>
 						<File
-							RelativePath=".\BLZWDLFile.h"
+							RelativePath=".\D3DWOWWDLModel.h"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWWDLModelResource.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\D3DWOWWDLModelResource.h"
 							>
 						</File>
 					</Filter>
@@ -880,6 +910,430 @@
 				</File>
 				<File
 					RelativePath=".\D3DSwapChain.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Shaders"
+				>
+				<File
+					RelativePath=".\Shaders\ADTLiquid.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\ADTModel20.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\ADTModel30.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\D3DBoard.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\D3DBoundFrame.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\D3DLine.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\M2ModelSoftBoneOnly.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\M2Particle.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\M2Ribbon.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shader.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Shaders.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Shaders\SharedLib.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\SharedParam.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\TXT2String.exe"
+					>
+				</File>
+				<File
+					RelativePath=".\Shaders\UIInverseColor.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\UITextRect.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\UIWinRectNoTexture.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\UIWinRectWithTexture.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\UIWinRectWithTextureFilter.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\WDLModel.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\WMOModel.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="渲染线程"
+				>
+				<File
+					RelativePath=".\D3DRenderThread.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\D3DRenderThread.h"
 					>
 				</File>
 			</Filter>

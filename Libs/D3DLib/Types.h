@@ -35,11 +35,19 @@ namespace D3DLib{
 
 #define MAX_TEXTURE_LAYER		8
 #define MAX_LIGHT				8
-#define MAX_SHADER_BONE_NUM		62
+#define MAX_SHADER_BONE_NUM		0
 
 #define MAX_HEIGHT			1.0e10f
 
 #define MAX_PREPARE_RENDER_DATA_FAIL_COUNT	1
+
+
+#define D3DCOLOR_ALPHA(Color)		((Color>>24)&0xFF)
+#define D3DCOLOR_RED(Color)			((Color>>16)&0xFF)
+#define D3DCOLOR_GREEN(Color)		((Color>>8)&0xFF)
+#define D3DCOLOR_BLUE(Color)		(Color&0xFF)
+#define D3DCOLOR_ADD(Color1,Color2)	D3DCOLOR_ARGB(D3DCOLOR_ALPHA(Color1)+D3DCOLOR_ALPHA(Color2),D3DCOLOR_RED(Color1)+D3DCOLOR_RED(Color2),D3DCOLOR_GREEN(Color1)+D3DCOLOR_GREEN(Color2),D3DCOLOR_BLUE(Color1)+D3DCOLOR_BLUE(Color2))
+#define D3DCOLOR_MUL(Color,Value)	D3DCOLOR_ARGB((BYTE)(D3DCOLOR_ALPHA(Color)*(Value)),(BYTE)(D3DCOLOR_RED(Color)*(Value)),(BYTE)(D3DCOLOR_GREEN(Color)*(Value)),(BYTE)(D3DCOLOR_BLUE(Color)*(Value)))
 
 enum D3D_RENDER_FLAG:UINT64
 {
@@ -115,117 +123,5 @@ struct D3D_A8B8G8R8_PIXEL
 	BYTE Alpha;	
 };
 
-const LPCTSTR DEFAULT_MODEL_FX=
-"texture TexLay0 < string name = \"test.jpg\"; >;		\r\n"
-"texture TexLay1 < string name = \"test1.jpg\"; >;		\r\n"
-"technique tec0											\r\n"
-"{														\r\n"
-"    pass p0											\r\n"
-"    {													\r\n"
-"		MultiSampleAntialias = FALSE;					\r\n"	
-"		SpecularEnable = false;							\r\n"
-"		zenable = true;									\r\n"
-"		zwriteenable = true;							\r\n"
-"		CullMode = ccw;									\r\n"
-"		fogenable = false;								\r\n"
-"		lighting = true;								\r\n"
-"		Texture[0] = <TexLay0>;							\r\n"
-"		AlphaTestEnable = false;						\r\n"
-"		AlphaBlendEnable = true;						\r\n"
-"		SrcBlend = SrcAlpha;							\r\n"
-"		DestBlend = InvSrcAlpha;						\r\n"
-"		Texture[0] = <TexLay0>;							\r\n"
-"     	ColorOp[0] = Modulate;							\r\n"
-"       ColorArg1[0] = Texture;							\r\n"
-"       ColorArg2[0] = Diffuse;							\r\n"      	
-"       AlphaOp[0] = Modulate;							\r\n"
-"       AlphaArg1[0] = Texture;							\r\n"
-"       AlphaArg2[0] = diffuse;							\r\n"
-"		ColorOp[1] = disable;							\r\n"
-"		AlphaOp[1] = disable;							\r\n"
-"		AddressU[0] = wrap;								\r\n"
-"		AddressV[0] = wrap;								\r\n"      
-"		MinFilter[0] = linear;							\r\n"
-"       MagFilter[0] = linear;							\r\n"
-"       MipFilter[0] = linear;							\r\n"
-"		VertexShader = NULL;							\r\n"
-"		PixelShader  = NULL;							\r\n"
-"    }"
-"}";
 
-const LPCTSTR DEFAULT_MODEL_FX_NT=
-"texture TexLay0 < string name = \"test.jpg\"; >;		\r\n"
-"texture TexLay1 < string name = \"test1.jpg\"; >;		\r\n"
-"technique tec0											\r\n"
-"{														\r\n"
-"    pass p0											\r\n"
-"    {													\r\n"
-"		MultiSampleAntialias = FALSE;					\r\n"	
-"		SpecularEnable = false;							\r\n"
-"		zenable = true;									\r\n"
-"		zwriteenable = true;							\r\n"
-"		lighting = true;								\r\n"
-"		CullMode = none;								\r\n"
-"		fogenable = false;								\r\n"
-"		Texture[0] = <TexLay0>;							\r\n"
-"		AlphaTestEnable = false;						\r\n"
-"		AlphaBlendEnable = false;						\r\n"
-"		SrcBlend = SrcAlpha;							\r\n"
-"		DestBlend = InvSrcAlpha;						\r\n"
-"     	ColorOp[0] = SelectArg1;						\r\n"
-"       ColorArg1[0] = Diffuse;							\r\n"      	
-"       AlphaOp[0] = SelectArg1;						\r\n"
-"       AlphaArg1[0] = diffuse;							\r\n"
-"		ColorOp[1] = disable;							\r\n"
-"		AlphaOp[1] = disable;							\r\n"
-"		VertexShader = NULL;							\r\n"
-"		PixelShader  = NULL;							\r\n"
-"    }"
-"}";
-
-const LPCTSTR DEFAULT_MODEL_FX_NT_WIRE_FRAME=
-"texture TexLay0 < string name = \"test.jpg\"; >;		\r\n"
-"texture TexLay1 < string name = \"test1.jpg\"; >;		\r\n"
-"technique tec0											\r\n"
-"{														\r\n"
-"    pass p0											\r\n"
-"    {													\r\n"
-"		MultiSampleAntialias = FALSE;					\r\n"	
-"		SpecularEnable = false;							\r\n"
-"		zenable = true;									\r\n"
-"		zwriteenable = true;							\r\n"
-"		FillMode = WireFrame;							\r\n"
-"		CullMode = ccw;									\r\n"
-"		fogenable = false;								\r\n"
-"		Texture[0] = <TexLay0>;							\r\n"
-"		AlphaTestEnable = false;						\r\n"
-"		AlphaBlendEnable = false;						\r\n"
-"		SrcBlend = SrcAlpha;							\r\n"
-"		DestBlend = InvSrcAlpha;						\r\n"
-"     	ColorOp[0] = SelectArg1;						\r\n"
-"       ColorArg1[0] = Diffuse;							\r\n"      	
-"       AlphaOp[0] = SelectArg1;						\r\n"
-"       AlphaArg1[0] = diffuse;							\r\n"
-"		ColorOp[1] = disable;							\r\n"
-"		AlphaOp[1] = disable;							\r\n"
-"		VertexShader = NULL;							\r\n"
-"		PixelShader  = NULL;							\r\n"
-"    }"
-"}";
-
-const LPCTSTR SHARED_PARAM_FX=
-"shared float4x4	PrjMatrix;							\r\n"
-"shared float3		CameraPos={0.0f,0.0f,0.0f};			\r\n"
-"shared float		CameraNear=1.0f;					\r\n"
-"shared float		CameraFar=1000.0f;					\r\n"
-"shared float		FogNear=3000.0f;					\r\n"
-"shared float		FogFar=3000.0f;						\r\n"
-"shared float3		FogColor={0.5f, 0.5f, 0.5f};		\r\n"
-"technique tec0											\r\n"
-"{														\r\n"
-"    pass p0											\r\n"
-"    {													\r\n"
-"    }													\r\n"
-"}														\r\n";
 }
-

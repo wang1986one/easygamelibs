@@ -239,7 +239,7 @@ BOOL CD3DScrollBar::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lPa
 			if(TraceSize&&m_CurScrollPos!=m_TrackingStartScrollPos+Len*m_MaxScrollPos/TraceSize)
 			{
 				m_CurScrollPos=m_TrackingStartScrollPos+Len*m_MaxScrollPos/TraceSize;
-				HandleMessage(this,WM_D3DGUI_SCROLL_BAR_SCROLL,m_CurScrollPos,(LPARAM)this);
+				HandleMessage(this,WM_D3DGUI_SCROLL_BAR_SCROLL,(WPARAM)GetID(),m_CurScrollPos);
 			}
 			return true;			
 		}
@@ -265,7 +265,7 @@ void CD3DScrollBar::Scroll(int Delta,bool SendMsg)
 	m_CurScrollPos+=Delta;
 	UpdateTrack();
 	if(SendMsg)
-		HandleMessage(this,WM_D3DGUI_SCROLL_BAR_SCROLL,m_CurScrollPos,(LPARAM)this);
+		HandleMessage(this,WM_D3DGUI_SCROLL_BAR_SCROLL,(WPARAM)GetID(),m_CurScrollPos);
 
 }
 
@@ -274,7 +274,7 @@ void CD3DScrollBar::SetScrollPos(int ScrollPos,bool SendMsg)
 	m_CurScrollPos=ScrollPos;
 	UpdateTrack();
 	if(SendMsg)
-		HandleMessage(this,WM_D3DGUI_SCROLL_BAR_SCROLL,m_CurScrollPos,(LPARAM)this);
+		HandleMessage(this,WM_D3DGUI_SCROLL_BAR_SCROLL,(WPARAM)GetID(),m_CurScrollPos);
 }
 
 void CD3DScrollBar::SetVisible(bool IsVisible)
@@ -473,7 +473,7 @@ void CD3DScrollBar::SaveToXml(xml_node * pXMLNode)
 		SaveTextureToXML(Texture);
 	}
 	
-	if(m_ChildWndList.size()>0)
+	if(m_ChildWndList.GetCount())
 	{
 		xml_node Childs=Wnd.append_child(node_element,"Childs");
 		SaveChildsToXml(Childs);
@@ -518,7 +518,7 @@ bool CD3DScrollBar::LoadFromXml(xml_node * pXMLNode)
 			LoadTextureFromXML(pXMLNode->child(i));
 		}
 	}
-	
+	HandleMessage(this,WM_D3DGUI_WND_LOADED,GetID(),(LPARAM)this);
 
 	//×°ÔØ×Ó´°¿Ú
 	for(int i=(int)pXMLNode->children()-1;i>=0;i--)
@@ -529,9 +529,9 @@ bool CD3DScrollBar::LoadFromXml(xml_node * pXMLNode)
 			break;
 		}
 	}
-	HandleMessage(this,WM_D3DGUI_WND_LOADED,GetID(),(LPARAM)this);
+	
 
-	for(int i=(int)m_ChildWndList.size()-1;i>=0;i--)
+	for(int i=(int)m_ChildWndList.GetCount()-1;i>=0;i--)
 	{
 		if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DButton))&&
@@ -561,7 +561,7 @@ bool CD3DScrollBar::LoadFromXml(xml_node * pXMLNode)
 			m_pTrackButton=pButton;
 		}
 	}
-	TopChild();
+	TopChild(true);
 	HandleMessage(this,WM_D3DGUI_CHILD_LOADED,GetID(),(LPARAM)this);
 	return true;
 }

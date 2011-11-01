@@ -34,11 +34,10 @@ public:
 	{
 		UINT32		ID;
 		CEasyString	Name;
-		UINT32		WeaponState;
-		UINT32		Flags;		
-		UINT32		Preceeding;
-		UINT32		RealId;
-		UINT32		Group;
+		UINT32		WeaponFlags;
+		UINT32		BodyFlags;
+		UINT32		Flags;
+		UINT32		Fallback;		
 	};
 
 	struct BLZ_DB_CHAR_HAIR_SUBMESH_INFO
@@ -62,22 +61,24 @@ public:
 
 	struct BLZ_DB_CHAR_RACE_INFO
 	{	
-		UINT32			RaceID;
-		UINT32			Flags;				
-		UINT32			FactionID;			
-		UINT32			Exploration;		
-		UINT32			MaleModelID;			
-		UINT32			FemaleModelID;		
+		UINT			RaceID;
+		UINT			Flags;				
+		UINT			FactionID;			
+		UINT			Exploration;		
+		UINT			MaleModelID;			
+		UINT			FemaleModelID;		
 		CEasyString		Abbrev;				
-		UINT32			Faction;			
-		UINT32			CreatureType;		
+		UINT			BaseLanguage;			
+		UINT			CreatureType;		
 		CEasyString		InternalName;		
-		UINT32			Camera;				
+		UINT			CinematicSequenceID;	
+		UINT			Alliance;
 		CEasyString		RaceName;
-		CEasyString		Feature1;			
-		CEasyString		Feature2;			
-		CEasyString		Feature3;			
-		UINT32			Expansion;			
+		CEasyString		FacialHairCustomization1;			
+		CEasyString		FacialHairCustomization2;			
+		CEasyString		HairCustomization;			
+		UINT			Expansion;	
+		UINT			UnalteredVisualRaceID;
 
 	};
 	struct BLZ_DB_CREATURE_DISPLAY_INFO
@@ -92,7 +93,8 @@ public:
 		CEasyString		Skin1;						
 		CEasyString		Skin2;						
 		CEasyString		Skin3;						
-		CEasyString		Icon;						
+		CEasyString		Icon;	
+		UINT32			SizeClass;
 		UINT32			BloodLevelID;					
 		UINT32			BloodID;						
 		UINT32			NPCSoundID;					
@@ -132,10 +134,22 @@ public:
 		CEasyString		ModelPath;					
 		CEasyString		AltermateModel;	
 		FLOAT			Scale;						
-		UINT32			BloodLevelID;					
-		UINT32			SoundDataID;					
+		UINT32			BloodLevelID;
+		UINT32			FootPrintID;			
+		FLOAT			FootPrintTextureLength; 
+		FLOAT			FootPrintTextureWidth; 	
+		FLOAT			FootPrintParticleScale; 
+		UINT32			FoleyMaterialID;		
+		UINT32			FootStepShakeSizeID;	
+		UINT32			DeathThudShakeSize; 	
+		UINT			SoundDataID;					
 		FLOAT			CollisionWidth; 			
-		FLOAT			CollisionHeight;	
+		FLOAT			CollisionHeight;
+		FLOAT			MountHeight;
+		CD3DBoundingBox	BoundingBox; 		
+		FLOAT			WorldEffectScale ; 		
+		FLOAT			AttachedEffectScale; 	
+
 		CEasyArray<BLZ_DB_CREATURE_DISPLAY_INFO *> CreatureDisplayInfos;
 	};
 
@@ -158,6 +172,7 @@ public:
 	{		
 		UINT			ClassID;
 		UINT			SubClassID;		
+		UINT			SubClassMark;
 		UINT			HandsNumber;
 		CEasyString		Name;
 		CEasyString		UniquePlural;
@@ -169,7 +184,6 @@ public:
 	struct BLZ_DB_ITEM_CLASS
 	{
 		UINT			ClassID;
-		UINT			SubClassID;
 		bool			IsWeapon;
 		CEasyString		Name;
 		CEasyArray<BLZ_DB_ITEM_SUB_CLASS>	SubClassInfo;
@@ -261,10 +275,43 @@ public:
 		CEasyString	TextureList[8];
 	};
 
-
-	struct BLZ_MINI_MAP_FILE_INFO
+	struct LIGHT_COLOR_VALUE
 	{
-		
+		UINT		Time;
+		D3DCOLOR	Color;
+	};
+
+	struct BLZ_DB_LIGHT_INFO
+	{
+		UINT							ID;
+		UINT							MapID;
+		bool							IsGlobal;
+		CD3DVector3						Pos;
+		float							FallOffStart;
+		float							FallOffEnd;
+		UINT							ParamID;
+		float							BlendWeight;
+
+		bool							IsHighLightSky;
+		UINT							SkyboxID;
+		UINT							CloudTypeID;
+		float							Glow;
+		float							WaterShallowAlpha;
+		float							WaterDeepAlpha;
+		float							OceanShallowAlpha;
+		float							OceanDeepAlpha;
+
+		CEasyArray<LIGHT_COLOR_VALUE>	Colors[DBC_LICI_MAX];
+
+		bool GetColor(UINT ColorIndex,UINT Time,D3DCOLOR& Color);
+
+	};
+
+	struct BLZ_DB_SKY_BOX_INFO
+	{
+		UINT			ID;
+		CEasyString		ModelName;
+		UINT			Flag;
 	};
 
 
@@ -303,11 +350,18 @@ protected:
 
 	CEasyMap<CEasyString,CEasyString>							m_MiniMapFileInfos;
 
+
+	CEasyArray<BLZ_DB_LIGHT_INFO>								m_LightInfoList;
+	CEasyMap<UINT,CEasyArray<BLZ_DB_LIGHT_INFO *> >				m_LightInfoMapByParamID;
+	CEasyMap<UINT,CEasyArray<BLZ_DB_LIGHT_INFO *> >				m_MapLightInfos;
+
 	DECLARE_FILE_CHANNEL_MANAGER
 
 public:
 	CBLZWOWDatabase(void);
 	~CBLZWOWDatabase(void);
+
+	virtual void Destory();
 
 	bool LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg);
 	bool Save(LPCTSTR szFileName);
@@ -388,6 +442,7 @@ public:
 
 	UINT GetMapInfoCount();
 	BLZ_DB_MAP_INFO * GetMapInfo(UINT Index);
+	BLZ_DB_MAP_INFO * FindMapInfo(UINT MapID);
 
 	bool LoadLiquidTypeInfo(LPCTSTR FileName);
 	BLZ_DB_LIQUID_TYPE * GetLiquidTypeInfo(UINT TypeID);
@@ -396,10 +451,20 @@ public:
 
 	LPCTSTR GetMiniMapRealFileName(LPCTSTR FileName);
 
+	bool LoadMapLightInfos(LPCTSTR FileName);
+	bool LoadLightParams(LPCTSTR FileName);
+	bool LoadLightColors(LPCTSTR FileName);
+
+	CEasyArray<BLZ_DB_LIGHT_INFO *> * GetMapLightInfos(UINT MapID);
+	bool GetMapLightColor(UINT MapID,CD3DVector3 Pos,UINT ColorIndex,UINT Time,D3DCOLOR& Color);
+
 protected:
 	CEasyString UTF8ToLocal(LPCTSTR szStr,int StrLen);
 	void BuildCreatureModelInfo();
 
+	void PrintColors(BLZ_DB_LIGHT_INFO * pInfo);
+
+	void AddLightInfoSorted(CEasyArray<BLZ_DB_LIGHT_INFO *>& LightList,BLZ_DB_LIGHT_INFO * pLightInfo);
 	
 };
 

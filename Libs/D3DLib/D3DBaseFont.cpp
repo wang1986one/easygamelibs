@@ -29,16 +29,11 @@ CD3DBaseFont::CD3DBaseFont(CD3DFontManager * pManager)
 
 CD3DBaseFont::~CD3DBaseFont(void)
 {
-}
-
-void CD3DBaseFont::Release()
-{
-	DecUseRef();
-	if(GetUseRef()<=0)
+	if(m_pManager&&GetID())
 	{
 		m_pManager->DeleteD3DFont(GetID());
-		delete this;
 	}
 }
+
 
 }

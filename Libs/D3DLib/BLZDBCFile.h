@@ -9,6 +9,12 @@ protected:
 	BYTE *		m_pData;
 	UINT		m_DataSize;
 	bool		m_IsSelfRelease;
+	UINT		m_RecordCount;
+	UINT		m_FieldCount;
+	UINT		m_RecordSize;
+	UINT		m_StringTableSize;
+	BYTE *		m_pRecordData;
+	char *		m_pStringTable;
 
 	DECLARE_FILE_CHANNEL_MANAGER
 public:

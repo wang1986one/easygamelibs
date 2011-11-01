@@ -111,9 +111,9 @@ public:
 
 	virtual CDBValue& GetParam(int Index)=0;	
 
-	virtual bool AddParam(DB_PARAM_INFO& ParamInfo,CDBValue Value)=0;
+	virtual bool AddParam(DB_PARAM_INFO& ParamInfo,const CDBValue& Value)=0;
 	virtual bool AddParam(DB_PARAM_INFO& ParamInfo)=0;
-	virtual bool SetParam(int Index,DB_PARAM_INFO& ParamInfo,CDBValue Value)=0;
+	virtual bool SetParam(int Index,DB_PARAM_INFO& ParamInfo,const CDBValue& Value)=0;
 	virtual bool SetParam(int Index,DB_PARAM_INFO& ParamInfo)=0;
 
 };

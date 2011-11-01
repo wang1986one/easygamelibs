@@ -255,15 +255,11 @@ bool CD3DWOWM2Model::LoadFromResource(CD3DWOWM2ModelResource * pModelResource)
 		m_BoneMatList[i].SetIdentity();
 	}
 
-	if(m_pModelResource->GetSkinMeshBoneCount()>MAX_SHADER_BONE_NUM)
+	if(m_pModelResource->GetSkinMeshBoneCount())
 	{
 		m_UseSoftSkinMesh=true;
 		PrepareSoftSkinMesh();
-	}
-	else if(m_pModelResource->GetBoneCount()==0)
-	{
-		m_UseSoftSkinMesh=true;
-	}
+	}	
 	else
 	{
 		m_UseSoftSkinMesh=false;
@@ -310,6 +306,7 @@ bool CD3DWOWM2Model::LoadFromResource(CD3DWOWM2ModelResource * pModelResource)
 	}
 
 	m_CurBoundingBox=*m_pModelResource->GetBoundingBox();
+	m_IsRenderDataChanged=true;
 	return true;
 }
 
@@ -341,6 +338,12 @@ bool CD3DWOWM2Model::LoadFromXFile(LPCTSTR szModelFileName)
 	bool Ret=LoadFromResource(pResource);
 	SAFE_RELEASE(pResource);
 	return Ret;
+}
+
+bool CD3DWOWM2Model::ChangeSkin(UINT Index)
+{
+	D3DLOCK_FOR_OBJECT_ADD;
+	return m_pModelResource->ChangeSkin(Index);
 }
 
 
@@ -585,44 +588,44 @@ UINT CD3DWOWM2Model::GetSmartStructSize(UINT Param)
 
 void CD3DWOWM2Model::OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
-	//设置灯光
-	if(LightList.GetCount())
-	{		
-		D3DLIGHT9	Light;
-		char		szParamName[32];
-		pFX->SetInt("LightCount",LightList.GetCount());
-		for(UINT i=0;i<LightList.GetCount();i++)
-		{
-			LightList[i]->GetCurLight(Light);
-			sprintf_s(szParamName,32,"LightType[%d]",i);
-			pFX->SetInt(szParamName,Light.Type);
-			sprintf_s(szParamName,32,"LightPos[%d]",i);
-			pFX->SetVector(szParamName,CD3DVector3(Light.Position));
-			sprintf_s(szParamName,32,"LightDir[%d]",i);
-			pFX->SetVector(szParamName,CD3DVector3(Light.Direction));
-			sprintf_s(szParamName,32,"LightAmbient[%d]",i);
-			pFX->SetColor(szParamName,Light.Ambient);
-			sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
-			pFX->SetColor(szParamName,Light.Diffuse);
-			sprintf_s(szParamName,32,"LightSpecular[%d]",i);
-			pFX->SetColor(szParamName,Light.Specular);
-			sprintf_s(szParamName,32,"LightRange[%d]",i);
-			pFX->SetFloat(szParamName,Light.Range);
-			sprintf_s(szParamName,32,"LightAtn0[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation0);
-			sprintf_s(szParamName,32,"LightAtn1[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation1);
-			sprintf_s(szParamName,32,"LightAtn2[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation2);
-			//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Falloff);
-			//sprintf_s(szParamName,32,"LightTheta[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Theta);
-			//sprintf_s(szParamName,32,"LightPhi[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Phi);
-		}
+	////设置灯光
+	//if(LightList.GetCount())
+	//{		
+	//	D3DLIGHT9	Light;
+	//	char		szParamName[32];
+	//	pFX->SetInt("LightCount",LightList.GetCount());
+	//	for(UINT i=0;i<LightList.GetCount();i++)
+	//	{
+	//		LightList[i]->GetCurLight(Light);
+	//		sprintf_s(szParamName,32,"LightType[%d]",i);
+	//		pFX->SetInt(szParamName,Light.Type);
+	//		sprintf_s(szParamName,32,"LightPos[%d]",i);
+	//		pFX->SetVector(szParamName,CD3DVector3(Light.Position));
+	//		sprintf_s(szParamName,32,"LightDir[%d]",i);
+	//		pFX->SetVector(szParamName,CD3DVector3(Light.Direction));
+	//		sprintf_s(szParamName,32,"LightAmbient[%d]",i);
+	//		pFX->SetColor(szParamName,Light.Ambient);
+	//		sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
+	//		pFX->SetColor(szParamName,Light.Diffuse);
+	//		sprintf_s(szParamName,32,"LightSpecular[%d]",i);
+	//		pFX->SetColor(szParamName,Light.Specular);
+	//		sprintf_s(szParamName,32,"LightRange[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Range);
+	//		sprintf_s(szParamName,32,"LightAtn0[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Attenuation0);
+	//		sprintf_s(szParamName,32,"LightAtn1[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Attenuation1);
+	//		sprintf_s(szParamName,32,"LightAtn2[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Attenuation2);
+	//		//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
+	//		//pFX->SetFloat(szParamName,Light.Falloff);
+	//		//sprintf_s(szParamName,32,"LightTheta[%d]",i);
+	//		//pFX->SetFloat(szParamName,Light.Theta);
+	//		//sprintf_s(szParamName,32,"LightPhi[%d]",i);
+	//		//pFX->SetFloat(szParamName,Light.Phi);
+	//	}
 
-	}
+	//}
 	////设置雾
 	//CD3DSceneRender * pRender=(CD3DSceneRender *)GetRender();
 	//if(pRender)
@@ -645,28 +648,28 @@ void CD3DWOWM2Model::OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasy
 
 					
 
-	if(CD3DDevice::IsUseMultiThreadRender())
-	{
-		UINT BoneNum=m_pModelResource->GetSkinMeshBoneCount();
-		if(BoneNum>m_BoneMatListR.GetCount())
-			BoneNum=m_BoneMatListR.GetCount();
-		if((!m_UseSoftSkinMesh)&&BoneNum)
-		{
-			//设置骨骼矩阵
-			pFX->SetMatrixArray("BoneMatrixArray",&(m_BoneMatListR[0]),BoneNum);
-		}
-	}
-	else
-	{
-		UINT BoneNum=m_pModelResource->GetSkinMeshBoneCount();
-		if(BoneNum>m_BoneMatList.GetCount())
-			BoneNum=m_BoneMatList.GetCount();
-		if((!m_UseSoftSkinMesh)&&BoneNum)
-		{
-			//设置骨骼矩阵
-			pFX->SetMatrixArray("BoneMatrixArray",&(m_BoneMatList[0]),BoneNum);
-		}
-	}
+	//if(CD3DDevice::IsUseMultiThreadRender())
+	//{
+	//	UINT BoneNum=m_pModelResource->GetSkinMeshBoneCount();
+	//	if(BoneNum>m_BoneMatListR.GetCount())
+	//		BoneNum=m_BoneMatListR.GetCount();
+	//	if((!m_UseSoftSkinMesh)&&BoneNum)
+	//	{
+	//		//设置骨骼矩阵
+	//		pFX->SetMatrixArray("BoneMatrixArray",&(m_BoneMatListR[0]),BoneNum);
+	//	}
+	//}
+	//else
+	//{
+	//	UINT BoneNum=m_pModelResource->GetSkinMeshBoneCount();
+	//	if(BoneNum>m_BoneMatList.GetCount())
+	//		BoneNum=m_BoneMatList.GetCount();
+	//	if((!m_UseSoftSkinMesh)&&BoneNum)
+	//	{
+	//		//设置骨骼矩阵
+	//		pFX->SetMatrixArray("BoneMatrixArray",&(m_BoneMatList[0]),BoneNum);
+	//	}
+	//}
 }
 void CD3DWOWM2Model::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
@@ -685,7 +688,7 @@ void CD3DWOWM2Model::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pF
 		sprintf_s(szTexName,64,"TexLay%d",i);
 		pFX->SetTexture(szTexName,pMaterial->GetTexture(i));
 	}			
-	UINT TextureFlag=pMaterial->GetTextureProperty(0)>>CD3DWOWM2ModelResource::TF_TEXTURE_FLAG_SHIFT;
+	UINT64 TextureFlag=pMaterial->GetTextureProperty(0)>>CD3DWOWM2ModelResource::TF_TEXTURE_FLAG_SHIFT;
 	if(TextureFlag&D3D_TEX_FLAG_UV_ANI)
 	{
 		pFX->SetMatrix("UVMatrix0",pMaterial->GetTextureUVTransform(0));
@@ -706,7 +709,7 @@ void CD3DWOWM2Model::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pF
 	WorldMat=GetWorldMatrixR();
 	WorldViewMat=WorldMat*pCamera->GetViewMatR();
 
-	UINT RenderFlag=pSubMesh->GetProperty()>>CD3DWOWM2ModelResource::SMP_RENDER_FLAG_SHIFT;
+	UINT64 RenderFlag=pSubMesh->GetProperty()>>CD3DWOWM2ModelResource::SMP_RENDER_FLAG_SHIFT;
 	if(RenderFlag&D3D_RENDER_FLAG_BILL_BOARD)
 	{
 		WorldMat=WorldMat.GetScaleTranslation();
@@ -714,25 +717,6 @@ void CD3DWOWM2Model::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pF
 	}
 	pFX->SetMatrix("WorldMatrix",WorldMat);
 	pFX->SetMatrix("WorldViewMatrix",WorldViewMat);
-}
-
-void CD3DWOWM2Model::OnPrepareRenderData()
-{
-	CD3DBaseDynamicModel::OnPrepareRenderData();
-
-	if(!m_UseSoftSkinMesh)
-	{
-		if(m_BoneMatListR.GetCount()<m_BoneMatList.GetCount())
-		{
-			m_BoneMatListR.Resize(m_BoneMatList.GetCount());
-		}
-		for(UINT i=0;i<m_BoneMatList.GetCount();i++)
-		{
-			m_BoneMatListR[i]=m_BoneMatList[i];
-		}
-
-		
-	}
 }
 
 int CD3DWOWM2Model::GetSubMeshCount()
@@ -804,13 +788,25 @@ bool CD3DWOWM2Model::CanDoSubMeshViewCull()
 void CD3DWOWM2Model::Update(FLOAT Time)
 {
 
-	
-	//更新世界矩阵
-	if(GetParent())
-		m_WorldMatrix=m_LocalMatrix*GetParent()->GetWorldMatrix();
-	else
-		m_WorldMatrix=m_LocalMatrix;
+	//更新世界矩阵	
 
+	m_UpdateCount++;
+	if(GetParent())
+	{
+		if(m_IsMatrixChanged||GetParent()->IsMatrixChanged())
+		{
+			m_WorldMatrix=m_LocalMatrix*GetParent()->GetWorldMatrix();
+			m_IsRenderDataChanged=true;
+		}
+	}
+	else
+	{
+		if(m_IsMatrixChanged)
+		{
+			m_WorldMatrix=m_LocalMatrix;
+			m_IsRenderDataChanged=true;
+		}
+	}
 	
 	if(m_IsPlaying&&m_PlayStartTime<0)	
 	{
@@ -831,7 +827,6 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 
 		if(m_pModelResource->HasBoneAni())
 		{
-
 			if(m_InterimStatus==IS_INIT)
 			{		
 				m_InterimBoneMatStart.Resize(m_BoneMatrices.GetCount());
@@ -961,7 +956,7 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 
 			}
 
-			if(m_UseSoftSkinMesh&&m_BoneMatList.GetCount())
+			if(m_UseSoftSkinMesh)
 			{
 				CaculateSoftSkinMesh();
 			}
@@ -979,9 +974,9 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 					{
 						CD3DMatrix BillBoardMat=CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint*(-1.0f))*
 							pRender->GetCamera()->GetWorldMatrixDirect().GetRotation()*
-							GetWorldMatrix().GetRotation().GetInverse()**m_BoneMatList[i].GetRotation().GetInverse()*
+							GetWorldMatrix().GetRotation().GetInverse()*m_BoneMatList[i].GetRotation().GetInverse()*
 							CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint);		
-						m_BoneMatList[i]=BillBoardMat*m_BoneMatList[i];//*GetWorldMatrix().GetInverse();
+						m_BoneMatList[i]=BillBoardMat*m_BoneMatList[i];
 					}	
 					else if(m_BoneMatrices[i].Flags&CD3DWOWM2ModelResource::BONE_FLAG_BILLBOARD_HORIZONTAL)
 					{
@@ -998,7 +993,7 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 							BillBoardMat*
 							CD3DMatrix::FromTranslation(m_BoneMatrices[i].PivotPoint);
 
-						m_BoneMatList[i]=BillBoardMat*m_BoneMatList[i];//*GetWorldMatrix().GetInverse();
+						m_BoneMatList[i]=BillBoardMat*m_BoneMatList[i];
 					}
 
 					if(m_BoneMatrices[i].pAttachObject)
@@ -1012,7 +1007,6 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 
 		if(m_pModelResource->HasMaterialAni())
 		{
-
 			//设置颜色动画和纹理动画
 			for(int i=0;i<GetSubMeshCount();i++)		
 			{			
@@ -1063,11 +1057,30 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 	}
 		
 	//更新子对象
-	for(UINT i=0;i<GetChildCount();i++)
-		GetChildByIndex(i)->Update(Time);
-
+	
+	if(m_ChildList.GetCount())
+	{
+		for(UINT i=0;i<m_ChildList.GetCount();i++)
+		{
+			((CD3DObject *)m_ChildList[i])->Update(Time);
+		}
+	}
 	
 
+	m_IsMatrixChanged=false;
+
+
+}
+
+bool CD3DWOWM2Model::NeedUpdateAni()
+{
+	if(m_pModelResource)
+	{
+		return m_pModelResource->HasBoneAni()||m_pModelResource->HasMaterialAni()||
+			m_pModelResource->GetParticleEmitterCount()!=0||
+			m_pModelResource->GetRibbonEmitterCount();
+	}
+	return false;
 }
 
 void CD3DWOWM2Model::PrepareSoftSkinMesh()
@@ -1078,6 +1091,11 @@ void CD3DWOWM2Model::PrepareSoftSkinMesh()
 	}
 	m_SubMeshListForSoftSkinMesh.Clear();
 
+	m_Vertices.Resize(m_pModelResource->GetVertexCount());
+	m_VerticesR.Resize(m_pModelResource->GetVertexCount());
+
+	memcpy(m_Vertices.GetBuffer(),m_pModelResource->GetVertices(),m_pModelResource->GetVertexCount()*sizeof(CD3DWOWM2ModelResource::MODEL_VERTEXT));
+
 	for(int i=0;i<GetSubMeshCount();i++)
 	{
 		CD3DSubMesh * pSubMesh=GetOriginSubMesh(i);
@@ -1087,9 +1105,10 @@ void CD3DWOWM2Model::PrepareSoftSkinMesh()
 			
 			pNewSubMesh->CloneFrom(pSubMesh,SUBMESH_CLONE_USE_SYSTEM_MEM|SUBMESH_CLONE_NOT_CLONE_MATERIAL);
 			
-			pNewSubMesh->AllocBackupVertexBuffer();
-						
-			memcpy(pNewSubMesh->GetBackupVertexBuffer(),pNewSubMesh->GetVertexBuffer(),pSubMesh->GetVertexFormat().VertexSize*pSubMesh->GetVertexCount());
+			pNewSubMesh->SetVertices((BYTE *)m_Vertices.GetBuffer());
+			pNewSubMesh->SetVertexBufferR((BYTE *)m_VerticesR.GetBuffer());
+			pNewSubMesh->SetIndices((BYTE *)m_pModelResource->GetIndices());
+			pNewSubMesh->OnPrepareRenderData();
 
 			m_SubMeshListForSoftSkinMesh.Add(pNewSubMesh);
 		}		
@@ -1099,37 +1118,33 @@ void CD3DWOWM2Model::PrepareSoftSkinMesh()
 
 void CD3DWOWM2Model::CaculateSoftSkinMesh()
 {
-	for(int s=0;s<m_SubMeshListForSoftSkinMesh.GetCount();s++)
+	m_IsRenderDataChanged=true;
+	for(UINT s=0;s<m_SubMeshListForSoftSkinMesh.GetCount();s++)
 	{
-		CD3DSubMesh * pSubMesh=m_SubMeshListForSoftSkinMesh[s];
-
 		
-		CD3DWOWM2ModelResource::MODEL_VERTEXT * pDestVertices=(CD3DWOWM2ModelResource::MODEL_VERTEXT *)pSubMesh->GetVertexBuffer();
-
-		CD3DWOWM2ModelResource::MODEL_VERTEXT * pSrcVertices=(CD3DWOWM2ModelResource::MODEL_VERTEXT *)pSubMesh->GetBackupVertexBuffer();
-
-
-		for(UINT i=0;i<pSubMesh->GetVertexCount();i++)
+		CD3DSubMesh * pSubMesh=m_SubMeshListForSoftSkinMesh[s];
+		if(pSubMesh->CheckProperty(CD3DSubMesh::SMF_IS_ANI_MESH))
 		{
-			pDestVertices[i].Pos=0.0f;
-			pDestVertices[i].Normal=0.0f;
-			for(int b=0;b<MAX_VERTEX_BONE_BIND;b++)
+			CD3DWOWM2ModelResource::MODEL_VERTEXT * pDestVertices=m_Vertices.GetBuffer()+pSubMesh->GetVertexStart();
+
+			CD3DWOWM2ModelResource::MODEL_VERTEXT * pSrcVertices=m_pModelResource->GetVertices()+pSubMesh->GetVertexStart();
+
+
+			for(UINT i=0;i<pSubMesh->GetVertexCount();i++)
 			{
-				if(pSrcVertices[i].BoneWeight[b]>0.000001f)
+				pDestVertices[i].Pos=0.0f;
+				pDestVertices[i].Normal=0.0f;
+				for(int b=0;b<MAX_VERTEX_BONE_BIND;b++)
 				{
-					if(m_InterimStatus==IS_DOING)
+					if(pSrcVertices[i].BoneWeight[b]>0.000001f)
 					{
-						if(pSrcVertices[i].BoneID[b]==48)
-						{
-							int err=1;
-						}
-					}
-					pDestVertices[i].Pos+=pSrcVertices[i].Pos*
-						m_BoneMatList[pSrcVertices[i].BoneID[b]]*pSrcVertices[i].BoneWeight[b];
-					pDestVertices[i].Normal+=pSrcVertices[i].Normal*
-						m_BoneMatList[pSrcVertices[i].BoneID[b]].GetScaleRotation()*pSrcVertices[i].BoneWeight[b];
-				}							
-			}			
+						pDestVertices[i].Pos+=pSrcVertices[i].Pos*
+							m_BoneMatList[pSrcVertices[i].BoneID[b]]*pSrcVertices[i].BoneWeight[b];
+						pDestVertices[i].Normal+=pSrcVertices[i].Normal*
+							m_BoneMatList[pSrcVertices[i].BoneID[b]].GetScaleRotation()*pSrcVertices[i].BoneWeight[b];
+					}							
+				}			
+			}
 		}
 	}		
 	

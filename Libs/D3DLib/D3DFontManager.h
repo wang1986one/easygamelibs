@@ -18,7 +18,7 @@ class CD3DFontManager :
 {
 protected:
 	CD3DDevice *								m_pD3DDevice;
-	CNameStorage<CD3DBaseFont *,false,true>		m_FontStorage;
+	CStaticMap<CEasyString,CD3DBaseFont *>		m_FontStorage;
 
 	DECLARE_CLASS_INFO_STATIC(CD3DFontManager)
 public:
@@ -69,7 +69,9 @@ inline CD3DBaseFont * CD3DFontManager::GetFont(UINT ID)
 
 inline CD3DBaseFont * CD3DFontManager::GetFont(LPCTSTR FontName)
 {
-	CD3DBaseFont ** ppFont=m_FontStorage.GetObject(FontName);
+	CEasyString Key=FontName;
+	Key.MakeUpper();
+	CD3DBaseFont ** ppFont=m_FontStorage.Find(Key);
 	if(ppFont)
 		return *ppFont;
 	else

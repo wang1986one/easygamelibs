@@ -327,7 +327,7 @@ inline bool GetInterpolationTransformGlobal(UINT Time,bool IsLoop,CD3DMatrix& Tr
 	CD3DVector3 Scaling(1.0f,1.0f,1.0f);
 	Rotation.SetIdentity();
 
-	if(Translations.GlobalSequenceID>=0&&Translations.GlobalSequenceID<GlobalSequences.GetCount())
+	if(Translations.GlobalSequenceID>=0&&Translations.GlobalSequenceID<(int)GlobalSequences.GetCount())
 	{
 		if(Translations.Animations.GetCount())
 		{
@@ -353,7 +353,7 @@ inline bool GetInterpolationTransformGlobal(UINT Time,bool IsLoop,CD3DMatrix& Tr
 		}
 	}
 
-	if(Rotations.GlobalSequenceID>=0&&Rotations.GlobalSequenceID<GlobalSequences.GetCount())
+	if(Rotations.GlobalSequenceID>=0&&Rotations.GlobalSequenceID<(int)GlobalSequences.GetCount())
 	{		
 		if(Rotations.Animations.GetCount())
 		{	
@@ -381,7 +381,7 @@ inline bool GetInterpolationTransformGlobal(UINT Time,bool IsLoop,CD3DMatrix& Tr
 	}
 
 
-	if(Scalings.GlobalSequenceID>=0&&Scalings.GlobalSequenceID<GlobalSequences.GetCount())
+	if(Scalings.GlobalSequenceID>=0&&Scalings.GlobalSequenceID<(int)GlobalSequences.GetCount())
 	{
 		if(Scalings.Animations.GetCount())
 		{
@@ -429,7 +429,7 @@ inline bool GetInterpolationTransformWithGlobal(UINT Time,bool IsLoop,UINT AniIn
 	Rotation.SetIdentity();
 
 
-	if(Translations.GlobalSequenceID>=0&&Translations.GlobalSequenceID<GlobalSequences.GetCount())
+	if(Translations.GlobalSequenceID>=0&&Translations.GlobalSequenceID<(int)GlobalSequences.GetCount())
 	{
 		if(Translations.Animations.GetCount())
 		{
@@ -452,7 +452,7 @@ inline bool GetInterpolationTransformWithGlobal(UINT Time,bool IsLoop,UINT AniIn
 	}
 
 
-	if(Rotations.GlobalSequenceID>=0&&Rotations.GlobalSequenceID<GlobalSequences.GetCount())
+	if(Rotations.GlobalSequenceID>=0&&Rotations.GlobalSequenceID<(int)GlobalSequences.GetCount())
 	{		
 		if(Rotations.Animations.GetCount())
 		{	
@@ -476,7 +476,7 @@ inline bool GetInterpolationTransformWithGlobal(UINT Time,bool IsLoop,UINT AniIn
 		IsAnimated=true;
 	}
 
-	if(Scalings.GlobalSequenceID>=0&&Scalings.GlobalSequenceID<GlobalSequences.GetCount())
+	if(Scalings.GlobalSequenceID>=0&&Scalings.GlobalSequenceID<(int)GlobalSequences.GetCount())
 	{
 		if(Scalings.Animations.GetCount())
 		{

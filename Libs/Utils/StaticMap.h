@@ -150,22 +150,28 @@ protected:
 
 	typedef _StorageNode<StorageMode,KEY,T> StorageNode;
 
-	StorageNode		* m_pObjectBuff;
-	StorageNode		* m_pFreeListHead;
-	StorageNode		* m_pFreeListTail;
-	StorageNode		* m_pObjectListHead;
-	StorageNode		* m_pObjectListTail;
-	StorageNode		* m_pTreeRoot;
-	StorageNode		* m_pFront;
-	StorageNode		* m_pBack;
-	UINT			m_ObjectCount;
-	UINT			m_ObjectBuffSize;
+	struct OBJECT_BUFF_PAGE_INFO
+	{
+		StorageNode *	pObjectBuffer;
+		UINT			BufferSize;
+	};
+
+	CEasyArray<OBJECT_BUFF_PAGE_INFO>	m_ObjectBuffPages;
+	StorageNode	*						m_pFreeListHead;
+	StorageNode	* 						m_pFreeListTail;
+	StorageNode	* 						m_pObjectListHead;
+	StorageNode	* 						m_pObjectListTail;
+	StorageNode	* 						m_pTreeRoot;
+	StorageNode	* 						m_pFront;
+	StorageNode	* 						m_pBack;
+	UINT								m_ObjectCount;
+	UINT								m_GrowSize;
+	UINT								m_GrowLimit;
 
 	//int				m_BlackCount;
 public:
 	CStaticMap()
 	{
-		m_pObjectBuff=NULL;
 		m_pFreeListHead=NULL;
 		m_pFreeListTail=NULL;
 		m_pObjectListHead=NULL;
@@ -174,63 +180,31 @@ public:
 		m_pFront=NULL;
 		m_pBack=NULL;
 		m_ObjectCount=0;
-		m_ObjectBuffSize=0;
+		m_GrowSize=0;
+		m_GrowLimit=0;
 	}
 	~CStaticMap()
 	{
 		Destory();
 	}
-	bool Create(UINT Size)
+	bool Create(UINT Size,UINT GrowSize=0,UINT GrowLimit=0)
 	{
 		Destory();
-		m_ObjectBuffSize=Size;
-		m_pObjectBuff=new StorageNode[m_ObjectBuffSize];
-		for(UINT i=0;i<m_ObjectBuffSize;i++)
-		{
-			m_pObjectBuff[i].ID=i+1;			
-			if(i==0)
-			{
-				m_pFreeListHead=m_pObjectBuff;
-				m_pObjectBuff[i].pPrev=NULL;
-			}
-			else
-			{
-				m_pObjectBuff[i].pPrev=&(m_pObjectBuff[i-1]);
-			}
-			if(i==m_ObjectBuffSize-1)
-			{
-				m_pFreeListTail=m_pObjectBuff+i;
-				m_pObjectBuff[i].pNext=NULL;
-			}
-			else
-			{
-				m_pObjectBuff[i].pNext=&(m_pObjectBuff[i+1]);
-			}
-			m_pObjectBuff[i].pFront=NULL;
-			m_pObjectBuff[i].pBack=NULL;
-			m_pObjectBuff[i].pParent=NULL;
-			m_pObjectBuff[i].pRightChild=NULL;
-			m_pObjectBuff[i].pLeftChild=NULL;
-			m_pObjectBuff[i].Color=NC_NONE;
-			m_pObjectBuff[i].IsFree=true;			
-			m_pObjectBuff[i].InitObject();
-		}		
-		m_pObjectListHead=NULL;
-		m_pObjectListTail=NULL;
-		m_pTreeRoot=NULL;
-		m_pFront=NULL;
-		m_pBack=NULL;
-		m_ObjectCount=0;
-		return true;
-
+		m_GrowSize=GrowSize;
+		m_GrowLimit=GrowLimit;
+		return CreateBufferPage(Size);
 	}
 	void Destory()
 	{		
-		for(UINT i=0;i<m_ObjectBuffSize;i++)
-		{			
-			m_pObjectBuff[i].FinalReleaseObject();
+		for(UINT i=0;i<m_ObjectBuffPages.GetCount();i++)
+		{
+			for(UINT j=0;j<m_ObjectBuffPages[i].BufferSize;j++)
+			{			
+				m_ObjectBuffPages[i].pObjectBuffer[j].FinalReleaseObject();
+			}
+			SAFE_DELETE_ARRAY(m_ObjectBuffPages[i].pObjectBuffer);
 		}
-		SAFE_DELETE_ARRAY(m_pObjectBuff);
+		m_ObjectBuffPages.Clear();
 		m_pFreeListHead=NULL;
 		m_pFreeListTail=NULL;
 		m_pObjectListHead=NULL;
@@ -239,51 +213,42 @@ public:
 		m_pFront=NULL;
 		m_pBack=NULL;
 		m_ObjectCount=0;
-		m_ObjectBuffSize=0;
+		m_GrowSize=0;
+		m_GrowLimit=0;
 	}
 	void Clear()
 	{
-		for(UINT i=0;i<m_ObjectBuffSize;i++)
-		{
-			m_pObjectBuff[i].ID=i+1;			
-			if(i==0)
-			{
-				m_pFreeListHead=m_pObjectBuff;
-				m_pObjectBuff[i].pPrev=NULL;
-			}
-			else
-			{
-				m_pObjectBuff[i].pPrev=&(m_pObjectBuff[i-1]);
-			}
-			if(i==m_ObjectBuffSize-1)
-			{
-				m_pFreeListTail=m_pObjectBuff+i;
-				m_pObjectBuff[i].pNext=NULL;
-			}
-			else
-			{
-				m_pObjectBuff[i].pNext=&(m_pObjectBuff[i+1]);
-			}
-			m_pObjectBuff[i].pFront=NULL;
-			m_pObjectBuff[i].pBack=NULL;
-			m_pObjectBuff[i].pParent=NULL;
-			m_pObjectBuff[i].pRightChild=NULL;
-			m_pObjectBuff[i].pLeftChild=NULL;
-			m_pObjectBuff[i].Color=NC_NONE;
-			m_pObjectBuff[i].IsFree=true;
-			m_pObjectBuff[i].DeleteObject();
-		}
-		
 		m_pObjectListHead=NULL;
 		m_pObjectListTail=NULL;
 		m_pTreeRoot=NULL;
 		m_pFront=NULL;
 		m_pBack=NULL;
 		m_ObjectCount=0;
+
+		UINT IDStart=1;
+		for(UINT i=0;i<m_ObjectBuffPages.GetCount();i++)
+		{
+			ClearBuffer(m_ObjectBuffPages[i],IDStart,false);
+			IDStart+=m_ObjectBuffPages[i].BufferSize;
+		}		
+	}
+	bool Grow()
+	{
+		if(m_GrowSize)
+		{
+			CreateBufferPage(m_GrowSize);
+			return true;
+		}
+		return NULL;
 	}
 	UINT GetBufferSize()
 	{
-		return m_ObjectBuffSize;
+		UINT BufferSize=0;
+		for(UINT i=0;i<m_ObjectBuffPages.GetCount();i++)
+		{
+			BufferSize+=m_ObjectBuffPages[i].BufferSize;
+		}
+		return BufferSize;
 	}
 	UINT New(const KEY& Key,T** ppValue)
 	{
@@ -381,12 +346,20 @@ public:
 	}
 	LPVOID GetObjectPosByID(UINT ID)
 	{
-		if(ID>0&&ID<=m_ObjectBuffSize)
+		if(ID==0)
+			return NULL;
+
+		UINT IDStart=1;
+		for(UINT i=0;i<m_ObjectBuffPages.GetCount();i++)
 		{
-			ID--;
-			if(!m_pObjectBuff[ID].IsFree)
-				return &(m_pObjectBuff[ID]);
-		}
+			if(ID<IDStart+m_ObjectBuffPages[i].BufferSize)
+			{
+				ID-=IDStart;
+				if(!m_ObjectBuffPages[i].pObjectBuffer[ID].IsFree)
+					return &(m_ObjectBuffPages[i].pObjectBuffer[ID]);
+			}
+			IDStart+=m_ObjectBuffPages[i].BufferSize;
+		}		
 		return NULL;
 	}
 
@@ -848,8 +821,81 @@ protected:
 		
 		m_ObjectCount--;
 	}
+	bool CreateBufferPage(UINT Size)
+	{
+		if(m_GrowLimit)
+		{
+			if(m_ObjectBuffPages.GetCount()>=m_GrowLimit)
+				return false;
+		}
+		OBJECT_BUFF_PAGE_INFO PageInfo;
+		PageInfo.BufferSize=Size;		
+		PageInfo.pObjectBuffer=new StorageNode[Size];
+		UINT IDStart=GetBufferSize()+1;
+		ClearBuffer(PageInfo,IDStart,true);
+		m_ObjectBuffPages.Add(PageInfo);
+		return true;
+	}
+	void ClearBuffer(OBJECT_BUFF_PAGE_INFO& PageInfo,UINT IDStart,bool IsInit)
+	{
+		StorageNode * pFreeListHead=NULL;
+		StorageNode * pFreeListTail=NULL;
+
+		assert(PageInfo.BufferSize!=0);
+		if(PageInfo.BufferSize==0)
+			return;
+
+		for(UINT i=0;i<PageInfo.BufferSize;i++)
+		{
+			PageInfo.pObjectBuffer[i].ID=i+IDStart;			
+			if(i==0)
+			{
+				pFreeListHead=PageInfo.pObjectBuffer;
+				PageInfo.pObjectBuffer[i].pPrev=NULL;
+			}
+			else
+			{
+				PageInfo.pObjectBuffer[i].pPrev=&(PageInfo.pObjectBuffer[i-1]);
+			}
+			if(i==PageInfo.BufferSize-1)
+			{
+				pFreeListTail=PageInfo.pObjectBuffer+i;
+				PageInfo.pObjectBuffer[i].pNext=NULL;
+			}
+			else
+			{
+				PageInfo.pObjectBuffer[i].pNext=&(PageInfo.pObjectBuffer[i+1]);
+			}		
+			PageInfo.pObjectBuffer[i].pFront=NULL;
+			PageInfo.pObjectBuffer[i].pBack=NULL;
+			PageInfo.pObjectBuffer[i].pParent=NULL;
+			PageInfo.pObjectBuffer[i].pRightChild=NULL;
+			PageInfo.pObjectBuffer[i].pLeftChild=NULL;
+			PageInfo.pObjectBuffer[i].Color=NC_NONE;
+			PageInfo.pObjectBuffer[i].IsFree=true;
+			if(IsInit)
+				PageInfo.pObjectBuffer[i].InitObject();
+			else
+				PageInfo.pObjectBuffer[i].DeleteObject();
+		}
+		if(m_pFreeListTail)
+		{
+			m_pFreeListTail->pNext=pFreeListHead;
+			pFreeListHead->pPrev=m_pFreeListTail;
+			m_pFreeListTail=pFreeListTail;
+		}
+		else
+		{
+			m_pFreeListHead=pFreeListHead;
+			m_pFreeListTail=pFreeListTail;
+		}
+	}
 	StorageNode * NewNode(const KEY& Key)
 	{
+		if(m_pFreeListHead==NULL&&m_GrowSize)
+		{
+			CreateBufferPage(m_GrowSize);
+		}
 		if(m_pFreeListHead)
 		{			
 			StorageNode * pNode;

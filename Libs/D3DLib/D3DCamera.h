@@ -45,6 +45,9 @@ public:
 	CD3DCamera();
 	virtual ~CD3DCamera(void);
 
+	virtual void Destory();
+
+
 	virtual bool CanRender();
 
 	void SetViewMat(const CD3DMatrix& Mat);

@@ -28,10 +28,10 @@ public:
 	{
 		
 	}
-	bool Create(UINT Size)
+	bool Create(UINT Size,UINT GrowSize=0,UINT GrowLimit=0)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::Create(Size);
+		return CStaticMap::Create(Size,GrowSize,GrowLimit);
 	}
 	void Destory()
 	{

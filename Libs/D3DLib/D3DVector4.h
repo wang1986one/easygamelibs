@@ -91,13 +91,13 @@ inline FLOAT CD3DVector4::LengthSq()
 }
 
 
-FLOAT CD3DVector4::Dot(const D3DXVECTOR4& V2)
+inline FLOAT CD3DVector4::Dot(const D3DXVECTOR4& V2)
 {
 	return D3DXVec4Dot(this,&V2);
 }
 
 
-CD3DVector4 CD3DVector4::Cross(const D3DXVECTOR4& V2,const D3DXVECTOR4& V3)
+inline CD3DVector4 CD3DVector4::Cross(const D3DXVECTOR4& V2,const D3DXVECTOR4& V3)
 {
 	CD3DVector4 RetVec;
 

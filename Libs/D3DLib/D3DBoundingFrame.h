@@ -46,7 +46,7 @@ public:
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual bool CanDoSubMeshViewCull();
 
-	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
+	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly);
 	virtual bool GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& y);
 
 	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);

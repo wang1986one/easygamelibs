@@ -346,6 +346,21 @@ public:
 		}
 		return false;
 	}
+	bool AddMember(ID_TYPE ID,bool Value)
+	{
+		LENGTH_TYPE BufferSize;
+		void * pBuffer=PrepareMember(BufferSize);
+		if(pBuffer)
+		{
+			CSmartValue SmartValue;
+			if(SmartValue.Attach(pBuffer,BufferSize,CSmartValue::VT_BOOL))
+			{
+				SmartValue=Value;
+				return FinishMember(ID,SmartValue.GetDataLen());
+			}			
+		}
+		return false;
+	}
 	bool AddMember(ID_TYPE ID,const char * pszStr)
 	{
 		if(pszStr==NULL)

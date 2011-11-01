@@ -17,7 +17,7 @@ public:
 	};
 
 protected:
-	MAINMapAreaInfo											m_MapAreaInfo[64][64];
+	CEasyArray<MAINMapAreaInfo>								m_MapAreaInfo;
 	CEasyArray<WMO_OBJECT_INFO>								m_MapWMOInfo;
 	bool													m_IsBigAlphaMask;
 
@@ -37,9 +37,10 @@ public:
 
 inline bool CBLZWDTFile::IsAreaExist(UINT x,UINT y)
 {
-	if(x<64&&y<64)
+	UINT Index=y*64+x;
+	if(Index<m_MapAreaInfo.GetCount())
 	{
-		return (m_MapAreaInfo[y][x].Flag&1)!=0;
+		return (m_MapAreaInfo[Index].Flag&1)!=0;
 	}
 	return false;
 }

@@ -33,6 +33,7 @@ public:
 	{
 		FF_NO_CAMERA_COLLIDE=0x2,
 		FF_NO_COLLIDE=0x4,
+		FF_COLLIDE_ONLY=0x8,
 	};
 	struct MODEL_VERTEXT
 	{
@@ -247,6 +248,7 @@ protected:
 
 	
 	void BuildSubMeshs();
+
 	
 };
 

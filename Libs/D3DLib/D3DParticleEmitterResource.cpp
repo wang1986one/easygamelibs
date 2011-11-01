@@ -123,7 +123,7 @@ bool CD3DParticleEmitterResource::MakeParticleParam(UINT Time,bool IsLoop,PARTIC
 	
 	UINT AniLength=0;
 	if(m_ParticleEmitterInfo.Speed.GlobalSequenceID>=0&&
-		m_ParticleEmitterInfo.Speed.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_ParticleEmitterInfo.Speed.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_ParticleEmitterInfo.Speed.GlobalSequenceID];
 	}
@@ -135,7 +135,7 @@ bool CD3DParticleEmitterResource::MakeParticleParam(UINT Time,bool IsLoop,PARTIC
 
 	AniLength=0;
 	if(m_ParticleEmitterInfo.SpeedVariation.GlobalSequenceID>=0&&
-		m_ParticleEmitterInfo.SpeedVariation.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_ParticleEmitterInfo.SpeedVariation.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_ParticleEmitterInfo.SpeedVariation.GlobalSequenceID];
 	}
@@ -147,7 +147,7 @@ bool CD3DParticleEmitterResource::MakeParticleParam(UINT Time,bool IsLoop,PARTIC
 
 	AniLength=0;
 	if(m_ParticleEmitterInfo.VerticalRange.GlobalSequenceID>=0&&
-		m_ParticleEmitterInfo.VerticalRange.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_ParticleEmitterInfo.VerticalRange.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_ParticleEmitterInfo.VerticalRange.GlobalSequenceID];
 	}
@@ -159,7 +159,7 @@ bool CD3DParticleEmitterResource::MakeParticleParam(UINT Time,bool IsLoop,PARTIC
 
 	AniLength=0;
 	if(m_ParticleEmitterInfo.HorizontalRange.GlobalSequenceID>=0&&
-		m_ParticleEmitterInfo.HorizontalRange.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_ParticleEmitterInfo.HorizontalRange.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_ParticleEmitterInfo.HorizontalRange.GlobalSequenceID];
 	}
@@ -171,7 +171,7 @@ bool CD3DParticleEmitterResource::MakeParticleParam(UINT Time,bool IsLoop,PARTIC
 
 	AniLength=0;
 	if(m_ParticleEmitterInfo.Gravity.GlobalSequenceID>=0&&
-		m_ParticleEmitterInfo.Gravity.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_ParticleEmitterInfo.Gravity.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_ParticleEmitterInfo.Gravity.GlobalSequenceID];
 	}
@@ -183,7 +183,7 @@ bool CD3DParticleEmitterResource::MakeParticleParam(UINT Time,bool IsLoop,PARTIC
 
 	AniLength=0;
 	if(m_ParticleEmitterInfo.LifeSpan.GlobalSequenceID>=0&&
-		m_ParticleEmitterInfo.LifeSpan.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_ParticleEmitterInfo.LifeSpan.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_ParticleEmitterInfo.LifeSpan.GlobalSequenceID];
 	}
@@ -195,7 +195,7 @@ bool CD3DParticleEmitterResource::MakeParticleParam(UINT Time,bool IsLoop,PARTIC
 
 	AniLength=0;
 	if(m_ParticleEmitterInfo.EmissionRate.GlobalSequenceID>=0&&
-		m_ParticleEmitterInfo.EmissionRate.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_ParticleEmitterInfo.EmissionRate.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_ParticleEmitterInfo.EmissionRate.GlobalSequenceID];
 	}
@@ -207,7 +207,7 @@ bool CD3DParticleEmitterResource::MakeParticleParam(UINT Time,bool IsLoop,PARTIC
 
 	AniLength=0;
 	if(m_ParticleEmitterInfo.EmissionAreaLength.GlobalSequenceID>=0&&
-		m_ParticleEmitterInfo.EmissionAreaLength.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_ParticleEmitterInfo.EmissionAreaLength.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_ParticleEmitterInfo.EmissionAreaLength.GlobalSequenceID];
 	}
@@ -219,7 +219,7 @@ bool CD3DParticleEmitterResource::MakeParticleParam(UINT Time,bool IsLoop,PARTIC
 
 	AniLength=0;
 	if(m_ParticleEmitterInfo.EmissionAreaWidth.GlobalSequenceID>=0&&
-		m_ParticleEmitterInfo.EmissionAreaWidth.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_ParticleEmitterInfo.EmissionAreaWidth.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_ParticleEmitterInfo.EmissionAreaWidth.GlobalSequenceID];
 	}
@@ -231,7 +231,7 @@ bool CD3DParticleEmitterResource::MakeParticleParam(UINT Time,bool IsLoop,PARTIC
 
 	AniLength=0;
 	if(m_ParticleEmitterInfo.Decelerate.GlobalSequenceID>=0&&
-		m_ParticleEmitterInfo.Decelerate.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_ParticleEmitterInfo.Decelerate.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_ParticleEmitterInfo.Decelerate.GlobalSequenceID];
 	}
@@ -516,7 +516,7 @@ CD3DFX * CD3DParticleEmitterResource::BuildParticleFX(UINT BlendingType)
 
 	FXName.Format("M2Particle\\0x%X",BlendingType);
 
-	DiffuseFunction="CaculateDiffuse(Pos)";
+	DiffuseFunction="CaculateDiffuse(Pos,float3(0,0,0))";
 
 	switch(BlendingType)
 	{
@@ -580,26 +580,10 @@ CD3DFX * CD3DParticleEmitterResource::BuildParticleFX(UINT BlendingType)
 		EnableAlphaTest="False";
 	}	
 
-	IFileAccessor * pFile;
-
-	CEasyString FxContent;
 
 
-	pFile=CD3DFX::CreateFileAccessor();
-	if(pFile==NULL)
-		return NULL;
-	CEasyString FXFileName=CD3DFX::FindFileOne(M2_PARTICLE_FX_FILE_NAME);
-	if(!pFile->Open(FXFileName,IFileAccessor::modeRead))
-	{
-		PrintD3DLog(0,"文件%s打开失败%d",(LPCTSTR)FXFileName,GetLastError());
-		pFile->Release();
-		return NULL;	
-	}
-	int FileSize=(int)pFile->GetSize();	
-	FxContent.Resize(FileSize);
-	pFile->Read((LPVOID)FxContent.GetBuffer(),FileSize);	
-	FxContent.SetLength(FileSize);
-	pFile->Release();
+	CEasyString FxContent=M2_PARTICLE_FX;
+	
 	FxContent.Replace("<EnableZWrite>",EnableZWrite);
 	FxContent.Replace("<EnableAlphaBlend>",EnableAlphaBlend);
 	FxContent.Replace("<BlendOp>",BlendOp);

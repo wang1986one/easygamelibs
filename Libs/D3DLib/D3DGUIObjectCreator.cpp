@@ -54,7 +54,7 @@ IUITextRect * CD3DGUIObjectCreator::CreateTextRect(FLOAT_RECT * pRect,const LOGF
 IUITexture * CD3DGUIObjectCreator::CreateTextureFromFile(LPCTSTR FileName)
 {
 	CD3DGUITexture * pTexture;
-	pTexture=(CD3DGUITexture *)m_pDevice->GetTextureManager()->GetTextrue(FileName);
+	pTexture=dynamic_cast<CD3DGUITexture *>(m_pDevice->GetTextureManager()->GetTextrue(FileName));
 
 	if(pTexture==NULL)
 	{	

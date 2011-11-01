@@ -17,8 +17,8 @@ class CD3DObjectResourceManager :
 	public CNameObject
 {
 protected:
-	CD3DDevice *							m_pD3DDevice;
-	CNameStorage<CD3DObjectResource *>	m_ObjectStorage;
+	CD3DDevice *									m_pD3DDevice;
+	CStaticMap<CEasyString,CD3DObjectResource *>	m_ObjectStorage;
 
 	DECLARE_CLASS_INFO_STATIC(CD3DObjectResourceManager)
 public:
@@ -55,7 +55,9 @@ inline CD3DObjectResource * CD3DObjectResourceManager::GetResource(UINT ID)
 
 inline CD3DObjectResource * CD3DObjectResourceManager::GetResource(LPCTSTR ResourceName)
 {
-	CD3DObjectResource ** ppResource=m_ObjectStorage.GetObject(ResourceName);
+	CEasyString Key=ResourceName;
+	Key.MakeUpper();
+	CD3DObjectResource ** ppResource=m_ObjectStorage.Find(Key);
 	if(ppResource)
 		return *ppResource;
 	else

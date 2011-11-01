@@ -3106,6 +3106,30 @@ public:
 		return append_attribute(name,temp);
 	}
 
+	xml_attribute append_attribute(const TCHAR* name,unsigned long value)
+	{
+		if(!name) return false;
+		TCHAR temp[32] = {0};
+		_stprintf_s(temp,32,_T("%ld"),value);
+		return append_attribute(name,temp);
+	}
+
+	xml_attribute append_attribute(const TCHAR* name,int value)
+	{
+		if(!name) return false;
+		TCHAR temp[32] = {0};
+		_stprintf_s(temp,32,_T("%d"),value);
+		return append_attribute(name,temp);
+	}
+
+	xml_attribute append_attribute(const TCHAR* name,unsigned int value)
+	{
+		if(!name) return false;
+		TCHAR temp[32] = {0};
+		_stprintf_s(temp,32,_T("%d"),value);
+		return append_attribute(name,temp);
+	}
+
 	//<summary>Append a new attribute of type double to the node list of attributes.</summary>
 	//<param name="name">Name.</param>
 	//<param name="value">Value thereof.</param>

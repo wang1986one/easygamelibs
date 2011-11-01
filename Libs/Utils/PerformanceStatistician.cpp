@@ -59,6 +59,7 @@ void CPerformanceStatistician::PrintPerformanceStat(int LogChannel)
 	LARGE_INTEGER PerformanceFrequency;
 	if(QueryPerformanceFrequency(&PerformanceFrequency))
 	{
+		PerformanceFrequency.QuadPart=PerformanceFrequency.QuadPart/PERFORMANCE_UNIT;
 		double Total=0;
 		for(size_t i=0;i<PerformanceList.size();i++)
 		{
@@ -123,6 +124,7 @@ void CPerformanceStatistician::PrintPerformanceStatUnit(int LogChannel)
 	LARGE_INTEGER PerformanceFrequency;
 	if(QueryPerformanceFrequency(&PerformanceFrequency))
 	{
+		PerformanceFrequency.QuadPart=PerformanceFrequency.QuadPart/PERFORMANCE_UNIT;
 		for(size_t i=0;i<PerformanceList.size();i++)
 		{
 			if(PerformanceList[i].PerformanceCount==0)

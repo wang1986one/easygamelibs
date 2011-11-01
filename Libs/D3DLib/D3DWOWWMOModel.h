@@ -31,6 +31,7 @@ protected:
 	CEasyArray<CD3DWOWWMOGroupModel *>					m_GroupList;
 	CEasyArray<CD3DWOWDoodadModel *>					m_DoodadList;
 	int													m_CurDoodadSet;
+	CEasyArray<CD3DObject *>							m_NeedUpdateChilds;
 
 	DECLARE_FILE_CHANNEL_MANAGER
 	DECLARE_CLASS_INFO(CD3DWOWWMOModel)
@@ -63,7 +64,7 @@ public:
 
 	virtual void OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 	virtual void OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
-
+	virtual void OnPrepareRenderData();
 	virtual void Update(FLOAT Time);
 	virtual int GetSubMeshCount();
 	virtual CD3DSubMesh * GetSubMesh(UINT index);
@@ -73,6 +74,8 @@ public:
 	virtual CD3DBoundingSphere * GetBoundingSphere();
 
 	bool GetHeightByXZ(const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight);
+	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly);
+	bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,UINT TestMode,bool TestOnly);
 
 protected:
 	void BuildGroups();

@@ -1,34 +1,7 @@
 #include "StdAfx.h"
 
 namespace D3DLib{
-
-const LPCTSTR DEFAULT_BOARD_FX_NT=
-	"texture TexLay0 < string name = \"test.jpg\"; >;		\r\n"
-	"texture TexLay1 < string name = \"test1.jpg\"; >;		\r\n"
-	"technique tec0											\r\n"
-	"{														\r\n"
-	"    pass p0											\r\n"
-	"    {													\r\n"
-	"		zenable = true;									\r\n"
-	"		zwriteenable = false;							\r\n"
-	"		lighting = false;								\r\n"
-	"		CullMode = none;								\r\n"
-	"		fogenable = false;								\r\n"
-	"		Texture[0] = <TexLay0>;							\r\n"
-	"		AlphaTestEnable = false;						\r\n"
-	"		AlphaBlendEnable = true;						\r\n"
-	"		SrcBlend = SrcAlpha;							\r\n"
-	"		DestBlend = InvSrcAlpha;						\r\n"
-	"     	ColorOp[0] = SelectArg1;						\r\n"
-	"       ColorArg1[0] = Diffuse;							\r\n"      	
-	"       AlphaOp[0] = SelectArg1;						\r\n"
-	"       AlphaArg1[0] = diffuse;							\r\n"
-	"		ColorOp[1] = disable;							\r\n"
-	"		AlphaOp[1] = disable;							\r\n"
-	"		VertexShader = NULL;							\r\n"
-	"		PixelShader  = NULL;							\r\n"
-	"    }													\r\n"
-	"}														\r\n";
+	
 
 IMPLEMENT_CLASS_INFO(CD3DBoard,CD3DObject);
 

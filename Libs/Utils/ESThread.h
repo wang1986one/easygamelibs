@@ -188,7 +188,9 @@ inline int CESThread::GetInterruptPos()
 }
 inline bool CESThread::IsInterruptTimeOut(UINT TimeOut)
 {
-	return m_InterruptTimer.IsTimeOut(TimeOut);
+	if(m_InterruptTimer.IsTimeOut(TimeOut))
+		return true;
+	return false;
 }
 inline void CESThread::SetInterruptCode(UINT Code)
 {

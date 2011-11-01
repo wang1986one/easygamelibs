@@ -64,7 +64,7 @@ public:
 
 	virtual bool AddObject(CD3DObject * pObj,bool IsRecursive=true);
 	virtual bool AddRootObject(CD3DObject * pObj);
-	virtual bool DelObject(CD3DObject * pObj);
+	virtual bool DelObject(CD3DObject * pObj,bool IsRecursive=true);
 	virtual bool DelRootObject(CD3DObject * pObj);
 
 
@@ -79,7 +79,6 @@ public:
 
 protected:
 	void RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPCTSTR RenderTech);
-	void PrepareRenderData(CD3DObject * pObject);
 };
 
 inline int CD3DBaseRender::GetRenderObjectCount()

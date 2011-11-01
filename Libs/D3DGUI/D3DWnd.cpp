@@ -99,11 +99,14 @@ void CD3DWnd::InitWnd(CD3DGUI *  pGUI)
 	m_FontShadowWidth=0;
 	m_FontCharSpace=0;
 	m_FontLineSpace=0;
+	m_FontScale=1.0f;
 
 
 	m_CanDrag=true;
 	m_CanResize=false;
 	m_Resizing=0;	
+	m_TabIndex=0;
+	m_IsTabContainer=false;
 
 	m_IsCaptureAll=false;
 	m_IsVisible=true;
@@ -123,6 +126,14 @@ void CD3DWnd::InitWnd(CD3DGUI *  pGUI)
 
 void CD3DWnd::Destory()
 {
+	//删除子窗口
+	for(int i=m_ChildWndList.GetCount()-1;i>=0;i--)	
+	{			
+		CD3DWnd * pWnd=m_ChildWndList[i];
+		SAFE_RELEASE(pWnd);
+	}
+	m_ChildWndList.Clear();
+
 	//从父窗口那里删除自己
 
 	if(m_pParentWnd)
@@ -134,15 +145,6 @@ void CD3DWnd::Destory()
 		if(m_pGUI)
 			m_pGUI->DelRootWnd(this);		
 	}
-
-	//删除子窗口
-	for(int i=(int)m_ChildWndList.size()-1;i>=0;i--)	
-	{			
-		CD3DWnd * pWnd=m_ChildWndList[i];
-		SAFE_RELEASE(pWnd);
-	}
-	m_ChildWndList.clear();
-
 	
 	if(m_pWndRects)
 	{
@@ -258,6 +260,27 @@ void CD3DWnd::SetBorders(WIN_BORDERS& Borders)
 void CD3DWnd::GetBorders(WIN_BORDERS& Borders)
 {
 	memcpy(Borders,m_Borders,sizeof(WIN_BORDERS));
+}
+
+int CD3DWnd::GetBorder(UINT Index)
+{
+	if(Index<RECT_BORDER_COUNT)
+	{
+		return m_Borders[Index];
+	}
+	return -1;
+}
+
+bool CD3DWnd::SetEffectMode(UINT Index,int EffectMode)
+{
+	if(Index<m_WndRectCount)
+	{
+		if(m_pWndRects[Index])
+		{
+			return m_pWndRects[Index]->SetEffectMode(EffectMode);
+		}
+	}
+	return false;
 }
 
 BOOL CD3DWnd::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lParam)
@@ -468,6 +491,17 @@ BOOL CD3DWnd::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lParam)
 			return true;
 		}
 		break;
+	case WM_KEYDOWN:
+		switch(wParam)
+		{
+		case VK_TAB:
+			if(GetParent())
+			{
+				GetParent()->ActiveNextChildWnd(this);
+				return true;
+			}			
+		}
+		break;
 	}
 	return false;
 }
@@ -597,6 +631,13 @@ void CD3DWnd::SetFontLineSpace(int Space)
 	UpdateFont();
 }
 
+void CD3DWnd::SetFontScale(FLOAT Scale)
+{
+	m_FontScale=Scale;
+	m_WantUpdateFont=true;
+	UpdateFont();
+}
+
 LOGFONT * CD3DWnd::GetFont()
 {
 	return &m_LogFont;
@@ -636,6 +677,10 @@ int CD3DWnd::GetFontLineSpace()
 	return m_FontLineSpace;
 }
 
+FLOAT CD3DWnd::GetFontScale()
+{
+	return m_FontScale;
+}
 
 void CD3DWnd::SetText(LPCTSTR Text)
 {
@@ -644,7 +689,7 @@ void CD3DWnd::SetText(LPCTSTR Text)
 	IUITextRect * pTextRect=GetTextRect();
 	if(pTextRect)
 	{		
-		pTextRect->SetTextW((LPCWSTR)m_WndText);		
+		pTextRect->SetTextW((LPCWSTR)m_WndText,m_WndText.GetLength());		
 	}
 }
 
@@ -655,7 +700,7 @@ void CD3DWnd::SetTextW(LPCWSTR Text)
 	IUITextRect * pTextRect=GetTextRect();
 	if(pTextRect)
 	{		
-		pTextRect->SetTextW((LPCWSTR)m_WndText);		
+		pTextRect->SetTextW((LPCWSTR)m_WndText,m_WndText.GetLength());		
 	}
 }
 
@@ -715,21 +760,55 @@ void CD3DWnd::ScreenToClient(POINT * point)
 }
 
 
-void CD3DWnd::ActiveWnd(bool bActive)
+void CD3DWnd::ActiveWnd(bool bActive,bool SendNotify)
 {
 	//m_pGUI->ActiveWnd(this,bActive);
 	m_IsActive=bActive;
 	if(m_IsActive)
 	{
 		TopParent();
-		HandleMessage(this,WM_D3DGUI_GET_FOCUS,GetID(),(LPARAM)this);
+		TopTo(true);
+		if(SendNotify)
+			HandleMessage(this,WM_D3DGUI_GET_FOCUS,GetID(),(LPARAM)this);
 	}
 	else
 	{
-		HandleMessage(this,WM_D3DGUI_LOST_FOCUS,GetID(),(LPARAM)this);
+		if(SendNotify)
+			HandleMessage(this,WM_D3DGUI_LOST_FOCUS,GetID(),(LPARAM)this);
 	}
 }
 
+void CD3DWnd::ActiveNextChildWnd(CD3DWnd * pCurWnd)
+{
+	if(m_IsTabContainer)
+	{
+		for(UINT i=0;i<m_TabWndList.GetCount();i++)
+		{
+			if(m_TabWndList[i]==pCurWnd)
+			{
+				if(i<m_TabWndList.GetCount()-1)
+				{
+					m_TabWndList[i+1]->SetFocus();
+				}
+				else
+				{
+					m_TabWndList[0]->SetFocus();
+				}
+				return;
+			}
+		}
+		if(m_TabWndList.GetCount())
+		{
+			m_TabWndList[0]->SetFocus();
+		}
+	}
+	else
+	{
+		if(GetParent())
+			GetParent()->ActiveNextChildWnd(pCurWnd);
+	}
+
+}
 
 void CD3DWnd::UpdateRects()
 {
@@ -831,6 +910,13 @@ void CD3DWnd::UpdateRects()
 			}
 			m_pWndRects[i]->SetRect(&FRect);			
 		}
+		else
+		{
+			if(m_pWndRects[i])
+			{
+				SAFE_RELEASE(m_pWndRects[i]);
+			}
+		}
 	}
 	UpdateText();
 	UpdateChildRects();
@@ -857,32 +943,32 @@ bool CD3DWnd::UpdateTextureRect()
 			case RECT_CENTER:
 				TextureRect.left	=m_TextureRect.left+m_Borders[RECT_LEFT];
 				TextureRect.top		=m_TextureRect.top+m_Borders[RECT_TOP];
-				TextureRect.right	=m_TextureRect.right-m_Borders[RECT_RIGHT];
-				TextureRect.bottom	=m_TextureRect.bottom-m_Borders[RECT_BOTTOM];
+				TextureRect.right	=m_TextureRect.right-m_Borders[RECT_RIGHT]-1;
+				TextureRect.bottom	=m_TextureRect.bottom-m_Borders[RECT_BOTTOM]-1;
 				break;
 			case RECT_TOP:
 				TextureRect.left	=m_TextureRect.left+m_Borders[RECT_TOP_LEFT];
 				TextureRect.top		=m_TextureRect.top;
-				TextureRect.right	=m_TextureRect.right-m_Borders[RECT_TOP_RIGHT];
+				TextureRect.right	=m_TextureRect.right-m_Borders[RECT_TOP_RIGHT]-1;
 				TextureRect.bottom	=m_TextureRect.top+m_Borders[RECT_TOP];
 				break;
 			case RECT_BOTTOM:
 				TextureRect.left	=m_TextureRect.left+m_Borders[RECT_TOP_LEFT];
 				TextureRect.top		=m_TextureRect.bottom-m_Borders[RECT_BOTTOM];
-				TextureRect.right	=m_TextureRect.right-m_Borders[RECT_TOP_RIGHT];
+				TextureRect.right	=m_TextureRect.right-m_Borders[RECT_TOP_RIGHT]-1;
 				TextureRect.bottom	=m_TextureRect.bottom;
 				break;
 			case RECT_LEFT:
 				TextureRect.left	=m_TextureRect.left;
 				TextureRect.top		=m_TextureRect.top+m_Borders[RECT_TOP];
 				TextureRect.right	=m_TextureRect.left+m_Borders[RECT_LEFT];
-				TextureRect.bottom	=m_TextureRect.bottom-m_Borders[RECT_BOTTOM];
+				TextureRect.bottom	=m_TextureRect.bottom-m_Borders[RECT_BOTTOM]-1;
 				break;
 			case RECT_RIGHT:
 				TextureRect.left	=m_TextureRect.right-m_Borders[RECT_RIGHT];
 				TextureRect.top		=m_TextureRect.top+m_Borders[RECT_TOP];
 				TextureRect.right	=m_TextureRect.right;
-				TextureRect.bottom	=m_TextureRect.bottom-m_Borders[RECT_BOTTOM];
+				TextureRect.bottom	=m_TextureRect.bottom-m_Borders[RECT_BOTTOM]-1;
 				break;
 			case RECT_TOP_LEFT:
 				TextureRect.left	=m_TextureRect.left;
@@ -970,7 +1056,7 @@ void CD3DWnd::SaveToXml(xml_node * pXMLNode)
 		SaveTextureToXML(Texture);
 	}
 	
-	if(m_ChildWndList.size()>0)
+	if(m_ChildWndList.GetCount())
 	{
 		xml_node Childs=Wnd.append_child(node_element,"Childs");
 		SaveChildsToXml(Childs);
@@ -1030,7 +1116,7 @@ bool CD3DWnd::LoadFromXml(xml_node * pXMLNode)
 			break;
 		}
 	}
-	TopChild();
+	TopChild(true);
 	HandleMessage(this,WM_D3DGUI_CHILD_LOADED,GetID(),(LPARAM)this);
 	
 	return true;
@@ -1159,7 +1245,7 @@ void CD3DWnd::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 		m_pTexture->PickResource(pResourceManager,Param);
 	}
 
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{
 		m_ChildWndList[i]->PickResource(pResourceManager,Param);
 	}	
@@ -1234,7 +1320,7 @@ UINT CD3DWnd::GetSmartStructSize(UINT Param)
 
 void CD3DWnd::SaveChildsToXml(xml_node& Childs)
 {
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{
 		m_ChildWndList[i]->SaveToXml(&Childs);
 	}
@@ -1304,6 +1390,8 @@ void CD3DWnd::SaveBehaviorToXML(xml_node& Behavior)
 	Behavior.append_attribute("CanResize",m_CanResize);
 	Behavior.append_attribute("CanGetFocus",m_CanGetFocus);
 	Behavior.append_attribute("IsTopmost",m_IsTopmost);
+	Behavior.append_attribute("TabIndex",m_TabIndex);
+	Behavior.append_attribute("IsTabContainer",m_IsTabContainer);
 	
 }
 
@@ -1411,18 +1499,24 @@ void CD3DWnd::LoadBehaviorFromXML(xml_node& Behavior)
 		EnableFocus((bool)Behavior.attribute("CanGetFocus"));
 	if(Behavior.has_attribute("IsTopmost"))
 		SetTopmost((bool)Behavior.attribute("IsTopmost"));
+	if(Behavior.has_attribute("TabIndex"))
+		SetTabIndex((long)Behavior.attribute("TabIndex"));
+	if(Behavior.has_attribute("IsTabContainer"))
+		EnableTabContainer((bool)Behavior.attribute("IsTabContainer"));
 
 	
 }
  
 bool CD3DWnd::AddChildWnd(CD3DWnd * child)
 {	
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{
 		if(m_ChildWndList[i]==child)
 			return false;
 	}
-	m_ChildWndList.push_back(child);
+	m_ChildWndList.Add(child);
+	AddTabWnd(child);
+	
 	child->UpdateRects();
 	child->TopTo(this);
 	return true;
@@ -1430,16 +1524,65 @@ bool CD3DWnd::AddChildWnd(CD3DWnd * child)
 
 bool CD3DWnd::DelChildWnd(CD3DWnd * child)
 {
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
-	{
-		
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
+	{		
 		if(m_ChildWndList[i]==child)
 		{
-			m_ChildWndList.erase(m_ChildWndList.begin()+i);
+			m_ChildWndList.Delete(i);
+			DelTabWnd(child);			
 			return true;
 		}
 	}
-	return true;
+	return false;
+}
+
+bool CD3DWnd::AddTabWnd(CD3DWnd * child)
+{
+	if(m_IsTabContainer)
+	{
+		if(child->GetTabIndex()==0)
+			return false;
+		for(UINT i=0;i<m_TabWndList.GetCount();i++)
+		{
+			if(m_TabWndList[i]->GetTabIndex()>child->GetTabIndex())
+			{
+				m_TabWndList.Insert(i,child);
+				return true;
+			}
+		}
+		m_TabWndList.Add(child);
+		return true;
+	}
+	else
+	{
+		if(GetParent())
+			return GetParent()->AddTabWnd(child);
+	}
+	return false;
+}
+
+bool CD3DWnd::DelTabWnd(CD3DWnd * child)
+{
+	if(m_IsTabContainer)
+	{
+		if(child->GetTabIndex())
+		{
+			for(UINT j=0;j<m_TabWndList.GetCount();j++)
+			{
+				if(m_TabWndList[j]==child)
+				{
+					m_TabWndList.Delete(j);
+					return true;
+				}
+			}
+		}
+	}
+	else
+	{
+		if(GetParent())
+			return GetParent()->DelTabWnd(child);
+	}
+	return false;
 }
 
 bool CD3DWnd::UpdateFont()
@@ -1458,6 +1601,7 @@ bool CD3DWnd::UpdateFont()
 			pTextRect->SetShadowWidth(m_FontShadowWidth);		
 			pTextRect->SetCharSpace(m_FontCharSpace);
 			pTextRect->SetLineSpace(m_FontLineSpace);
+			pTextRect->SetScale(m_FontScale);
 			m_FontCharSpace=pTextRect->GetCharSpace();
 			m_FontLineSpace=pTextRect->GetLineSpace();
 			pTextRect->EnableUpdate(true);
@@ -1470,29 +1614,34 @@ bool CD3DWnd::UpdateFont()
 
 void CD3DWnd::UpdateChildRects()
 {
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{		
 		m_ChildWndList[i]->UpdateRects();
 	}
 }
 
-void CD3DWnd::TopTo(CD3DWnd * Before)
+void CD3DWnd::TopTo(bool bRedraw,CD3DWnd * Before)
 {
-	IUIBaseRect * pBottomRect;
-	if(Before)
-		pBottomRect=Before->GetTopRect();
-	else
-		pBottomRect=NULL;
-	for(int i=0;i<m_WndRectCount;i++)
-	{
-		if(m_pWndRects[i])
-		{
-			m_pWndRects[i]->TopTo(pBottomRect);
-			pBottomRect=m_pWndRects[i];
-		}
-	}	
 	m_pGUI->LeftWndToTop(this,Before);
-	TopChild();
+
+	if(bRedraw)
+	{
+		IUIBaseRect * pBottomRect;
+		if(Before)
+			pBottomRect=Before->GetTopRect();
+		else
+			pBottomRect=NULL;
+
+		CEasyArray<IUIBaseRect *> RectList(64,64);
+		GetRectIncludeChild(RectList);
+
+		if(RectList.GetCount())	
+		{
+			RectList[0]->TopTo(RectList.GetBuffer(),RectList.GetCount(),pBottomRect);
+		}
+	}
+
+	TopChild(false);
 }
 
 IUIBaseRect * CD3DWnd::GetTopRect()
@@ -1505,11 +1654,41 @@ IUIBaseRect * CD3DWnd::GetTopRect()
 	return NULL;
 }
 
-void CD3DWnd::TopChild()
+void CD3DWnd::GetRectIncludeChild(CEasyArray<IUIBaseRect *>& RectList)
 {
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
+	for(UINT i=0;i<m_WndRectCount;i++)
+	{
+		if(m_pWndRects[i])
+			RectList.Add(m_pWndRects[i]);
+	}
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{		
-		m_ChildWndList[i]->TopTo(this);
+		m_ChildWndList[i]->GetRectIncludeChild(RectList);
+	}
+}
+
+void CD3DWnd::TopChild(bool Redraw)
+{
+	CEasyArray<IUIBaseRect *> RectList(64,64);
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
+	{		
+		if(Redraw)
+			m_ChildWndList[i]->GetRectIncludeChild(RectList);
+		m_pGUI->LeftWndToTop(m_ChildWndList[i],this);
+	}
+
+	if(Redraw)
+	{
+		IUIBaseRect * pTopRect=GetTopRect();
+		if(RectList.GetCount())
+		{
+			RectList[0]->TopTo(RectList.GetBuffer(),RectList.GetCount(),pTopRect);
+		}	
+	}
+
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
+	{		
+		m_ChildWndList[i]->TopChild(false);
 	}
 }
 
@@ -1531,11 +1710,30 @@ void CD3DWnd::SetVisible(bool IsVisible)
 			UpdateFont();
 		}
 		HandleMessage(this,WM_D3DGUI_VISIBLE_CHANGE,(WPARAM)m_IsVisible,0);
-		for(int i=0;i<(int)m_ChildWndList.size();i++)
+		for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 		{
 			m_ChildWndList[i]->SetVisible(IsVisible);
 		}
 	}
+}
+
+void CD3DWnd::SetTabIndex(UINT Index)
+{
+	if(GetParent())
+	{
+		GetParent()->DelTabWnd(this);
+		m_TabIndex=Index;
+		GetParent()->AddTabWnd(this);
+	}
+}
+
+void CD3DWnd::EnableTabContainer(bool Enbale)
+{
+	m_IsTabContainer=Enbale;
+	if(!Enbale)
+	{
+		m_TabWndList.Clear();
+	}	
 }
 
 void CD3DWnd::SetCaptureAll(bool IsCaptureAll)
@@ -1586,31 +1784,28 @@ IUITextRect * CD3DWnd::CreateTextRect()
 
 void CD3DWnd::RebuildOrder()
 {
-	int BottomIndex=0;
-	for(int i=0;i<m_WndRectCount;i++)
+
+	CEasyArray<IUIBaseRect *> RectList(64,64);
+	GetRectIncludeChild(RectList);
+
+	if(RectList.GetCount()>1)	
 	{
-		if(m_pWndRects[i])
-		{
-			BottomIndex=i;
-			break;
-		}
+		RectList[1]->TopTo(RectList.GetBuffer()+1,RectList.GetCount()-1,RectList[0]);
 	}
-	for(int i=BottomIndex+1;i<m_WndRectCount;i++)
-	{
-		if(m_pWndRects[i])
-		{
-			m_pWndRects[i]->TopTo(m_pWndRects[BottomIndex]);
-			BottomIndex=i;
-		}
-	}		
-	TopChild();
 }
 
 void CD3DWnd::TopParent()
 {
 	if(m_pParentWnd)
-		m_pParentWnd->TopParent();
-	TopTo();
+	{
+		m_pParentWnd->TopParent();	
+		TopTo(false);
+	}
+	else
+	{
+		TopTo(true);
+	}
+	
 }
 
 void CD3DWnd::GetMiniSize(int& Width,int& Height)
@@ -1639,7 +1834,7 @@ void CD3DWnd::GetMiniSize(int& Width,int& Height)
 
 CD3DWnd * CD3DWnd::GetChildWndByID(int ID)
 {
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{
 		if(m_ChildWndList[i]->GetID()==ID)
 			return m_ChildWndList[i];
@@ -1648,7 +1843,7 @@ CD3DWnd * CD3DWnd::GetChildWndByID(int ID)
 }
 CD3DWnd * CD3DWnd::GetChildWndByName(LPCTSTR Name)
 {
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{
 		if(strcmp(m_ChildWndList[i]->GetName(),Name)==0)
 			return m_ChildWndList[i];
@@ -1658,7 +1853,7 @@ CD3DWnd * CD3DWnd::GetChildWndByName(LPCTSTR Name)
 
 bool CD3DWnd::IsChild(CD3DWnd * pWnd)
 {
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{
 		if(m_ChildWndList[i]==pWnd)
 			return true;
@@ -1668,12 +1863,12 @@ bool CD3DWnd::IsChild(CD3DWnd * pWnd)
 
 bool CD3DWnd::IsChildRecursion(CD3DWnd * pWnd)
 {
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{
 		if(m_ChildWndList[i]==pWnd)
 			return true;
 	}
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{
 		if(m_ChildWndList[i]->IsChildRecursion(pWnd))
 			return true;

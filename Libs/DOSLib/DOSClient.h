@@ -20,6 +20,9 @@ protected:
 	CEasyBuffer		m_AssembleBuffer;	
 	CEasyBuffer		m_SendBuffer;
 
+	CDOSSimpleMessage *							m_pCurHandleMsg;
+	CEasyMap<MSG_ID_TYPE,DOS_MSG_HANDLE_INFO>	m_MsgFnMap;
+
 	DECLARE_CLASS_INFO(CDOSClient);
 public:
 	CDOSClient(void);
@@ -44,7 +47,11 @@ public:
 	virtual BOOL RegisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_TYPE * pMsgIDList,int CmdCount);
 	virtual BOOL UnregisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_TYPE * pMsgIDList,int CmdCount);
 
-	virtual void PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list vl);
+	virtual BOOL AddConcernedObject(OBJECT_ID ObjectID,bool NeedTest);
+	virtual BOOL DeleteConcernedObject(OBJECT_ID ObjectID);
+
+	virtual BOOL FindObject(UINT ObjectType);
+	virtual BOOL ReportObject(OBJECT_ID TargetID,const CSmartStruct& ObjectInfo);
 
 	virtual BOOL RegisterObject(DOS_OBJECT_REGISTER_INFO_EX& ObjectRegisterInfo);
 	virtual void Release();

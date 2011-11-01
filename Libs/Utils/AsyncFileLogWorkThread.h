@@ -42,7 +42,6 @@ public:
 	virtual void OnTerminate();
 
 	BOOL PushLog(LPCTSTR LogData);
-	BOOL WriteLogDirect(LPCTSTR LogData);
 
 	LPCTSTR GetLogFileName()
 	{
@@ -50,5 +49,5 @@ public:
 	}
 	
 protected:
-	void CreateDir(LPCTSTR FilePath);
+	void CreateDir(LPCTSTR FilePath);	
 };

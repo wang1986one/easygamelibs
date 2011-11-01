@@ -81,7 +81,7 @@ CD3DTexture::CD3DTexture(CD3DTextureManager * pManager)
 
 CD3DTexture::~CD3DTexture()
 {
-	if(m_pManager)
+	if(m_pManager&&GetID())
 	{
 		m_pManager->DeleteTexture(GetID());
 	}
@@ -165,7 +165,7 @@ bool CD3DTexture::LoadTexture(LPCTSTR TextureFileName,UINT MipLevels,bool UseFil
 {
 	
 
-	CD3DTexture::Destory();
+	
 
 	CEasyString FileName=FindFileOne(TextureFileName);
 
@@ -178,29 +178,33 @@ bool CD3DTexture::LoadTexture(LPCTSTR TextureFileName,UINT MipLevels,bool UseFil
 	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
-	if(!pFile->Open(FileName,IFileAccessor::modeRead))
+	bool Ret=false;
+	if(pFile->Open(FileName,IFileAccessor::modeRead))
 	{
-		PrintSystemLog(0,"打开纹理<%s>失败\r\n",TextureFileName);		
-		pFile->Release();
-		return false;	
+		Ret=LoadTexture(pFile,MipLevels,UseFilter,IsManaged,KeyColor);
+		if(!Ret)
+		{
+			PrintSystemLog(0,"装载纹理<%s>失败\r\n",TextureFileName);	
+		}
 	}
-	int FileSize=(int)pFile->GetSize();	
-	BYTE * pData=new BYTE[FileSize];
-	pFile->Read(pData,FileSize);
+	else
+	{
+		PrintSystemLog(0,"打开纹理<%s>失败\r\n",TextureFileName);			
+	}
+
 	pFile->Release();
+	return Ret;
+}
+
+bool CD3DTexture::LoadTexture(IFileAccessor * pFileAccessor,UINT MipLevels,bool UseFilter,bool IsManaged,D3DCOLOR KeyColor)
+{
+	int FileSize=(int)pFileAccessor->GetSize();	
+	BYTE * pData=new BYTE[FileSize];
+	pFileAccessor->Read(pData,FileSize);	
 
 	bool ret=LoadTextureFromMemory(pData,FileSize,MipLevels,UseFilter,IsManaged,KeyColor);
 	delete[] pData;
-	if(ret)
-	{		
-		return true;
-	}
-	else
-	{	
-		PrintSystemLog(0,"装载纹理<%s>失败\r\n",TextureFileName);		
-		return false;
-	}
-	
+	return ret;	
 }
 
 

@@ -44,7 +44,7 @@ CMemoryAllocatee::~CMemoryAllocatee(void)
 	}
 }
 
-void * CMemoryAllocatee::Alloc(int Size,const char * FileName,int Line)
+void * CMemoryAllocatee::Alloc(int Size,LPCTSTR FileName,int Line)
 {
 	void * pMemBlock=::malloc(Size);
 	if(m_IsWorking)
@@ -57,7 +57,7 @@ void * CMemoryAllocatee::Alloc(int Size,const char * FileName,int Line)
 	return pMemBlock;
 }
 
-void * CMemoryAllocatee::Realloc(void * pBlock,int Size,const char * FileName,int Line)
+void * CMemoryAllocatee::Realloc(void * pBlock,int Size,LPCTSTR FileName,int Line)
 {
 	if(m_IsWorking)
 	{

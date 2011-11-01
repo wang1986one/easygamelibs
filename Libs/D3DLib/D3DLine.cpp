@@ -2,28 +2,8 @@
 
 namespace D3DLib{
 
-const LPCTSTR DEFAULT_LINE_FX_NT=
-"technique tec0											\r\n"
-"{														\r\n"
-"    pass p0											\r\n"
-"    {													\r\n"
-"		zenable = true;									\r\n"
-"		zwriteenable = true;							\r\n"
-"		lighting = false;								\r\n"
-"		CullMode = none;								\r\n"
-"		fogenable = false;								\r\n"
-"		AlphaTestEnable = false;						\r\n"
-"		AlphaBlendEnable = false;						\r\n"
-"     	ColorOp[0] = SelectArg1;						\r\n"
-"       ColorArg1[0] = Diffuse;							\r\n"      	
-"       AlphaOp[0] = SelectArg1;						\r\n"
-"       AlphaArg1[0] = diffuse;							\r\n"
-"		ColorOp[1] = disable;							\r\n"
-"		AlphaOp[1] = disable;							\r\n"
-"		VertexShader = NULL;							\r\n"
-"		PixelShader  = NULL;							\r\n"
-"    }													\r\n"
-"}														\r\n";
+
+
 
 IMPLEMENT_CLASS_INFO(CD3DLine,CD3DObject);
 
@@ -87,6 +67,9 @@ void CD3DLine::Modify(CD3DVector3 P1,CD3DVector3 P2,D3DCOLOR Color1,D3DCOLOR Col
 	VERTEX * pBuff;
 
 	m_pSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pBuff,0);
+
+	m_BoundingBox.ComputeFromVertex(&P1,1,sizeof(P1));
+	m_BoundingBox.AppendFromVertex(&P2,1,sizeof(P2));
 
 
 	pBuff[0].Pos=P1;

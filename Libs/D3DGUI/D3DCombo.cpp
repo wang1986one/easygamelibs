@@ -27,6 +27,7 @@ CD3DCombo::CD3DCombo():CD3DEdit()
 {
 	m_pExpandButton=NULL;
 	m_pComboList=NULL;
+	m_ComboListOrginHeight=0;
 	InitWnd(NULL);
 
 }
@@ -35,6 +36,7 @@ CD3DCombo::CD3DCombo(CD3DGUI * pGUI):CD3DEdit(pGUI)
 {
 	m_pExpandButton=NULL;
 	m_pComboList=NULL;
+	m_ComboListOrginHeight=0;
 	InitWnd(pGUI);	
 }
 
@@ -66,7 +68,7 @@ void CD3DCombo::InitWnd(CD3DGUI *  pGUI)
 		//m_pComboList->EnableFocus(false);
 	}
 
-	
+	m_ComboListOrginHeight=m_pComboList->GetWndRect().Height();
 }
 
 
@@ -88,7 +90,15 @@ BOOL CD3DCombo::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lParam)
 				CEasyRect Rect=GetWndRect();
 				ScreenToClient(&Rect);
 
-				int Height=m_pComboList->GetWndRect().Height();
+				int Height=m_pComboList->GetItemCount()*m_pComboList->GetItemHeight();
+
+				if(Height<0)
+					Height=m_pComboList->GetItemHeight();
+
+				Height+=m_pComboList->GetBorder(RECT_TOP)+m_pComboList->GetBorder(RECT_BOTTOM);
+
+				if(Height>m_ComboListOrginHeight)
+					Height=m_ComboListOrginHeight;
 
 				Rect.top=Rect.bottom;
 				Rect.bottom=Rect.top+Height;
@@ -111,7 +121,7 @@ BOOL CD3DCombo::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_D3DGUI_SIMPLE_LIST_SELCHANGE:
-		if(((CD3DSimpleList *)lParam)->GetID()==CIC_LIST)
+		if(wParam==CIC_LIST)
 		{
 			int Index=m_pComboList->GetFirstSelectedItem();
 			if(Index>=0)
@@ -119,13 +129,13 @@ BOOL CD3DCombo::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lParam)
 				CEasyString Text;
 				m_pComboList->GetItemText(Index,Text);
 				SetText(Text);
-				HandleMessage(this,WM_D3DGUI_COMBO_SELCHANGE,Index,(LPARAM)this);
+				HandleMessage(this,WM_D3DGUI_COMBO_SELCHANGE,(WPARAM)GetID(),Index);
 			}
 			return true;
 		}
 		break;
 	case WM_D3DGUI_SIMPLE_LIST_LDBCLICK:
-		if(((CD3DSimpleList *)lParam)->GetID()==CIC_LIST)
+		if(wParam==CIC_LIST)
 		{
 			m_IsListShow=false;
 			m_pComboList->SetVisible(m_IsListShow);		
@@ -137,9 +147,11 @@ BOOL CD3DCombo::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lParam)
 
 void CD3DCombo::SetVisible(bool IsVisible)
 {
-	m_pExpandButton->SetVisible(IsVisible);
-	m_pComboList->SetVisible(IsVisible);
 	CD3DWnd::SetVisible(IsVisible);
+	if(IsVisible)
+		m_pComboList->SetVisible(m_IsListShow);
+	else
+		m_pComboList->SetVisible(false);
 }
 
 CEasyRect CD3DCombo::GetCenterRect()
@@ -193,14 +205,14 @@ void CD3DCombo::SelectItem(int Index)
 	}
 }
 
-void CD3DCombo::AddItem(LPCTSTR ItemText)
+int CD3DCombo::AddItem(LPCTSTR ItemText)
 {
-	m_pComboList->AddItem(ItemText);
+	return m_pComboList->AddItem(ItemText);
 }
 
-void CD3DCombo::InsertItem(int Index,LPCTSTR ItemText)
+bool CD3DCombo::InsertItem(int Index,LPCTSTR ItemText)
 {
-	m_pComboList->InsertItem(Index,ItemText);
+	return m_pComboList->InsertItem(Index,ItemText);
 }
 
 bool CD3DCombo::DeleteItem(int Index)
@@ -213,15 +225,53 @@ void CD3DCombo::DeleteAllItem()
 	m_pComboList->DeleteAllItem();
 }
 
+int CD3DCombo::GetItemCount()
+{
+	return m_pComboList->GetItemCount();
+}
+bool CD3DCombo::SetItemText(int Index,LPCTSTR Text)
+{
+	return m_pComboList->SetItemText(Index,Text);
+}
+bool CD3DCombo::GetItemText(int Index,CEasyString& Text)
+{
+	return m_pComboList->GetItemText(Index,Text);
+}
+bool CD3DCombo::SetItemData(int Index,LPVOID pData)
+{
+	return m_pComboList->SetItemData(Index,pData);
+}
+LPVOID CD3DCombo::GetItemData(int Index)
+{
+	return m_pComboList->GetItemData(Index);
+}
+
+int CD3DCombo::GetFirstSelectedItem()
+{
+	return m_pComboList->GetFirstSelectedItem();
+}
+int CD3DCombo::GetNextSelectedItem(int Index)
+{
+	return m_pComboList->GetNextSelectedItem(Index);
+}
 
 void CD3DCombo::SaveToXml(xml_node * pXMLNode)
 {
 	xml_node Wnd=pXMLNode->append_child(node_element,"Combo");
 	Wnd.append_attribute("Name",(LPCTSTR)GetName());
 	Wnd.append_attribute("ID",(long)GetID());
+	Wnd.append_attribute("IsInternal",IsInternal());
 
 	xml_node Behavior=Wnd.append_child(node_element,"Behavior");
 	SaveBehaviorToXML(Behavior);
+	Behavior.append_attribute("IsMultiLine",m_IsMultiLine);
+	Behavior.append_attribute("ShowCaret",m_IsShowCaret);
+	Behavior.append_attribute("CaretColor",(long)m_CaretColor);
+	Behavior.append_attribute("AutoWrap",m_AutoWrap);
+	Behavior.append_attribute("ReadOnly",m_IsReadyOnly);
+	Behavior.append_attribute("Encryption",m_IsEncryption);
+	Behavior.append_attribute("EnableScrollBar",m_IsEnabledScrollBar);
+	Behavior.append_attribute("ScrollBarWidth",(long)m_ScrollBarWidth);
 
 	xml_node Frame=Wnd.append_child(node_element,"Frame");
 	SaveFrameToXML(Frame);
@@ -236,9 +286,8 @@ void CD3DCombo::SaveToXml(xml_node * pXMLNode)
 		xml_node Texture=Wnd.append_child(node_element,"Texture");
 		SaveTextureToXML(Texture);
 	}
-	
 
-	if(m_ChildWndList.size()>0)
+	if(m_ChildWndList.GetCount())
 	{
 		xml_node Childs=Wnd.append_child(node_element,"Childs");
 		SaveChildsToXml(Childs);
@@ -247,7 +296,7 @@ void CD3DCombo::SaveToXml(xml_node * pXMLNode)
 
 bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 {
-	if(_strnicmp(pXMLNode->name(),"Window",7)!=0)
+	if(_strnicmp(pXMLNode->name(),"Combo",7)!=0)
 		return false;
 	if(pXMLNode->has_attribute("Name"))
 		SetName(pXMLNode->attribute("Name").getvalue().c_str());
@@ -258,12 +307,27 @@ bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 	if(pXMLNode->has_attribute("IsInternal"))
 		SetInternal((bool)pXMLNode->attribute("IsInternal"));
 
-
 	for(int i=0;i<(int)pXMLNode->children();i++)
 	{
 		if(_strnicmp(pXMLNode->child(i).name(),"Behavior",9)==0)
 		{
 			LoadBehaviorFromXML(pXMLNode->child(i));
+			if(pXMLNode->child(i).has_attribute("IsMultiLine"))
+				SetMultiLine((bool)pXMLNode->child(i).attribute("IsMultiLine"));
+			if(pXMLNode->child(i).has_attribute("ShowCaret"))
+				EnableCaret((bool)pXMLNode->child(i).attribute("ShowCaret"));
+			if(pXMLNode->child(i).has_attribute("CaretColor"))
+				SetCaretColor((long)pXMLNode->child(i).attribute("CaretColor"));
+			if(pXMLNode->child(i).has_attribute("AutoWrap"))
+				EnableAutoWrap((bool)pXMLNode->child(i).attribute("AutoWrap"));
+			if(pXMLNode->child(i).has_attribute("ReadOnly"))
+				SetReadOnly((bool)pXMLNode->child(i).attribute("ReadOnly"));
+			if(pXMLNode->child(i).has_attribute("Encryption"))
+				SetEncryption((bool)pXMLNode->child(i).attribute("Encryption"));
+			if(pXMLNode->child(i).has_attribute("EnableScrollBar"))
+				EnableScrollBar((bool)pXMLNode->child(i).attribute("EnableScrollBar"));
+			if(pXMLNode->child(i).has_attribute("ScrollBarWidth"))
+				SetScrollBarWidth((long)pXMLNode->child(i).attribute("ScrollBarWidth"));
 		}
 		else if(_strnicmp(pXMLNode->child(i).name(),"Frame",6)==0)
 		{
@@ -285,6 +349,8 @@ bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 		{
 			LoadTextureFromXML(pXMLNode->child(i));
 		}
+
+
 	}
 	HandleMessage(this,WM_D3DGUI_WND_LOADED,GetID(),(LPARAM)this);
 
@@ -298,9 +364,18 @@ bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 		}
 	}
 
-	for(int i=(int)m_ChildWndList.size()-1;i>=0;i--)
+	for(int i=(int)m_ChildWndList.GetCount()-1;i>=0;i--)
 	{
 		if(m_ChildWndList[i]->IsInternal()&&
+			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DScrollBar))&&
+			(strcmp(m_ChildWndList[i]->GetName(),"ED_ScrollBar")==0)&&
+			m_ChildWndList[i]!=m_pScrollBar)
+		{
+			CD3DScrollBar * pScrollBar=(CD3DScrollBar *)m_ChildWndList[i];
+			SAFE_RELEASE(m_pScrollBar);
+			m_pScrollBar=pScrollBar;
+		}
+		else if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DButton))&&
 			(strcmp(m_ChildWndList[i]->GetName(),"ComboEB")==0)&&
 			m_ChildWndList[i]!=m_pExpandButton)
@@ -314,13 +389,15 @@ bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 			(strcmp(m_ChildWndList[i]->GetName(),"ComboList")==0)&&
 			m_ChildWndList[i]!=m_pComboList)
 		{
-			CD3DSimpleList * pButton=(CD3DSimpleList *)m_ChildWndList[i];
+			CD3DSimpleList * pWnd=(CD3DSimpleList *)m_ChildWndList[i];
 			SAFE_RELEASE(m_pComboList);
-			m_pComboList=pButton;
+			m_pComboList=pWnd;
+			m_pComboList->SetVisible(false);
+			m_ComboListOrginHeight=m_pComboList->GetWndRect().Height();
 		}
 		
 	}	
-	TopChild();
+	TopChild(true);
 	HandleMessage(this,WM_D3DGUI_CHILD_LOADED,GetID(),(LPARAM)this);
 	
 	

@@ -55,7 +55,15 @@ CD3DWOWM2CharacterModel::~CD3DWOWM2CharacterModel(void)
 void CD3DWOWM2CharacterModel::Destory()
 {
 	CD3DWOWM2Model::Destory();
-	
+		
+	m_CharSkinColor=0;
+	m_CharHairColor=0;
+	m_CharFaceType=0;
+	m_CharHairType=0;
+	m_CharBeardType=0;
+	m_IsCharBald=false;
+	ZeroMemory(m_Equipments,sizeof(m_Equipments));
+
 	m_pHelmetModel=NULL;
 	m_pLeftShoulderModel=NULL;
 	m_pRightShoulderModel=NULL;
@@ -261,7 +269,7 @@ bool CD3DWOWM2CharacterModel::LoadCreature(UINT CreatureDisplayID)
 
 bool CD3DWOWM2CharacterModel::BuildModel()
 {
-	D3DLOCK_FOR_OBJECT_ADD
+	D3DLOCK_FOR_OBJECT_ADD;
 
 	if(GetDevice()==NULL||m_pModelResource==NULL)
 		return false;
@@ -403,6 +411,8 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 	SAFE_RELEASE(pSkinTexture3);
 
 	OnSubMeshChanged();
+	Update(m_PlayStartTime+m_CurPlayTime);
+	OnPrepareRenderData();
 	return true;
 }
 

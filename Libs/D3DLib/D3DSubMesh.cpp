@@ -21,14 +21,12 @@ CD3DSubMesh::CD3DSubMesh(void)
 	m_PrimitiveCount=0;
 	m_pVertexBuffer=NULL;
 	m_pDXVertexBuffer=NULL;
-	m_pBackupVertexBuffer=NULL;
 	m_IsVertexsSelfDelete=false;
 	m_IsDXVertexBufferSelfRelease=false;
 	m_VertexCount=0;
 	m_StartVertex=0;
 	m_pIndexBuffer=NULL;
 	m_pDXIndexBuffer=NULL;
-	m_pBackupIndexBuffer=NULL;
 	m_IsIndexsSelfDelete=false;
 	m_IsDXIndexBufferSelfRelease=false;
 	m_IndexCount=0;	
@@ -38,9 +36,9 @@ CD3DSubMesh::CD3DSubMesh(void)
 	m_RenderBufferUsed=BUFFER_USE_DX;
 	m_OrginDataBufferUsed=BUFFER_USE_DX;
 	m_pVertexBufferR=NULL;
-	m_VertexBufferRSize=0;
+	m_IsVertexBufferRSelfDelete=false;
 	m_pIndexBufferR=NULL;
-	m_IndexBufferRSize=0;
+	m_IsIndexBufferRSelfDelete=false;
 	SetVisible(true);
 
 }
@@ -53,14 +51,12 @@ CD3DSubMesh::CD3DSubMesh(CD3DDevice * pDevice)
 	m_PrimitiveCount=0;
 	m_pVertexBuffer=NULL;
 	m_pDXVertexBuffer=NULL;
-	m_pBackupVertexBuffer=NULL;
 	m_IsVertexsSelfDelete=false;
 	m_IsDXVertexBufferSelfRelease=false;
 	m_VertexCount=0;
 	m_StartVertex=0;
 	m_pIndexBuffer=NULL;
 	m_pDXIndexBuffer=NULL;
-	m_pBackupIndexBuffer=NULL;
 	m_IsIndexsSelfDelete=false;
 	m_IsDXIndexBufferSelfRelease=false;
 	m_IndexCount=0;	
@@ -70,9 +66,9 @@ CD3DSubMesh::CD3DSubMesh(CD3DDevice * pDevice)
 	m_RenderBufferUsed=BUFFER_USE_DX;
 	m_OrginDataBufferUsed=BUFFER_USE_DX;
 	m_pVertexBufferR=NULL;
-	m_VertexBufferRSize=0;
+	m_IsVertexBufferRSelfDelete=false;
 	m_pIndexBufferR=NULL;
-	m_IndexBufferRSize=0;
+	m_IsIndexBufferRSelfDelete=false;
 	SetVisible(true);
 }
 
@@ -100,11 +96,16 @@ void CD3DSubMesh::Destory()
 	{
 		SAFE_RELEASE(m_pDXIndexBuffer);
 	}
-	SAFE_DELETE_ARRAY(m_pBackupVertexBuffer);
-	SAFE_DELETE_ARRAY(m_pBackupIndexBuffer);
 	SAFE_RELEASE(m_VertexFormat.pVertexDeclaration);
-	SAFE_DELETE_ARRAY(m_pVertexBufferR);
-	SAFE_DELETE_ARRAY(m_pIndexBufferR);
+	if(m_IsVertexBufferRSelfDelete)
+	{
+		SAFE_DELETE_ARRAY(m_pVertexBufferR);
+	}	
+	if(m_IsIndexBufferRSelfDelete)
+	{
+		SAFE_DELETE_ARRAY(m_pIndexBufferR);
+	}
+	
 	m_Material.Destory();
 	CNameObject::Destory();
 }
@@ -248,16 +249,14 @@ void CD3DSubMesh::AppendBoundingBoxWithTranform(CD3DBoundingBox& BBox,const CD3D
 	}
 }
 
-bool CD3DSubMesh::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly)
+bool CD3DSubMesh::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,bool TestOnly)
 {
 	BYTE * pVertexBuff=NULL;
 	BYTE * pIndexBuff=NULL;
 	bool IsIntersect=false;
 
-	if(!m_BoundingBox.RayIntersect(Point,Dir,IntersectPoint,Distance))
+	if(!m_BoundingBox.RayIntersect(Point,Dir,IntersectPoint,Distance,true))
 		return IsIntersect;
-
-	Distance=3.4E+38f;
 
 	if(GetOrginDataBufferUsed()==BUFFER_USE_DX)
 	{
@@ -265,16 +264,12 @@ bool CD3DSubMesh::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,C
 		if(m_pDXIndexBuffer)
 			m_pDXIndexBuffer->Lock(0,0,(LPVOID *)&pIndexBuff,D3DLOCK_READONLY);
 	}
-	else if(GetOrginDataBufferUsed()==BUFFER_USE_CUSTOM)
+	else
 	{				
 		pVertexBuff=m_pVertexBuffer;
 		pIndexBuff=m_pIndexBuffer;
 	}
-	else
-	{
-		pVertexBuff=m_pBackupVertexBuffer;
-		pIndexBuff=m_pBackupIndexBuffer;
-	}
+	
 	for(UINT t=0;t<m_PrimitiveCount;t++)
 	{
 		CD3DVector3 p1;
@@ -285,14 +280,14 @@ bool CD3DSubMesh::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,C
 		{
 			if(m_VertexFormat.IndexSize==2)
 			{
-				WORD * IndexList=(WORD *)pIndexBuff;
+				WORD * IndexList=(WORD *)pIndexBuff+m_StartIndex;
 				p1=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3]*m_VertexFormat.VertexSize);
 				p2=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+1]*m_VertexFormat.VertexSize);
 				p3=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+2]*m_VertexFormat.VertexSize);
 			}
 			else
 			{
-				DWORD * IndexList=(DWORD *)pIndexBuff;
+				DWORD * IndexList=(DWORD *)pIndexBuff+m_StartIndex;
 				p1=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3]*m_VertexFormat.VertexSize);
 				p2=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+1]*m_VertexFormat.VertexSize);
 				p3=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+2]*m_VertexFormat.VertexSize);
@@ -300,9 +295,9 @@ bool CD3DSubMesh::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,C
 		}
 		else
 		{
-			p1=*(CD3DVector3 *)(pVertexBuff+(t*3)*m_VertexFormat.VertexSize);
-			p2=*(CD3DVector3 *)(pVertexBuff+(t*3+1)*m_VertexFormat.VertexSize);
-			p3=*(CD3DVector3 *)(pVertexBuff+(t*3+2)*m_VertexFormat.VertexSize);
+			p1=*(CD3DVector3 *)(pVertexBuff+(m_StartVertex+t*3)*m_VertexFormat.VertexSize);
+			p2=*(CD3DVector3 *)(pVertexBuff+(m_StartVertex+t*3+1)*m_VertexFormat.VertexSize);
+			p3=*(CD3DVector3 *)(pVertexBuff+(m_StartVertex+t*3+2)*m_VertexFormat.VertexSize);
 		}
 		
 
@@ -311,15 +306,25 @@ bool CD3DSubMesh::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,C
 
 		if(D3DXIntersectTri(&p1,&p2,&p3,&Point,&Dir,&U,&V,&Dis))
 		{			
-			IsIntersect=true;
-			if(Dis<Distance)
+			if(IsIntersect)
 			{
+				if(Dis<Distance)
+				{
+					Distance=Dis;
+					IntersectPoint=p1+(p2-p1)*U+(p3-p1)*V;
+					DotValue=CD3DPlane::FromPoints(p1,p2,p3).GetNormalize().DotNormal(Dir);
+				}
+			}
+			else
+			{
+				IsIntersect=true;
+				if(TestOnly)
+				{
+					break;
+				}
 				Distance=Dis;
 				IntersectPoint=p1+(p2-p1)*U+(p3-p1)*V;
-			}
-			if(TestOnly)
-			{
-				break;
+				DotValue=CD3DPlane::FromPoints(p1,p2,p3).GetNormalize().DotNormal(Dir);
 			}
 		}
 	}
@@ -332,92 +337,30 @@ bool CD3DSubMesh::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,C
 	return IsIntersect;
 }
 
-bool CD3DSubMesh::LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly)
+bool CD3DSubMesh::LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue)
 {
-	CD3DVector3 Dir=EndPoint-StartPoint;
+	CD3DVector3 P;
+	FLOAT D,A;
+
+	if(!m_BoundingBox.LineIntersect(StartPoint,EndPoint,P,D))
+		return false;
+
+	CD3DVector3 Dir=(EndPoint-StartPoint);
 	FLOAT Len=Dir.Length();
 	Dir.Normalize();
 
-	BYTE * pVertexBuff=NULL;
-	BYTE * pIndexBuff=NULL;
-	bool IsIntersect=false;
-
-	if(!m_BoundingBox.RayIntersect(StartPoint,Dir,IntersectPoint,Distance))
-		return IsIntersect;
-
-	Distance=Len;
-
-	if(GetOrginDataBufferUsed()==BUFFER_USE_DX)
+	
+	if(RayIntersect(StartPoint,Dir,P,D,A,false))
 	{
-		m_pDXVertexBuffer->Lock(0,0,(LPVOID *)&pVertexBuff,D3DLOCK_READONLY);
-		if(m_pDXIndexBuffer)
-			m_pDXIndexBuffer->Lock(0,0,(LPVOID *)&pIndexBuff,D3DLOCK_READONLY);
-	}
-	else if(GetOrginDataBufferUsed()==BUFFER_USE_CUSTOM)
-	{				
-		pVertexBuff=m_pVertexBuffer;
-		pIndexBuff=m_pIndexBuffer;
-	}
-	else
-	{
-		pVertexBuff=m_pBackupVertexBuffer;
-		pIndexBuff=m_pBackupIndexBuffer;
-	}
-	for(UINT t=0;t<m_PrimitiveCount;t++)
-	{
-		CD3DVector3 p1;
-		CD3DVector3 p2;
-		CD3DVector3 p3;
-
-		if(pIndexBuff)
+		if(D<=Len)
 		{
-			if(m_VertexFormat.IndexSize==2)
-			{
-				WORD * IndexList=(WORD *)pIndexBuff;
-				p1=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3]*m_VertexFormat.VertexSize);
-				p2=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+1]*m_VertexFormat.VertexSize);
-				p3=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+2]*m_VertexFormat.VertexSize);
-			}
-			else
-			{
-				DWORD * IndexList=(DWORD *)pIndexBuff;
-				p1=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3]*m_VertexFormat.VertexSize);
-				p2=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+1]*m_VertexFormat.VertexSize);
-				p3=*(CD3DVector3 *)(pVertexBuff+IndexList[t*3+2]*m_VertexFormat.VertexSize);
-			}
-		}
-		else
-		{
-			p1=*(CD3DVector3 *)(pVertexBuff+(t*3)*m_VertexFormat.VertexSize);
-			p2=*(CD3DVector3 *)(pVertexBuff+(t*3+1)*m_VertexFormat.VertexSize);
-			p3=*(CD3DVector3 *)(pVertexBuff+(t*3+2)*m_VertexFormat.VertexSize);
-		}
-
-
-		FLOAT U,V;
-		FLOAT Dis;
-
-		if(D3DXIntersectTri(&p1,&p2,&p3,&StartPoint,&Dir,&U,&V,&Dis))
-		{			
-			if(Dis<=Distance)
-			{
-				IsIntersect=true;
-				Distance=Dis;
-				IntersectPoint=p1+(p2-p1)*U+(p3-p1)*V;
-				if(TestOnly)
-				{
-					break;
-				}
-			}			
+			IntersectPoint=P;
+			Distance=D;
+			DotValue=A;
+			return true;
 		}
 	}
-	if(GetOrginDataBufferUsed()==BUFFER_USE_DX)
-	{
-		m_pDXVertexBuffer->Unlock();
-		if(m_pDXIndexBuffer)
-			m_pDXIndexBuffer->Unlock();
-	}
-	return IsIntersect;
+	return false;
 }
 
 bool CD3DSubMesh::GetHeightByXZ(const CD3DMatrix& WorldMatrix,const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight)
@@ -426,12 +369,12 @@ bool CD3DSubMesh::GetHeightByXZ(const CD3DMatrix& WorldMatrix,const CD3DVector3&
 	CD3DVector3 RayPos=Pos;
 	CD3DVector3 RayDir(0,-1,0);
 	CD3DVector3 IntersectPoint;
-	FLOAT Distance;
+	FLOAT Distance,DotValue;
 	RayPos.y=MaxHeight;
 	RayPos*=InvMat;
 	RayDir*=InvMat.GetScaleRotation();
 	RayDir.Normalize();
-	if(RayIntersect(RayPos,RayDir,IntersectPoint,Distance,false))
+	if(RayIntersect(RayPos,RayDir,IntersectPoint,Distance,DotValue,false))
 	{
 		IntersectPoint*=WorldMatrix;
 		if(IntersectPoint.y>=MinHeight)
@@ -463,29 +406,16 @@ bool CD3DSubMesh::DeclareVertexFormat(D3DVERTEXELEMENT9* pVertexElements,WORD Ve
 	return false;
 }
 
-void CD3DSubMesh::SetVertices(BYTE * pVertexBuffer,UINT BufferSize,bool IsSelfDelete)
+void CD3DSubMesh::SetVertices(BYTE * pVertexBuffer)
 {
 	m_pVertexBuffer=pVertexBuffer;
-	m_IsVertexsSelfDelete=IsSelfDelete;
-	if(CD3DDevice::IsUseMultiThreadRender()&&BufferSize)
-	{
-		SAFE_DELETE_ARRAY(m_pVertexBufferR);
-		m_pVertexBufferR=new BYTE[BufferSize];
-		m_VertexBufferRSize=BufferSize;
-	}
+	m_IsVertexsSelfDelete=false;	
 }
 
 void CD3DSubMesh::AllocVertexBuffer()
 {
-	SAFE_DELETE_ARRAY(m_pVertexBuffer);	
 	m_pVertexBuffer=new BYTE[m_VertexFormat.VertexSize*m_VertexCount];	
-	m_IsVertexsSelfDelete=true;
-	if(CD3DDevice::IsUseMultiThreadRender())
-	{
-		SAFE_DELETE_ARRAY(m_pVertexBufferR);
-		m_pVertexBufferR=new BYTE[m_VertexFormat.VertexSize*m_VertexCount];
-		m_VertexBufferRSize=m_VertexFormat.VertexSize*m_VertexCount;
-	}
+	m_IsVertexsSelfDelete=true;	
 }
 bool CD3DSubMesh::AllocDXVertexBuffer(DWORD Usage,D3DPOOL Pool)
 {
@@ -508,35 +438,17 @@ bool CD3DSubMesh::AllocDXVertexBuffer(DWORD Usage,D3DPOOL Pool)
 	return false;	
 }
 
-void CD3DSubMesh::SetIndices(BYTE * pIndexBuffer,UINT BufferSize,bool IsSelfDelete)
+void CD3DSubMesh::SetIndices(BYTE * pIndexBuffer)
 {
 	m_pIndexBuffer=pIndexBuffer;
-	m_IsIndexsSelfDelete=IsSelfDelete;
-	if(CD3DDevice::IsUseMultiThreadRender()&&BufferSize)
-	{
-		SAFE_DELETE_ARRAY(m_pIndexBufferR);
-		m_pIndexBufferR=new BYTE[BufferSize];
-		m_IndexBufferRSize=BufferSize;
-	}
+	m_IsIndexsSelfDelete=false;	
 }
 
-void CD3DSubMesh::AllocBackupVertexBuffer()
-{
-	SAFE_DELETE_ARRAY(m_pBackupVertexBuffer);
-	m_pBackupVertexBuffer=new BYTE[m_VertexFormat.VertexSize*m_VertexCount];	
-}
 
 void CD3DSubMesh::AllocIndexBuffer()
 {
-	SAFE_DELETE_ARRAY(m_pIndexBuffer);	
 	m_pIndexBuffer=new BYTE[m_VertexFormat.IndexSize*m_IndexCount];	
-	m_IsIndexsSelfDelete=true;
-	if(CD3DDevice::IsUseMultiThreadRender())
-	{
-		SAFE_DELETE_ARRAY(m_pIndexBufferR);
-		m_pIndexBufferR=new BYTE[m_VertexFormat.IndexSize*m_IndexCount];
-		m_IndexBufferRSize=m_VertexFormat.IndexSize*m_IndexCount;
-	}
+	m_IsIndexsSelfDelete=true;	
 }
 
 bool CD3DSubMesh::AllocDXIndexBuffer(DWORD Usage,D3DPOOL Pool)
@@ -566,10 +478,33 @@ bool CD3DSubMesh::AllocDXIndexBuffer(DWORD Usage,D3DPOOL Pool)
 	return false;
 }
 
-void CD3DSubMesh::AllocBackupIndexBuffer()
+
+void CD3DSubMesh::SetVertexBufferR(BYTE * pVertexBuffer,bool IsSelfDelete)
 {
-	SAFE_DELETE_ARRAY(m_pBackupIndexBuffer);
-	m_pBackupIndexBuffer=new BYTE[m_VertexFormat.IndexSize*m_IndexCount];
+	m_pVertexBufferR=pVertexBuffer;
+	m_IsVertexBufferRSelfDelete=IsSelfDelete;
+}
+void CD3DSubMesh::AllocVertexBufferR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender())
+	{
+		m_pVertexBufferR=new BYTE[m_VertexFormat.VertexSize*m_VertexCount];	
+		m_IsVertexBufferRSelfDelete=true;	
+	}
+}
+
+void CD3DSubMesh::SetIndexBufferR(BYTE * pIndexBuffer,bool IsSelfDelete)
+{
+	m_pIndexBufferR=pIndexBuffer;
+	m_IsIndexBufferRSelfDelete=IsSelfDelete;
+}
+void CD3DSubMesh::AllocIndexBufferR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender())
+	{
+		m_pIndexBufferR=new BYTE[m_VertexFormat.IndexSize*m_IndexCount];	
+		m_IsIndexBufferRSelfDelete=true;	
+	}
 }
 
 void CD3DSubMesh::OnPrepareRenderData()
@@ -663,10 +598,16 @@ bool CD3DSubMesh::CloneFrom(CNameObject * pObject,UINT Param)
 		}
 		else
 		{
-			AllocVertexBuffer();
-			pDestVertexData=GetVertexBuffer();
+			if(m_IsVertexsSelfDelete)
+			{
+				AllocVertexBuffer();
+				pDestVertexData=GetVertexBuffer();
+			}
 		}
-		memcpy(pDestVertexData,pSrcVertexData,m_VertexFormat.VertexSize*m_VertexCount);
+		if(pDestVertexData&&pSrcVertexData)
+		{
+			memcpy(pDestVertexData,pSrcVertexData,m_VertexFormat.VertexSize*m_VertexCount);
+		}		
 		if(pSrcSubMesh->m_OrginDataBufferUsed==BUFFER_USE_DX&&pSrcSubMesh->GetDXVertexBuffer())
 		{
 			pSrcSubMesh->GetDXVertexBuffer()->Unlock();
@@ -697,10 +638,16 @@ bool CD3DSubMesh::CloneFrom(CNameObject * pObject,UINT Param)
 		}
 		else
 		{
-			AllocIndexBuffer();
-			pDestIndexData=GetIndexBuffer();
+			if(m_IsIndexsSelfDelete)
+			{
+				AllocIndexBuffer();
+				pDestIndexData=GetIndexBuffer();
+			}
 		}
-		memcpy(pDestIndexData,pSrcIndexData,m_VertexFormat.IndexSize*m_IndexCount);
+		if(pDestIndexData&&pSrcIndexData)
+		{
+			memcpy(pDestIndexData,pSrcIndexData,m_VertexFormat.IndexSize*m_IndexCount);
+		}		
 		if(pSrcSubMesh->m_OrginDataBufferUsed==BUFFER_USE_DX&&pSrcSubMesh->GetDXIndexBuffer())
 		{
 			pSrcSubMesh->GetDXIndexBuffer()->Unlock();
@@ -752,7 +699,7 @@ bool CD3DSubMesh::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pReso
 	if(m_VertexCount)
 	{
 		UINT DataSize=m_VertexCount*m_VertexFormat.VertexSize;
-		bool Ret;
+		bool Ret=false;
 		if(GetOrginDataBufferUsed()==BUFFER_USE_DX)
 		{
 			BYTE *pBuff;
@@ -761,7 +708,7 @@ bool CD3DSubMesh::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pReso
 			m_pDXVertexBuffer->Unlock();
 			
 		}
-		else
+		else if(m_IsVertexsSelfDelete)
 		{
 			Ret=Packet.AddMember(SST_D3DSM_VERTEX,(char *)m_pVertexBuffer,DataSize);
 		}
@@ -771,7 +718,7 @@ bool CD3DSubMesh::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pReso
 	if(m_IndexCount)
 	{
 		UINT DataSize=m_IndexCount*m_VertexFormat.IndexSize;
-		bool Ret;
+		bool Ret=false;
 		if(GetOrginDataBufferUsed()==BUFFER_USE_DX)
 		{
 			BYTE *pBuff;
@@ -780,7 +727,7 @@ bool CD3DSubMesh::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pReso
 			m_pDXIndexBuffer->Unlock();
 			
 		}
-		else
+		else if(m_IsIndexsSelfDelete)
 		{
 			Ret=Packet.AddMember(SST_D3DSM_VERTEX,(char *)m_pIndexBuffer,DataSize);
 		}
@@ -917,7 +864,40 @@ UINT CD3DSubMesh::GetSmartStructSize(UINT Param)
 	return Size;
 }
 
-
+bool CD3DSubMesh::CheckValid()
+{
+	if(GetRenderBufferUsed()==BUFFER_USE_CUSTOM)
+	{
+		for(UINT i=m_StartIndex;i<m_StartIndex+m_IndexCount;i++)
+		{
+			UINT Index;
+			if(m_VertexFormat.IndexSize==2)
+			{
+				Index=((WORD *)m_pIndexBuffer)[i];
+			}
+			else
+			{
+				Index=((DWORD *)m_pIndexBuffer)[i];
+			}
+			if(Index<m_StartVertex||Index>=m_StartVertex+m_VertexCount)
+			{
+				PrintD3DLog(0,"CD3DSubMesh::CheckValid:索引值超出顶点范围");
+				return false;
+			}
+		}
+		for(UINT i=m_StartVertex;i<m_StartVertex+m_VertexCount;i++)
+		{
+			float VertexValue=*((float *)(m_pVertexBuffer+i*m_VertexFormat.VertexSize));
+			if(VertexValue<-1e10f&&VertexValue>1e10f)
+			{
+				PrintD3DLog(0,"CD3DSubMesh::CheckValid:顶点数值异常");
+				return false;
+			}
+			BYTE LastByte=(m_pVertexBuffer+i*m_VertexFormat.VertexSize)[m_VertexFormat.VertexSize-1];
+		}
+	}
+	return true;
+}
 
 
 }

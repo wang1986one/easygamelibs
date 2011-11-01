@@ -20,33 +20,7 @@ namespace D3DGUI{
 #define CARET_WIDTH 2
 #define MAX_COMPSTRING_SIZE	256
 
-static LPCTSTR SELECTED_RECT_FX=	
-	"texture TexLay0 < string name = \"test.jpg\"; >;	\r\n"
-	"texture TexLay1 < string name = \"test1.jpg\"; >;	\r\n"
-	"technique tec0										\r\n"
-	"{													\r\n"
-	"    pass p0										\r\n"
-	"    {												\r\n"
-	"		MultiSampleAntialias = FALSE;				\r\n"
-	"		Lighting=false;								\r\n"
-	"		zenable = false;							\r\n"
-	"		zwriteenable = false;						\r\n"
-	"		CullMode = ccw;								\r\n"
-	"		fogenable = false;							\r\n"	
-	"		AlphaTestEnable = false;					\r\n"
-	"		AlphaBlendEnable = true;					\r\n"
-	"		SrcBlend = InvDestColor;					\r\n"
-	"		DestBlend = InvDestColor;					\r\n"		
-	"     	ColorOp[0] = SelectArg1;					\r\n"	
-	"       ColorArg1[0] = Diffuse;						\r\n"      	
-	"       AlphaOp[0] = SelectArg1;					\r\n"	
-	"       AlphaArg1[0] = diffuse;						\r\n"
-	"		ColorOp[1] = disable;						\r\n"
-	"		AlphaOp[1] = disable;						\r\n"	
-	"		VertexShader = NULL;						\r\n"
-	"		PixelShader  = NULL;						\r\n"
-	"    }												\r\n"
-	"}													\r\n";
+
 
 
 IMPLEMENT_CLASS_INFO(CD3DEdit,CD3DWnd);
@@ -85,6 +59,7 @@ void CD3DEdit::InitWnd(CD3DGUI *  pGUI)
 	m_IsCaretValidate=true;
 	m_AutoWrap=true;
 	m_IsReadyOnly=false;
+	m_IsEncryption=false;
 
 	m_LineHeight=16;
 	m_FirstVisibleLine=0;	
@@ -451,7 +426,7 @@ BOOL CD3DEdit::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		return true;
 	case WM_D3DGUI_SCROLL_BAR_SCROLL:
-		SetFirstVisibleLine((int)wParam);		
+		SetFirstVisibleLine((int)lParam);		
 		return true;
 	}
 	return false;
@@ -471,9 +446,9 @@ CEasyRect CD3DEdit::GetCenterRect()
 	return rect;
 }
 
-void CD3DEdit::ActiveWnd(bool bActive)
+void CD3DEdit::ActiveWnd(bool bActive,bool SendNotify)
 {
-	CD3DWnd::ActiveWnd(bActive);	
+	CD3DWnd::ActiveWnd(bActive,SendNotify);	
 	m_IsCaretValidate=bActive;
 	UpdateCaret();
 }
@@ -483,7 +458,7 @@ void CD3DEdit::SetFont(LOGFONT * pLogFont)
 	if(pLogFont)
 	{
 		m_LogFont=*pLogFont;
-		m_LineHeight=m_LogFont.lfHeight;//+m_FontShadowWidth*2+1;
+		m_LineHeight=m_LogFont.lfHeight*m_FontScale;//m_FontShadowWidth*2+1;
 		m_WantUpdateFont=true;	
 		UpdateFont();
 	}
@@ -502,7 +477,15 @@ void CD3DEdit::SetFontAlign(DWORD Align)
 void CD3DEdit::SetFontSahdowWidth(DWORD ShadowWidth)
 {
 	m_FontShadowWidth=ShadowWidth;
-	m_LineHeight=m_LogFont.lfHeight+m_FontShadowWidth*2+1;
+	//m_LineHeight=m_LogFont.lfHeight*m_FontScale;
+	m_WantUpdateFont=true;
+	UpdateFont();
+}
+
+void CD3DEdit::SetFontScale(FLOAT Scale)
+{
+	m_FontScale=Scale;
+	m_LineHeight=m_LogFont.lfHeight*m_FontScale;
 	m_WantUpdateFont=true;
 	UpdateFont();
 }
@@ -608,8 +591,21 @@ void CD3DEdit::UpdateText()
 		pLineInfo=GetLineInfo(Row);
 		if(pLineInfo)
 			TextEnd=pLineInfo->StartPos+pLineInfo->Len;
-
-		TextRect()->SetTextW((LPCWSTR)m_WndText.SubStr(TextStart,TextEnd-TextStart));
+		if(m_IsEncryption)
+		{
+			CEasyStringW EncryptionText;
+			EncryptionText.Resize(TextEnd-TextStart);
+			EncryptionText.SetLength(TextEnd-TextStart);
+			for(UINT i=0;i<EncryptionText.GetLength();i++)
+			{
+				EncryptionText[i]='*';
+			}
+			TextRect()->SetTextW(EncryptionText,EncryptionText.GetLength());
+		}
+		else
+		{
+			TextRect()->SetTextW((LPCWSTR)m_WndText+TextStart,TextEnd-TextStart);
+		}		
 	}
 	
 	UpdateSelect();
@@ -740,7 +736,7 @@ void CD3DEdit::UpdateSelect()
 			{
 				SelectRect(Index)=CreateRect();
 				RebuildOrder();
-				SelectRect(Index)->SetFXFromMemory("EditSelectRectFX",SELECTED_RECT_FX,(int)strlen(SELECTED_RECT_FX));
+				SelectRect(Index)->SetEffectMode(D3DGUI_EFFECT_INVERSE_COLOR);
 			}
 			if(SelectRect(Index))
 			{
@@ -808,6 +804,12 @@ void CD3DEdit::EnableAutoWrap(bool IsAutoWrap)
 	FormatText(m_WndText);
 	CaculateLineInfo(m_WndText,m_LineInfos);	
 	UpdateCaretPos();
+	UpdateText();
+}
+
+void CD3DEdit::SetEncryption(bool IsEncryption)
+{
+	m_IsEncryption=IsEncryption;
 	UpdateText();
 }
 
@@ -977,6 +979,7 @@ void CD3DEdit::SaveToXml(xml_node * pXMLNode)
 	Behavior.append_attribute("CaretColor",(long)m_CaretColor);
 	Behavior.append_attribute("AutoWrap",m_AutoWrap);
 	Behavior.append_attribute("ReadOnly",m_IsReadyOnly);
+	Behavior.append_attribute("Encryption",m_IsEncryption);
 	Behavior.append_attribute("EnableScrollBar",m_IsEnabledScrollBar);
 	Behavior.append_attribute("ScrollBarWidth",(long)m_ScrollBarWidth);
 
@@ -994,7 +997,7 @@ void CD3DEdit::SaveToXml(xml_node * pXMLNode)
 		SaveTextureToXML(Texture);
 	}
 	
-	if(m_ChildWndList.size()>0)
+	if(m_ChildWndList.GetCount())
 	{
 		xml_node Childs=Wnd.append_child(node_element,"Childs");
 		SaveChildsToXml(Childs);
@@ -1029,6 +1032,8 @@ bool CD3DEdit::LoadFromXml(xml_node * pXMLNode)
 				EnableAutoWrap((bool)pXMLNode->child(i).attribute("AutoWrap"));
 			if(pXMLNode->child(i).has_attribute("ReadOnly"))
 				SetReadOnly((bool)pXMLNode->child(i).attribute("ReadOnly"));
+			if(pXMLNode->child(i).has_attribute("Encryption"))
+				SetEncryption((bool)pXMLNode->child(i).attribute("Encryption"));
 			if(pXMLNode->child(i).has_attribute("EnableScrollBar"))
 				EnableScrollBar((bool)pXMLNode->child(i).attribute("EnableScrollBar"));
 			if(pXMLNode->child(i).has_attribute("ScrollBarWidth"))
@@ -1070,7 +1075,7 @@ bool CD3DEdit::LoadFromXml(xml_node * pXMLNode)
 	}
 
 	//识别内部对象
-	for(int i=(int)m_ChildWndList.size()-1;i>=0;i--)
+	for(int i=(int)m_ChildWndList.GetCount()-1;i>=0;i--)
 	{
 		CD3DWnd * pWnd=m_ChildWndList[i];
 		if(m_ChildWndList[i]->IsInternal()&&
@@ -1083,7 +1088,7 @@ bool CD3DEdit::LoadFromXml(xml_node * pXMLNode)
 			m_pScrollBar=pScrollBar;
 		}
 	}
-	TopChild();
+	TopChild(true);
 	HandleMessage(this,WM_D3DGUI_CHILD_LOADED,GetID(),(LPARAM)this);
 	return true;
 }
@@ -1135,6 +1140,7 @@ bool CD3DEdit::UpdateFont()
 			TextRect()->SetShadowWidth(m_FontShadowWidth);
 			TextRect()->SetCharSpace(m_FontCharSpace);
 			TextRect()->SetLineSpace(m_FontLineSpace);
+			TextRect()->SetScale(m_FontScale);
 			m_FontCharSpace=TextRect()->GetCharSpace();
 			m_FontLineSpace=TextRect()->GetLineSpace();
 			TextRect()->EnableUpdate(true);
@@ -1539,7 +1545,7 @@ bool CD3DEdit::DeleteTextAtCaret(bool IsBack)
 				UpdateCaretPos(false);
 			}
 			UpdateText();
-			HandleMessage(this,WM_D3DGUI_EDIT_TEXT_CHANGED,0,0);
+			HandleMessage(this,WM_D3DGUI_EDIT_TEXT_CHANGED,(WPARAM)GetID(),0);
 			return true;
 		}	
 		
@@ -1578,7 +1584,7 @@ bool CD3DEdit::DeleteSelection()
 		FormatText(m_WndText);
 		CaculateLineInfo(m_WndText,m_LineInfos);
 		UpdateText();
-		HandleMessage(this,WM_D3DGUI_EDIT_TEXT_CHANGED,0,0);
+		HandleMessage(this,WM_D3DGUI_EDIT_TEXT_CHANGED,(WPARAM)GetID(),0);
 		return true;
 	}
 	return false;
@@ -1628,7 +1634,7 @@ void CD3DEdit::InsertStr(LPCWSTR Str,bool WantTrans)
 	IndexToRowCol(Index,m_CurCaretRow,m_CurCaretCol);
 	UpdateCaretPos();
 	UpdateText();
-	HandleMessage(this,WM_D3DGUI_EDIT_TEXT_CHANGED,0,0);
+	HandleMessage(this,WM_D3DGUI_EDIT_TEXT_CHANGED,(WPARAM)GetID(),0);
 }
 
 void CD3DEdit::GetMiniSize(int& Width,int& Height)
@@ -1681,6 +1687,8 @@ void CD3DEdit::MakeCaretVisible()
 		CEasyRect ClientRect=GetClientRect();	
 		ClientToScreen(&ClientRect);
 		
+		if(ClientRect.Width()<=0)
+			return;
 
 		if(m_FirstVisibleCol>m_CurCaretCol)
 			m_FirstVisibleCol=m_CurCaretCol;

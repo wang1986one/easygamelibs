@@ -20,18 +20,23 @@ CD3DTextureManager::CD3DTextureManager(CD3DDevice * pD3DDevice,int StorageSize):
 {
 	m_pD3DDevice=pD3DDevice;
 	m_TextureStorage.Create(StorageSize);
+	m_DelayReleaseTime=0;
 }
 
 CD3DTextureManager::~CD3DTextureManager(void)
 {
 #ifdef _DEBUG
+	CAutoLock Lock(m_CriticalSection);
 	void * Pos;
 
 	Pos=m_TextureStorage.GetFirstObjectPos();
 	while(Pos)
 	{
-		CD3DTexture * pTexture=*(m_TextureStorage.GetNext(Pos));
-		PrintSystemLog(0,"纹理<%s>未释放！",(LPCTSTR)pTexture->GetName());
+		CEasyString Key;
+		TESTURE_INFO * pTextureInfo=m_TextureStorage.GetNextObject(Pos,Key);
+		if(m_DelayReleaseTime==0)
+			PrintSystemLog(0,"纹理<%s>未释放！",(LPCTSTR)pTextureInfo->pTexture->GetName());
+		SAFE_RELEASE(pTextureInfo->pTexture);
 	}
 	m_TextureStorage.Destory();
 #endif
@@ -39,87 +44,124 @@ CD3DTextureManager::~CD3DTextureManager(void)
 
 bool CD3DTextureManager::Reset()
 {
+	CAutoLock Lock(m_CriticalSection);
+
 	bool Ret=true;
 	void * Pos;
 
 	Pos=m_TextureStorage.GetFirstObjectPos();
 	while(Pos)
 	{		
-		CD3DTexture * pTexture=*(m_TextureStorage.GetNext(Pos));
-		if(!pTexture->Reset())
+		CEasyString Key;
+		TESTURE_INFO * pTextureInfo=m_TextureStorage.GetNextObject(Pos,Key);
+		if(!pTextureInfo->pTexture->Reset())
 			Ret=false;
 
+	}
+	for(UINT i=0;i<m_DynamicTextureList.GetCount();i++)
+	{
+		if(!m_DynamicTextureList[i]->Reset())
+			Ret=false;
 	}
 	return Ret;
 }
 
 bool CD3DTextureManager::Restore()
 {
+	CAutoLock Lock(m_CriticalSection);
+
 	bool Ret=true;
 	void * Pos;
 
 	Pos=m_TextureStorage.GetFirstObjectPos();
 	while(Pos)
 	{		
-		CD3DTexture * pTexture=*(m_TextureStorage.GetNext(Pos));
-		if(!pTexture->Restore())
+		CEasyString Key;
+		TESTURE_INFO * pTextureInfo=m_TextureStorage.GetNextObject(Pos,Key);
+		if(!pTextureInfo->pTexture->Restore())
 			Ret=false;
 
+	}
+	for(UINT i=0;i<m_DynamicTextureList.GetCount();i++)
+	{
+		if(!m_DynamicTextureList[i]->Restore())
+			Ret=false;
 	}
 	return Ret;
 }
 
-CD3DTexture * CD3DTextureManager::CreateTexture(LPCTSTR TextureName)
-{	
-	CD3DTexture * pTexture=new CD3DTexture(this);
-	
-	if(AddTexture(pTexture,TextureName))
-		return pTexture;
-	return NULL;
-	
-}
 
 bool CD3DTextureManager::AddTexture(CD3DTexture * pTexture,LPCTSTR TextureName)
 {
-	UINT ID=m_TextureStorage.AddObject(pTexture,TextureName);
+	CAutoLock Lock(m_CriticalSection);
+
+	CEasyString Key=TextureName;
+	Key.MakeUpper();
+	TESTURE_INFO TextureInfo;
+	TextureInfo.pTexture=pTexture;
+	TextureInfo.IsPrepareRelease=false;
+	UINT ID=m_TextureStorage.Insert(Key,TextureInfo);
 	if(ID)
 	{
-		pTexture->SetID(ID);
-		pTexture->SetName(TextureName);
-		if(pTexture->IsKindOf(GET_CLASS_INFO(CD3DIFLTexture))||
-			pTexture->IsKindOf(GET_CLASS_INFO(CD3DTextTexture)))
+		TextureInfo.pTexture->SetID(ID);
+		TextureInfo.pTexture->SetName(TextureName);
+		if(TextureInfo.pTexture->IsKindOf(GET_CLASS_INFO(CD3DIFLTexture))||
+			TextureInfo.pTexture->IsKindOf(GET_CLASS_INFO(CD3DTextTexture)))
 		{
-			AddAniTexture(pTexture);
+			AddAniTexture(TextureInfo.pTexture);
+		}
+		if(m_DelayReleaseTime)
+		{
+			TextureInfo.pTexture->AddUseRef();
 		}
 		return true;
 	}
 	else
 	{
+		PrintD3DLog(0,"把纹理添加到纹理管理器失败(%u,%u)",
+			m_TextureStorage.GetObjectCount(),m_TextureStorage.GetBufferSize());
 		return false;
 	}
 }
 
 bool CD3DTextureManager::DeleteTexture(UINT ID)
 {
-	CD3DTexture ** ppTexture=m_TextureStorage.GetObject(ID);
-	if(ppTexture)
-	{
-		
-		DelAniTexture(*ppTexture);
+	CAutoLock Lock(m_CriticalSection);
+
+	TESTURE_INFO * pTextureInfo=m_TextureStorage.GetObject(ID);
+	if(pTextureInfo)
+	{		
+		DelAniTexture(pTextureInfo->pTexture);
+		m_TextureStorage.DeleteByID(ID);
+		return true;
 	}
-	return m_TextureStorage.DeleteObject(ID);		
+	else
+	{
+		PrintD3DLog(0,"CD3DTextureManager::DeleteTexture:纹理[%u]未找到",
+			ID);
+		return false;
+	}
 }
 
 bool CD3DTextureManager::DeleteTexture(LPCTSTR TextureName)
 {
-	CD3DTexture ** ppTexture=m_TextureStorage.GetObject(TextureName);
-	if(ppTexture)
+	CAutoLock Lock(m_CriticalSection);
+
+	CEasyString Key=TextureName;
+	Key.MakeUpper();
+	TESTURE_INFO * pTextureInfo=m_TextureStorage.Find(Key);
+	if(pTextureInfo)
 	{
-		DelAniTexture(*ppTexture);
-		m_TextureStorage.DeleteObject((*ppTexture)->GetID());		
+		DelAniTexture(pTextureInfo->pTexture);
+		m_TextureStorage.DeleteByID(pTextureInfo->pTexture->GetID());		
 		return true;
 	}
-	return false;
+	else
+	{
+		PrintD3DLog(0,"CD3DTextureManager::DeleteTexture:纹理[%s]未找到",
+			TextureName);
+		return false;
+	}	
 }
 
 CD3DTexture * CD3DTextureManager::LoadTexture(LPCTSTR TextureFileName,UINT MipLevels,bool UseFilter,bool IsManaged,D3DCOLOR KeyColor)
@@ -165,28 +207,6 @@ CD3DIFLTexture * CD3DTextureManager::LoadIFLTexture(LPCTSTR TextureFileName,UINT
 	return NULL;
 }
 
-CD3DTextTexture * CD3DTextureManager::CreateTextTexture(LPCTSTR TextureName,LOGFONT * pLogFont,int Width,int Height,int MipLevels,D3DCOLOR FontColor)
-{
-	CD3DTextTexture * pTexture;
-
-	//CD3DTextTexture * pTexture=(CD3DTextTexture *)GetTextrue(TextureName);
-	//if(pTexture)
-	//{
-	//	pTexture->AddUseRef();
-	//	return pTexture;
-	//}
-
-	pTexture=new CD3DTextTexture(this);
-
-	if(pTexture->Create(pLogFont,Width,Height,MipLevels,FontColor))
-	{
-		if(AddTexture(pTexture,TextureName))
-			return pTexture;
-	}
-	delete pTexture;
-	return NULL;
-}
-
 int CD3DTextureManager::GetCount()
 {
 	return m_TextureStorage.GetObjectCount();
@@ -204,20 +224,52 @@ LPVOID CD3DTextureManager::GetLastPos()
 
 CD3DTexture * CD3DTextureManager::GetNext(LPVOID& Pos)
 {
-	return *m_TextureStorage.GetNext(Pos);
+	CEasyString Key;
+	return m_TextureStorage.GetNextObject(Pos,Key)->pTexture;
 }
 
 CD3DTexture * CD3DTextureManager::GetPrev(LPVOID& Pos)
 {
-	return *m_TextureStorage.GetPrev(Pos);
+	CEasyString Key;
+	return m_TextureStorage.GetPrevObject(Pos,Key)->pTexture;
 }
 
-void CD3DTextureManager::Update(FLOAT Time)
+int CD3DTextureManager::Update(FLOAT Time)
 {
+	CAutoLock Lock(m_CriticalSection);
+
 	for(UINT i=0;i<m_DynamicTextureList.GetCount();i++)
 	{
 		m_DynamicTextureList[i]->Update(Time);
 	}
+
+	if(m_DelayReleaseTime)
+	{
+		void * Pos;
+		Pos=m_TextureStorage.GetFirstObjectPos();
+		while(Pos)
+		{		
+			CEasyString Key;
+			TESTURE_INFO * pTestureInfo=m_TextureStorage.GetNextObject(Pos,Key);
+			if(pTestureInfo->pTexture->GetUseRef()==1)
+			{
+				if(pTestureInfo->IsPrepareRelease)
+				{
+					if(pTestureInfo->ReleaseTimer.IsTimeOut(m_DelayReleaseTime))
+					{
+						//PrintD3DDebugLog(0,"CD3DFXManager::Update:已延时删除纹理:%s",pTestureInfo->pTexture->GetName());
+						SAFE_RELEASE(pTestureInfo->pTexture);
+					}
+				}
+				else
+				{
+					pTestureInfo->IsPrepareRelease=true;
+					pTestureInfo->ReleaseTimer.SaveTime();
+				}
+			}
+		}
+	}
+	return 0;
 }
 
 void CD3DTextureManager::PrepareRenderData()
@@ -230,11 +282,22 @@ void CD3DTextureManager::PrepareRenderData()
 
 void CD3DTextureManager::AddAniTexture(CD3DTexture * pTexture)
 {
+	CAutoLock Lock(m_CriticalSection);
+
+	for(UINT i=0;i<m_DynamicTextureList.GetCount();i++)
+	{
+		if(m_DynamicTextureList[i]==pTexture)
+		{
+			return;
+		}
+	}
 	m_DynamicTextureList.Add(pTexture);
 }
 
 void CD3DTextureManager::DelAniTexture(CD3DTexture * pTexture)
 {
+	CAutoLock Lock(m_CriticalSection);
+
 	for(UINT i=0;i<m_DynamicTextureList.GetCount();i++)
 	{
 		if(m_DynamicTextureList[i]==pTexture)

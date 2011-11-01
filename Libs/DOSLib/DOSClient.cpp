@@ -117,10 +117,25 @@ BOOL CDOSClient::UnregisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_TYPE 
 	return FALSE;
 }
 
-void CDOSClient::PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list vl)
+BOOL CDOSClient::AddConcernedObject(OBJECT_ID ObjectID,bool NeedTest)
 {
-
+	return FALSE;
 }
+
+BOOL CDOSClient::DeleteConcernedObject(OBJECT_ID ObjectID)
+{
+	return FALSE;
+}
+
+BOOL CDOSClient::FindObject(UINT ObjectType)
+{
+	return FALSE;
+}
+BOOL CDOSClient::ReportObject(OBJECT_ID TargetID,const CSmartStruct& ObjectInfo)
+{
+	return FALSE;
+}
+
 
 BOOL CDOSClient::RegisterObject(DOS_OBJECT_REGISTER_INFO_EX& ObjectRegisterInfo)
 {

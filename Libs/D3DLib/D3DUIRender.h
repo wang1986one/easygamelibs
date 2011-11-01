@@ -38,11 +38,10 @@ public:
 	virtual void RenderDirectly(CD3DObject * pObject);	
 
 	virtual bool AddObject(CD3DObject * pObj,bool IsRecursive=true);
-	virtual bool DelObject(CD3DObject * pObj);
+	virtual bool DelObject(CD3DObject * pObj,bool IsRecursive=true);
 
-	bool MoveToTop(CD3DObject * pObj);	
 	bool MoveToTop(CD3DObject * pObj,CD3DObject *pBefore);
-	bool MoveToTop(CD3DObject ** ppObj,CD3DObject *pBefore,int ObjectCount);
+	bool MoveToTop(CD3DObject ** ppObj,UINT ObjectCount,CD3DObject *pBefore);
 
 protected:
 	

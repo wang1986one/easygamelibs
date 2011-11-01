@@ -14,42 +14,46 @@
 namespace D3DLib{
 
 #define BLZ_DBC_HEADER_TAG					((DWORD)'CBDW')
+#define BLZ_DB2_HEADER_TAG					((DWORD)'2BDW')
 #define BLZ_M2_HEADER_TAG					((DWORD)'02DM')
 #define BLZ_SKIN_HEADER_TAG					((DWORD)'NIKS')
 #define BLZ_BLS_VS_HEADER_TAG				((DWORD)'GXVS')
 #define BLZ_BLS_PS_HEADER_TAG				((DWORD)'GXPS')
 
-#define M2_MODEL_FX_FILE_NAME				"M2Model.fx"
-#define M2_PARTICLE_FX_FILE_NAME			"M2Particle.fx"
-#define M2_RIBBON_FX_FILE_NAME				"M2Ribbon.fx"
-#define WMO_MODEL_FX_FILE_NAME				"WMOModel.fx"
-#define ADT_MODEL_20_FX_FILE_NAME			"ADTModel20.fx"
-#define ADT_MODEL_30_FX_FILE_NAME			"ADTModel30.fx"
-#define ADT_MODEL_LIQUID_FX_FILE_NAME		"ADTLiquid.fx"
+//#define M2_MODEL_FX_FILE_NAME				"M2ModelSoftBoneOnly.fx"
+//#define M2_PARTICLE_FX_FILE_NAME			"M2Particle.fx"
+//#define M2_RIBBON_FX_FILE_NAME				"M2Ribbon.fx"
+//#define WMO_MODEL_FX_FILE_NAME				"WMOModel.fx"
+//#define ADT_MODEL_20_FX_FILE_NAME			"ADTModel20.fx"
+//#define ADT_MODEL_30_FX_FILE_NAME			"ADTModel30.fx"
+//#define ADT_MODEL_LIQUID_FX_FILE_NAME		"ADTLiquid.fx"
 
 
 
 
 #define BLZ_DBC_CHAR_SECTION_RECORD_SIZE				(40)
-#define BLZ_DBC_ANIMATION_DATA_RECORD_SIZE				(32)
+#define BLZ_DBC_ANIMATION_DATA_RECORD_SIZE				(24)
 #define BLZ_DBC_CHAR_HAIR_GEOSET_RECORD_SIZE			(24)
-#define BLZ_DBC_CHAR_WHISKER_GEOSET_RECORD_SIZE			(32)
-#define BLZ_DBC_CHAR_RACE_RECORD_SIZE					(276)
-#define BLZ_DBC_CREATURE_DISPLAY_INFO_RECORD_SIZE		(64)
+#define BLZ_DBC_CHAR_WHISKER_GEOSET_RECORD_SIZE			(36)
+#define BLZ_DBC_CHAR_RACE_RECORD_SIZE					(96)
+#define BLZ_DBC_CREATURE_DISPLAY_INFO_RECORD_SIZE		(68)
 #define BLZ_DBC_CREATURE_EXTRA_DISPLAY_INFO_RECORD_SIZE	(84)
-#define BLZ_DBC_CREATURE_MODEL_INFO_RECORD_SIZE			(104)
-#define BLZ_DBC_ITEM_CLASS_RECORD_SIZE					(80)
-#define BLZ_DBC_ITEM_SUB_CLASS_RECORD_SIZE				(176)
-#define BLZ_DBC_ITEM_SUB_CLASS_MASK_RECORD_SIZE			(76)
+#define BLZ_DBC_CREATURE_MODEL_INFO_RECORD_SIZE			(124)
+#define BLZ_DBC_ITEM_CLASS_RECORD_SIZE					(20)
+#define BLZ_DBC_ITEM_SUB_CLASS_RECORD_SIZE				(52)
+#define BLZ_DBC_ITEM_SUB_CLASS_MASK_RECORD_SIZE			(16)
 #define BLZ_DBC_ITEM_DATA_RECORD_SIZE					(32)
 #define BLZ_DBC_ITEM_DISPLAY_INFO_RECORD_SIZE			(100)
 #define BLZ_DBC_HELMET_GEOSET_VISIBLE_RECORD_SIZE		(32)
 #define BLZ_DBC_MAP_RECORD_SIZE							(472)
 #define BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_RECORD_SIZE	(28)
 #define BLZ_DBC_LIQUID_TYPE_RECORD_SIZE					(46*sizeof(UINT32))
+#define BLZ_DBC_LIGHT_RECORD_SIZE						(15*sizeof(UINT32))
+#define BLZ_DBC_LIGHT_PARAMS_RECORD_SIZE				(9*sizeof(UINT32))
+#define BLZ_DBC_LIGHT_INT_BAND_RECORD_SIZE				(34*sizeof(UINT32))
 
-#define BLZ_DBC_STR_LOCAL_ZH_CN							4
-#define BLZ_DBC_STR_LOCAL_NUM							17
+#define BLZ_DBC_STR_LOCAL_ZH_CN							0//4
+#define BLZ_DBC_STR_LOCAL_NUM							1//17
 
 #define BLZ_DBC_CHAR_SECTION_FILE_NAME					"DBFilesClient\\CharSections.dbc"
 #define BLZ_DBC_ANIMATION_DATA_FILE_NAME				"DBFilesClient\\AnimationData.dbc"
@@ -63,15 +67,17 @@ namespace D3DLib{
 #define BLZ_DBC_ITEM_CLASS_FILE_NAME					"DBFilesClient\\ItemClass.dbc"
 #define BLZ_DBC_ITEM_SUB_CLASS_FILE_NAME				"DBFilesClient\\ItemSubClass.dbc"
 #define BLZ_DBC_ITEM_SUB_CLASS_MASK_FILE_NAME			"DBFilesClient\\ItemSubClassMask.dbc"
-#define BLZ_DBC_ITEM_DATA_FILE_NAME						"DBFilesClient\\Item.dbc"
+#define BLZ_DBC_ITEM_DATA_FILE_NAME						"DBFilesClient\\Item.db2"
 #define BLZ_DBC_ITEM_CACHE_DATA_FILE_NAME				"ItemData.csv"
 #define BLZ_DBC_ITEM_DISPLAY_INFO_FILE_NAME				"DBFilesClient\\ItemDisplayInfo.dbc"
 #define BLZ_DBC_HELMET_GEOSET_VISIBLE_FILE_NAME			"DBFilesClient\\HelmetGeosetVisData.dbc"
 #define BLZ_DBC_MAP_FILE_NAME							"DBFilesClient\\Map.dbc"
 #define BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_FILE_NAME		"DBFilesClient\\SpellVisualEffectName.dbc"
 #define BLZ_DBC_LIQUID_TYPE_FILE_NAME					"DBFilesClient\\LiquidType.dbc"
-
 #define BLZ_TRS_MINI_MAP_TEXTURE_FILES					"Textures\\MiniMap\\md5translate.trs"
+#define BLZ_DBC_LIGHT_FILE_NAME							"DBFilesClient\\Light.dbc"
+#define BLZ_DBC_LIGHT_PARAMS_FILE_NAME					"DBFilesClient\\LightParams.dbc"
+#define BLZ_DBC_LIGHT_INT_BAND_FILE_NAME				"DBFilesClient\\LightIntBand.dbc"
 
 
 #define EQUIPMENT_ARM_UPPER_TEXTURE_PATH		"ITEM\\TEXTURECOMPONENTS\\ARMUPPERTEXTURE"
@@ -86,7 +92,7 @@ namespace D3DLib{
 #define WOW_MAP_ADT_FILE_DIR					"WORLD\\MAPS"
 #define WOW_MINI_MAP_FILE_DIR					"Textures\\MiniMap"
 
-
+#define BLZ_WOW_MAP_WIDTH						64
 #define BLZ_ADT_MAP_TILE_SIZE					(100.0f/3.0f)
 #define BLZ_ADT_MAP_TILE_WIDTH					(16)
 #define BLZ_ADT_MAP_TILE_COUNT					(BLZ_ADT_MAP_TILE_WIDTH*BLZ_ADT_MAP_TILE_WIDTH)
@@ -95,6 +101,8 @@ namespace D3DLib{
 #define BLZ_ADT_TEXTURE_LAYER_COUNT				(4)
 #define BLZ_ADT_MAP_TILE_BLOCK_SIZE				(BLZ_ADT_MAP_TILE_SIZE/8.0f)
 #define BLZ_ADT_MAP_TILE_BLOCK_HALF_SIZE		(BLZ_ADT_MAP_TILE_SIZE/16.0f)
+
+#define MAX_M2_SKIN								5
 
 //WMO Root
 #define CHUNK_ID_VERSION						((DWORD)'MVER')
@@ -158,6 +166,7 @@ namespace D3DLib{
 #define CHUNK_ID_WDT_MODF						((DWORD)'MODF')
 
 #define CHUNK_ID_WDL_MWMO						((DWORD)'MWMO')
+#define CHUNK_ID_WDL_MWID						((DWORD)'MWID')
 #define CHUNK_ID_WDL_MODF						((DWORD)'MODF')
 #define CHUNK_ID_WDL_MAOF						((DWORD)'MAOF')
 #define CHUNK_ID_WDL_MARE						((DWORD)'MARE')
@@ -404,7 +413,11 @@ enum PARTICLE_EMITTER_BLENDING_TYPE
 	EBT_ALPHA_MUL=5,
 };
 
-
+enum M2_LIGHT_TYPE
+{
+	M2LT_DIRECT,
+	M2LT_POINT,
+};
 
 enum WMO_LIGHT_TYPE 
 {
@@ -493,6 +506,28 @@ enum WDT_MPHD_FLAG
 	WDT_MPHD_FLAG_BIG_ALPHA_MASK=0x04,
 };
 
+enum DBC_LIGHT_INFO_COLOR_ID
+{
+	DBC_LICI_LIGHT_DIFFUSE,
+	DBC_LICI_LIGHT_AMBIENT,
+	DBC_LICI_SKY_COLOR_0,
+	DBC_LICI_SKY_COLOR_1,
+	DBC_LICI_SKY_COLOR_2,
+	DBC_LICI_SKY_COLOR_3,
+	DBC_LICI_SKY_COLOR_4,
+	DBC_LICI_FOG_COLOR,
+	DBC_LICI_SKY_UNKNOWN_1,
+	DBC_LICI_SUN_COLOR,
+	DBC_LICI_SUN_HALO_COLOR,
+	DBC_LICI_SKY_UNKNOWN_2,
+	DBC_LICI_CLOUD_COLOR,
+	DBC_LICI_SKY_UNKNOWN_3,
+	DBC_LICI_SKY_UNKNOWN_4,
+	DBC_LICI_WATER_COLOR_DARK,
+	DBC_LICI_WATER_COLOR_LIGHT,	
+	DBC_LICI_SHADOW_COLOR,
+	DBC_LICI_MAX,
+};
 
 
 #pragma pack(push)
@@ -505,6 +540,22 @@ struct BLZ_DBC_HEADER
 	UINT32	FieldCount;
 	UINT32	RecordSize;
 	UINT32	StringBlockSize;
+};
+
+struct BLZ_DB2_HEADER
+{
+	DWORD	Tag;
+	UINT32	RecordCount;
+	UINT32	FieldCount;
+	UINT32	RecordSize;
+	UINT32	StringBlockSize;
+	UINT32	Unknow1;
+	UINT32	ClientMinorVersion;
+	UINT32	Unknow2;
+	UINT32	FirstRowIndex;
+	UINT32	LastRowIndex;
+	UINT32	LocaleCode;
+	UINT32	Unknow3;
 };
 
 struct DBC_CHAR_SECTION_RECORD
@@ -525,12 +576,10 @@ struct DBC_ANIMATION_DATA_RECORD
 {
 	UINT32	ID;
 	UINT32	Name;
-	UINT32	WeaponState;
+	UINT32	WeaponFlags;
+	UINT32	BodyFlags;
 	UINT32	Flags;
-	UINT32	Unknown1;
-	UINT32	Preceeding;
-	UINT32	RealId;
-	UINT32	Group;
+	UINT32	Fallback;
 };
 
 struct DBC_CHAR_HAIR_GEOSET_RECORD
@@ -549,10 +598,11 @@ struct DBC_CHAR_WHISKER_TYPE_RECORD
 	UINT32	Sex;
 	UINT32	WhiskerType;	
 	UINT32	SubMeshID1;
-	UINT32	SubMeshID3;
 	UINT32	SubMeshID2;
+	UINT32	SubMeshID3;
+	UINT32	SubMeshID4;
+	UINT32	SubMeshID5;
 	UINT32	Unknown1;
-	UINT32	Unknown2;
 };
 
 struct DBC_CHAR_RACE_RECORD
@@ -564,20 +614,23 @@ struct DBC_CHAR_RACE_RECORD
 	UINT32	MaleModel;				//iRefID  only used for the char creation/selection screen. Ingame the server sets the model.  
 	UINT32	FemaleModel;			//iRefID  only used for the char creation/selection screen. Ingame the server sets the model.  
 	UINT32	Abbrev;					//String  A short form of the name. Used for helmet models.  
-	UINT32	Unknown1;				//Float  This is 1.0 for the most. Maybe some sort of size or speed.  
-	UINT32	Faction;				//Integer  1 = Horde, 7 = Alliance & not playable  
+	UINT32	BaseLanguage;			//Integer  1 = Horde, 7 = Alliance & not playable  
 	UINT32	CreatureType;			//iRefID  Always 7 (humanoid).  
-	UINT32	Unknown2;				//Integer  Always 15007.  
-	UINT32	Unknown3;				//Integer  1090 for dwarfs, 1096 for the others. Getting stored in CGUnit at CGUnit::PostInit.  
+	UINT32	ResSicknessSpellID;		//Integer  Always 15007.  
+	UINT32	SplashSoundID ;			//Integer  1090 for dwarfs, 1096 for the others. Getting stored in CGUnit at CGUnit::PostInit.  
 	UINT32	InternalName;			//String  Same as the one used in model-filepathes.  
-	UINT32	Camera;					//iRefID  Used for the opening cinematic.  
-	UINT32	RaceNameMale[BLZ_DBC_STR_LOCAL_NUM];		//Loc  A name to display.  
-	UINT32	RaceNameFemale[BLZ_DBC_STR_LOCAL_NUM];		//Loc  always is NULL for zhCN.  
+	UINT32	CinematicSequenceID ;	//iRefID  Used for the opening cinematic.  
+	UINT32	Alliance;
 	UINT32	RaceNameNeutral[BLZ_DBC_STR_LOCAL_NUM];	//Loc  always is NULL for zhCN.  
-	UINT32	Feature1;				//String  Internal names for the facial features.  
-	UINT32	Feature2;				//String  The localized ones are in luas.  
-	UINT32	Feature3;				//String   
+	UINT32	RaceNameFemale[BLZ_DBC_STR_LOCAL_NUM];		//Loc  always is NULL for zhCN.  
+	UINT32	RaceNameMale[BLZ_DBC_STR_LOCAL_NUM];		//Loc  A name to display.  
+	UINT32	FacialHairCustomization1;				//String  Internal names for the facial features.  
+	UINT32	FacialHairCustomization2;				//String  The localized ones are in luas.  
+	UINT32	HairCustomization;				//String   
 	UINT32	Expansion;				//Integer  0 for classic and non-playables, 1 for Burning Crusade  
+	UINT32	UnalteredVisualRaceID;
+	UINT32	Unknow1;
+	UINT32	Unknow2;
 
 };
 
@@ -586,13 +639,14 @@ struct DBC_CREATURE_DISPLAY_INFO_RECORD
 	UINT32	ID;							//Integer   
 	UINT32	ModelID;					//iRefID  A model to be used.  
 	UINT32	SoundID;					//iRefID  Not set for that much models. Can also be set in CreatureModelData.  
-	UINT32	ExtraDisplayInformationID;	//iRefID  If this display-id is a NPC wearing things that are described in there.  
+	UINT32	ExtraDisplayInformationID;	//iRefID  If this display-id is a NPC wearing things that are described in there.  	
 	FLOAT	Scale;						//Float  Default scale, if not set by server. 1 is the normal size.  
 	UINT32	Opacity;					//Integer  0 (transparent) to 255 (opaque).  
 	UINT32	Skin1;						//String  Skins that are used in the model.  
 	UINT32	Skin2;						//String  See this for information when they are used.  
 	UINT32	Skin3;						//String   
 	UINT32	Icon;						//String  Holding an icon like INV_Misc_Food_59. Only on a few.  
+	UINT32	SizeClass;
 	UINT32	BloodLevelID;				//iRefID  If 0, this is read from CreatureModelData. (CGUnit::RefreshDataPointers)  
 	UINT32	BloodID;					//iRefID   
 	UINT32	NPCSoundID;					//iRefID  Sounds used when interacting with the NPC.  
@@ -603,53 +657,56 @@ struct DBC_CREATURE_DISPLAY_INFO_RECORD
 
 struct DBC_CREATURE_MODEL_INFO_RECORD
 {
-	UINT32	ID;							//Integer 	
-	UINT32	Flags;						//Integer 	Known to be checked: 0x80. Known: 4: Has death corpse.
-	UINT32	ModelPath;					//String 		*.MDX!
-	UINT32	AltermateModel;				//String 		This is always 0. It would be used, if something was in here. Its pushed into M2Scene::AddNewModel(GetM2Cache(), Modelpath, AlternateModel, 0).
-	UINT32	Unknown1;					//Integer* 	0 - 4 | 4 got mostly big models (ragnaros, nef.) but again, not all big models got 4 ...
-	FLOAT	Scale;						//Float 		CMD.Scale * CDI.Scale is used in CUnit.
-	UINT32	BloodLevelID;				//iRefID	
-	UINT32	Unknown2;					//Integer* 	-1, 0, 1, 3 - 7 | 0 for "Creature\CrystalSpider\CrystalSpider.mdx" only
-	FLOAT	Unknown3; 					//Float 		big dragons got 30.0, some mounts 24.0 etc | most time 18.0
-	FLOAT	Unknown4; 					//Float 	        mostly 12, others are 0.0 - 20.0
-	FLOAT	Unknown5; 					//Float 	        mostly 1.0, others are 0.0 - 5.0  
-	UINT32	Unknown6;					//Integer* 	always 0.
-	UINT32	Unknown7;					//Integer* 	ground shake? (Kunga) | 0 - 2, 10, 79, 82 | again bigger models got bigger number most time
-	UINT32	Unknown8; 					//Integer* 	0, 10 - 12, 38 | 0 most of the time.
-	UINT32	SoundDataID;				//iRefID		
-	FLOAT	CollisionWidth; 			//Float 		Size of collision for the model. Has to be bigger than 0.41670012920929, else "collision width is too small.".
-	FLOAT	CollisionHeight;			//Float 		ZEROSCALEUNIT when 0-CollisionHeight < 0
-	FLOAT	Unknown9; 					//Float 		<.. other collision data?
-	FLOAT	Unknown10; 					//Float 		 ..
-	FLOAT	Unknown11; 					//Float 		 ..
-	FLOAT	Unknown12; 					//Float 		 .. selection circle size ?
-	FLOAT	Unknown13; 					//Float 		 ..
-	FLOAT	Unknown14; 					//Float 		 .. 
-	FLOAT	Unknown15;					//Float 	 	 other collision data? ..>
-	FLOAT	Unknown16; 					//Float 		 mostly 1.0, others are 0.03 - 0.9
-	FLOAT	Unknown17; 					//Float 		 mostly 1.0, others are 0.5 - 2.9
+	UINT32		ID;							//Integer 	
+	UINT32		Flags;						//Integer 	Known to be checked: 0x80. Known: 4: Has death corpse.
+	UINT32		ModelPath;					//String 		*.MDX!
+	UINT32		AltermateModel;				//String 		This is always 0. It would be used, if something was in here. Its pushed into M2Scene::AddNewModel(GetM2Cache(), Modelpath, AlternateModel, 0).
+	FLOAT		Scale;						//Float 		CMD.Scale * CDI.Scale is used in CUnit.
+	UINT32		BloodLevelID;				//iRefID	
+	UINT32		FootPrintID;				//iRefID 		Defines the footpritns you leave in snow. 
+	FLOAT		FootPrintTextureLength; 	//Float		most time 18.0 
+	FLOAT		FootPrintTextureWidth; 		//Float 	        mostly 12, others are 0.0 - 20.0
+	FLOAT		FootPrintParticleScale; 	//Float 	        mostly 1.0, others are 0.0 - 5.0  
+	UINT32		FoleyMaterialID;			//Integer* 	always 0.
+	UINT32		FootStepShakeSizeID;		//Integer* 	ground shake? (Kunga) | 0 - 2, 10, 79, 82 | again bigger models got bigger number most time
+	UINT32		DeathThudShakeSize; 		//Integer* 	0, 10 - 12, 38 | 0 most of the time.
+	UINT32		SoundDataID;				//iRefID		
+	FLOAT		CollisionWidth; 			//Float 		Size of collision for the model. Has to be bigger than 0.41670012920929, else "collision width is too small.".
+	FLOAT		CollisionHeight;			//Float 		ZEROSCALEUNIT when 0-CollisionHeight < 0
+	FLOAT		MountHeight; 				//Float 		<.. other collision data?
+	CD3DVector3	BoundingBoxMin; 			//Float 		 ..
+	CD3DVector3	BoundingBoxMax; 			//Float 		 ..	
+	FLOAT		WorldEffectScale ; 			//Float 		 mostly 1.0, others are 0.03 - 0.9
+	FLOAT		AttachedEffectScale; 		//Float 		 mostly 1.0, others are 0.5 - 2.9
+	FLOAT		Unknow1;
+	FLOAT		Unknow2;
+	FLOAT		Unknow3;
+	FLOAT		Unknow4;
+	FLOAT		Unknow5;
+	FLOAT		Unknow6;
 };
 
 struct DBC_ITEM_CLASS
 {
 	UINT32	ClassID;
-	UINT32	SubClassID;
-	UINT32	IsWeapon;
+	UINT32	ClassID2;
+	UINT32	Unknow;
+	UINT32	IsWeapon;	
 	UINT32	Name[BLZ_DBC_STR_LOCAL_NUM];
 };
 
 struct DBC_ITEM_SUB_CLASS
 {
-	UINT32	ClassID;
+	UINT32	ID;
+	UINT32	ClassID;	
 	UINT32	SubClassID;
-	UINT32	Unknow1;
 	UINT32	Unknow2;
 	UINT32	Unknow3;
 	UINT32	Unknow4;
 	UINT32	Unknow5;
 	UINT32	Unknow6;
-	UINT32	Unknow7;
+	UINT32	SubClassMark;
+	UINT32	Unknow8;
 	UINT32	HandsNumber;
 	UINT32	Name[BLZ_DBC_STR_LOCAL_NUM];
 	UINT32	UniquePlural[BLZ_DBC_STR_LOCAL_NUM];
@@ -658,6 +715,7 @@ struct DBC_ITEM_SUB_CLASS
 struct DBC_ITEM_SUB_CLASS_MASK
 {
 	UINT32	ID;
+	UINT32	Unknow;
 	UINT32	Mask;
 	UINT32	Name[BLZ_DBC_STR_LOCAL_NUM];
 };
@@ -1190,6 +1248,34 @@ struct M2_TEXTURE_UV_ANIMATION
 	M2_MODEL_ANIMATION_BLOCK	Translation;
 	M2_MODEL_ANIMATION_BLOCK	Rotation;
 	M2_MODEL_ANIMATION_BLOCK	Scaling;
+};
+
+struct M2_LIGHT_INFO
+{
+	UINT16						Type;					//Types are listed below.  
+	INT16						Bone;					//  If its attached to a bone, this is the bone. Else here is a nice -1.  
+	CD3DVector3					Position;				//  Where is this light?  
+	M2_MODEL_ANIMATION_BLOCK	AmbientColor;			//  The ambient color. Three floats for RGB.  
+	M2_MODEL_ANIMATION_BLOCK	AmbientIntensity;		// A float for the intensity.  
+	M2_MODEL_ANIMATION_BLOCK	DiffuseColor;			//  The diffuse color. Three floats for RGB.  
+	M2_MODEL_ANIMATION_BLOCK	DiffuseIntensity;		// A float for the intensity again.  
+	M2_MODEL_ANIMATION_BLOCK	AttenuationStart;		// This defines, where the light starts to be.  
+	M2_MODEL_ANIMATION_BLOCK	AttenuationEnd;			//  And where it stops.  
+	M2_MODEL_ANIMATION_BLOCK	Unknown;				//  Its an integer and usually 1.  
+};
+
+struct M2_CAMERA_INFO
+{
+	UINT32  					Type;					//  0: potrait, 1: characterinfo; -1: else (flyby etc.); referenced backwards in the lookup table.  
+	FLOAT						FOV;					//  No radians, no degrees. Multiply by 35 to get degrees.  
+	FLOAT						FarClipping;			//  Where it stops to be drawn.  
+	FLOAT						NearClipping;			//  Far and near. Both of them.  
+	M2_MODEL_ANIMATION_BLOCK	TranslationPos;			//  How the camera's position moves. Should be 3*3 floats. (WoW parses 36 bytes = 3*3*sizeof(float))  
+	CD3DVector3					Position;				//Where the camera is located.  
+	M2_MODEL_ANIMATION_BLOCK	TranslationTar;			//  How the target moves. Should be 3*3 floats.  
+	CD3DVector3					Target;					//			Where the camera points to.  
+	M2_MODEL_ANIMATION_BLOCK	Scaling;				//  The camera can have some roll-effect. Its 0 to 2*Pi. 3 Floats!  
+
 };
 
 struct BLZ_CHUNK_HEADER
@@ -1793,24 +1879,21 @@ struct BLZ_CHUNK_MAIN:public BLZ_CHUNK_HEADER
 	MAINMapAreaInfo	MapAreaInfo[64][64];
 };
 
-//struct WDT_WMO_OBJECT_INFO
-//{
-//	UINT32 			Index;			//ID (index in the MWID list)
-//	UINT32 			ID;				//unique identifier for this instance
-//	CD3DVector3 	Position;		// (X,Y,Z)
-//	CD3DVector3 	Orientation;	// (A,B,C)
-//	CD3DVector3 	UpperExtents;
-//	CD3DVector3 	LowerExtents;
-//	UINT32 			Flags;
-//	UINT16 			DoodadSet;
-//	UINT16 			NameSet;
-//};
-//
-//struct BLZ_CHUNK_MODF_WDT:public BLZ_CHUNK_HEADER
-//{
-//	WDT_WMO_OBJECT_INFO	WMOObjects[1];
-//};
+struct BLZ_CHUNK_MAOF:public BLZ_CHUNK_HEADER
+{
+	UINT32 AreaLowOffsets[64][64];
+};
 
+struct BLZ_CHUNK_MARE:public BLZ_CHUNK_HEADER
+{
+	INT16 HeightmapOuter[17*17];
+	INT16 HeightmapInner[16*16];
+};
+
+struct BLZ_CHUNK_MAHO:public BLZ_CHUNK_HEADER
+{
+	UINT16  Holes[16];
+};
 
 #pragma pack(pop)
 

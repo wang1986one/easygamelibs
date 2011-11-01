@@ -177,7 +177,7 @@ bool CD3DFontCN::Create(const LOGFONT * pLogFont,int MipLevels,int BufferSize)
 	
 	//´´½¨ÎÆÀí
 
-	m_pCharTextureBuff=m_pManager->GetDevice()->GetTextureManager()->CreateTexture("FontBuffer");
+	m_pCharTextureBuff=new CD3DTexture(m_pManager->GetDevice()->GetTextureManager());
 	if(m_pCharTextureBuff==NULL)
 	{
 		SAFE_DELETE_ARRAY(m_pCharInfoBuff);

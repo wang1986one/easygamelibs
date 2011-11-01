@@ -56,6 +56,8 @@ bool CD3DWOWWMOGroupModel::LoadFromResource(CD3DWOWWMOModelResource * pModelReso
 		SetName(m_pGroupInfo->Name);
 		//CreatePortalBoard();
 		//CreateBSPBoard();
+
+		m_IsRenderDataChanged=true;
 		return true;
 	}
 	return false;
@@ -63,61 +65,13 @@ bool CD3DWOWWMOGroupModel::LoadFromResource(CD3DWOWWMOModelResource * pModelReso
 
 void CD3DWOWWMOGroupModel::OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
-	//设置灯光
-	if(LightList.GetCount())
-	{		
-		D3DLIGHT9	Light;
-		char		szParamName[32];
-		pFX->SetInt("LightCount",LightList.GetCount());
-		for(UINT i=0;i<LightList.GetCount();i++)
-		{
-			LightList[i]->GetCurLight(Light);
-			sprintf_s(szParamName,32,"LightType[%d]",i);
-			pFX->SetInt(szParamName,Light.Type);
-			sprintf_s(szParamName,32,"LightPos[%d]",i);
-			pFX->SetVector(szParamName,CD3DVector3(Light.Position));
-			sprintf_s(szParamName,32,"LightDir[%d]",i);
-			pFX->SetVector(szParamName,CD3DVector3(Light.Direction));
-			sprintf_s(szParamName,32,"LightAmbient[%d]",i);
-			pFX->SetColor(szParamName,Light.Ambient);
-			sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
-			pFX->SetColor(szParamName,Light.Diffuse);
-			sprintf_s(szParamName,32,"LightSpecular[%d]",i);
-			pFX->SetColor(szParamName,Light.Specular);
-			sprintf_s(szParamName,32,"LightRange[%d]",i);
-			pFX->SetFloat(szParamName,Light.Range);
-			sprintf_s(szParamName,32,"LightAtn0[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation0);
-			sprintf_s(szParamName,32,"LightAtn1[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation1);
-			sprintf_s(szParamName,32,"LightAtn2[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation2);
-			//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Falloff);
-			//sprintf_s(szParamName,32,"LightTheta[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Theta);
-			//sprintf_s(szParamName,32,"LightPhi[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Phi);
-
-		}
-
-	}
-	////设置雾
-	//CD3DSceneRender * pRender=(CD3DSceneRender *)GetRender();
-	//pFX->SetColor("FogColor",pRender->GetFogColor());
-	//pFX->SetFloat("FogNear",pRender->GetFogNear());
-	//pFX->SetFloat("FogFar",pRender->GetFogFar());
+	
 
 	CD3DMatrix Mat=GetWorldMatrixR()*pCamera->GetViewMatR();
 
 	pFX->SetMatrix("WorldMatrix",GetWorldMatrixR());
 	pFX->SetMatrix("WorldViewMatrix",Mat);
-	//pFX->SetMatrix("PrjMatrix",pCamera->GetProjectMatR());
-
-
-	//pFX->SetVector("CameraPos",pCamera->GetWorldMatrixR().GetTranslation());
-	//pFX->SetFloat("CameraNear",pCamera->GetNear());
-	//pFX->SetFloat("CameraFar",pCamera->GetFar());
+	
 }
 void CD3DWOWWMOGroupModel::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
@@ -135,8 +89,14 @@ void CD3DWOWWMOGroupModel::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DF
 
 	//设置纹理
 	pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
-	//pMaterial->GetFX()->SetTexture("TexLay1",pMaterial->GetTexture(1));
-
+	if(pSubMesh->IsSelected())
+	{
+		pFX->SetColor("GlobalColor",0xFFFF0000);
+	}
+	else
+	{
+		pFX->SetColor("GlobalColor",0xFFFFFFFF);
+	}
 }
 
 
@@ -191,111 +151,144 @@ CD3DBoundingSphere * CD3DWOWWMOGroupModel::GetBoundingSphere()
 	return NULL;
 }
 bool CD3DWOWWMOGroupModel::GetHeightByXZ(const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight)
+{	
+	CD3DVector3 P1=Pos;	
+	P1.y=MaxHeight;
+	CD3DVector3 Dir(0,-1,0);
+	
+
+	CD3DVector3 IntersectPoint;
+	FLOAT Distance,DotValue;
+
+	if(RayIntersect(P1,Dir,IntersectPoint,Distance,DotValue,RITM_INCLUDE_COLLIDE_ONLY_FACE,false))
+	{
+		if(IntersectPoint.y>=MinHeight&&MinHeight<=MaxHeight)
+		{
+			Height=IntersectPoint.y;
+			WaterHeight=Height;
+			return true;
+		}		
+	}
+	return false;	
+}
+
+bool CD3DWOWWMOGroupModel::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly)
 {
-	//if(m_IsSelected)
-	//{
-	//	m_IsSelected=false;
-	//	for(UINT i=0;i<m_pGroupInfo->VertexList.GetCount();i++)
-	//	{
-	//		m_pGroupInfo->VertexList[i].Diffuse=0xFFFFFFFF;
-	//	}
-	//}
- //	if(m_pHeightTestLine==NULL)
-	//{
-	//	m_pHeightTestLine=new CD3DLine();
-	//	m_pHeightTestLine->SetDevice(GetDevice());
-	//	CD3DVector3 P1=Pos;
-	//	CD3DVector3 P2=Pos;
-	//	P1.y=MaxHeight;
-	//	P2.y=MinHeight;
-	//	P1=P1*GetWorldMatrix().GetInverse();
-	//	P2=P2*GetWorldMatrix().GetInverse();
-	//	m_pHeightTestLine->Create(P1,P2,D3DCOLOR_XRGB(0,0,0xFF),D3DCOLOR_XRGB(0xFF,0,0));
-	//	m_pHeightTestLine->SetParent(this);
-	//	if(GetRender())
-	//		GetRender()->AddObject(m_pHeightTestLine);
-	//}
-	//else
-	//{
-	//	CD3DVector3 P1=Pos;
-	//	CD3DVector3 P2=Pos;
-	//	P1.y=MaxHeight;
-	//	P2.y=MinHeight;
-	//	P1=P1*GetWorldMatrix().GetInverse();
-	//	P2=P2*GetWorldMatrix().GetInverse();
-	//	m_pHeightTestLine->Modify(P1,P2,D3DCOLOR_XRGB(0,0,0xFF),D3DCOLOR_XRGB(0xFF,0,0));
-	//}
-	bool HaveHeight=false;
+	FLOAT DotValue;
+	return RayIntersect(Point,Dir,IntersectPoint,Distance,DotValue,0,TestOnly);
+}
+
+bool CD3DWOWWMOGroupModel::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,UINT TestMode,bool TestOnly)
+{
 	if(GetBoundingBox())
 	{
-		CD3DVector3 FindPos=Pos*GetWorldMatrix().GetInverse();
-		CD3DVector3 RayPos=FindPos;
-		CD3DVector3 RayDir(0,-1,0);
-		CD3DVector3 IntersectPoint;
-		FLOAT Distance;
-		MinHeight=MinHeight-GetWorldMatrix().GetTranslation().y;
-		MaxHeight=MaxHeight-GetWorldMatrix().GetTranslation().y;
-		RayPos.y=MaxHeight;		
+		
+
+		bool IsIntersect=false;
+		FLOAT FinalDis;
+		CD3DVector3 P;
+		FLOAT D=0;
+
+		CD3DMatrix Mat=GetWorldMatrix().GetInverse();
+		CD3DVector3 RayPos=Point*Mat;
+		CD3DVector3 RayDir=Dir*Mat.GetRotation();
+		RayDir.Normalize();
+	
 		CD3DBoundingBox WMOBBox=*GetBoundingBox();
-		if(WMOBBox.RayIntersect(RayPos,RayDir,IntersectPoint,Distance)||
-			WMOBBox.CheckRelation(FindPos)!=CD3DBoundingBox::RELATION_TYPE_OUT||
-			WMOBBox.CheckRelation(RayPos)!=CD3DBoundingBox::RELATION_TYPE_OUT)
+
+		if(WMOBBox.RayIntersect(RayPos,RayDir,P,D,true))
 		{
 			CD3DWOWWMOModelResource::BSP_NODE * pRoot=m_pGroupInfo->BSPTree.GetObject(0);
 			if(pRoot)
 			{				
-				CD3DWOWWMOModelResource::BSP_NODE * pNode=FindBSPNode(pRoot,FindPos);
-				if(pNode)
+				//WalkBSPNode(pRoot,WMOBBox);
+
+				CEasyArray<CD3DWOWWMOModelResource::BSP_NODE *> NodeList;
+				FindBSPNode(pRoot,WMOBBox,RayPos,RayDir,NodeList);
+				for(UINT j=0;j<NodeList.GetCount();j++)
 				{
-					FLOAT FinalHeight=MinHeight;
-					
-					for(UINT i=0;i<pNode->FaceCount;i++)
+					for(UINT i=0;i<NodeList[j]->FaceCount;i++)
 					{
-						WORD Face=m_pGroupInfo->BSPFaceList[i+pNode->FirstFace];
-						if((m_pGroupInfo->FaceFlags[Face]&CD3DWOWWMOModelResource::FF_NO_COLLIDE)==0)
+						WORD Face=m_pGroupInfo->BSPFaceList[i+NodeList[j]->FirstFace];
+						if(CanTestCollide(m_pGroupInfo->FaceFlags[Face],TestMode))
 						{
 							WORD Index1=m_pGroupInfo->IndexList[Face*3];
 							WORD Index2=m_pGroupInfo->IndexList[Face*3+1];						
 							WORD Index3=m_pGroupInfo->IndexList[Face*3+2];
+							CD3DVector3& P1=m_pGroupInfo->VertexList[Index1].Pos;
+							CD3DVector3& P2=m_pGroupInfo->VertexList[Index2].Pos;
+							CD3DVector3& P3=m_pGroupInfo->VertexList[Index3].Pos;
 							FLOAT U,V;						
 							if(D3DXIntersectTri(
-								&m_pGroupInfo->VertexList[Index1].Pos,
-								&m_pGroupInfo->VertexList[Index2].Pos,
-								&m_pGroupInfo->VertexList[Index3].Pos,
-								&RayPos,&RayDir,&U,&V,&Distance))
-							{
-								FLOAT H1=m_pGroupInfo->VertexList[Index1].Pos.y;
-								FLOAT H2=m_pGroupInfo->VertexList[Index2].Pos.y;
-								FLOAT H3=m_pGroupInfo->VertexList[Index3].Pos.y;
-								FLOAT H=H1+(H2-H1)*U+(H3-H1)*V;
-								if(H>MinHeight&&H<MaxHeight)
+								&P1,&P2,&P3,
+								&RayPos,&RayDir,&U,&V,&D))
+							{					
+								if(IsIntersect)
 								{
-									HaveHeight=true;
-									if(H>FinalHeight)
-										FinalHeight=H;
+									if(D<FinalDis)
+									{
+										Distance=D;
+										IntersectPoint=P1+(P2-P1)*U+(P3-P1)*V;
+										DotValue=CD3DPlane::FromPoints(P1,P2,P3).GetNormalize().DotNormal(RayDir);
+										FinalDis=D;
+									}
 								}
+								else
+								{
+									IsIntersect=true;
+									Distance=D;
+									IntersectPoint=P1+(P2-P1)*U+(P3-P1)*V;
+									DotValue=CD3DPlane::FromPoints(P1,P2,P3).GetNormalize().DotNormal(RayDir);
+									FinalDis=D;
+								}								
 							}
 							//m_pGroupInfo->VertexList[Index1].Diffuse=0xFFFF0000;
 							//m_pGroupInfo->VertexList[Index2].Diffuse=0xFFFF0000;
 							//m_pGroupInfo->VertexList[Index3].Diffuse=0xFFFF0000;
-							//m_IsSelected=true;						
 						}
-					}
-					if(HaveHeight)
-					{
-						CD3DVector3 HeightVector(0,FinalHeight,0);
-						HeightVector=HeightVector*GetWorldMatrix();
-						Height=HeightVector.y;
-						WaterHeight=HeightVector.y;
-					}
+					}					
 				}
+				if(IsIntersect)
+				{
+					IntersectPoint=IntersectPoint*GetWorldMatrix();
+					Distance=(IntersectPoint-Point).Length();
+				}
+				return IsIntersect;
 			}
 		}
 	}
-	
-	return HaveHeight;
+	return false;
 }
 
+bool CD3DWOWWMOGroupModel::LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,UINT TestMode)
+{
+	CD3DVector3 P;
+	FLOAT D,A;
+
+	if(GetBoundingBox())
+	{
+		CD3DBoundingBox BBox=(*GetBoundingBox())*GetWorldMatrix();
+		if(!BBox.LineIntersect(StartPoint,EndPoint,P,D))
+			return false;
+	}
+
+	CD3DVector3 Dir=(EndPoint-StartPoint);
+	FLOAT Len=Dir.Length();
+	Dir.Normalize();
+
+
+	if(RayIntersect(StartPoint,Dir,P,D,A,TestMode,false))
+	{
+		if(D<=Len)
+		{
+			IntersectPoint=P;
+			Distance=D;
+			DotValue=A;
+			return true;
+		}
+	}
+	return false;
+}
 
 void CD3DWOWWMOGroupModel::CreatePortalBoard()
 {
@@ -391,6 +384,15 @@ void CD3DWOWWMOGroupModel::CreateBSPBoard(CD3DWOWWMOModelResource::BSP_NODE * pN
 		
 }
 
+void CD3DWOWWMOGroupModel::CreateBSPBox(CD3DBoundingBox Box)
+{
+	CD3DBoundingFrame * pBox=new CD3DBoundingFrame();
+	pBox->SetDevice(GetDevice());
+	pBox->CreateFromBBox(Box,0xFF0000FF);
+	pBox->SetParent(this);
+	GetRender()->AddObject(pBox);
+}
+
 void CD3DWOWWMOGroupModel::SetBSPColor(CD3DWOWWMOModelResource::BSP_NODE * pTree,D3DCOLOR Color)
 {
 	if(pTree->FaceCount)
@@ -446,6 +448,90 @@ CD3DWOWWMOModelResource::BSP_NODE * CD3DWOWWMOGroupModel::FindBSPNode(CD3DWOWWMO
 		break;
 	}
 	return NULL;
+}
+
+void CD3DWOWWMOGroupModel::FindBSPNode(CD3DWOWWMOModelResource::BSP_NODE * pRoot,CD3DBoundingBox SpaceBox,CD3DVector3 Point,CD3DVector3 Dir,CEasyArray<CD3DWOWWMOModelResource::BSP_NODE *>& NodeList)
+{
+	if(pRoot==NULL)
+		return;
+	//CreateBSPBoard(pRoot);
+	CD3DBoundingBox MinBox=SpaceBox;
+	CD3DBoundingBox MaxBox=SpaceBox;
+	CD3DVector3 P;
+	FLOAT D;
+
+	switch(pRoot->PlaneType)
+	{
+	case CD3DWOWWMOModelResource::BPT_XY:
+		MinBox.m_Max.z=pRoot->Distance;
+		MaxBox.m_Min.z=pRoot->Distance;
+		break;
+	case CD3DWOWWMOModelResource::BPT_YZ:
+		MinBox.m_Max.x=pRoot->Distance;
+		MaxBox.m_Min.x=pRoot->Distance;		
+		break;
+	case CD3DWOWWMOModelResource::BPT_XZ:
+		MinBox.m_Max.y=pRoot->Distance;
+		MaxBox.m_Min.y=pRoot->Distance;
+		break;
+	case CD3DWOWWMOModelResource::BPT_LEAF:
+		//if(pRoot->FirstFace>=90&&pRoot->FirstFace<100)
+		//	CreateBSPBox(SpaceBox);
+		NodeList.Add(pRoot);
+		return;
+	}
+	if(MinBox.RayIntersect(Point,Dir,P,D,true))
+		FindBSPNode(m_pGroupInfo->BSPTree.GetObject(pRoot->RightChildIndex),MinBox,Point,Dir,NodeList);
+	if(MaxBox.RayIntersect(Point,Dir,P,D,true))
+		FindBSPNode(m_pGroupInfo->BSPTree.GetObject(pRoot->LeftChildIndex),MaxBox,Point,Dir,NodeList);
+}
+
+bool CD3DWOWWMOGroupModel::CanTestCollide(UINT FaceFlag,UINT TestMode)
+{
+	if(TestMode&RITM_CAMERA)
+	{
+		return ((FaceFlag&CD3DWOWWMOModelResource::FF_NO_COLLIDE)==0&&(FaceFlag&CD3DWOWWMOModelResource::FF_COLLIDE_ONLY)==0&&(FaceFlag&CD3DWOWWMOModelResource::FF_NO_CAMERA_COLLIDE)==0)||		
+			((TestMode&RITM_INCLUDE_COLLIDE_ONLY_FACE)&&(FaceFlag&CD3DWOWWMOModelResource::FF_COLLIDE_ONLY)&&(FaceFlag&CD3DWOWWMOModelResource::FF_NO_CAMERA_COLLIDE)==0);
+	}
+	else
+	{
+		return ((FaceFlag&CD3DWOWWMOModelResource::FF_NO_COLLIDE)==0&&(FaceFlag&CD3DWOWWMOModelResource::FF_COLLIDE_ONLY)==0)||		
+			((TestMode&RITM_INCLUDE_COLLIDE_ONLY_FACE)&&(FaceFlag&CD3DWOWWMOModelResource::FF_COLLIDE_ONLY));
+	}
+	
+
+}
+
+void CD3DWOWWMOGroupModel::WalkBSPNode(CD3DWOWWMOModelResource::BSP_NODE * pRoot,CD3DBoundingBox SpaceBox)
+{
+	if(pRoot==NULL)
+		return;	
+	CD3DBoundingBox MinBox=SpaceBox;
+	CD3DBoundingBox MaxBox=SpaceBox;
+	
+
+	switch(pRoot->PlaneType)
+	{
+	case CD3DWOWWMOModelResource::BPT_XY:
+		MinBox.m_Max.z=pRoot->Distance;
+		MaxBox.m_Min.z=pRoot->Distance;
+		break;
+	case CD3DWOWWMOModelResource::BPT_YZ:
+		MinBox.m_Max.x=pRoot->Distance;
+		MaxBox.m_Min.x=pRoot->Distance;		
+		break;
+	case CD3DWOWWMOModelResource::BPT_XZ:
+		MinBox.m_Max.y=pRoot->Distance;
+		MaxBox.m_Min.y=pRoot->Distance;
+		break;
+	case CD3DWOWWMOModelResource::BPT_LEAF:
+		if(pRoot->FirstFace>=90&&pRoot->FirstFace<100)
+			CreateBSPBox(SpaceBox);		
+		return;
+	}
+	
+	WalkBSPNode(m_pGroupInfo->BSPTree.GetObject(pRoot->RightChildIndex),MinBox);	
+	WalkBSPNode(m_pGroupInfo->BSPTree.GetObject(pRoot->LeftChildIndex),MaxBox);
 }
 
 }

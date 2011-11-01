@@ -23,6 +23,9 @@ D3DMATERIAL9 CD3DObject::SELECTED_SUBMESH_MATERIAL=
 	40.0f
 };
 
+UINT CD3DObject::m_UpdateCount=0;
+UINT CD3DObject::m_RenderDataUpdateCount=0;
+
 IMPLEMENT_CLASS_INFO(CD3DObject,CTreeObject);
 
 CD3DObject::CD3DObject():CTreeObject()
@@ -32,6 +35,8 @@ CD3DObject::CD3DObject():CTreeObject()
 	m_pParent=NULL;
 	m_LocalMatrix.SetIdentity();
 	m_WorldMatrix.SetIdentity();
+	m_IsMatrixChanged=true;
+	m_IsRenderDataChanged=true;
 	m_Flag=OBJECT_FLAG_VISIBLE;		
 	m_pBoundingFrame=NULL;
 }
@@ -95,6 +100,7 @@ void CD3DObject::SetParent(CTreeObject* pParent)
 		if(m_pRender)
 			m_pRender->AddRootObject(this);
 	}
+	m_IsMatrixChanged=true;
 }
 
 const CD3DMatrix CD3DObject::GetWorldMatrixDirect()
@@ -146,7 +152,7 @@ CD3DBoundingBox CD3DObject::GetWorldBoundingBox()
 	if(GetSubMeshCount())
 	{
 		BBox=GetSubMesh(0)->GetBoundingBoxWithTranform(GetWorldMatrix());
-		for(UINT i=0;i<GetSubMeshCount();i++)
+		for(int i=0;i<GetSubMeshCount();i++)
 		{
 			GetSubMesh(i)->AppendBoundingBoxWithTranform(BBox,GetWorldMatrix());			
 		}
@@ -192,32 +198,66 @@ void CD3DObject::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD
 
 void CD3DObject::OnPrepareRenderData()
 {
-	m_WorldMatrixR=m_WorldMatrix;
-	for(UINT i=0;i<GetSubMeshCount();i++)
+	if(m_IsRenderDataChanged)
 	{
-		CD3DSubMesh * pSubMesh=GetSubMesh(i);
-		if(pSubMesh)
+		CAutoLock Lock(GetRenderLock());
+
+		m_WorldMatrixR=m_WorldMatrix;
+		for(int i=0;i<GetSubMeshCount();i++)
 		{
-			pSubMesh->OnPrepareRenderData();
-		}
+			CD3DSubMesh * pSubMesh=GetSubMesh(i);
+			if(pSubMesh)
+			{
+				pSubMesh->OnPrepareRenderData();
+			}
+		}		
+		m_RenderDataUpdateCount++;
 	}
+
+	for(UINT i=0;i<m_ChildList.GetCount();i++)
+	{
+		((CD3DObject *)m_ChildList[i])->OnPrepareRenderData();
+	}
+
+	m_IsRenderDataChanged=false;
 }
 
 
 void CD3DObject::Update(FLOAT Time)
 {
 	//更新世界矩阵
+	m_UpdateCount++;
 	if(GetParent())
-		m_WorldMatrix=m_LocalMatrix*GetParent()->GetWorldMatrix();
+	{
+		if(m_IsMatrixChanged||GetParent()->IsMatrixChanged())
+		{
+			m_WorldMatrix=m_LocalMatrix*GetParent()->GetWorldMatrix();
+			m_IsRenderDataChanged=true;
+		}
+	}
 	else
-		m_WorldMatrix=m_LocalMatrix;
+	{
+		if(m_IsMatrixChanged)
+		{
+			m_WorldMatrix=m_LocalMatrix;
+			m_IsRenderDataChanged=true;
+		}
+	}
 
 
 	//更新子对象
-	for(UINT i=0;i<GetChildCount();i++)
-		GetChildByIndex(i)->Update(Time);
+	for(UINT i=0;i<m_ChildList.GetCount();i++)
+	{
+		((CD3DObject *)m_ChildList[i])->Update(Time);
+	}
+
+	m_IsMatrixChanged=false;
 }
 
+bool CD3DObject::NeedUpdateAni()
+{
+	return false;
+}
 
 void CD3DObject::SetVisible(bool IsVisible)
 {
@@ -255,14 +295,16 @@ bool CD3DObject::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD
 
 		BBox=(*GetBoundingBox())*GetWorldMatrix();
 
-		if(!BBox.RayIntersect(Point,Dir,IntersectPoint,Distance))
+		if(!BBox.RayIntersect(Point,Dir,IntersectPoint,Distance,true))
 			return false;
+
+		
 	}
 
 	bool IsIntersect=false;
 
 	Distance=3.4E+38f;
-	FLOAT Dis;
+	FLOAT Dis,DotValue;
 	CD3DVector3 InterPoint;
 
 	CD3DMatrix Mat=GetWorldMatrix().GetInverse();
@@ -276,7 +318,7 @@ bool CD3DObject::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD
 		CD3DSubMesh * pSubMesh=GetSubMesh(i);
 		if(pSubMesh)
 		{
-			if(pSubMesh->RayIntersect(RayPos,RayDir,InterPoint,Dis,TestOnly))
+			if(pSubMesh->RayIntersect(RayPos,RayDir,InterPoint,Dis,DotValue,TestOnly))
 			{
 				IsIntersect=true;
 				if(Dis<Distance)
@@ -292,12 +334,40 @@ bool CD3DObject::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD
 		}
 	}
 	if(IsIntersect)
-	{
+	{		
 		IntersectPoint*=GetWorldMatrix();
+		Distance=(IntersectPoint-Point).Length();
 	}
 	return IsIntersect;
 }
 
+bool CD3DObject::LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance)
+{
+	CD3DVector3 P;
+	FLOAT D;
+
+	if(GetBoundingBox())
+	{
+		if(!GetBoundingBox()->LineIntersect(StartPoint,EndPoint,P,D))
+			return false;
+	}
+
+	CD3DVector3 Dir=(EndPoint-StartPoint);
+	FLOAT Len=Dir.Length();
+	Dir.Normalize();
+
+
+	if(RayIntersect(StartPoint,Dir,P,D,false))
+	{
+		if(D<=Len)
+		{
+			IntersectPoint=P;
+			Distance=D;
+			return true;
+		}
+	}
+	return false;
+}
 
 CD3DObject * CD3DObject::PickObject(CD3DVector3 Point,CD3DVector3 Dir,FLOAT& Distance)
 {
@@ -306,6 +376,7 @@ CD3DObject * CD3DObject::PickObject(CD3DVector3 Point,CD3DVector3 Dir,FLOAT& Dis
 	CD3DVector3 IntersectPoint;
 	FLOAT ObjDis;
 
+	
 	if(RayIntersect(Point,Dir,IntersectPoint,ObjDis,false))
 	{
 		Distance=ObjDis;

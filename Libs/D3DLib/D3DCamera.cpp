@@ -25,6 +25,12 @@ CD3DCamera::CD3DCamera():CD3DObject()
 
 CD3DCamera::~CD3DCamera(void)
 {
+	Destory();
+}
+
+void CD3DCamera::Destory()
+{
+	CD3DObject::Destory();
 }
 
 void CD3DCamera::GetPickRay(FLOAT ScreenX,FLOAT ScreenY,CD3DVector3& Point,CD3DVector3& Dir)
@@ -56,10 +62,20 @@ void CD3DCamera::GetPickRay(int ScreenX,int ScreenY,int ScreenWidth,int ScreenHe
 
 void CD3DCamera::OnPrepareRenderData()
 {
-	m_ViewMatrixR=m_ViewMatrix;
-	m_ProjectMatrixR=m_ProjectMatrix;
-	m_FrustumR=m_Frustum;
-	CD3DObject::OnPrepareRenderData();
+	{
+		CAutoLock Lock(GetRenderLock());
+
+		m_WorldMatrixR=m_WorldMatrix;
+		m_ViewMatrixR=m_ViewMatrix;
+		m_ProjectMatrixR=m_ProjectMatrix;
+		m_FrustumR=m_Frustum;	
+
+	}
+
+	for(UINT i=0;i<m_ChildList.GetCount();i++)
+	{
+		((CD3DObject *)m_ChildList[i])->OnPrepareRenderData();
+	}
 }
 
 void CD3DCamera::Update(FLOAT Time)

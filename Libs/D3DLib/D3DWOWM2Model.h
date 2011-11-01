@@ -51,9 +51,11 @@ protected:
 	CD3DWOWM2ModelResource *							m_pModelResource;
 	CEasyArray<CD3DWOWM2ModelResource::BONE_MATRIX>		m_BoneMatrices;
 	CEasyArray<CD3DMatrix>								m_BoneMatList;
-	CEasyArray<CD3DMatrix>								m_BoneMatListR;
+	//CEasyArray<CD3DMatrix>								m_BoneMatListR;
 	bool												m_UseSoftSkinMesh;
 	CEasyArray<CD3DSubMesh *>							m_SubMeshListForSoftSkinMesh;
+	CEasyArray<CD3DWOWM2ModelResource::MODEL_VERTEXT>	m_Vertices;
+	CEasyArray<CD3DWOWM2ModelResource::MODEL_VERTEXT>	m_VerticesR;
 
 	CEasyArray<CD3DMatrix>								m_InterimBoneMatStart;
 	CEasyArray<CD3DMatrix>								m_InterimBoneMatEnd;
@@ -103,6 +105,8 @@ public:
 	bool LoadFromResource(CD3DWOWM2ModelResource * pModelResource);
 	bool LoadFromXFile(LPCTSTR szModelFileName);
 
+	bool ChangeSkin(UINT Index);
+
 	
 	virtual bool CloneFrom(CNameObject * pObject,UINT Param=0);
 	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
@@ -120,7 +124,6 @@ public:
 
 	virtual void OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 	virtual void OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
-	virtual void OnPrepareRenderData();
 	virtual int GetSubMeshCount();
 	virtual CD3DSubMesh * GetSubMesh(UINT index);
 	virtual CD3DSubMeshMaterial  *GetSubMeshMaterial(UINT index);
@@ -134,6 +137,7 @@ public:
 	
 
 	virtual void Update(FLOAT Time);
+	virtual bool NeedUpdateAni();
 protected:
 	void PrepareSoftSkinMesh();
 	void CaculateSoftSkinMesh();

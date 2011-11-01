@@ -18,17 +18,17 @@ class CNetService :
 	public CBaseService,public IEpollEventHandler
 {
 protected:
-	volatile BOOL							m_WantClose;
-	CNetServer *							m_pServer;	
-	int										m_CurProtocol;	
-	CThreadSafeList<CEpollEventObject *>	m_RecvQueue;
-	CThreadSafeList<CEpollEventObject *>	m_SendQueue;
-	int										m_AcceptQueueSize;
-	int										m_RecvQueueSize;
-	int										m_SendQueueSize;
-	int										m_ParallelAcceptCount;
-	int										m_ParallelRecvCount;
-	CEpollEventRouter *						m_pEpollEventRouter;
+	volatile BOOL								m_WantClose;
+	CNetServer *								m_pServer;	
+	int											m_CurProtocol;	
+	CThreadSafeIDStorage<CEpollEventObject *>	m_RecvQueue;
+	CThreadSafeIDStorage<CEpollEventObject *>	m_SendQueue;
+	int											m_AcceptQueueSize;
+	int											m_RecvQueueSize;
+	int											m_SendQueueSize;
+	int											m_ParallelAcceptCount;
+	int											m_ParallelRecvCount;
+	CEpollEventRouter *							m_pEpollEventRouter;
 
 	
 

@@ -41,7 +41,7 @@
 		//	return CMemoryAllocatee::GetInstance()->Alloc(size,NULL,0);
 		//}
 
-		inline void* operator new( size_t size, const char *file, int line )
+		inline void* operator new( size_t size, LPCTSTR file, int line )
 		{
 			return CMemoryAllocatee::GetInstance()->Alloc(size,file,line);
 		}
@@ -52,7 +52,7 @@
 		//	CMemoryAllocatee::GetInstance()->Free(address);
 		//}
 
-		inline void operator delete( void* address, const char *file, int line  )
+		inline void operator delete( void* address, LPCTSTR file, int line  )
 		{
 			CMemoryAllocatee::GetInstance()->Free(address);
 		}
@@ -63,7 +63,7 @@
 		//	return CMemoryAllocatee::GetInstance()->Alloc(size,NULL,0);
 		//}
 
-		inline void* operator new[]( size_t size, const char *file, int line  )
+		inline void* operator new[]( size_t size, LPCTSTR file, int line  )
 		{
 			return CMemoryAllocatee::GetInstance()->Alloc(size,file,line);
 		}
@@ -73,7 +73,7 @@
 		//	CMemoryAllocatee::GetInstance()->Free(address);
 		//}
 
-		inline void operator delete[]( void* address , const char *file, int line  )
+		inline void operator delete[]( void* address , LPCTSTR file, int line  )
 		{
 			CMemoryAllocatee::GetInstance()->Free(address);
 		}

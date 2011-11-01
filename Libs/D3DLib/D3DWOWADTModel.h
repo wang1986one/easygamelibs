@@ -29,6 +29,9 @@ protected:
 	CEasyArray<CD3DWOWM2Model *>						m_M2ObjectList;
 	CEasyArray<CD3DWOWWMOModel *>						m_WMOObjectList;
 	CD3DBoundingBox										m_BoundingBox;
+	D3DCOLOR											m_WaterColorLight;
+	D3DCOLOR											m_WaterColorDark;
+	CEasyArray<CD3DObject *>							m_NeedUpdateChilds;
 
 	DECLARE_FILE_CHANNEL_MANAGER
 	DECLARE_CLASS_INFO(CD3DWOWADTModel)
@@ -41,8 +44,10 @@ public:
 	virtual bool Reset();
 	virtual bool Restore();
 
-	bool LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask);
-	bool LoadFromResource(CD3DWOWADTModelResource * pModelResource);
+	bool LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask,bool BeLoadObject=true);
+	bool LoadFromResource(CD3DWOWADTModelResource * pModelResource,bool BeLoadObject=true);
+
+	void SetWaterColor(D3DCOLOR ColorLight,D3DCOLOR ColorDark);
 
 	CD3DWOWADTModelResource * GetModelResource();
 public:
@@ -53,6 +58,7 @@ public:
 public:
 	virtual void OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 	virtual void OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
+	virtual void OnPrepareRenderData();
 	virtual void Update(FLOAT Time);
 	virtual int GetSubMeshCount();
 	virtual CD3DSubMesh * GetSubMesh(UINT index);
@@ -63,13 +69,36 @@ public:
 
 	bool GetHeightByXZ(const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight,bool IncludeChild=true);
 
-protected:
-	bool LoadObjects();
 	void BuildBoundingBox();
+
+	UINT GetM2ObjectCount();
+	UINT GetWMOObjectCount();
+
+	CD3DWOWDoodadModel * LoadM2Object(UINT Index);
+	CD3DWOWWMOModel * LoadWMOObject(UINT Index);
+
+	bool LoadObjects();
+	void CheckNeedUpdateObjects();
 };
 
 inline CD3DWOWADTModelResource * CD3DWOWADTModel::GetModelResource()
 {
 	return m_pModelResource;
 }
+
+inline void CD3DWOWADTModel::SetWaterColor(D3DCOLOR ColorLight,D3DCOLOR ColorDark)
+{
+	m_WaterColorLight=ColorLight;
+	m_WaterColorDark=ColorDark;
+}
+
+inline UINT CD3DWOWADTModel::GetM2ObjectCount()
+{
+	return m_pModelResource->GetM2ObjectCount();
+}
+inline UINT CD3DWOWADTModel::GetWMOObjectCount()
+{
+	return m_pModelResource->GetWMOObjectCount();
+}
+
 }

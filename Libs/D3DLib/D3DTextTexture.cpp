@@ -102,6 +102,10 @@ CD3DTextTexture::~CD3DTextTexture(void)
 
 void CD3DTextTexture::Destory()
 {
+	if(m_pManager)
+	{
+		m_pManager->DelAniTexture(this);
+	}
 	SAFE_RELEASE(m_pD3DFont);
 	SAFE_RELEASE(m_pTexture);
 	SAFE_RELEASE(m_pFX);
@@ -119,6 +123,7 @@ bool CD3DTextTexture::Reset()
 bool CD3DTextTexture::Restore()
 {
 	//return Create(&m_LogFont,m_Width,m_Height,m_MipLevels,m_Color);
+	m_WantUpdate=true;
 	return CD3DTexture::Restore();
 }
 
@@ -146,6 +151,10 @@ bool CD3DTextTexture::Create(LOGFONT * pLogFont,int Width,int Height,int MipLeve
 	m_MipLevels=MipLevels;
 	m_WantUpdate=true;
 
+	if(m_pManager)
+	{
+		m_pManager->AddAniTexture(this);
+	}
 	//UpdateTexture();
 	return true;
 }
@@ -195,26 +204,41 @@ void CD3DTextTexture::SetColor(D3DCOLOR Color)
 }
 
 
-void CD3DTextTexture::SetText(LPCTSTR szText)
+void CD3DTextTexture::SetText(LPCTSTR szText,int StrLen)
 {
 	//设置文字内容
-	CEasyStringW NewText(szText);
+	CEasyStringW NewText;
+	if(StrLen<=0)
+		NewText=szText;
+	else
+		NewText.SetString(szText,StrLen);
 	if(m_Text!=NewText)
 	{
-		m_Text=NewText;
+		m_Text=szText;
 		m_WantUpdate=true;
 		//UpdateTexture();
 	}
 }
 
-void CD3DTextTexture::SetTextW(LPCWSTR szText)
+void CD3DTextTexture::SetTextW(LPCWSTR szText,int StrLen)
 {
 	//设置文字内容
-	if(m_Text!=szText)
+	if(StrLen<=0)
 	{
-		m_Text=szText;
-		m_WantUpdate=true;
-		//UpdateTexture();
+		if(m_Text!=szText)
+		{
+			m_Text=szText;
+			m_WantUpdate=true;
+			//UpdateTexture();
+		}
+	}
+	else
+	{
+		if(m_Text.GetLength()!=StrLen||_wcsnicmp(m_Text,szText,StrLen)!=0)
+		{
+			m_Text.SetString(szText,StrLen);
+			m_WantUpdate=true;
+		}
 	}
 }
 
@@ -450,7 +474,7 @@ void CD3DTextTexture::UpdateTexture()
 		}
 	}
 
-	m_pManager->GetDevice()->StartRender(m_BKColor);
+	m_pManager->GetDevice()->StartRender(m_BKColor,D3DCLEAR_TARGET);
 
 	if(!m_Text.IsEmpty()&&m_pD3DFont&&m_pFX) 
 	{

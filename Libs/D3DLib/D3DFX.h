@@ -95,6 +95,7 @@ public:
 	bool SetIntArray(LPCTSTR ParamName,const int * pValues,int Count);
 	bool SetFloat(LPCTSTR ParamName,FLOAT Value);
 	bool SetBool(LPCTSTR ParamName,BOOL Value);
+	bool SetValue(LPCTSTR ParamName,LPCVOID pData,UINT DataSize);
 
 	bool GetInt(LPCTSTR ParamName,int& Value);
 	bool GetFloat(LPCTSTR ParamName,FLOAT& Value);

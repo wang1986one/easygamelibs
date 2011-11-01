@@ -93,21 +93,30 @@ public:
 		MODEL_FX_TYPE_NORMAL,
 		MODEL_FX_TYPE_LIQUID,
 	};
+	enum DOODAD_FLAG:UINT64
+	{
+		DOODAD_FLAG_SHIFT=8,
+		DOODAD_FLAG_MASK=(((UINT64)0xFFFF)<<DOODAD_FLAG_SHIFT),
+	};
 	struct M2_OBJECT_INFO
 	{
 		UINT						ID;
+		CEasyString					ModelFilePath;
 		CD3DWOWM2ModelResource *	pModelResource;
 		CD3DVector3					Position;
 		CD3DQuaternion				Orientation;
 		FLOAT						Scale;
+		WORD						Flag;
 	};
 	struct WMO_OBJECT_INFO
 	{
 		UINT						ID;
+		CEasyString					ModelFilePath;
 		CD3DWOWWMOModelResource *	pModelResource;
 		CD3DVector3					Position;
 		CD3DQuaternion				Orientation;
 		UINT						DoodadSet;
+		WORD						Flag;
 	};
 
 	
@@ -166,6 +175,7 @@ protected:
 	
 
 	TERRAIN_BLOCK_HEIGHT_INFO		m_TerrainHeightInfo[BLZ_ADT_MAP_TILE_COUNT];
+	UINT							m_TerrainHoleInfo[BLZ_ADT_MAP_TILE_COUNT];
 	CD3DVector3						m_Position;
 	CEasyArray<M2_OBJECT_INFO>		m_M2ObjectList;
 	CEasyArray<WMO_OBJECT_INFO>		m_WMOObjectList;
@@ -182,7 +192,7 @@ public:
 	virtual bool Reset();
 	virtual bool Restore();
 
-	bool LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask);
+	bool LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask,bool BeLoadObject);
 
 	UINT GetM2ObjectCount();
 	M2_OBJECT_INFO * GetM2ObjectInfo(UINT Index);
