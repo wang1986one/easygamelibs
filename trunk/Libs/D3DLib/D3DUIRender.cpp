@@ -140,7 +140,7 @@ void CD3DUIRender::RenderDirectly(CD3DObject * pObject)
 
 		if(CD3DDevice::IsUseMultiThreadRender())
 		{
-			PrepareRenderData(pObject);
+			pObject->OnPrepareRenderData();
 		}
 
 		CEasyArray<CD3DLight *>	EmptyLightList;
@@ -206,7 +206,7 @@ bool CD3DUIRender::AddObject(CD3DObject * pObj,bool IsRecursive)
 }
 
 
-bool CD3DUIRender::DelObject(CD3DObject * pObj)
+bool CD3DUIRender::DelObject(CD3DObject * pObj,bool IsRecursive)
 {
 	CAutoLockEx Lock;
 
@@ -228,33 +228,13 @@ bool CD3DUIRender::DelObject(CD3DObject * pObj)
 			return true;
 		}
 	}
-	return false;
-}
 
-
-bool CD3DUIRender::MoveToTop(CD3DObject * pObj)
-{
-	CAutoLockEx Lock;
-
-	if(CD3DDevice::IsUseMultiThreadRender())
+	if(IsRecursive)
 	{
-		Lock.Lock(m_RenderLock);
-	}
-
-	bool IsExist=false;
-	for(int i=(int)m_ObjectList.GetCount()-1;i>=0;i--)
-	{
-		if(m_ObjectList[i]==pObj)
+		for(UINT i=0;i<pObj->GetChildCount();i++)
 		{
-			m_ObjectList.Delete(i);
-			IsExist=true;
+			DelObject(pObj->GetChildByIndex(i));
 		}
-	}
-
-	if(IsExist)
-	{
-		m_ObjectList.Add(pObj);
-		return true;
 	}
 	return false;
 }
@@ -280,21 +260,24 @@ bool CD3DUIRender::MoveToTop(CD3DObject * pObj,CD3DObject *pBefore)
 
 	if(IsExist)
 	{
-		for(UINT i=0;i<m_ObjectList.GetCount();i++)
-		{		
-			if(m_ObjectList[i]==pBefore)
-			{				
-				m_ObjectList.Insert(i+1,pObj);
-				return true;				
-			}
-		}	
+		if(pBefore)
+		{
+			for(UINT i=0;i<m_ObjectList.GetCount();i++)
+			{		
+				if(m_ObjectList[i]==pBefore)
+				{				
+					m_ObjectList.Insert(i+1,pObj);
+					return true;				
+				}
+			}	
+		}
 		m_ObjectList.Add(pObj);
 		return true;
 	}	
 	return false;
 }
 
-bool CD3DUIRender::MoveToTop(CD3DObject ** ppObj,CD3DObject *pBefore,int ObjectCount)
+bool CD3DUIRender::MoveToTop(CD3DObject ** ppObj,UINT ObjectCount,CD3DObject *pBefore)
 {
 	CAutoLockEx Lock;
 
@@ -303,31 +286,32 @@ bool CD3DUIRender::MoveToTop(CD3DObject ** ppObj,CD3DObject *pBefore,int ObjectC
 		Lock.Lock(m_RenderLock);
 	}
 
-	for(int i=0;i<(int)m_ObjectList.GetCount();i++)
-	{	
-		
-		if(m_ObjectList[i]==pBefore)
-		{			
-			for(int j=0;j<ObjectCount;j++)
-			{			
-				bool IsExist=false;
-				for(int o=(int)m_ObjectList.GetCount()-1;o>=0;o--)
-				{
-					if(m_ObjectList[o]==ppObj[j])
-					{
-						m_ObjectList.Delete(o);
-						IsExist=true;
-					}
-				}
-				if(IsExist)
-				{
-					m_ObjectList.Insert(i+1,ppObj[j]);
-				}				
+	CEasyArray<CD3DObject *> WantTopList(64,64);
+	for(UINT i=0;i<ObjectCount;i++)
+	{
+		for(int j=(int)m_ObjectList.GetCount()-1;j>=0;j--)
+		{
+			if(m_ObjectList[j]==ppObj[i])
+			{
+				m_ObjectList.Delete(j);
+				WantTopList.Add(ppObj[i]);
 			}
-			return true;;
 		}
-	}	
-	return false;
+	}
+
+	if(pBefore)
+	{
+		for(int i=0;i<(int)m_ObjectList.GetCount();i++)
+		{	
+			if(m_ObjectList[i]==pBefore)
+			{	
+				m_ObjectList.Insert(i+1,WantTopList);
+				return true;;
+			}
+		}	
+	}
+	m_ObjectList.AddArray(WantTopList);
+	return true;
 }
 
 }

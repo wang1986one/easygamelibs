@@ -171,6 +171,14 @@
 				RelativePath=".\EasyTimer.h"
 				>
 			</File>
+			<File
+				RelativePath=".\EasyTimerEx.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\EasyTimerEx.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="预编译"
@@ -489,46 +497,6 @@
 			</File>
 			<File
 				RelativePath=".\Utils.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="对象存储模版"
-			>
-			<File
-				RelativePath=".\EasyArray.h"
-				>
-			</File>
-			<File
-				RelativePath=".\EasyList.h"
-				>
-			</File>
-			<File
-				RelativePath=".\EasyMap.h"
-				>
-			</File>
-			<File
-				RelativePath=".\IDStorage.h"
-				>
-			</File>
-			<File
-				RelativePath=".\IndexSet.h"
-				>
-			</File>
-			<File
-				RelativePath=".\NameStorage.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ObjectManager.h"
-				>
-			</File>
-			<File
-				RelativePath=".\StaticList.h"
-				>
-			</File>
-			<File
-				RelativePath=".\StaticMap.h"
 				>
 			</File>
 		</Filter>
@@ -1415,11 +1383,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\hpc\hppa.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\hppa.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\hppa.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\hpc\hppa.h"
 					>
 				</File>
 				<File
@@ -1459,11 +1427,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\powerpc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\ibmc\powerpc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\ibmc\powerpc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\powerpc.h"
 					>
 				</File>
 				<File
@@ -1487,11 +1455,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\sunc\sparc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\sparc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\sparc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\sunc\sparc.h"
 					>
 				</File>
 				<File
@@ -1507,11 +1475,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\msftc\x86.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\x86.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\x86.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\msftc\x86.h"
 					>
 				</File>
 				<File
@@ -1565,6 +1533,34 @@
 			</File>
 			<File
 				RelativePath=".\LZO\minilzo.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="对象存储模版"
+			>
+			<File
+				RelativePath=".\EasyArray.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EasyList.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EasyMap.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IDStorage.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IndexSet.h"
+				>
+			</File>
+			<File
+				RelativePath=".\StaticMap.h"
 				>
 			</File>
 		</Filter>

@@ -11,8 +11,8 @@
 /****************************************************************************/
 #pragma once
 
-template < class T ,int StorageMode=EDSM_STATIC>
-class CThreadSafeList:public CStaticList<T,StorageMode>
+template < class T >
+class CThreadSafeList:public CEasyList<T>
 {
 protected:	
 	CEasyCriticalSection	m_EasyCriticalSection;
@@ -26,92 +26,113 @@ public:
 	{
 		
 	}
-	BOOL Create(int Size)
-	{
-		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::Create(Size);
-	}
-	
-	void Destory()
-	{
-		CAutoLock Lock(m_EasyCriticalSection);
-		CStaticList::Destory();
-	}
 
 	void Clear()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		CStaticList::Clear();
+		CEasyList::Clear();
 	}
 
+	T* GetObject(LPVOID Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CEasyList::GetObject(Pos);
+	}	
+
+	T* GetNext(LPVOID& Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CEasyList::GetNext(Pos);
+	}
+
+	T* GetPrev(LPVOID& Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CEasyList::GetPrev(Pos);
+	}
+	BOOL MoveBeforeTo(LPVOID Pos,LPVOID Target)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CEasyList::MoveBeforeTo(Pos,Target);
+	}
+	BOOL MoveAfterTo(LPVOID Pos,LPVOID Target)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CEasyList::MoveAfterTo(Pos,Target);
+	}
+	
+	LPVOID InsertAfter(LPVOID Pos=NULL)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CEasyList::InsertAfter(Pos);
+	}
+	LPVOID InsertAfter(const T& Object,LPVOID Pos=NULL)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CEasyList::InsertAfter(Object,Pos);
+	}
+	LPVOID InsertBefore(LPVOID Pos=NULL)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CEasyList::InsertBefore(Pos);
+	}
+	LPVOID InsertBefore(const T& Object,LPVOID Pos=NULL)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CEasyList::InsertBefore(Object,Pos);
+	}
+	LPVOID InsertSorted(const T& Object)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CEasyList::InsertSorted(Object);
+	}	
+
+	
+	
+	BOOL DeleteObject(LPVOID Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CEasyList::DeleteObject(Pos);
+	}	
+	
 	LPVOID PushFront()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::PushFront();
+		return CEasyList::PushFront();
 	}
 
 	LPVOID PushFront(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::PushFront(Object);
+		return CEasyList::PushFront(Object);
 	}
 
 	LPVOID PushBack()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::PushBack();
+		return CEasyList::PushBack();
 	}
 
 	LPVOID PushBack(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::PushBack(Object);
+		return CEasyList::PushBack(Object);
 	}
 
 	BOOL PopFront(T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::PopFront(Object);
+		return CEasyList::PopFront(Object);
 	}
 
 	BOOL PopBack(T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::PopBack(Object);
+		return CEasyList::PopBack(Object);
 	}
-
-	BOOL DeleteObject(LPVOID Pos)
+	LPVOID Find(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::DeleteObject(Pos);
-	}
-	
-	BOOL GetHead(T& Object)
-	{
-		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::GetHead(Object);
-	}
-	BOOL GetTail(T& Object)
-	{
-		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::GetTail(Object);
-	}
-
-	T * GetNext(LPVOID& Pos)
-	{
-		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::GetNext(Pos);
-	}
-
-	T * GetPrev(LPVOID& Pos)
-	{
-		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::GetPrev(Pos);
-	}
-
-	T * GetObject(LPVOID Pos)
-	{
-		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticList::GetObject(Pos);
+		return CEasyList::Find(Object);		
 	}
 };

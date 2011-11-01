@@ -47,7 +47,6 @@ public:
 	{
 		BUFFER_USE_DX,
 		BUFFER_USE_CUSTOM,
-		BUFFER_USE_BACKUP,
 	};
 	
 	enum SST_MEMBER_ID
@@ -76,14 +75,12 @@ protected:
 	UINT					m_PrimitiveCount;
 	BYTE*					m_pVertexBuffer;	
 	LPDIRECT3DVERTEXBUFFER9 m_pDXVertexBuffer;
-	BYTE*					m_pBackupVertexBuffer;
 	bool					m_IsVertexsSelfDelete;
 	bool					m_IsDXVertexBufferSelfRelease;
 	UINT					m_VertexCount;
 	UINT					m_StartVertex;
 	BYTE*					m_pIndexBuffer;
 	LPDIRECT3DINDEXBUFFER9	m_pDXIndexBuffer;
-	BYTE*					m_pBackupIndexBuffer;
 	bool					m_IsIndexsSelfDelete;
 	bool					m_IsDXIndexBufferSelfRelease;
 	UINT					m_IndexCount;	
@@ -97,9 +94,10 @@ protected:
 	UINT					m_OrginDataBufferUsed;
 
 	BYTE*					m_pVertexBufferR;
-	UINT					m_VertexBufferRSize;
+	bool					m_IsVertexBufferRSelfDelete;
+
 	BYTE*					m_pIndexBufferR;
-	UINT					m_IndexBufferRSize;
+	bool					m_IsIndexBufferRSelfDelete;
 
 	////以下给渲染器使用
 	//bool					m_IsTransparent;
@@ -126,8 +124,8 @@ public:
 	CD3DBoundingBox GetBoundingBoxWithTranform(const CD3DMatrix& TransformMat);
 	void AppendBoundingBoxWithTranform(CD3DBoundingBox& BBox,const CD3DMatrix& TransformMat);
 
-	bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
-	bool LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
+	bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,bool TestOnly);
+	bool LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue);
 	bool GetHeightByXZ(const CD3DMatrix& WorldMatrix,const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight);
 
 	VERTEX_FORMAT& GetVertexFormat();
@@ -139,7 +137,7 @@ public:
 	void SetPrimitiveCount(UINT Count);
 
 	BYTE * GetVertexBuffer();
-	void SetVertices(BYTE * pVertexBuffer,UINT BufferSize,bool IsSelfDelete=false);
+	void SetVertices(BYTE * pVertexBuffer);
 	void AllocVertexBuffer();
 	LPDIRECT3DVERTEXBUFFER9 GetDXVertexBuffer();
 	void SetDXVertexBuffer(LPDIRECT3DVERTEXBUFFER9 pDXVertexBuffer,bool IsSelfRelease=false);
@@ -148,11 +146,9 @@ public:
 	void SetVertexCount(UINT Count);
 	UINT GetVertexStart();
 	void SetVertexStart(UINT Start);
-		void AllocBackupVertexBuffer();
-	BYTE * GetBackupVertexBuffer();
 
 	BYTE * GetIndexBuffer();
-	void SetIndices(BYTE * pIndexBuffer,UINT BufferSize,bool IsSelfDelete=false);
+	void SetIndices(BYTE * pIndexBuffer);
 	void AllocIndexBuffer();
 	LPDIRECT3DINDEXBUFFER9 GetDXIndexBuffer();
 	void SetDXIndexBuffer(LPDIRECT3DINDEXBUFFER9 pDXIndexBuffer,bool IsSelfRelease=false);
@@ -161,8 +157,6 @@ public:
 	void SetIndexCount(UINT Count);
 	UINT GetIndexStart();
 	void SetIndexStart(UINT Start);
-	void AllocBackupIndexBuffer();
-	BYTE * GetBackupIndexBuffer();
 
 	CD3DSubMeshMaterial& GetMaterial();
 	CD3DBoundingBox& GetBoundingBox();
@@ -196,7 +190,12 @@ public:
 	UINT GetOrginDataBufferUsed();
 	void SetOrginDataBufferUsed(UINT Which);
 
+	void SetVertexBufferR(BYTE * pVertexBuffer,bool IsSelfDelete=false);
+	void AllocVertexBufferR();
 	BYTE * GetVertexBufferR();
+
+	void SetIndexBufferR(BYTE * pIndexBuffer,bool IsSelfDelete=false);
+	void AllocIndexBufferR();
 	BYTE * GetIndexBufferR();
 
 	void OnPrepareRenderData();
@@ -212,6 +211,9 @@ public:
 	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual UINT GetSmartStructSize(UINT Param=0);
+
+
+	bool CheckValid();
 protected:
 	
 };
@@ -279,10 +281,6 @@ inline void CD3DSubMesh::SetVertexStart(UINT Start)
 	m_StartVertex=Start;
 }
 
-inline BYTE * CD3DSubMesh::GetBackupVertexBuffer()
-{
-	return m_pBackupVertexBuffer;
-}
 
 inline BYTE * CD3DSubMesh::GetIndexBuffer()
 {
@@ -315,10 +313,6 @@ inline void CD3DSubMesh::SetIndexStart(UINT Start)
 	m_StartIndex=Start;
 }
 
-inline BYTE * CD3DSubMesh::GetBackupIndexBuffer()
-{
-	return m_pBackupIndexBuffer;
-}
 
 inline CD3DSubMeshMaterial& CD3DSubMesh::GetMaterial()
 {

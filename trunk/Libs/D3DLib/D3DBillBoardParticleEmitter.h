@@ -16,6 +16,8 @@ namespace D3DLib{
 class CD3DBillBoardParticleEmitter :
 	public CD3DBaseDynamicModel
 {
+public:
+	static UINT										m_BillBoardParticleEmitterUpdateCount;
 protected:
 	enum SST_MEMBER_ID
 	{
@@ -93,6 +95,8 @@ protected:
 	int												m_TextureTileRotation;
 	CD3DBoundingBox									m_BoundingBox;
 
+	
+
 	DECLARE_FILE_CHANNEL_MANAGER
 	DECLARE_CLASS_INFO(CD3DBillBoardParticleEmitter)
 
@@ -129,6 +133,7 @@ public:
 
 
 	virtual void Update(FLOAT Time);
+	virtual bool NeedUpdateAni();
 
 	bool LoadFromResource(CD3DParticleEmitterResource * pModelResource,UINT MaxParticleCount);
 

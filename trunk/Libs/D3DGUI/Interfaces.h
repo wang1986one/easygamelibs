@@ -13,6 +13,12 @@
 
 namespace D3DGUI{
 
+enum D3DGUI_EFFECT_MODE
+{
+	D3DGUI_EFFECT_INVERSE_COLOR=1,
+	D3DGUI_EFFECT_TEXTURE_FILTER,
+};
+
 class IUITexture
 {
 public:
@@ -48,7 +54,14 @@ public:
 	virtual void SetRect(FLOAT_RECT * pRect)=0;
 	virtual FLOAT_RECT GetRect()=0;
 
-	virtual void TopTo(IUIBaseRect* pRect)=0;		//pWndRect==NULL,提到最高
+	virtual void TopTo(IUIBaseRect* pBeforeRect)=0;		//pWndRect==NULL,提到最高
+	virtual void TopTo(IUIBaseRect** pRects,UINT RectCount,IUIBaseRect* pBeforeRect)=0;
+
+	virtual bool SetEffectMode(int Mode)=0;
+
+	virtual bool SetFX(LPCTSTR FXFileName)=0;
+	virtual bool SetFXFromMemory(LPCTSTR FXName,LPCTSTR FXContent,int Size)=0;
+	virtual CEasyString GetFX()=0;
 
 	virtual void Release()=0;
 
@@ -70,9 +83,7 @@ public:
 	virtual void SetUV(FLOAT_RECT * pUVRect)=0;
 	virtual FLOAT_RECT GetUV()=0;
 
-	virtual bool SetFX(LPCTSTR FXFileName)=0;
-	virtual bool SetFXFromMemory(LPCTSTR FXName,LPCTSTR FXContent,int Size)=0;
-	virtual CEasyString GetFX()=0;
+	
 	
 	
 
@@ -86,7 +97,7 @@ public:
 
 	virtual bool SetFont(const LOGFONT* pLogFont)=0;	
 	virtual void SetColor(DWORD Color)=0;	
-	virtual void SetTextW(LPCWSTR szText)=0;	
+	virtual void SetTextW(LPCWSTR szText,int StrLen)=0;	
 	virtual void SetAlign(DWORD dwAlign)=0;
 	virtual void SetShadowMode(DWORD ShadowMode)=0;
 	virtual void SetShadowColor(DWORD ShadowColor)=0;
@@ -94,6 +105,7 @@ public:
 	virtual void SetBKColor(DWORD Color)=0;
 	virtual void SetCharSpace(int Space)=0;
 	virtual void SetLineSpace(int Space)=0;
+	virtual void SetScale(FLOAT Scale)=0;
 
 	virtual LOGFONT* GetFont()=0;	
 	virtual DWORD GetColor()=0;	
@@ -105,15 +117,12 @@ public:
 	virtual DWORD GetBKColor()=0;
 	virtual int GetCharSpace()=0;
 	virtual int GetLineSpace()=0;
+	virtual FLOAT GetScale()=0;
 
 	virtual void EnableUpdate(bool AllowUpdate)=0;
 	
 	virtual bool GetTextSizeW(LPCWSTR pText,int StrLen,FLOAT& Width,FLOAT& Height,LPINT pCharWidths=NULL)=0;
 	virtual bool TranslateTextW(LPCWSTR pSrcText,int StrLen,LPWSTR pDestText,int& BufferSize)=0;
-
-	virtual bool SetFX(LPCTSTR FXFileName)=0;
-	virtual bool SetFXFromMemory(LPCTSTR FXName,LPCTSTR FXContent,int Size)=0;
-	virtual CEasyString GetFX()=0;	
 	
 };
 

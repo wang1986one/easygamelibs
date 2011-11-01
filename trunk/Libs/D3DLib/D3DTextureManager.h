@@ -20,9 +20,17 @@ class CD3DTextureManager :
 	public CNameObject
 {
 protected:
+	struct TESTURE_INFO
+	{
+		CD3DTexture *	pTexture;
+		bool			IsPrepareRelease;
+		CEasyTimer		ReleaseTimer;
+	};
 	CD3DDevice *							m_pD3DDevice;
-	CNameStorage<CD3DTexture *,false,true>	m_TextureStorage;
+	CStaticMap<CEasyString,TESTURE_INFO>	m_TextureStorage;
 	CEasyArray<CD3DTexture *>				m_DynamicTextureList;
+	UINT									m_DelayReleaseTime;
+	CEasyCriticalSection					m_CriticalSection;
 
 	DECLARE_CLASS_INFO_STATIC(CD3DTextureManager)
 public:
@@ -31,8 +39,6 @@ public:
 
 	virtual bool Reset();
 	virtual bool Restore();	
-
-	CD3DTexture * CreateTexture(LPCTSTR TextureName);
 
 	bool AddTexture(CD3DTexture * pTexture,LPCTSTR TextureName);
 
@@ -46,7 +52,6 @@ public:
 
 	CD3DTexture * LoadTexture(LPCTSTR TextureFileName,UINT MipLevels=1,bool UseFilter=true,bool IsManaged=true,D3DCOLOR KeyColor=0);
 	CD3DIFLTexture * LoadIFLTexture(LPCTSTR TextureFileName,UINT MipLevels=1,bool UseFilter=true,bool IsManaged=true,D3DCOLOR KeyColor=0);
-	CD3DTextTexture * CreateTextTexture(LPCTSTR TextureName,LOGFONT * pLogFont,int Width,int Height,int MipLevels,D3DCOLOR FontColor);
 
 	CD3DDevice * GetDevice();
 
@@ -56,28 +61,31 @@ public:
 	CD3DTexture * GetNext(LPVOID& Pos);
 	CD3DTexture * GetPrev(LPVOID& Pos);
 
-	void Update(FLOAT Time);
+	int Update(FLOAT Time);
 	void PrepareRenderData();
 
-protected:
+	void SetDelayReleaseTime(UINT Time);
+
 	void AddAniTexture(CD3DTexture * pTexture);
 	void DelAniTexture(CD3DTexture * pTexture);
 };
 
 inline CD3DTexture * CD3DTextureManager::GetTextrue(UINT ID)
 {
-	CD3DTexture ** ppTexture=m_TextureStorage.GetObject(ID);
-	if(ppTexture)
-		return *ppTexture;
+	TESTURE_INFO * pTextureInfo=m_TextureStorage.GetObject(ID);
+	if(pTextureInfo)
+		return pTextureInfo->pTexture;
 	else
 		return NULL;
 }
 
 inline CD3DTexture * CD3DTextureManager::GetTextrue(LPCTSTR TextureName)
 {
-	CD3DTexture ** ppTexture=m_TextureStorage.GetObject(TextureName);
-	if(ppTexture)
-		return *ppTexture;
+	CEasyString Key=TextureName;
+	Key.MakeUpper();
+	TESTURE_INFO * pTextureInfo=m_TextureStorage.Find(Key);
+	if(pTextureInfo)
+		return pTextureInfo->pTexture;
 	else
 		return NULL;
 }
@@ -87,6 +95,9 @@ inline CD3DDevice * CD3DTextureManager::GetDevice()
 	return m_pD3DDevice;
 }
 
-
+inline void CD3DTextureManager::SetDelayReleaseTime(UINT Time)
+{
+	m_DelayReleaseTime=Time;
+}
 
 }

@@ -31,6 +31,8 @@ public:
 
 	virtual ~CD3DLight(void);
 
+	virtual void Destory();
+
 	bool CanRender();
 
 	void SetLight(const D3DLIGHT9& Light);
@@ -41,12 +43,15 @@ public:
 	void SetPosition(FLOAT x,FLOAT y,FLOAT z);
 	void SetAmbient(FLOAT r,FLOAT g,FLOAT b,FLOAT a);
 	void SetDiffuse(FLOAT r,FLOAT g,FLOAT b,FLOAT a);
-	void SetSpecular(FLOAT r,FLOAT g,FLOAT b,FLOAT a);	
+	void SetSpecular(FLOAT r,FLOAT g,FLOAT b,FLOAT a);
+	void SetAmbient(D3DCOLOR Color);
+	void SetDiffuse(D3DCOLOR Color);
+	void SetSpecular(D3DCOLOR Color);
 
 	void Apply(CD3DDevice * pDevice,int Index);
 	virtual void Update(FLOAT Time);
 
-	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true);
+	virtual bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly);
 	virtual CD3DBoundingBox * GetBoundingBox();
 	virtual void ShowBoundingFrame(int Operator);
 	virtual void UpdateBoundingFrame();
@@ -82,5 +87,27 @@ inline void CD3DLight::SetSpecular(FLOAT r,FLOAT g,FLOAT b,FLOAT a)
 	m_LightData.Specular.g=g;
 	m_LightData.Specular.b=b;
 	m_LightData.Specular.a=a;
+}
+
+inline void CD3DLight::SetAmbient(D3DCOLOR Color)
+{
+	m_LightData.Ambient.a=((FLOAT)((Color>>24)&0xFF))/255.0f;
+	m_LightData.Ambient.r=((FLOAT)((Color>>16)&0xFF))/255.0f;
+	m_LightData.Ambient.g=((FLOAT)((Color>>8)&0xFF))/255.0f;
+	m_LightData.Ambient.b=((FLOAT)((Color)&0xFF))/255.0f;
+}
+inline void CD3DLight::SetDiffuse(D3DCOLOR Color)
+{
+	m_LightData.Diffuse.a=((FLOAT)((Color>>24)&0xFF))/255.0f;
+	m_LightData.Diffuse.r=((FLOAT)((Color>>16)&0xFF))/255.0f;
+	m_LightData.Diffuse.g=((FLOAT)((Color>>8)&0xFF))/255.0f;
+	m_LightData.Diffuse.b=((FLOAT)((Color)&0xFF))/255.0f;
+}
+inline void CD3DLight::SetSpecular(D3DCOLOR Color)
+{
+	m_LightData.Specular.a=((FLOAT)((Color>>24)&0xFF))/255.0f;
+	m_LightData.Specular.r=((FLOAT)((Color>>16)&0xFF))/255.0f;
+	m_LightData.Specular.g=((FLOAT)((Color>>8)&0xFF))/255.0f;
+	m_LightData.Specular.b=((FLOAT)((Color)&0xFF))/255.0f;
 }
 }

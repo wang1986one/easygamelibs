@@ -106,6 +106,7 @@ BOOL CWinFileAccessor::Open(LPCTSTR FileName,int OpenMode)
 	m_hFile=CreateFile(FileName,dwDesiredAccess,dwShareMode,NULL,
 		dwCreationDispostion,dwFlagsAndAttributes,NULL);
 
+
 	if(m_hFile==INVALID_HANDLE_VALUE)
 	{
 		return false;

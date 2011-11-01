@@ -17,18 +17,25 @@ namespace D3DLib{
 
 IMPLEMENT_CLASS_INFO(CD3DSceneRender,CD3DBaseRender);
 
+
 CD3DSceneRender::CD3DSceneRender(void)
 {
 	m_pCamera=NULL;
+	m_pBackGroundCamera=NULL;
 	m_pSharedParamFX=NULL;
+	m_pGlobalLight=NULL;
 	m_FogColor=0xFFFFFFFF;
 	m_FogNear=10000.0f;
 	m_FogFar=10000.0f;
+	m_WaterColorLight=0xFF666666;
+	m_WaterColorDark=0xFF191919;
+	m_ShadowColor=0x80808080;
 
 	m_TreeMode=TREE_MODE_QD;
 	m_pSceneRoot=NULL;
 	m_pSelectedSceneTree=NULL;
-	m_MaxTreeDepth=16;
+	m_MaxTreeDepth=0;
+	m_TreeDepthLimit=0;
 	m_pDepthTexture=NULL;
 	m_ShowNodeFrame=false;
 	m_SizeCullSize=0;
@@ -39,7 +46,7 @@ CD3DSceneRender::~CD3DSceneRender(void)
 	Destory();
 }
 
-bool CD3DSceneRender::Create(CD3DDevice * pDevice,UINT TreeMode,CD3DBoundingBox SceneBox,int StartDepth)
+bool CD3DSceneRender::Create(CD3DDevice * pDevice,UINT TreeMode,CD3DBoundingBox SceneBox,int StartDepth,int DepthLimit)
 {
 	Destory();
 
@@ -52,13 +59,18 @@ bool CD3DSceneRender::Create(CD3DDevice * pDevice,UINT TreeMode,CD3DBoundingBox 
 
 	m_pDevice=pDevice;	
 	m_TreeMode=TreeMode;
+	m_ObjectList.Create(1024,1024);
+	m_SceneRenderUnitList.Create(1024,1024);
+	m_SceneObjectList.Create(1024,1024);
 	m_RenderBatchList.Create(1024,1024);
 	m_TransparentSubMeshList.Create(1024,1024);
 
 	m_pSharedParamFX=m_pDevice->GetFXManager()->LoadFXFromMemory("SHARED_PARAM_FX",SHARED_PARAM_FX,strlen(SHARED_PARAM_FX));
 
+	m_pSharedParamFX->SetBool("IsGlobalLightEnable",true);
 
 	m_MaxTreeDepth=0;
+	m_TreeDepthLimit=DepthLimit;
 
 	m_pSceneRoot=new TREE_NODE;
 	m_pSceneRoot->NodeBox=SceneBox;
@@ -67,7 +79,7 @@ bool CD3DSceneRender::Create(CD3DDevice * pDevice,UINT TreeMode,CD3DBoundingBox 
 
 	BuildSceneTree(m_pSceneRoot,StartDepth);
 
-	UpdateSceneTree();
+	//UpdateSceneTree();
 	return true;
 }
 
@@ -81,7 +93,9 @@ void CD3DSceneRender::Destory()
 	}
 
 	SAFE_RELEASE(m_pSharedParamFX);
+	SAFE_RELEASE(m_pGlobalLight);
 	SAFE_RELEASE(m_pCamera);
+	SAFE_RELEASE(m_pBackGroundCamera);
 	SAFE_RELEASE(m_pDepthTexture);	
 	if(m_pSceneRoot)
 	{
@@ -98,45 +112,78 @@ void CD3DSceneRender::Destory()
 }
 
 
-bool CD3DSceneRender::DelObject(CD3DObject * pObj)
+bool CD3DSceneRender::DelObject(CD3DObject * pObj,bool IsRecursive)
 {
-	CAutoLockEx Lock;
-
-	if(CD3DDevice::IsUseMultiThreadRender())
 	{
-		Lock.Lock(m_RenderLock);
-	}
+		CAutoLockEx Lock;
 
-	
-	
-	DelWMOObject((CD3DWOWWMOModel *)pObj);
-	
-
-	for(int i=(int)m_ObjectList.GetCount()-1;i>=0;i--)
-	{
-		if(m_ObjectList[i]==pObj)
+		if(CD3DDevice::IsUseMultiThreadRender())
 		{
-			m_ObjectList.Delete(i);
+			Lock.Lock(m_RenderLock);
+		}
 
-			if(pObj->GetParent()==NULL)
-				DelRootObject(pObj);
+		if(pObj->IsKindOf(GET_CLASS_INFO(CD3DWOWWMOModel)))
+			DelWMOObject((CD3DWOWWMOModel *)pObj);
 
-			pObj->SetRender(NULL);
-			return true;
+		if(pObj->GetParent()==NULL)
+			DelRootObject(pObj);
+
+		pObj->SetRender(NULL);
+
+		if(pObj->IsKindOf(GET_CLASS_INFO(CD3DLight)))
+		{
+			DeleteLight((CD3DLight *)pObj);
+		}
+		else if(pObj->CanRender())
+		{
+			bool IsDeleted=false;
+			for(UINT i=0;i<m_BackGroundObjectList.GetCount();i++)
+			{
+				if(m_BackGroundObjectList[i]==pObj)
+				{
+					m_BackGroundObjectList.Delete(i);
+					IsDeleted=true;
+					break;
+				}
+			}
+			if(!IsDeleted)
+			{
+				for(int i=(int)m_ObjectList.GetCount()-1;i>=0;i--)
+				{
+					if(m_ObjectList[i]==pObj)
+					{
+						m_ObjectList.Delete(i);					
+						IsDeleted=true;
+						break;
+					}
+				}
+			}
+
+			if(!IsDeleted)
+			{
+				if(!DeleteSceneObject(pObj))				
+				{
+					PrintD3DLog(0,"从场景树中删除对象[%s,%s]失败",
+						pObj->GetName(),pObj->GetClassInfo().ClassName);
+				}
+			}
 		}
 	}
 
-	return DeleteSceneObject(pObj);
+	if(IsRecursive)
+	{
+		for(UINT i=0;i<pObj->GetChildCount();i++)
+		{
+			DelObject(pObj->GetChildByIndex(i));
+		}
+	}
+
+	return true;
 }
 
-bool CD3DSceneRender::AddSceneObject(CD3DObject * pObject,bool IsRecursive,bool IsUpdateSceneTree)
+bool CD3DSceneRender::AddSceneObject(CD3DObject * pObject,bool IsRecursive)
 {
-	CAutoLockEx Lock;
-
-	if(CD3DDevice::IsUseMultiThreadRender())
-	{
-		Lock.Lock(m_RenderLock);
-	}
+	
 	
 	if((!pObject->IsKindOf(GET_CLASS_INFO(CD3DWOWADTModel)))&&
 		(!pObject->IsKindOf(GET_CLASS_INFO(CD3DWOWWMOModel)))&&
@@ -147,41 +194,57 @@ bool CD3DSceneRender::AddSceneObject(CD3DObject * pObject,bool IsRecursive,bool 
 	{
 		return AddObject(pObject,IsRecursive);
 	}
-
 	
-
-	if(pObject->IsKindOfFast(GET_CLASS_INFO(CD3DWOWWMOModel)))
-	{
-		AddWMOObject((CD3DWOWWMOModel *)pObject);
-	}
-	
-	pObject->Update(0);	
+	pObject->Update(0);		
 	CD3DBoundingBox BBox=(*(pObject->GetBoundingBox()))*pObject->GetWorldMatrix();
 
-	CD3DVector3 BoxSize=BBox.GetSize();
-	if(BoxSize.x<=0||BoxSize.y<=0||BoxSize.z<=0)
-	{
-		PrintD3DDebugLog(0,"对象[%s]包围和大小异常，无法加入场景树，当作非场景对象处理",pObject->GetName());
-		if(!AddObject(pObject,false))
-			return false;
-	}
-	else
+	//CD3DVector3 BoxSize=BBox.GetSize();
+	//if(BoxSize.x<=0||BoxSize.y<=0||BoxSize.z<=0)
+	//{
+	//	PrintD3DDebugLog(0,"对象[%s]包围和大小异常，无法加入场景树，当作非场景对象处理",pObject->GetName());
+	//	if(!AddObject(pObject,false))
+	//		return false;
+	//}
+	//else
 	{
 		int Relation=m_pSceneRoot->NodeBox.CheckRelation(BBox);
 		if((!BBox.IsValid())||Relation==CD3DBoundingBox::RELATION_TYPE_OUT||Relation==CD3DBoundingBox::RELATION_TYPE_BE_INCLUDE)
 		{
-			PrintD3DLog(0,"对象[%s]因为超出场景范围，无法加入场景树");
-			return AddObject(pObject,IsRecursive);
+			PrintD3DLog(0,"对象[%s]因为超出场景范围，无法加入场景树",pObject->GetName());
+			if(!AddObject(pObject,false))
+				return false;
 		}
-
-		if(pObject->GetParent()==NULL)
-			AddRootObject(pObject);
-
-		pObject->SetRender(this);
+		
 		if(pObject->CanRender())
 		{
-			if(!AddObjectToTree(m_pSceneRoot,pObject,true))
+			CAutoLockEx Lock;
+
+			if(CD3DDevice::IsUseMultiThreadRender())
+			{
+				Lock.Lock(m_RenderLock);
+			}
+
+			pObject->SetRender(this);
+
+			if(pObject->GetParent()==NULL)
+				AddRootObject(pObject);
+		
+
+			//WMO本身不加入场景树
+			if(pObject->IsKindOfFast(GET_CLASS_INFO(CD3DWOWWMOModel)))
+			{
+				if(!AddObject(pObject,false))
+					return false;
+			}			
+			else if(!AddObjectToTree(m_pSceneRoot,pObject,true))
+			{
 				return false;			
+			}
+		}
+		else
+		{
+			PrintD3DLog(0,"对象[%s]不是可渲染对象，不加入场景树");
+			return AddObject(pObject,IsRecursive);
 		}
 	}
 		
@@ -191,14 +254,11 @@ bool CD3DSceneRender::AddSceneObject(CD3DObject * pObject,bool IsRecursive,bool 
 	{
 		for(UINT i=0;i<pObject->GetChildCount();i++)
 		{
-			AddSceneObject(pObject->GetChildByIndex(i),true,false);
+			AddSceneObject(pObject->GetChildByIndex(i),true);
 		}
-	}	
+	}		
 
-	if(IsUpdateSceneTree)
-	{
-		UpdateSceneTree();
-	}
+	
 	return true;
 }
 
@@ -216,7 +276,30 @@ void CD3DSceneRender::SetCamera(CD3DCamera * pCamera)
 	SAFE_RELEASE(m_pCamera);
 	m_pCamera=pCamera;
 	if(m_pCamera)
+	{
 		m_pCamera->AddUseRef();
+		if(m_pCamera->GetParent()==NULL)
+			AddRootObject(m_pCamera);
+	}
+}
+
+void CD3DSceneRender::SetBackGroundCamera(CD3DCamera * pCamera)
+{
+	CAutoLockEx Lock;
+
+	if(CD3DDevice::IsUseMultiThreadRender())
+	{
+		Lock.Lock(m_RenderLock);
+	}
+
+	SAFE_RELEASE(m_pBackGroundCamera);
+	m_pBackGroundCamera=pCamera;
+	if(m_pBackGroundCamera)
+	{
+		m_pBackGroundCamera->AddUseRef();
+		if(m_pBackGroundCamera->GetParent()==NULL)
+			AddRootObject(m_pBackGroundCamera);
+	}
 }
 
 void CD3DSceneRender::ShowNodeFrame(TREE_NODE * pTree,bool IsShow)
@@ -236,14 +319,9 @@ void CD3DSceneRender::ShowNodeFrame(TREE_NODE * pTree,bool IsShow)
 			pTree->pBoundingFrame->SetDevice(m_pDevice);
 			pTree->pBoundingFrame->CreateFromBBox(pTree->NodeBox,0xFF0000FF);
 			pTree->pBoundingFrame->SetName("NodeBox");
-			AddRootObject(pTree->pBoundingFrame);
-			AddObjectToTree(pTree,pTree->pBoundingFrame,false);				
+			AddObject(pTree->pBoundingFrame);			
 		}
-	}
-	else
-	{
-		SAFE_RELEASE(pTree->pBoundingFrame);
-	}
+	}	
 }
 
 void CD3DSceneRender::SetSelectTree(TREE_NODE * pTree)
@@ -267,7 +345,7 @@ void CD3DSceneRender::HideCutObject(TREE_NODE * pTree)
 			pTree->ObjectList[i]->pObject->SetVisible(false);
 		}
 	}
-	if(pTree->HaveChild)
+	if(pTree->ChildCount)
 	{
 		for(UINT i=0;i<m_TreeMode;i++)
 		{
@@ -286,7 +364,7 @@ void CD3DSceneRender::FindTreeByObject(TREE_NODE * pRoot,CD3DObject * pObject,CE
 			break;
 		}
 	}
-	if(pRoot->HaveChild)
+	if(pRoot->ChildCount)
 	{
 		for(UINT i=0;i<m_TreeMode;i++)
 		{
@@ -295,11 +373,30 @@ void CD3DSceneRender::FindTreeByObject(TREE_NODE * pRoot,CD3DObject * pObject,CE
 	}
 }
 
+void CD3DSceneRender::FindTreeBySubMesh(TREE_NODE * pRoot,CD3DObject * pObject,CD3DSubMesh * pSubMesh,CEasyArray<TREE_NODE *>& TreeList)
+{
+	for(UINT i=0;i<pRoot->ObjectList.GetCount();i++)
+	{
+		if(pRoot->ObjectList[i]->pObject==pObject&&pRoot->ObjectList[i]->pSubMesh==pSubMesh)
+		{
+			TreeList.Add(pRoot);
+			break;
+		}
+	}
+	if(pRoot->ChildCount)
+	{
+		for(UINT i=0;i<m_TreeMode;i++)
+		{
+			FindTreeBySubMesh(pRoot->Childs[i],pObject,pSubMesh,TreeList);
+		}
+	}
+}
+
 CD3DSceneRender::TREE_NODE * CD3DSceneRender::FindTreeByBBox(TREE_NODE * pRoot,const CD3DBoundingBox& BBox)
 {
 	if(CheckBBoxRelation(pRoot->NodeBox,BBox)==CD3DBoundingBox::RELATION_TYPE_INCLUDE)
 	{
-		if(pRoot->HaveChild)
+		if(pRoot->ChildCount)
 		{
 			for(UINT i=0;i<m_TreeMode;i++)
 			{
@@ -316,12 +413,17 @@ CD3DSceneRender::TREE_NODE * CD3DSceneRender::FindTreeByBBox(TREE_NODE * pRoot,c
 bool CD3DSceneRender::GetHeightByXZ(const CD3DVector3 Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight)
 {
 	bool HaveHeight=false;
-	FLOAT FinalHeight=-1E38,FinalWaterHeight=-1E38;
+	FLOAT FinalHeight=-1E38f,FinalWaterHeight=-1E38f;
 	FLOAT H,WH;
 
 	m_HeightTestCount=0;
 
-	MinHeight=m_pSceneRoot->NodeBox.m_Min.y;	
+	MinHeight=m_pSceneRoot->NodeBox.m_Min.y;
+
+	for(UINT i=0;i<m_WMOObjectList.GetCount();i++)
+	{
+		m_WMOObjectList[i]->RemoveFlagRecursive(CD3DObject::OBJECT_FLAG_CHECKED);
+	}
 
 	if(HeightTest(m_pSceneRoot,Pos,MinHeight,MaxHeight,H,WH))
 	{
@@ -336,10 +438,39 @@ bool CD3DSceneRender::GetHeightByXZ(const CD3DVector3 Pos,FLOAT MinHeight,FLOAT 
 		Height=FinalHeight;
 		WaterHeight=FinalWaterHeight;
 	}
-	//PrintSystemLog(0,"HeightTest(%u)",m_HeightTestCount);
+	//PrintD3DDebugLog(0,"HeightTest(%u)",m_HeightTestCount);
 	return HaveHeight;
 }
 
+bool CD3DSceneRender::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,CD3DObject ** ppIntersectObject,UINT TestMode)
+{
+	for(UINT i=0;i<m_WMOObjectList.GetCount();i++)
+	{
+		m_WMOObjectList[i]->RemoveFlagRecursive(CD3DObject::OBJECT_FLAG_CHECKED);
+	}
+	m_RayIntersectCount=0;
+	if(RayIntersect(m_pSceneRoot,Point,Dir,IntersectPoint,Distance,DotValue,ppIntersectObject,TestMode))
+	{
+		//PrintD3DDebugLog(0,"RayIntersect(%u)",m_RayIntersectCount);
+		return true;
+	}
+	return false;
+}
+
+bool CD3DSceneRender::LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,CD3DObject ** ppIntersectObject,UINT TestMode)
+{
+	for(UINT i=0;i<m_WMOObjectList.GetCount();i++)
+	{
+		m_WMOObjectList[i]->RemoveFlagRecursive(CD3DObject::OBJECT_FLAG_CHECKED);
+	}
+	m_LineIntersectCount=0;
+	if(LineIntersect(m_pSceneRoot,StartPoint,EndPoint,IntersectPoint,Distance,DotValue,ppIntersectObject,TestMode))
+	{
+		//PrintD3DDebugLog(0,"LineIntersect(%u)",m_LineIntersectCount);
+		return true;
+	}
+	return false;
+}
 
 void CD3DSceneRender::BuildSceneTree(TREE_NODE * pRoot,int StartDepth)
 {
@@ -349,7 +480,7 @@ void CD3DSceneRender::BuildSceneTree(TREE_NODE * pRoot,int StartDepth)
 	StartDepth--;
 
 	CD3DVector3 CutCenter=GetBoxCutCenter(pRoot);
-	CreateChilds(pRoot,CutCenter);
+	CreateChilds(pRoot,CutCenter,true);
 	for(UINT i=0;i<m_TreeMode;i++)
 	{
 		pRoot->Childs[i]->IsFixed=true;
@@ -386,6 +517,18 @@ bool CD3DSceneRender::DelWMOObject(CD3DWOWWMOModel * pWMOObject)
 	return false;
 }
 
+void CD3DSceneRender::SetGlobalLight(CD3DLight * pLight)
+{
+	SAFE_RELEASE(m_pGlobalLight);
+	m_pGlobalLight=pLight;
+	if(m_pGlobalLight)
+	{
+		m_pGlobalLight->AddUseRef();
+		if(m_pGlobalLight->GetParent()==NULL)
+			AddRootObject(m_pGlobalLight);
+	}
+}
+
 void CD3DSceneRender::AddLight(CD3DLight * pLight)
 {
 	CAutoLockEx Lock;
@@ -402,6 +545,8 @@ void CD3DSceneRender::AddLight(CD3DLight * pLight)
 			return;
 		}
 	}
+	pLight->SetRender(this);	
+	pLight->AddUseRef();
 	m_LightList.Add(pLight);	
 }
 
@@ -416,6 +561,7 @@ bool CD3DSceneRender::DeleteLight(UINT Index)
 
 	if(Index<m_LightList.GetCount())
 	{
+		SAFE_RELEASE(m_LightList[Index]);
 		m_LightList.Delete(Index);
 		return true;
 	}
@@ -462,18 +608,18 @@ bool CD3DSceneRender::DeleteLight(LPCTSTR LightName)
 
 
 
-void CD3DSceneRender::UpdateSceneTree()
-{
-	CAutoLockEx Lock;
-
-	if(CD3DDevice::IsUseMultiThreadRender())
-	{
-		Lock.Lock(m_RenderLock);
-	}
-
-
-	UpdateTree(m_pSceneRoot);
-}
+//void CD3DSceneRender::UpdateSceneTree()
+//{
+//	CAutoLockEx Lock;
+//
+//	if(CD3DDevice::IsUseMultiThreadRender())
+//	{
+//		Lock.Lock(m_RenderLock);
+//	}
+//
+//
+//	UpdateTree(m_pSceneRoot);
+//}
 
 void CD3DSceneRender::Render()
 {	
@@ -498,12 +644,11 @@ void CD3DSceneRender::Render()
 	m_pSharedParamFX->SetFloat("FogNear",GetFogNear());
 	m_pSharedParamFX->SetFloat("FogFar",GetFogFar());
 
-	m_pSharedParamFX->SetMatrix("PrjMatrix",m_pCamera->GetProjectMatR());
-
-
-	m_pSharedParamFX->SetVector("CameraPos",m_pCamera->GetWorldMatrixR().GetTranslation());
-	m_pSharedParamFX->SetFloat("CameraNear",m_pCamera->GetNear());
-	m_pSharedParamFX->SetFloat("CameraFar",m_pCamera->GetFar());
+	//设置全局光
+	if(m_pGlobalLight)
+	{
+		m_pSharedParamFX->SetValue("GlobalLight",&(m_pGlobalLight->GetLight()),sizeof(D3DLIGHT9));
+	}
 
 
 	////设置摄像机
@@ -525,6 +670,46 @@ void CD3DSceneRender::Render()
 	//	}
 	//}			
 
+
+	//渲染背景对象
+	if(m_pBackGroundCamera)
+	{
+		m_RenderBatchList.Empty();
+		m_TransparentSubMeshList.Empty();
+
+		m_pSharedParamFX->SetMatrix("PrjMatrix",m_pBackGroundCamera->GetProjectMatR());
+		m_pSharedParamFX->SetMatrix("ViewMatrix",m_pBackGroundCamera->GetViewMatR());
+
+		m_pSharedParamFX->SetVector("CameraPos",m_pBackGroundCamera->GetWorldMatrixR().GetTranslation());
+		m_pSharedParamFX->SetFloat("CameraNear",m_pBackGroundCamera->GetNear());
+		m_pSharedParamFX->SetFloat("CameraFar",m_pBackGroundCamera->GetFar());
+
+		CD3DFrustum Frustum=m_pBackGroundCamera->GetFrustumR();
+
+		for(UINT i=0;i<m_BackGroundObjectList.GetCount();i++)
+		{
+			CD3DObject * pObject=m_BackGroundObjectList[i];
+
+			if(!pObject->CheckFlag(CD3DObject::OBJECT_FLAG_PREPARE_RENDERED))
+				RenderObject(pObject,Frustum,true);
+		}
+
+		qsort(m_RenderBatchList.GetBuffer(),m_RenderBatchList.GetCount(),sizeof(RENDER_SUBMESH_INFO),SubMeshCompare);
+		qsort(m_TransparentSubMeshList.GetBuffer(),m_TransparentSubMeshList.GetCount(),sizeof(RENDER_SUBMESH_INFO),SubMeshCompare);
+
+		DoBatchRender();
+
+		//清除ZBuffer
+		m_pDevice->Clear(0,D3DCLEAR_ZBUFFER);
+	}
+
+
+	m_pSharedParamFX->SetMatrix("PrjMatrix",m_pCamera->GetProjectMatR());
+	m_pSharedParamFX->SetMatrix("ViewMatrix",m_pCamera->GetViewMatR());
+
+	m_pSharedParamFX->SetVector("CameraPos",m_pCamera->GetWorldMatrixR().GetTranslation());
+	m_pSharedParamFX->SetFloat("CameraNear",m_pCamera->GetNear());
+	m_pSharedParamFX->SetFloat("CameraFar",m_pCamera->GetFar());
 
 
 	CD3DFrustum Frustum=m_pCamera->GetFrustumR();
@@ -566,6 +751,7 @@ void CD3DSceneRender::Render()
 		if(!pObject->CheckFlag(CD3DObject::OBJECT_FLAG_PREPARE_RENDERED))
 			RenderObject(pObject,Frustum,true);
 	}
+	
 
 	//渲染场景对象
 
@@ -591,10 +777,12 @@ void CD3DSceneRender::Render()
 	else
 		RenderScene(pRenderTree,Frustum,true);
 
-	qsort(m_RenderBatchList.GetBuffer(),m_RenderBatchList.GetCount(),sizeof(RENDER_BATCH_INFO),SubMeshCompare);
-	qsort(m_TransparentSubMeshList.GetBuffer(),m_TransparentSubMeshList.GetCount(),sizeof(RENDER_BATCH_INFO),SubMeshCompare);
+	qsort(m_RenderBatchList.GetBuffer(),m_RenderBatchList.GetCount(),sizeof(RENDER_SUBMESH_INFO),SubMeshCompare);
+	qsort(m_TransparentSubMeshList.GetBuffer(),m_TransparentSubMeshList.GetCount(),sizeof(RENDER_SUBMESH_INFO),SubMeshCompare);
 
 	DoBatchRender();
+
+	//PrintImportantLog(0,"Face=%d",m_FaceCount);
 	
 	//清理所有临时渲染标记
 	for(UINT i=0;i<m_SceneRenderUnitList.GetCount();i++)
@@ -620,10 +808,60 @@ void CD3DSceneRender::Render()
 			m_ObjectList[i]->AddFlag(CD3DObject::OBJECT_FLAG_CULLED);
 		m_ObjectList[i]->RemoveFlag(CD3DObject::OBJECT_FLAG_PREPARE_RENDERED|CD3DObject::OBJECT_FLAG_RENDERED);
 	}
+
+	for(UINT i=0;i<m_BackGroundObjectList.GetCount();i++)
+	{
+		if(m_BackGroundObjectList[i]->CheckFlag(CD3DObject::OBJECT_FLAG_RENDERED))
+			m_BackGroundObjectList[i]->RemoveFlag(CD3DObject::OBJECT_FLAG_CULLED);
+		else
+			m_BackGroundObjectList[i]->AddFlag(CD3DObject::OBJECT_FLAG_CULLED);
+		m_BackGroundObjectList[i]->RemoveFlag(CD3DObject::OBJECT_FLAG_PREPARE_RENDERED|CD3DObject::OBJECT_FLAG_RENDERED);
+	}
+
+	
 }
 
 
+void CD3DSceneRender::Update(FLOAT Time)
+{
+	CD3DObject::m_UpdateCount=0;
+	CD3DObject::m_RenderDataUpdateCount=0;
+	CD3DBillBoardParticleEmitter::m_BillBoardParticleEmitterUpdateCount=0;
 
+	for(int i=0;i<(int)m_RootObjectList.GetCount();i++)
+	{		
+		m_RootObjectList[i]->Update(Time);
+	}
+	if(CD3DDevice::IsUseMultiThreadRender())
+	{		
+		CAutoLockEx Lock;
+		if(m_PrepareRenderDataFailCount<MAX_PREPARE_RENDER_DATA_FAIL_COUNT)
+		{
+			if(Lock.TryLock(m_RenderLock))
+			{
+				for(int i=0;i<(int)m_RootObjectList.GetCount();i++)
+				{
+					m_RootObjectList[i]->OnPrepareRenderData();
+				}
+				m_PrepareRenderDataFailCount=0;
+			}
+			else
+			{
+				m_PrepareRenderDataFailCount++;
+			}
+		}
+		else
+		{
+			Lock.Lock(m_RenderLock);
+			for(int i=0;i<(int)m_RootObjectList.GetCount();i++)
+			{
+				m_RootObjectList[i]->OnPrepareRenderData();
+			}
+			m_PrepareRenderDataFailCount=0;
+		}
+
+	}
+}
 
 
 bool CD3DSceneRender::CreateDepthTexture()
@@ -645,6 +883,19 @@ bool CD3DSceneRender::CreateDepthTexture()
 	return false;
 }
 
+bool CD3DSceneRender::ClearDepthTexture()
+{
+	LPDIRECT3DSURFACE9 pRenderTarget=NULL;
+	if(m_pDepthTexture->GetD3DTexture()->GetSurfaceLevel(0, &pRenderTarget)==D3D_OK)
+	{
+		HRESULT Ret=m_pDevice->GetD3DDevice()->ColorFill(pRenderTarget,NULL,0xFFFFFFFF);
+		SAFE_RELEASE(pRenderTarget);
+		return Ret==D3D_OK;
+	}
+	return false;
+	
+}
+
 bool CD3DSceneRender::DeleteSceneObject(CD3DObject * pObject)
 {
 	for(UINT i=0;i<m_SceneObjectList.GetCount();i++)
@@ -661,7 +912,17 @@ bool CD3DSceneRender::DeleteSceneObject(CD3DObject * pObject)
 	{
 		if(m_SceneRenderUnitList[i]->pObject==pObject)
 		{
-			DeleteObject(m_pSceneRoot,m_SceneRenderUnitList[i]);
+			for(int j=(int)m_SceneRenderUnitList[i]->TreeNodes.GetCount()-1;j>=0;j--)
+			{
+				TREE_NODE * pTree=m_SceneRenderUnitList[i]->TreeNodes[j];
+				pTree->DelObj(m_SceneRenderUnitList[i]);
+				UpdateTree(pTree);
+			}
+			if(m_SceneRenderUnitList[i]->TreeNodes.GetCount())
+			{
+				PrintD3DLog(0,"未能从所有树节点中清除此对象");
+			}
+			//DeleteObjectFromTree(m_pSceneRoot,m_SceneRenderUnitList[i]);
 			SAFE_DELETE(m_SceneRenderUnitList[i]);
 			m_SceneRenderUnitList.Delete(i);		
 			IsDeleted=true;
@@ -678,31 +939,31 @@ bool CD3DSceneRender::DeleteSceneObject(CD3DObject * pObject)
 	return false;
 }
 
-int CD3DSceneRender::DeleteObject(TREE_NODE * pNode,RENDER_OBJECT_INFO * pObjectInfo)
-{
-	int DeleteCount=0;
-	for(UINT i=0;i<pNode->ObjectList.GetCount();i++)
-	{
-		if(pNode->ObjectList[i]==pObjectInfo)
-		{
-			pNode->ObjectList.Delete(i);
-			DeleteCount++;
-			break;
-		}
-	}
-	if(pNode->HaveChild)
-	{
-		for(UINT i=0;i<m_TreeMode;i++)
-		{
-			DeleteCount+=DeleteObject(pNode->Childs[i],pObjectInfo);
-		}
-	}
-	return DeleteCount;
-}
+//int CD3DSceneRender::DeleteObjectFromTree(TREE_NODE * pNode,RENDER_OBJECT_INFO * pObjectInfo)
+//{	
+//	int DeleteCount=0;
+//	for(UINT i=0;i<pNode->ObjectList.GetCount();i++)
+//	{
+//		if(pNode->ObjectList[i]==pObjectInfo)
+//		{
+//			pNode->ObjectList.Delete(i);
+//			DeleteCount++;
+//			break;
+//		}
+//	}
+//	if(pNode->ChildCount)
+//	{
+//		for(UINT i=0;i<m_TreeMode;i++)
+//		{
+//			DeleteCount+=DeleteObject(pNode->Childs[i],pObjectInfo);
+//		}
+//	}
+//	return DeleteCount;
+//}
 
 void CD3DSceneRender::DeleteSceneNode(TREE_NODE * pNode)
 {
-	if(pNode->HaveChild)
+	if(pNode->ChildCount)
 	{
 		for(UINT i=0;i<m_TreeMode;i++)
 		{
@@ -711,14 +972,71 @@ void CD3DSceneRender::DeleteSceneNode(TREE_NODE * pNode)
 		}
 	}
 	SAFE_RELEASE(pNode->pBoundingFrame);
+	if(pNode->pParent)
+	{
+		for(UINT i=0;i<m_TreeMode;i++)
+		{
+			if(pNode->pParent->Childs[i]==pNode)
+			{
+				pNode->pParent->Childs[i]=NULL;
+				pNode->pParent->ChildCount--;
+			}
+		}
+	}
 	delete pNode;
 }
 
+//void CD3DSceneRender::DeleteNodeChilds(TREE_NODE * pNode,TREE_NODE * pParent)
+//{
+//	if(pNode!=pParent)
+//	{
+//		SAFE_RELEASE(pNode->pBoundingFrame);
+//	}
+//	if(pNode->ChildCount)
+//	{
+//		for(UINT i=0;i<m_TreeMode;i++)
+//		{
+//			DeleteNodeChilds(pNode->Childs[i],pParent);			
+//		}
+//		for(UINT i=0;i<m_TreeMode;i++)
+//		{
+//			SAFE_DELETE(pNode->Childs[i]);
+//		}
+//		pNode->ChildCount=0;
+//		pNode->ChildCount=false;
+//	}
+//	else
+//	{
+//		if(pNode!=pParent)
+//		{
+//			for(UINT i=0;i<pNode->ObjectList.GetCount();i++)
+//			{
+//				pNode->ObjectList[i]->pObject->CheckFlag(0);
+//				pParent->ObjectList.Add(pNode->ObjectList[i]);
+//			}
+//			pNode->ObjectList.Clear();
+//			
+//		}
+//	}	
+//}
+
 bool CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,CD3DObject * pObject,bool BeWalkTree)
 {
-	for(UINT i=0;i<m_SceneRenderUnitList.GetCount();i++)
+	CEasyTimerEx CostTimer;
+	static UINT64 MaxCost=0;
+
+	CostTimer.SaveTime();
+
+	m_AddObjectSubMeshCount=0;
+	m_AddObjectTreeWalkCount=0;
+	m_AddObjectTreeAddCount=0;
+	m_AddObjectTreeCutCount=0;
+	m_AddObjectTreeUpdateCount=0;
+	m_AddObjectObjectTestCount=0;
+
+	for(UINT i=0;i<m_SceneObjectList.GetCount();i++)
 	{
-		if(m_SceneRenderUnitList[i]->pObject==pObject)
+		if(m_SceneObjectList[i]==pObject)
 		{
 			PrintD3DLog(0,"对象[%s]已经存在于场景中",
 				pObject->GetName());
@@ -726,20 +1044,24 @@ bool CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,CD3DObject * pObject,boo
 		}
 	}	
 
-	m_SceneObjectList.Add(pObject);
+	pObject->OnPrepareRenderData();
 
-	for(UINT i=0;i<pObject->GetSubMeshCount();i++)
+	m_SceneObjectList.Add(pObject);
+	
+
+	for(int i=0;i<pObject->GetSubMeshCount();i++)
 	{
 		CD3DSubMesh * pSubMesh=pObject->GetSubMesh(i);
 		CD3DSubMeshMaterial * pMaterial=pObject->GetSubMeshMaterial(i);
 
 		if(pSubMesh&&pMaterial)
 		{
+			pSubMesh->CheckValid();
 			if(pMaterial->GetFX())
 			{
 				RENDER_OBJECT_INFO * pObjectInfo=new RENDER_OBJECT_INFO;
 				pObjectInfo->ObjectType=RBT_OBJECT;
-				if(pSubMesh->CheckProperty(CD3DSubMesh::SMF_IS_ANI_MESH))
+				if(pSubMesh->CheckProperty(CD3DSubMesh::SMF_IS_ANI_MESH)||(!pObject->CanDoSubMeshViewCull()))
 				{
 					//对于SkinMesh,使用对象包围盒作为SubMesh包围盒
 					pObjectInfo->WorldBBox=(*pObject->GetBoundingBox())*pObject->GetWorldMatrix();
@@ -748,11 +1070,7 @@ bool CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,CD3DObject * pObject,boo
 				{
 					pObjectInfo->WorldBBox=pSubMesh->GetBoundingBoxWithTranform(pObject->GetWorldMatrix());
 				}
-				//CD3DVector3 BoxSize=pObjectInfo->WorldBBox.GetSize();
-				//if(BoxSize.x<=0||BoxSize.z<=0)
-				//{
-				//	int err=1;
-				//}
+				m_AddObjectSubMeshCount++;
 				pObjectInfo->pObject=pObject;
 				pObjectInfo->pSubMesh=pSubMesh;
 				pObjectInfo->pMaterial=pMaterial;
@@ -765,8 +1083,7 @@ bool CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,CD3DObject * pObject,boo
 				}
 				else
 				{
-					pTree->ObjectList.Add(pObjectInfo);
-					pTree->IsModified=true;
+					pTree->AddObj(pObjectInfo);						
 				}
 			}
 			else
@@ -776,17 +1093,28 @@ bool CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,CD3DObject * pObject,boo
 			}
 		}
 	}
+
+	UINT64 CostTime=CostTimer.GetPastTime();
+	if(CostTime>MaxCost)
+	{
+		MaxCost=CostTime;
+		PrintD3DDebugLog(0,"CD3DSceneRender::AddSceneObject:最大耗时:%g[%u,%u,%u,%u,%u,%u]",
+			(double)MaxCost/CEasyTimerEx::TIME_UNIT_PER_SECOND,
+			m_AddObjectSubMeshCount,m_AddObjectTreeWalkCount,m_AddObjectTreeAddCount,
+			m_AddObjectTreeCutCount,m_AddObjectTreeUpdateCount,m_AddObjectObjectTestCount);
+	}
 	
 	return true;
 }
 
 void CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,RENDER_OBJECT_INFO * pObjectInfo)
-{	
-	if(pTree->HaveChild)
+{		
+	m_AddObjectTreeWalkCount++;
+	if(pTree->ChildCount)
 	{
 		CD3DBoundingBox BBox=pObjectInfo->WorldBBox;
 		bool IsCut=false;
-		int IntersectCount=0;
+		UINT IntersectCount=0;
 		bool IntersectWitch[OTC_MAX]={0};
 
 		for(UINT j=0;j<m_TreeMode;j++)
@@ -802,7 +1130,7 @@ void CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,RENDER_OBJECT_INFO * pOb
 		}
 		if(IntersectCount)
 		{
-			if(IntersectCount<m_TreeMode)
+			if(IntersectCount<=m_TreeMode/2)
 			{
 				for(UINT j=0;j<OTC_MAX;j++)
 				{
@@ -813,12 +1141,17 @@ void CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,RENDER_OBJECT_INFO * pOb
 				}		
 				return;
 			}					
-		}		
+		}
+		else
+		{
+			PrintD3DLog(0,"CD3DSceneRender::AddObjectToTree:异常，加入节点的对象和节点的任何一个子结点都不相交");
+		}
 	}	
 	//未能加入子树，就加入当前节点
 	
-	pTree->ObjectList.Add(pObjectInfo);
-	pTree->IsModified=true;
+	m_AddObjectTreeAddCount++;
+	pTree->AddObj(pObjectInfo);
+	UpdateTree(pTree);
 }
 
 void CD3DSceneRender::UpdateTree(TREE_NODE * pNode)
@@ -830,57 +1163,35 @@ void CD3DSceneRender::UpdateTree(TREE_NODE * pNode)
 		PrintSystemLog(0,"Depth=%u,XSize=%g,ZSize=%g",m_MaxTreeDepth,Size.x,Size.z);
 	}
 
-	//尝试切割有过变动的叶子节点
-	if((!pNode->HaveChild)&&pNode->IsModified)
+	m_AddObjectTreeUpdateCount++;
+	
+	if(pNode->UpdateFlag==TNUF_ADD_OBJECT)
 	{
-		if(pNode->ObjectList.GetCount()&&(!pNode->IsFixed))
-		{
-			//缩小节点包围盒
-			CD3DBoundingBox NodeBox=pNode->ObjectList[0]->WorldBBox;
-			for(UINT i=1;i<pNode->ObjectList.GetCount();i++)
-			{
-				NodeBox.Merge(pNode->ObjectList[i]->WorldBBox);
-			}
-			if(pNode->NodeBox.m_Min.x<NodeBox.m_Min.x)
-				pNode->NodeBox.m_Min.x=NodeBox.m_Min.x;
-			if(pNode->NodeBox.m_Min.y<NodeBox.m_Min.y)
-				pNode->NodeBox.m_Min.y=NodeBox.m_Min.y;
-			if(pNode->NodeBox.m_Min.z<NodeBox.m_Min.z)
-				pNode->NodeBox.m_Min.z=NodeBox.m_Min.z;
-
-			if(pNode->NodeBox.m_Max.x>NodeBox.m_Max.x)
-				pNode->NodeBox.m_Max.x=NodeBox.m_Max.x;
-			if(pNode->NodeBox.m_Max.y>NodeBox.m_Max.y)
-				pNode->NodeBox.m_Max.y=NodeBox.m_Max.y;
-			if(pNode->NodeBox.m_Max.z>NodeBox.m_Max.z)
-				pNode->NodeBox.m_Max.z=NodeBox.m_Max.z;
-		}
-
-		if(pNode->ObjectList.GetCount()>=MINI_CUT_COUNT)
+		pNode->UpdateFlag=TNUF_NONE;
+		if(pNode->ObjectList.GetCount()>=MINI_CUT_COUNT&&pNode->ChildCount==0)
 		{		
-			if(!pNode->HaveChild)
+			//尝试进行空间分割
+			CD3DVector3 CutCenter=GetBoxCutCenter(pNode);
+			if(CanBeCut(pNode,CutCenter))
 			{
-				CD3DVector3 CutCenter=GetBoxCutCenter(pNode);
-				if(CanBeCut(pNode,CutCenter))
-				{
-					CreateChilds(pNode,CutCenter);
-				}
-			}
-			if(pNode->HaveChild)
-			{
+				m_AddObjectTreeCutCount++;
+				CreateChilds(pNode,CutCenter,false);
+
+				//将对象分散到子树中
 				for(int i=(int)pNode->ObjectList.GetCount()-1;i>=0;i--)
 				{
 					CD3DBoundingBox BBox=pNode->ObjectList[i]->WorldBBox;
 					bool IsCut=false;
-					int IntersectCount=0;
+					UINT IntersectCount=0;
 					bool IntersectWitch[OTC_MAX]={0};
 
 					for(UINT j=0;j<m_TreeMode;j++)
 					{
+						m_AddObjectObjectTestCount++;
 						int Relation=CheckBBoxRelation(pNode->Childs[j]->NodeBox,BBox);
 						if(Relation==CD3DBoundingBox::RELATION_TYPE_INCLUDE)
 						{
-							pNode->Childs[j]->ObjectList.Add(pNode->ObjectList[i]);
+							pNode->Childs[j]->AddObj(pNode->ObjectList[i]);
 							IsCut=true;
 							break;
 						}
@@ -900,85 +1211,63 @@ void CD3DSceneRender::UpdateTree(TREE_NODE * pNode)
 							{
 								if(IntersectWitch[j])
 								{
-									pNode->Childs[j]->ObjectList.Add(pNode->ObjectList[i]);
+									pNode->Childs[j]->AddObj(pNode->ObjectList[i]);
 									IsCut=true;
 								}
 							}						
 						}					
 					}
 					if(IsCut)
-						pNode->ObjectList.Delete(i);
+					{
+						pNode->DelObj(i);
+					}
 				}
 			}
+
+			//更新子结点
+			if(pNode->ChildCount)
+			{
+				for(UINT i=0;i<m_TreeMode;i++)
+				{
+					UpdateTree(pNode->Childs[i]);
+				}		
+			}
 		}
+
+		
 	}
 
-	if(pNode->HaveChild)
+	if(pNode->UpdateFlag==TNUF_DEL_OBJECT)
 	{
-		//更新子结点
-		for(UINT i=0;i<m_TreeMode;i++)
-		{
-			UpdateTree(pNode->Childs[i]);
-		}
-
-		//确定子结点是否可删除	
-		int EmptyChildCount=0;
-		for(UINT i=0;i<m_TreeMode;i++)
-		{			
-			if(pNode->Childs[i]->ObjectCount==0&&(!pNode->Childs[i]->IsFixed))
-				EmptyChildCount++;
-		}
-
-		if(EmptyChildCount==m_TreeMode)
+		pNode->UpdateFlag=TNUF_NONE;
+	
+		//检查子节点是否可删除
+		if(pNode->ChildCount)
 		{
 			for(UINT i=0;i<m_TreeMode;i++)
-			{			
+			{
+				if(pNode->Childs[i]->IsFixed||pNode->Childs[i]->ChildCount||pNode->Childs[i]->ObjectList.GetCount())
+				{
+					return;
+				}
+			}	
+			for(UINT i=0;i<m_TreeMode;i++)
+			{
 				DeleteSceneNode(pNode->Childs[i]);
 			}
-			pNode->IsModified=true;
-			pNode->HaveChild=false;
 		}
-	}
 
-	
-
-	if(pNode->IsModified)
-	{
-		pNode->IsModified=false;
-		//节点有变动，更新相关数据
-		if(m_ShowNodeFrame&&pNode->pBoundingFrame==NULL)
+		if(pNode->ObjectList.GetCount()==0&&pNode->ChildCount==0&&pNode->pParent)
 		{
-			pNode->pBoundingFrame=new CD3DBoundingFrame();
-			pNode->pBoundingFrame->SetDevice(m_pDevice);
-			if(pNode->IsFixed)
-				pNode->pBoundingFrame->CreateFromBBox(pNode->NodeBox,0xFF00FF00);
-			else
-				pNode->pBoundingFrame->CreateFromBBox(pNode->NodeBox,0xFF0000FF);
-
-			AddRootObject(pNode->pBoundingFrame);
-			AddObjectToTree(pNode,pNode->pBoundingFrame,false);
+			pNode->pParent->UpdateFlag=TNUF_DEL_OBJECT;
+			UpdateTree(pNode->pParent);
 		}
-		pNode->ChildCount=0;
-		pNode->ObjectCount=pNode->ObjectList.GetCount();
-		if(pNode->HaveChild)
-		{
-			for(UINT i=0;i<m_TreeMode;i++)
-			{			
-				pNode->ChildCount++;
-				pNode->ChildCount+=pNode->Childs[i]->ChildCount;
-				pNode->ObjectCount+=pNode->Childs[i]->ObjectCount;
-			}
-
-		}
+		
 	}
-
-	
-	
 }
 
-void CD3DSceneRender::CreateChilds(TREE_NODE * pNode,CD3DVector3 CutCenter)
-{	
-	pNode->HaveChild=true;
+void CD3DSceneRender::CreateChilds(TREE_NODE * pNode,CD3DVector3 CutCenter,bool IsFixed)
+{		
 	CD3DBoundingBox ChildBBoxs[OTC_MAX];
 	CutBBox(pNode,CutCenter,ChildBBoxs);
 	for(UINT i=0;i<m_TreeMode;i++)
@@ -987,9 +1276,25 @@ void CD3DSceneRender::CreateChilds(TREE_NODE * pNode,CD3DVector3 CutCenter)
 		pNode->Childs[i]->pParent=pNode;
 		pNode->Childs[i]->Depth=pNode->Depth+1;		
 		pNode->Childs[i]->NodeBox=ChildBBoxs[i];		
-		pNode->Childs[i]->ObjectList.Create(8,128);		
+		pNode->Childs[i]->ObjectList.Create(8,128);
+		pNode->Childs[i]->IsFixed=IsFixed;
+
+		//节点有变动，更新相关数据
+		if(m_ShowNodeFrame)
+		{
+			pNode->Childs[i]->pBoundingFrame=new CD3DBoundingFrame();
+			pNode->Childs[i]->pBoundingFrame->SetDevice(m_pDevice);
+			if(pNode->Childs[i]->IsFixed)
+				pNode->Childs[i]->pBoundingFrame->CreateFromBBox(pNode->Childs[i]->NodeBox,0xFF00FF00);
+			else
+				pNode->Childs[i]->pBoundingFrame->CreateFromBBox(pNode->Childs[i]->NodeBox,0xFF0000FF);
+
+			AddObject(pNode->Childs[i]->pBoundingFrame);			
+		}
 	}
+	pNode->ChildCount=m_TreeMode;
 }
+
 
 void CD3DSceneRender::CutBBox(TREE_NODE * pNode,CD3DVector3 CutCenter,CD3DBoundingBox * pChildBBoxs)
 {	
@@ -1064,39 +1369,57 @@ void CD3DSceneRender::CutBBox(TREE_NODE * pNode,CD3DVector3 CutCenter,CD3DBoundi
 
 bool CD3DSceneRender::AddObject(CD3DObject * pObj,bool IsRecursive)
 {
-	CAutoLockEx Lock;
-
-	if(CD3DDevice::IsUseMultiThreadRender())
 	{
-		Lock.Lock(m_RenderLock);
-	}
+		CAutoLockEx Lock;
 
-	if(pObj->GetParent()==NULL)
-		AddRootObject(pObj);
-
-	pObj->SetRender(this);
-	if(pObj->CanRender())
-	{
-		bool IsExist=false;
-		for(UINT i=0;i<m_ObjectList.GetCount();i++)
+		if(CD3DDevice::IsUseMultiThreadRender())
 		{
-			if(m_ObjectList[i]==pObj)
-			{
-				IsExist=true;
-				break;
-			}
-		}	
-		if(!IsExist)
-			m_ObjectList.Add(pObj);
-	}
-	else if(pObj->IsKindOf(GET_CLASS_INFO(CD3DLight)))
-	{
-		AddLight((CD3DLight *)pObj);
-	}
+			Lock.Lock(m_RenderLock);
+		}
 
-	if(pObj->IsKindOfFast(GET_CLASS_INFO(CD3DWOWWMOModel)))
-	{
-		AddWMOObject((CD3DWOWWMOModel *)pObj);
+		pObj->Update(0);		
+		pObj->OnPrepareRenderData();
+		
+
+		if(pObj->GetParent()==NULL)
+			AddRootObject(pObj);
+
+		pObj->SetRender(this);
+		if(pObj->CanRender())
+		{
+			bool IsExist=false;
+			for(UINT i=0;i<m_ObjectList.GetCount();i++)
+			{
+				if(m_ObjectList[i]==pObj)
+				{
+					IsExist=true;
+					break;
+				}
+			}	
+			if(!IsExist)
+			{
+				m_ObjectList.Add(pObj);
+
+				for(int i=0;i<pObj->GetSubMeshCount();i++)
+				{
+					CD3DSubMesh * pSubMesh=pObj->GetSubMesh(i);
+				
+					if(pSubMesh)
+					{
+						pSubMesh->CheckValid();
+					}
+				}
+			}
+		}
+		else if(pObj->IsKindOf(GET_CLASS_INFO(CD3DLight)))
+		{
+			AddLight((CD3DLight *)pObj);
+		}
+
+		if(pObj->IsKindOfFast(GET_CLASS_INFO(CD3DWOWWMOModel)))
+		{
+			AddWMOObject((CD3DWOWWMOModel *)pObj);
+		}
 	}
 
 	if(IsRecursive)
@@ -1110,18 +1433,81 @@ bool CD3DSceneRender::AddObject(CD3DObject * pObj,bool IsRecursive)
 	return true;
 }
 
+bool CD3DSceneRender::AddBackGroundObject(CD3DObject * pObj,bool IsRecursive)
+{
+	{
+		CAutoLockEx Lock;
+
+		if(CD3DDevice::IsUseMultiThreadRender())
+		{
+			Lock.Lock(m_RenderLock);
+		}
+
+		pObj->Update(0);		
+		pObj->OnPrepareRenderData();
+
+
+		if(pObj->GetParent()==NULL)
+			AddRootObject(pObj);
+
+		pObj->SetRender(this);
+		if(pObj->CanRender())
+		{
+			bool IsExist=false;
+			for(UINT i=0;i<m_BackGroundObjectList.GetCount();i++)
+			{
+				if(m_BackGroundObjectList[i]==pObj)
+				{
+					IsExist=true;
+					break;
+				}
+			}	
+			if(!IsExist)
+			{
+				m_BackGroundObjectList.Add(pObj);
+
+				for(int i=0;i<pObj->GetSubMeshCount();i++)
+				{
+					CD3DSubMesh * pSubMesh=pObj->GetSubMesh(i);
+
+					if(pSubMesh)
+					{
+						pSubMesh->CheckValid();
+					}
+				}
+			}
+		}
+	}
+
+	if(IsRecursive)
+	{
+		for(UINT i=0;i<pObj->GetChildCount();i++)
+		{
+			AddBackGroundObject(pObj->GetChildByIndex(i));
+		}
+	}
+
+	return true;
+}
 
 bool CD3DSceneRender::CanBeCut(TREE_NODE * pNode,CD3DVector3 CutCenter)
 {
+	if(m_TreeDepthLimit>0)
+	{
+		if(pNode->Depth>=m_TreeDepthLimit)
+			return false;
+	}
+
 	if(pNode->ObjectList.GetCount()>=MINI_CUT_COUNT)
 	{
 		CD3DBoundingBox ChildBBoxs[OTC_MAX];
 		CutBBox(pNode,CutCenter,ChildBBoxs);
 
 		int ChildCount=0;
-		for(UINT j=0;j<m_TreeMode;j++)
+		
+		for(int i=(int)pNode->ObjectList.GetCount()-1;i>=0;i--)
 		{
-			for(int i=(int)pNode->ObjectList.GetCount()-1;i>=0;i--)
+			for(UINT j=0;j<m_TreeMode;j++)
 			{
 				int Relation=CheckBBoxRelation(ChildBBoxs[j],pNode->ObjectList[i]->WorldBBox);
 				if(Relation==CD3DBoundingBox::RELATION_TYPE_INCLUDE)
@@ -1244,14 +1630,14 @@ void CD3DSceneRender::RenderObject(CD3DObject * pObject,const CD3DFrustum& Frust
 					pSubMesh->SetCulled(false);
 					if(pSubMesh->IsTransparent())
 					{
-						RENDER_BATCH_INFO BatchInfo;
+						RENDER_SUBMESH_INFO BatchInfo;
 						BatchInfo.pObj=pObject;
 						BatchInfo.pSubMesh=pSubMesh;
 						BatchInfo.pMaterial=pMaterial;									
 						m_TransparentSubMeshList.Add(BatchInfo);
 						continue;
 					}					
-					RENDER_BATCH_INFO BatchInfo;
+					RENDER_SUBMESH_INFO BatchInfo;
 					BatchInfo.pObj=pObject;
 					BatchInfo.pSubMesh=pSubMesh;
 					BatchInfo.pMaterial=pMaterial;							
@@ -1275,11 +1661,11 @@ void CD3DSceneRender::RenderSubMesh(RENDER_OBJECT_INFO * pObjectInfo,const CD3DF
 
 	pObjectInfo->IsPreRenderd=true;
 
-	if(pObjectInfo->pSubMesh->IsVisible())
+	if(pObjectInfo->pObject->IsVisible()&&pObjectInfo->pSubMesh->IsVisible())
 	{	
 		if(NeedFrustumCheck)
 		{
-			if(pObjectInfo->pObject->CanDoSubMeshViewCull())
+			//if(pObjectInfo->pObject->CanDoSubMeshViewCull())
 			{
 				m_ObjectCheckCount++;
 				//进行SubMesh级裁减
@@ -1312,10 +1698,9 @@ void CD3DSceneRender::RenderSubMesh(RENDER_OBJECT_INFO * pObjectInfo,const CD3DF
 				}
 			}
 		}
-
-		m_ObjectCount++;
+		
 		pObjectInfo->IsRenderd=true;
-		RENDER_BATCH_INFO BatchInfo;
+		RENDER_SUBMESH_INFO BatchInfo;
 		BatchInfo.pObj=pObjectInfo->pObject;
 		BatchInfo.pSubMesh=pObjectInfo->pSubMesh;
 		BatchInfo.pMaterial=pObjectInfo->pMaterial;
@@ -1341,13 +1726,13 @@ void CD3DSceneRender::RenderScene(TREE_NODE * pNode,const CD3DFrustum& Frustum,b
 			if((!pNode->ObjectList[i]->IsPreRenderd)&&
 				(!pNode->ObjectList[i]->pObject->CheckFlag(CD3DObject::OBJECT_FLAG_PREPARE_RENDERED)))
 			{				
-				if(pNode->HaveChild)
+				if(pNode->ChildCount)
 					m_BranchObjectCheckCount++;
 				RenderSubMesh(pNode->ObjectList[i],Frustum,true);
 			}
 		}
 
-		if(pNode->HaveChild)
+		if(pNode->ChildCount)
 		{
 			int BoxCut=Frustum.BoxLocation(pNode->NodeBox);
 			switch(BoxCut)
@@ -1386,7 +1771,7 @@ void CD3DSceneRender::RenderScene(TREE_NODE * pNode,const CD3DFrustum& Frustum,b
 
 
 		}
-		if(pNode->HaveChild)
+		if(pNode->ChildCount)
 		{
 			for(UINT i=0;i<m_TreeMode;i++)
 			{
@@ -1405,7 +1790,7 @@ void CD3DSceneRender::DoBatchRender()
 
 	for(UINT i=0;i<m_RenderBatchList.GetCount();i++)
 	{
-		RENDER_BATCH_INFO& BatchInfo=m_RenderBatchList[i];
+		RENDER_SUBMESH_INFO& BatchInfo=m_RenderBatchList[i];
 		bool NeedSetObjectFXParam=false;
 
 		if(pFX!=BatchInfo.pMaterial->GetFX())
@@ -1437,7 +1822,7 @@ void CD3DSceneRender::DoBatchRender()
 				pObject->GetRenderLock().Lock();
 			}
 			NeedSetObjectFXParam=true;
-			
+			m_ObjectCount++;
 		}
 		if(NeedSetObjectFXParam)
 			pObject->OnPrepareRender(this,pFX,m_LightList,m_pCamera);
@@ -1504,8 +1889,12 @@ void CD3DSceneRender::DoBatchRender()
 
 	for(UINT i=0;i<m_TransparentSubMeshList.GetCount();i++)
 	{
-		RENDER_BATCH_INFO& BatchInfo=m_TransparentSubMeshList[i];
+		RENDER_SUBMESH_INFO& BatchInfo=m_TransparentSubMeshList[i];
 		bool NeedSetObjectFXParam=false;
+
+		assert(BatchInfo.pObj);
+		assert(BatchInfo.pMaterial);
+		assert(BatchInfo.pMaterial->GetFX());
 
 		if(pFX!=BatchInfo.pMaterial->GetFX())
 		{
@@ -1536,6 +1925,7 @@ void CD3DSceneRender::DoBatchRender()
 				pObject->GetRenderLock().Lock();
 			}
 			NeedSetObjectFXParam=true;
+			m_ObjectCount++;
 		}
 		if(NeedSetObjectFXParam)
 			pObject->OnPrepareRender(this,pFX,m_LightList,m_pCamera);
@@ -1671,202 +2061,204 @@ int BBoxRangeCompareWithWeight(const void * b1,const void * b2)
 CD3DVector3 CD3DSceneRender::GetBoxCutCenter(TREE_NODE * pNode)
 {
 	CD3DVector3 Center=(pNode->NodeBox.m_Max+pNode->NodeBox.m_Min)/2; 
-	
-	CEasyArray<BBOX_RANGE_INFO> BBoxsX;
-	CEasyArray<BBOX_RANGE_INFO> BBoxsZ;
-	CEasyArray<BBOX_RANGE_INFO> BBoxsY;
 
-	BBoxsX.Create(pNode->ObjectList.GetCount(),pNode->ObjectList.GetCount());
-	BBoxsZ.Create(pNode->ObjectList.GetCount(),pNode->ObjectList.GetCount());
-	if(m_TreeMode==QTC_MAX)
-	{
-		BBoxsY.Create(pNode->ObjectList.GetCount(),pNode->ObjectList.GetCount());
-	}
-
-	for(UINT i=0;i<pNode->ObjectList.GetCount();i++)
-	{
-		CD3DBoundingBox BBox=pNode->ObjectList[i]->WorldBBox;
-		BBOX_RANGE_INFO Range;
-		Range.Min=BBox.m_Min.x;
-		Range.Max=BBox.m_Max.x;
-		Range.MinCount=0;
-		Range.MaxCount=0;
-		Range.Weight=0;
-		if(Range.Min>pNode->NodeBox.m_Min.x&&
-			Range.Max<pNode->NodeBox.m_Max.x)
-			BBoxsX.Add(Range);
-		Range.Min=BBox.m_Min.z;
-		Range.Max=BBox.m_Max.z;
-		if(Range.Min>pNode->NodeBox.m_Min.z&&
-			Range.Max<pNode->NodeBox.m_Max.z)
-			BBoxsZ.Add(Range);
-		if(m_TreeMode==QTC_MAX)
-		{
-			Range.Min=BBox.m_Min.y;
-			Range.Max=BBox.m_Max.y;
-			if(Range.Min>pNode->NodeBox.m_Min.y&&
-				Range.Max<pNode->NodeBox.m_Max.y)
-				BBoxsY.Add(Range);
-		}
-	}
-
-	if(BBoxsX.GetCount()>1)
-	{
-		qsort(BBoxsX.GetBuffer(),BBoxsX.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompare);
-
-		for(UINT i=0;i<BBoxsX.GetCount()-1;i++)
-		{
-			for(UINT j=i+1;j<BBoxsX.GetCount();j++)
-			{
-				if(BBoxsX[i].Max>BBoxsX[j].Min)
-				{
-					BBoxsX[i].MaxCount++;
-					BBoxsX[j].MinCount++;
-				}
-				else
-				{
-					break;
-				}
-			}			
-		}	
-		UINT MaxConverCount=1;
-		for(int i=BBoxsX.GetCount()-1;i>0;i--)
-		{
-			for(int j=i-1;j>=0;j--)
-			{
-				if(BBoxsX[i].Min<BBoxsX[j].Max)
-				{
-					BBoxsX[i].MinCount++;
-					BBoxsX[j].MaxCount++;
-					if(BBoxsX[i].MinCount>MaxConverCount)
-						MaxConverCount=BBoxsX[i].MinCount;
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
-
-		for(UINT i=1;i<BBoxsX.GetCount();i++)
-		{
-			BBoxsX[i].Weight=((float)abs((int)BBoxsX.GetCount()/2-(int)i)/(BBoxsX.GetCount()/2))+
-				((float)BBoxsX[i].MinCount/MaxConverCount);
-		}
-
-		BBoxsX[0].Weight=1000.0f;
-
-		qsort(BBoxsX.GetBuffer(),BBoxsX.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompareWithWeight);
-		Center.x=BBoxsX[0].Min;
-	}
-
-
-	if(BBoxsZ.GetCount()>1)
-	{
-		qsort(BBoxsZ.GetBuffer(),BBoxsZ.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompare);
-
-
-
-		for(UINT i=0;i<BBoxsZ.GetCount()-1;i++)
-		{
-			for(UINT j=i+1;j<BBoxsZ.GetCount();j++)
-			{
-				if(BBoxsZ[i].Max>=BBoxsZ[j].Min)
-				{
-					BBoxsZ[i].MaxCount++;
-					BBoxsZ[j].MinCount++;
-				}
-				else
-				{
-					break;
-				}
-			}			
-		}
-		UINT MaxConverCount=1;
-		for(int i=BBoxsZ.GetCount()-1;i>0;i--)
-		{
-			for(int j=i-1;j>=0;j--)
-			{
-				if(BBoxsZ[i].Min<BBoxsZ[j].Max)
-				{
-					BBoxsZ[i].MinCount++;
-					BBoxsZ[j].MaxCount++;
-					if(BBoxsZ[i].MinCount>MaxConverCount)
-						MaxConverCount=BBoxsZ[i].MinCount;
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
-
-		for(UINT i=1;i<BBoxsZ.GetCount();i++)
-		{
-			BBoxsZ[i].Weight=((float)abs((int)BBoxsZ.GetCount()/2-(int)i)/(BBoxsZ.GetCount()/2))+
-				((float)BBoxsZ[i].MinCount/MaxConverCount);
-		}
-
-		BBoxsZ[0].Weight=1000.0f;
-
-		qsort(BBoxsZ.GetBuffer(),BBoxsZ.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompareWithWeight);
-
-		Center.z=BBoxsZ[0].Min;
-	}
-
-	if(BBoxsY.GetCount()>1)
-	{
-		qsort(BBoxsY.GetBuffer(),BBoxsY.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompare);
-
-
-
-		for(UINT i=0;i<BBoxsY.GetCount()-1;i++)
-		{
-			for(UINT j=i+1;j<BBoxsY.GetCount();j++)
-			{
-				if(BBoxsY[i].Max>=BBoxsY[j].Min)
-				{
-					BBoxsY[i].MaxCount++;
-					BBoxsY[j].MinCount++;
-				}
-				else
-				{
-					break;
-				}
-			}			
-		}
-		UINT MaxConverCount=1;
-		for(int i=BBoxsY.GetCount()-1;i>0;i--)
-		{
-			for(int j=i-1;j>=0;j--)
-			{
-				if(BBoxsY[i].Min<BBoxsY[j].Max)
-				{
-					BBoxsY[i].MinCount++;
-					BBoxsY[j].MaxCount++;
-					if(BBoxsY[i].MinCount>MaxConverCount)
-						MaxConverCount=BBoxsY[i].MinCount;
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
-
-		for(UINT i=1;i<BBoxsY.GetCount();i++)
-		{
-			BBoxsY[i].Weight=((float)abs((int)BBoxsY.GetCount()/2-(int)i)/(BBoxsY.GetCount()/2))+
-				((float)BBoxsY[i].MinCount/MaxConverCount);
-		}
-
-		BBoxsY[0].Weight=1000.0f;
-
-		qsort(BBoxsY.GetBuffer(),BBoxsY.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompareWithWeight);
-
-		Center.y=BBoxsY[0].Min;
-	}
 	return Center;
+	
+	//CEasyArray<BBOX_RANGE_INFO> BBoxsX;
+	//CEasyArray<BBOX_RANGE_INFO> BBoxsZ;
+	//CEasyArray<BBOX_RANGE_INFO> BBoxsY;
+
+	//BBoxsX.Create(pNode->ObjectList.GetCount(),pNode->ObjectList.GetCount());
+	//BBoxsZ.Create(pNode->ObjectList.GetCount(),pNode->ObjectList.GetCount());
+	//if(m_TreeMode==QTC_MAX)
+	//{
+	//	BBoxsY.Create(pNode->ObjectList.GetCount(),pNode->ObjectList.GetCount());
+	//}
+
+	//for(UINT i=0;i<pNode->ObjectList.GetCount();i++)
+	//{
+	//	CD3DBoundingBox BBox=pNode->ObjectList[i]->WorldBBox;
+	//	BBOX_RANGE_INFO Range;
+	//	Range.Min=BBox.m_Min.x;
+	//	Range.Max=BBox.m_Max.x;
+	//	Range.MinCount=0;
+	//	Range.MaxCount=0;
+	//	Range.Weight=0;
+	//	if(Range.Min>pNode->NodeBox.m_Min.x&&
+	//		Range.Max<pNode->NodeBox.m_Max.x)
+	//		BBoxsX.Add(Range);
+	//	Range.Min=BBox.m_Min.z;
+	//	Range.Max=BBox.m_Max.z;
+	//	if(Range.Min>pNode->NodeBox.m_Min.z&&
+	//		Range.Max<pNode->NodeBox.m_Max.z)
+	//		BBoxsZ.Add(Range);
+	//	if(m_TreeMode==QTC_MAX)
+	//	{
+	//		Range.Min=BBox.m_Min.y;
+	//		Range.Max=BBox.m_Max.y;
+	//		if(Range.Min>pNode->NodeBox.m_Min.y&&
+	//			Range.Max<pNode->NodeBox.m_Max.y)
+	//			BBoxsY.Add(Range);
+	//	}
+	//}
+
+	//if(BBoxsX.GetCount()>1)
+	//{
+	//	qsort(BBoxsX.GetBuffer(),BBoxsX.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompare);
+
+	//	for(UINT i=0;i<BBoxsX.GetCount()-1;i++)
+	//	{
+	//		for(UINT j=i+1;j<BBoxsX.GetCount();j++)
+	//		{
+	//			if(BBoxsX[i].Max>BBoxsX[j].Min)
+	//			{
+	//				BBoxsX[i].MaxCount++;
+	//				BBoxsX[j].MinCount++;
+	//			}
+	//			else
+	//			{
+	//				break;
+	//			}
+	//		}			
+	//	}	
+	//	UINT MaxConverCount=1;
+	//	for(int i=BBoxsX.GetCount()-1;i>0;i--)
+	//	{
+	//		for(int j=i-1;j>=0;j--)
+	//		{
+	//			if(BBoxsX[i].Min<BBoxsX[j].Max)
+	//			{
+	//				BBoxsX[i].MinCount++;
+	//				BBoxsX[j].MaxCount++;
+	//				if(BBoxsX[i].MinCount>MaxConverCount)
+	//					MaxConverCount=BBoxsX[i].MinCount;
+	//			}
+	//			else
+	//			{
+	//				break;
+	//			}
+	//		}
+	//	}
+
+	//	for(UINT i=1;i<BBoxsX.GetCount();i++)
+	//	{
+	//		BBoxsX[i].Weight=((float)abs((int)BBoxsX.GetCount()/2-(int)i)/(BBoxsX.GetCount()/2))+
+	//			((float)BBoxsX[i].MinCount/MaxConverCount);
+	//	}
+
+	//	BBoxsX[0].Weight=1000.0f;
+
+	//	qsort(BBoxsX.GetBuffer(),BBoxsX.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompareWithWeight);
+	//	Center.x=BBoxsX[0].Min;
+	//}
+
+
+	//if(BBoxsZ.GetCount()>1)
+	//{
+	//	qsort(BBoxsZ.GetBuffer(),BBoxsZ.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompare);
+
+
+
+	//	for(UINT i=0;i<BBoxsZ.GetCount()-1;i++)
+	//	{
+	//		for(UINT j=i+1;j<BBoxsZ.GetCount();j++)
+	//		{
+	//			if(BBoxsZ[i].Max>=BBoxsZ[j].Min)
+	//			{
+	//				BBoxsZ[i].MaxCount++;
+	//				BBoxsZ[j].MinCount++;
+	//			}
+	//			else
+	//			{
+	//				break;
+	//			}
+	//		}			
+	//	}
+	//	UINT MaxConverCount=1;
+	//	for(int i=BBoxsZ.GetCount()-1;i>0;i--)
+	//	{
+	//		for(int j=i-1;j>=0;j--)
+	//		{
+	//			if(BBoxsZ[i].Min<BBoxsZ[j].Max)
+	//			{
+	//				BBoxsZ[i].MinCount++;
+	//				BBoxsZ[j].MaxCount++;
+	//				if(BBoxsZ[i].MinCount>MaxConverCount)
+	//					MaxConverCount=BBoxsZ[i].MinCount;
+	//			}
+	//			else
+	//			{
+	//				break;
+	//			}
+	//		}
+	//	}
+
+	//	for(UINT i=1;i<BBoxsZ.GetCount();i++)
+	//	{
+	//		BBoxsZ[i].Weight=((float)abs((int)BBoxsZ.GetCount()/2-(int)i)/(BBoxsZ.GetCount()/2))+
+	//			((float)BBoxsZ[i].MinCount/MaxConverCount);
+	//	}
+
+	//	BBoxsZ[0].Weight=1000.0f;
+
+	//	qsort(BBoxsZ.GetBuffer(),BBoxsZ.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompareWithWeight);
+
+	//	Center.z=BBoxsZ[0].Min;
+	//}
+
+	//if(BBoxsY.GetCount()>1)
+	//{
+	//	qsort(BBoxsY.GetBuffer(),BBoxsY.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompare);
+
+
+
+	//	for(UINT i=0;i<BBoxsY.GetCount()-1;i++)
+	//	{
+	//		for(UINT j=i+1;j<BBoxsY.GetCount();j++)
+	//		{
+	//			if(BBoxsY[i].Max>=BBoxsY[j].Min)
+	//			{
+	//				BBoxsY[i].MaxCount++;
+	//				BBoxsY[j].MinCount++;
+	//			}
+	//			else
+	//			{
+	//				break;
+	//			}
+	//		}			
+	//	}
+	//	UINT MaxConverCount=1;
+	//	for(int i=BBoxsY.GetCount()-1;i>0;i--)
+	//	{
+	//		for(int j=i-1;j>=0;j--)
+	//		{
+	//			if(BBoxsY[i].Min<BBoxsY[j].Max)
+	//			{
+	//				BBoxsY[i].MinCount++;
+	//				BBoxsY[j].MaxCount++;
+	//				if(BBoxsY[i].MinCount>MaxConverCount)
+	//					MaxConverCount=BBoxsY[i].MinCount;
+	//			}
+	//			else
+	//			{
+	//				break;
+	//			}
+	//		}
+	//	}
+
+	//	for(UINT i=1;i<BBoxsY.GetCount();i++)
+	//	{
+	//		BBoxsY[i].Weight=((float)abs((int)BBoxsY.GetCount()/2-(int)i)/(BBoxsY.GetCount()/2))+
+	//			((float)BBoxsY[i].MinCount/MaxConverCount);
+	//	}
+
+	//	BBoxsY[0].Weight=1000.0f;
+
+	//	qsort(BBoxsY.GetBuffer(),BBoxsY.GetCount(),sizeof(BBOX_RANGE_INFO),BBoxRangeCompareWithWeight);
+
+	//	Center.y=BBoxsY[0].Min;
+	//}
+	//return Center;
 	
 }
 
@@ -1876,13 +2268,14 @@ bool CD3DSceneRender::HeightTest(TREE_NODE * pRoot,const CD3DVector3 Pos,FLOAT M
 	{
 		bool HaveHeight=false;
 		bool IsADTTested=false;
-		FLOAT FinalHeight=-1E38,FinalWaterHeight=-1E38;
+		FLOAT FinalHeight=-1E38f,FinalWaterHeight=-1E38f;
 		
 		for(UINT i=0;i<pRoot->ObjectList.GetCount();i++)
 		{
-			if(pRoot->ObjectList[i]->pObject->IsKindOfFast(GET_CLASS_INFO(CD3DWOWWMOModel)))
+			if(pRoot->ObjectList[i]->pObject->IsKindOfFast(GET_CLASS_INFO(CD3DWOWWMOGroupModel))&&
+				(!pRoot->ObjectList[i]->pObject->CheckFlag(CD3DObject::OBJECT_FLAG_CHECKED)))
 			{
-				CD3DWOWWMOModel * pModel=(CD3DWOWWMOModel *)pRoot->ObjectList[i]->pObject;
+				CD3DWOWWMOGroupModel * pModel=(CD3DWOWWMOGroupModel *)pRoot->ObjectList[i]->pObject;
 				FLOAT H,WH;
 				m_HeightTestCount++;
 				if(pModel->GetHeightByXZ(Pos,MinHeight,MaxHeight,H,WH))
@@ -1899,7 +2292,7 @@ bool CD3DSceneRender::HeightTest(TREE_NODE * pRoot,const CD3DVector3 Pos,FLOAT M
 				CD3DWOWADTModel * pModel=(CD3DWOWADTModel *)pRoot->ObjectList[i]->pObject;
 				FLOAT H,WH;
 				m_HeightTestCount++;
-				if(pModel->GetHeightByXZ(Pos,MinHeight,MaxHeight,H,WH))
+				if(pModel->GetHeightByXZ(Pos,MinHeight,MaxHeight,H,WH,false))
 				{
 					IsADTTested=true;
 					HaveHeight=true;
@@ -1925,7 +2318,7 @@ bool CD3DSceneRender::HeightTest(TREE_NODE * pRoot,const CD3DVector3 Pos,FLOAT M
 				}
 			}
 		}
-		if(pRoot->HaveChild)
+		if(pRoot->ChildCount)
 		{
 			for(UINT i=0;i<m_TreeMode;i++)
 			{
@@ -1951,10 +2344,251 @@ bool CD3DSceneRender::HeightTest(TREE_NODE * pRoot,const CD3DVector3 Pos,FLOAT M
 	return false;
 }
 
+bool CD3DSceneRender::RayIntersect(TREE_NODE * pRoot,const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,CD3DObject ** ppIntersectObject,UINT TestMode)
+{
+	if(pRoot->NodeBox.CheckRelationRay(Point,Dir)==CD3DBoundingBox::RELATION_TYPE_INTERSECT)
+	{
+		bool IsIntersect=false;
+		FLOAT FinalDis;
+		CD3DVector3 P;
+		FLOAT D=0,A;
+		CD3DObject * pObj=NULL;
+
+		for(UINT i=0;i<pRoot->ObjectList.GetCount();i++)
+		{
+			if(pRoot->ObjectList[i]->pObject->IsKindOfFast(GET_CLASS_INFO(CD3DWOWWMOGroupModel))&&
+				(!pRoot->ObjectList[i]->pObject->CheckFlag(CD3DObject::OBJECT_FLAG_CHECKED)))
+			{
+				pRoot->ObjectList[i]->pObject->AddFlag(CD3DObject::OBJECT_FLAG_CHECKED);
+				CD3DWOWWMOGroupModel * pModel=(CD3DWOWWMOGroupModel *)pRoot->ObjectList[i]->pObject;
+				m_RayIntersectCount++;
+				if(pModel->RayIntersect(Point,Dir,P,D,A,TestMode,false))
+				{
+					if(IsIntersect)
+					{
+						if(D<FinalDis)
+						{
+							IntersectPoint=P;
+							Distance=D;
+							DotValue=A;
+							if(ppIntersectObject)
+								*ppIntersectObject=pModel;
+							FinalDis=D;
+						}
+					}
+					else
+					{
+						IsIntersect=true;
+						IntersectPoint=P;
+						Distance=D;
+						DotValue=A;
+						if(ppIntersectObject)
+							*ppIntersectObject=pModel;
+						FinalDis=D;
+					}
+				}				
+			}			
+			else if(CanTestCollide(pRoot->ObjectList[i]->pSubMesh->GetProperty(),TestMode))
+			{
+				CD3DMatrix Mat=pRoot->ObjectList[i]->pObject->GetWorldMatrix();
+				CD3DMatrix MatInv=pRoot->ObjectList[i]->pObject->GetWorldMatrix().GetInverse();
+				CD3DVector3 RayPos=Point*MatInv;
+				CD3DVector3 RayDir=Dir*MatInv.GetRotation();
+				RayDir.Normalize();
+				
+				m_RayIntersectCount++;
+				if(pRoot->ObjectList[i]->pSubMesh->RayIntersect(RayPos,RayDir,P,D,A,false))
+				{
+					P=P*Mat;
+					D=(P-Point).Length();
+					if(IsIntersect)
+					{
+						if(D<FinalDis)
+						{
+							IntersectPoint=P;
+							Distance=D;
+							DotValue=A;
+							if(ppIntersectObject)
+								*ppIntersectObject=pRoot->ObjectList[i]->pObject;
+							FinalDis=D;
+						}
+					}
+					else
+					{
+						IsIntersect=true;
+						IntersectPoint=P;
+						Distance=D;
+						DotValue=A;
+						if(ppIntersectObject)
+							*ppIntersectObject=pRoot->ObjectList[i]->pObject;
+						FinalDis=D;
+					}
+				}
+			}
+		}
+		if(pRoot->ChildCount)
+		{
+			for(UINT i=0;i<m_TreeMode;i++)
+			{
+				if(RayIntersect(pRoot->Childs[i],Point,Dir,P,D,A,&pObj,TestMode))
+				{				
+					if(IsIntersect)
+					{
+						if(D<FinalDis)
+						{
+							IntersectPoint=P;
+							Distance=D;
+							DotValue=A;
+							if(ppIntersectObject)
+								*ppIntersectObject=pObj;
+							FinalDis=D;
+						}
+					}
+					else
+					{
+						IsIntersect=true;
+						IntersectPoint=P;
+						Distance=D;
+						DotValue=A;
+						if(ppIntersectObject)
+							*ppIntersectObject=pObj;
+						FinalDis=D;
+					}
+				}
+			}	
+		}
+		
+		return IsIntersect;
+	}
+	return false;
+}
+
+bool CD3DSceneRender::LineIntersect(TREE_NODE * pRoot,const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,CD3DObject ** ppIntersectObject,UINT TestMode)
+{
+	
+	FLOAT FinalDis;
+	bool IsIntersect=false;
+	CD3DVector3 P;
+	FLOAT D=0,A;
+	CD3DObject * pObj=NULL;
+
+	if(pRoot->NodeBox.LineIntersect(StartPoint,EndPoint,P,D))
+	{
+		for(UINT i=0;i<pRoot->ObjectList.GetCount();i++)
+		{
+			if(pRoot->ObjectList[i]->pObject->IsKindOfFast(GET_CLASS_INFO(CD3DWOWWMOGroupModel))&&
+				(!pRoot->ObjectList[i]->pObject->CheckFlag(CD3DObject::OBJECT_FLAG_CHECKED)))
+			{
+				pRoot->ObjectList[i]->pObject->AddFlag(CD3DObject::OBJECT_FLAG_CHECKED);
+				CD3DWOWWMOGroupModel * pModel=(CD3DWOWWMOGroupModel *)pRoot->ObjectList[i]->pObject;
+				m_LineIntersectCount++;
+				if(pModel->LineIntersect(StartPoint,EndPoint,P,D,A,TestMode))
+				{
+					if(IsIntersect)
+					{
+						if(D<=FinalDis)
+						{
+							IntersectPoint=P;
+							Distance=D;
+							DotValue=A;
+							if(ppIntersectObject)
+								*ppIntersectObject=pModel;
+							FinalDis=D;
+						}
+					}
+					else
+					{
+						IsIntersect=true;
+						IntersectPoint=P;
+						Distance=D;
+						DotValue=A;
+						if(ppIntersectObject)
+							*ppIntersectObject=pModel;
+						FinalDis=D;
+					}
+					
+				}
+			}			
+			else if(CanTestCollide(pRoot->ObjectList[i]->pSubMesh->GetProperty(),TestMode))
+			{
+				CD3DMatrix Mat=pRoot->ObjectList[i]->pObject->GetWorldMatrix();
+				CD3DMatrix MatInv=pRoot->ObjectList[i]->pObject->GetWorldMatrix().GetInverse();
+				CD3DVector3 Pos1=StartPoint*MatInv;
+				CD3DVector3 Pos2=EndPoint*MatInv;				
+
+				m_LineIntersectCount++;
+				if(pRoot->ObjectList[i]->pSubMesh->LineIntersect(Pos1,Pos2,P,D,A))
+				{
+					P=P*Mat;
+					D=(P-StartPoint).Length();
+					if(IsIntersect)
+					{
+						if(D<=FinalDis)
+						{
+							IntersectPoint=P;
+							Distance=D;
+							DotValue=A;
+							if(ppIntersectObject)
+								*ppIntersectObject=pRoot->ObjectList[i]->pObject;
+							FinalDis=D;
+						}
+					}
+					else
+					{
+						IsIntersect=true;
+						IntersectPoint=P;
+						Distance=D;
+						DotValue=A;
+						if(ppIntersectObject)
+							*ppIntersectObject=pRoot->ObjectList[i]->pObject;
+						FinalDis=D;
+					}
+					
+				}
+			}
+		}
+		if(pRoot->ChildCount)
+		{
+			for(UINT i=0;i<m_TreeMode;i++)
+			{
+				if(LineIntersect(pRoot->Childs[i],StartPoint,EndPoint,P,D,A,&pObj,TestMode))
+				{				
+					if(IsIntersect)
+					{
+						if(D<=FinalDis)
+						{
+							IntersectPoint=P;
+							Distance=D;
+							DotValue=A;
+							if(ppIntersectObject)
+								*ppIntersectObject=pObj;
+							FinalDis=D;
+						}
+					}
+					else
+					{
+						IsIntersect=true;
+						IntersectPoint=P;
+						Distance=D;
+						DotValue=A;
+						if(ppIntersectObject)
+							*ppIntersectObject=pObj;
+						FinalDis=D;
+					}					
+				}
+			}	
+		}
+
+		return IsIntersect;
+		
+	}
+	return false;
+}
+
 int CD3DSceneRender::SubMeshCompare(const void * s1,const void * s2)
 {
-	RENDER_BATCH_INFO * pBatchInfo1=(RENDER_BATCH_INFO *)s1;
-	RENDER_BATCH_INFO * pBatchInfo2=(RENDER_BATCH_INFO *)s2;
+	RENDER_SUBMESH_INFO * pBatchInfo1=(RENDER_SUBMESH_INFO *)s1;
+	RENDER_SUBMESH_INFO * pBatchInfo2=(RENDER_SUBMESH_INFO *)s2;
 
 	
 	if(pBatchInfo1->pMaterial->GetFX()==pBatchInfo2->pMaterial->GetFX())
@@ -2024,7 +2658,7 @@ void CD3DSceneRender::RenderSubMeshEx(CD3DSubMesh * pSubMesh)
 		{
 			hr=m_pDevice->GetD3DDevice()->DrawIndexedPrimitiveUP((D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(),
 				pSubMesh->GetVertexStart(),
-				pSubMesh->GetVertexStart()+pSubMesh->GetVertexCount(),
+				pSubMesh->GetVertexCount()+pSubMesh->GetVertexStart(),
 				pSubMesh->GetPrimitiveCount(),
 				pSubMesh->GetIndexBufferR()+pSubMesh->GetVertexFormat().IndexSize*pSubMesh->GetIndexStart(),
 				IndexFormat,
@@ -2048,6 +2682,11 @@ void CD3DSceneRender::RenderSubMeshEx(CD3DSubMesh * pSubMesh)
 		}
 	}
 				
+}
+
+bool CD3DSceneRender::CanTestCollide(UINT64 SubMeshProperty,UINT TestMode)
+{
+	return (SubMeshProperty&CD3DSubMesh::SMF_HAVE_COLLIDE)||(TestMode&RITM_INCLUDE_NO_COLLIDE_FACE);
 }
 
 }

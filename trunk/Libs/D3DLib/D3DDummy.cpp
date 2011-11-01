@@ -23,6 +23,17 @@ CD3DDummy::CD3DDummy(void):CD3DObject()
 
 CD3DDummy::~CD3DDummy(void)
 {
+	Destory();
+}
+
+void CD3DDummy::Destory()
+{
+	CD3DObject::Destory();
+}
+
+bool CD3DDummy::CanRender()
+{
+	return false;
 }
 
 void CD3DDummy::ShowBoundingFrame(int Operator)

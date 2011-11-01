@@ -226,10 +226,10 @@ void CD3DWOWM2ModelResource::Destory()
 	{
 		SAFE_RELEASE(m_RibbonEmitters[i].pModelResource);		
 	}
+	m_SkinFiles.Clear();
 	m_SubMeshList.Clear();	
 	m_AnimationSequence.Clear();
-	m_Bones.Clear();	
-	m_SkinMeshBoneCount=0;
+	m_Bones.Clear();		
 	m_KeyBoneIndex.Clear();
 	m_GlobalSequences.Clear();
 	m_Attachments.Clear();	
@@ -291,7 +291,6 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR szModelFileName)
 	pFile->Release();
 
 	SetName(szModelFileName);
-		
 
 	CEasyString ModelPath=szModelFileName;
 	int Pos=ModelPath.ReverseFind('.');
@@ -300,7 +299,6 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR szModelFileName)
 		return false;
 	}
 	ModelPath=ModelPath.Left(Pos);
-	CEasyString SkinFileName=ModelPath+"00.skin";
 
 	BLZ_M2_HEADER * pHeader=(BLZ_M2_HEADER *)ModelData.GetBuffer();
 	if(pHeader->Tag!=BLZ_M2_HEADER_TAG)
@@ -308,6 +306,13 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR szModelFileName)
 
 	m_Flag=pHeader->ModelFlag;
 	m_Version=pHeader->Version;
+
+	m_ModelFilePath=szModelFileName;
+
+	CheckSkins(ModelPath);
+
+	if(m_SkinFiles.GetCount()<=0)
+		return false;
 
 	//PrintD3DDebugLog(0,"M2 Flag=0x%X",pHeader->ModelFlag);
 
@@ -326,9 +331,16 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR szModelFileName)
 	if(!LoadAttachments((BYTE *)ModelData.GetBuffer()))
 		return false;
 	
+	if(!LoadCameraInfos((BYTE *)ModelData.GetBuffer()))
+		return false;
 
+	if(!LoadRibbonEmitters((BYTE *)ModelData.GetBuffer()))
+		return false;
+
+	if(!LoadParticleEmitters((BYTE *)ModelData.GetBuffer()))
+		return false;
 	
-	if(!LoadSkin(SkinFileName,m_SubMeshList,(BYTE *)ModelData.GetBuffer()))
+	if(!LoadSkin(m_SkinFiles[0],m_SubMeshList,(BYTE *)ModelData.GetBuffer()))
 		return false;
 	
 
@@ -337,12 +349,6 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR szModelFileName)
 
 	CreateBounding();
 
-	
-	if(!LoadRibbonEmitters((BYTE *)ModelData.GetBuffer()))
-		return false;
-
-	if(!LoadParticleEmitters((BYTE *)ModelData.GetBuffer()))
-		return false;
 
 	return true;
 
@@ -519,7 +525,44 @@ bool CD3DWOWM2ModelResource::LoadFromXFile(LPCTSTR szModelFileName)
 	return true;
 }
 
+bool CD3DWOWM2ModelResource::ChangeSkin(UINT Index)
+{
+	if(Index<m_SkinFiles.GetCount())
+	{
+		for(UINT i=0;i<m_SubMeshList.GetCount();i++)
+		{
+			SAFE_RELEASE(m_SubMeshList[i]);
+		}
+		
+		m_SubMeshList.Clear();	
+	
+		
+		IFileAccessor * pFile;
 
+
+		CEasyBuffer ModelData;
+
+
+		pFile=CD3DWOWM2Model::CreateFileAccessor();
+		if(pFile==NULL)
+			return false;
+		if(!pFile->Open(m_ModelFilePath,IFileAccessor::modeRead))
+		{
+			pFile->Release();
+			return false;	
+		}
+		UINT FileSize=(UINT)pFile->GetSize();	
+		ModelData.Create(FileSize);	
+		pFile->Read(ModelData.GetBuffer(),FileSize);
+		ModelData.SetUsedSize(FileSize);
+		pFile->Release();
+
+
+		return LoadSkin(m_SkinFiles[Index],m_SubMeshList,(BYTE *)ModelData.GetBuffer());
+	}
+
+	return false;
+}
 
 void CD3DWOWM2ModelResource::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 {
@@ -968,6 +1011,7 @@ bool CD3DWOWM2ModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceMa
 	}	
 	CheckAni();
 	//PrintBoneInfo();
+	BuildSubMeshData();
 	
 	return true;
 }
@@ -1101,6 +1145,47 @@ bool CD3DWOWM2ModelResource::LoadSkin(LPCTSTR SkinFileName,CEasyArray<CD3DSubMes
 	WORD * pIndices=(WORD *)((BYTE *)SkinData.GetBuffer()+pSkinHeader->IndicesOffset);
 	WORD * pTriangles=(WORD *)((BYTE *)SkinData.GetBuffer()+pSkinHeader->TrianglesOffset);
 
+	m_Vertices.Resize(pHeader->VerticesCount);
+	for(UINT i=0;i<pHeader->VerticesCount;i++)
+	{
+		m_Vertices[i].Pos=BLZTranslationToD3D(pVertices[i].Pos);
+		for(int b=0;b<MAX_VERTEX_BONE_BIND;b++)
+		{
+			m_Vertices[i].BoneWeight[b]=pVertices[i].BoneWeight[b]/255.0f;					
+			m_Vertices[i].BoneID[b]=pVertices[i].BoneIndex[b];				
+			if(IsAniBone(m_Vertices[i].BoneID[b])&&m_Vertices[i].BoneWeight[b]>0)
+			{
+				if(m_Vertices[i].BoneID[b]+1>(BYTE)m_SkinMeshBoneCount)
+				{
+					m_SkinMeshBoneCount=m_Vertices[i].BoneID[b]+1;
+				}
+			}
+		}			
+		m_Vertices[i].Normal=BLZTranslationToD3D(pVertices[i].Normal);
+
+		m_Vertices[i].TextureCoord=pVertices[i].Tex;			
+
+		m_Vertices[i].Diffuse=(((UINT)(pVertices[i].Unknow[0]*255))&0xFF)|
+			(((UINT)(pVertices[i].Unknow[1]*255))<<8);
+	}
+
+	m_Indices.Resize(pSkinHeader->TrianglesCount);
+	for(UINT i=0;i<pSkinHeader->TrianglesCount;i++)
+	{
+		UINT Triangle=(i/3)*3+(2-i%3);
+
+		WORD Index=pTriangles[Triangle];
+		if(Index>=pSkinHeader->IndicesCount)
+		{
+			PrintSystemLog(0,"Error Triangle");
+		}
+		m_Indices[i]=pIndices[Index];
+		if(m_Indices[i]>=pHeader->VerticesCount)
+		{
+			PrintSystemLog(0,"Error Indice");
+		}			
+	}
+
 	int TotalVertexCount=0;
 	for(UINT i=0;i<SubMeshCount;i++)
 	{		
@@ -1113,82 +1198,57 @@ bool CD3DWOWM2ModelResource::LoadSkin(LPCTSTR SkinFileName,CEasyArray<CD3DSubMes
 		pD3DSubMesh->GetVertexFormat().IndexSize=sizeof(WORD);
 		pD3DSubMesh->SetPrimitiveType(D3DPT_TRIANGLELIST);
 		pD3DSubMesh->SetPrimitiveCount(pSubMesh[i].TrianglesCount/3);		
+		pD3DSubMesh->SetIndexStart(pSubMesh[i].StartTriangle);
+		pD3DSubMesh->SetIndexCount(pSubMesh[i].TrianglesCount);	
+		pD3DSubMesh->SetVertexStart(pSubMesh[i].StartVertex);
 		pD3DSubMesh->SetVertexCount(pSubMesh[i].VerticesCount);
-		pD3DSubMesh->SetIndexCount(pSubMesh[i].TrianglesCount);
+
+		UINT StartVertex=pSubMesh[i].StartVertex;
+		UINT EndVertex=pSubMesh[i].StartVertex+pSubMesh[i].VerticesCount-1;
+		
+
+		pD3DSubMesh->SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
+		pD3DSubMesh->SetOrginDataBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 
 
-		pD3DSubMesh->AllocDXIndexBuffer();
-
-		CEasyArray<WORD> VertexIndexList(pSubMesh[i].VerticesCount,64);
-
-		WORD * pStaticModelIndices=NULL;
-		pD3DSubMesh->GetDXIndexBuffer()->Lock(0,0,(LPVOID *)&pStaticModelIndices,0);
-		for(UINT j=0;j<pSubMesh[i].TrianglesCount;j++)
+		for(UINT j=pSubMesh[i].StartTriangle;j<pSubMesh[i].StartTriangle+pSubMesh[i].TrianglesCount;j++)
 		{
-			UINT Triangle=((pSubMesh[i].StartTriangle+j)/3)*3+(2-(pSubMesh[i].StartTriangle+j)%3);
-
-			WORD Index=pTriangles[Triangle];
-			if(Index>=pSkinHeader->IndicesCount)
+			WORD Index=m_Indices[j];
+			if(Index<StartVertex)
 			{
-				PrintSystemLog(0,"Error Triangle");
+				StartVertex=Index;
+				PrintD3DDebugLog(0,"Index值有异常，修正Vertex范围");
 			}
-			WORD VertexIndex=pIndices[Index];
-			if(VertexIndex>=pHeader->VerticesCount)
+			if(Index>EndVertex)
 			{
-				PrintSystemLog(0,"Error Indice");
-			}			
-			pStaticModelIndices[j]=RebuildVertexIndex(VertexIndexList,VertexIndex);
-		}
-		pD3DSubMesh->GetDXIndexBuffer()->Unlock();
-
-		if(pD3DSubMesh->GetVertexCount()>=VertexIndexList.GetCount())
-		{
-			pD3DSubMesh->AllocDXVertexBuffer();
-
-			MODEL_VERTEXT * pModelVertices=NULL;
-			pD3DSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pModelVertices,0);
-			for(UINT j=0;j<VertexIndexList.GetCount();j++)
+				EndVertex=Index;
+				PrintD3DDebugLog(0,"Index值有异常，修正Vertex范围");
+			}
+			if(!HasSkinMeshAni)
 			{
-				WORD VertexIndex=VertexIndexList[j];
-				pModelVertices[j].Pos=BLZTranslationToD3D(pVertices[VertexIndex].Pos);
 				for(int b=0;b<MAX_VERTEX_BONE_BIND;b++)
 				{
-					pModelVertices[j].BoneWeight[b]=pVertices[VertexIndex].BoneWeight[b]/255.0f;					
-					pModelVertices[j].BoneID[b]=pVertices[VertexIndex].BoneIndex[b];				
-					if(IsAniBone(pModelVertices[j].BoneID[b]))
+					if(IsAniBone(m_Vertices[Index].BoneID[b]))
 					{
 						HasSkinMeshAni=true;
-						if(pModelVertices[j].BoneID[b]+1>(BYTE)m_SkinMeshBoneCount)
-						{
-							m_SkinMeshBoneCount=pModelVertices[j].BoneID[b]+1;
-						}
+						break;
 					}
 				}			
-				pModelVertices[j].Normal=BLZTranslationToD3D(pVertices[VertexIndex].Normal);
-				
-				pModelVertices[j].TextureCoord=pVertices[VertexIndex].Tex;			
-
-				pModelVertices[j].Diffuse=(((UINT)(pVertices[VertexIndex].Unknow[0]*255))&0xFF)|
-					(((UINT)(pVertices[VertexIndex].Unknow[1]*255))<<8);
-				
-				
-
-				TotalVertexCount++;
 			}
+			//if(HasSkinMeshAni)
+			//{
+			//	break;
+			//}
+		}
 
-			pD3DSubMesh->GetDXVertexBuffer()->Unlock();
-		}
-		else
-		{
-			PrintD3DLog(0,"Error VertexCount,Origin=%u,Now=%u",
-				pD3DSubMesh->GetVertexCount(),VertexIndexList.GetCount());
-		}
+		pD3DSubMesh->SetVertexStart(StartVertex);
+		pD3DSubMesh->SetVertexCount(EndVertex-StartVertex+1);
 
 		pD3DSubMesh->SetID(pSubMesh[i].ID);
 		CEasyString SubMeshName;
 		int Part=pSubMesh[i].ID/100;
 		int Type=pSubMesh[i].ID%100;
-		SubMeshName.Format("%02d-%02d",Part,Type);
+		SubMeshName.Format("%02d-%02d(%d)",Part,Type,i);
 		pD3DSubMesh->SetName(SubMeshName);
 
 		if(HasSkinMeshAni)
@@ -1204,6 +1264,8 @@ bool CD3DWOWM2ModelResource::LoadSkin(LPCTSTR SkinFileName,CEasyArray<CD3DSubMes
 	{
 		MakeSubmeshMaterial(pModelData,(BYTE *)SkinData.GetBuffer(),i,m_SubMeshList[i]);		
 	}
+
+	BuildSubMeshData();
 
 	return true;
 }
@@ -1282,10 +1344,16 @@ void CD3DWOWM2ModelResource::MakeSubmeshMaterial(BYTE * pModelData,BYTE * pSkinD
 			short ColorAniIndex=pTextureUnits[i].ColorIndex;
 			short TransparencyAniIndex=-1;
 			short UVAniIndex=-1;
-			if(pTextureUnits[i].Transparency<pHeader->TransLookupCount)
-				TransparencyAniIndex=pTransparencylookup[pTextureUnits[i].Transparency];
-			if(pTextureUnits[i].TextureAnim<pHeader->TexAnimLookupCount)
-				UVAniIndex=pTextureAnimLookup[pTextureUnits[i].TextureAnim];
+			if(m_ColorAnimations.GetCount())
+			{
+				if(pTextureUnits[i].Transparency<pHeader->TransLookupCount)
+					TransparencyAniIndex=pTransparencylookup[pTextureUnits[i].Transparency];
+			}
+			if(m_TextureUVAnimations.GetCount())
+			{
+				if(pTextureUnits[i].TextureAnim<pHeader->TexAnimLookupCount)
+					UVAniIndex=pTextureAnimLookup[pTextureUnits[i].TextureAnim];
+			}
 
 			if(UVAniIndex>=0)
 				TextureFlag|=D3D_TEX_FLAG_UV_ANI;
@@ -1741,7 +1809,15 @@ CD3DWOWM2ModelResource::RIBBON_EMITTER_BIND_INFO * CD3DWOWM2ModelResource::GetRi
 	return m_RibbonEmitters.GetObject(Index);
 }
 
+UINT CD3DWOWM2ModelResource::GetCameraCount()
+{
+	return m_CameraInfos.GetCount();
+}
 
+CD3DWOWM2ModelResource::CAMERA_INFO * CD3DWOWM2ModelResource::GetCameraInfo(UINT Index)
+{
+	return m_CameraInfos.GetObject(Index);
+}
 
 bool CD3DWOWM2ModelResource::MakeTextureUVAniFrame(UINT Index,UINT Time,bool IsLoop,CD3DMatrix& Frame)
 {
@@ -1763,10 +1839,13 @@ bool CD3DWOWM2ModelResource::MakeTextureUVAniFrame(UINT Index,UINT Time,bool IsL
 
 void CD3DWOWM2ModelResource::SetBoneAniCache(UINT CacheSize,UINT CacheFreq)
 {
-	m_BoneAniCache.Clear();	
+	
 	m_BoneAniCacheSize=CacheSize;
 	m_BoneAniCacheFreq=CacheFreq;
-	BuildGlobalBoneAniCache();	
+	if(m_BoneAniCacheSize&&m_GlobalBoneAniCache.GetCount()==0)
+	{
+		BuildGlobalBoneAniCache();
+	}
 }
 
 UINT CD3DWOWM2ModelResource::CaculateDataSize()
@@ -2009,17 +2088,26 @@ void CD3DWOWM2ModelResource::LoadBoneAnimation(BYTE * pData,BYTE * pAniData,MODE
 
 
 
-WORD CD3DWOWM2ModelResource::RebuildVertexIndex(CEasyArray<WORD>& VertexIndexList,WORD VertexIndex)
+//WORD CD3DWOWM2ModelResource::RebuildVertexIndex(CEasyArray<WORD>& VertexIndexList,WORD VertexIndex)
+//{
+//	for(UINT i=0;i<VertexIndexList.GetCount();i++)
+//	{
+//		if(VertexIndexList[i]==VertexIndex)
+//		{
+//			return i;
+//		}
+//	}
+//	VertexIndexList.Add(VertexIndex);
+//	return VertexIndexList.GetCount()-1;
+//}
+
+void CD3DWOWM2ModelResource::BuildSubMeshData()
 {
-	for(UINT i=0;i<VertexIndexList.GetCount();i++)
+	for(UINT i=0;i<m_SubMeshList.GetCount();i++)
 	{
-		if(VertexIndexList[i]==VertexIndex)
-		{
-			return i;
-		}
+		m_SubMeshList[i]->SetVertices((BYTE *)m_Vertices.GetBuffer());
+		m_SubMeshList[i]->SetIndices((BYTE *)m_Indices.GetBuffer());
 	}
-	VertexIndexList.Add(VertexIndex);
-	return VertexIndexList.GetCount()-1;
 }
 
 bool CD3DWOWM2ModelResource::LoadAttachments(BYTE * pModelData)
@@ -2049,6 +2137,34 @@ bool CD3DWOWM2ModelResource::LoadAttachments(BYTE * pModelData)
 }
 
 
+bool CD3DWOWM2ModelResource::LoadCameraInfos(BYTE * pModelData)
+{
+	if(pModelData==NULL)
+		return false;
+
+	BLZ_M2_HEADER * pHeader=(BLZ_M2_HEADER *)pModelData;
+
+	M2_CAMERA_INFO * pCameraInfos=(M2_CAMERA_INFO *)(pModelData+pHeader->CamerasOffset);	
+	short * pCameraLookup=(short *)(pModelData+pHeader->CameraLookupOffset);
+
+	m_CameraInfos.Resize(pHeader->CamerasCount);
+	for(UINT i=0;i<pHeader->CamerasCount;i++)
+	{
+		m_CameraInfos[i].Type=pCameraInfos[i].Type;
+		m_CameraInfos[i].FOV=pCameraInfos[i].FOV*35*D3DX_PI/180;
+		m_CameraInfos[i].FarClipping=pCameraInfos[i].FarClipping;
+		m_CameraInfos[i].NearClipping=pCameraInfos[i].NearClipping;
+		m_CameraInfos[i].Position=BLZTranslationToD3D(pCameraInfos[i].Position);
+		m_CameraInfos[i].Target=BLZTranslationToD3D(pCameraInfos[i].Target);
+
+		LoadAniBlockTranslation(pModelData,pCameraInfos[i].TranslationPos,m_CameraInfos[i].TranslationPos);
+		LoadAniBlockTranslation(pModelData,pCameraInfos[i].TranslationTar,m_CameraInfos[i].TranslationTar);
+		LoadAniBlockScaling(pModelData,pCameraInfos[i].Scaling,m_CameraInfos[i].Scaling);
+	}
+
+	return true;
+}
+
 void CD3DWOWM2ModelResource::BuildFX(CD3DSubMesh * pSubMesh)
 {
 	CEasyString FXName;
@@ -2063,8 +2179,7 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMesh * pSubMesh)
 	CEasyString DestBlend;
 	CEasyString EnableAlphaTest;
 	CEasyString VertexAlphaOperation;
-	CEasyString VShader;
-	CEasyString PShader;
+	CEasyString VShader;	
 	CEasyString TextureAddrU[4];
 	CEasyString TextureAddrV[4];
 	CEasyString TextureUVAni;
@@ -2252,29 +2367,10 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMesh * pSubMesh)
 			}
 		}
 	}	
-	PShader="PShaderWithNormal";
-
-	IFileAccessor * pFile;
 
 	CEasyString FxContent;
-
-
-	pFile=CD3DFX::CreateFileAccessor();
-	if(pFile==NULL)
-		return ;
-
-	CEasyString FXFileName=CD3DFX::FindFileOne(M2_MODEL_FX_FILE_NAME);
-	if(!pFile->Open(FXFileName,IFileAccessor::modeRead|IFileAccessor::shareShareAll))
-	{
-		PrintD3DLog(0,"文件%s打开失败%d",(LPCTSTR)FXFileName,GetLastError());
-		pFile->Release();
-		return ;	
-	}
-	int FileSize=(int)pFile->GetSize();	
-	FxContent.Resize(FileSize);
-	pFile->Read((LPVOID)FxContent.GetBuffer(),FileSize);	
-	FxContent.SetLength(FileSize);
-	pFile->Release();
+	
+	FxContent=M2_MODEL_FX;	
 	FxContent.Replace("<PSDiffuseFunction>",PSDiffuseFunction);
 	FxContent.Replace("<VSDiffuseFunction>",VSDiffuseFunction);
 	FxContent.Replace("<EnableZWrite>",EnableZWrite);
@@ -2287,8 +2383,7 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMesh * pSubMesh)
 	FxContent.Replace("<EnableAlphaTest>",EnableAlphaTest);
 	FxContent.Replace("<VertexAlphaOperation>",VertexAlphaOperation);
 	FxContent.Replace("<TextureUVAni>",TextureUVAni);
-	FxContent.Replace("<VShader>",VShader);
-	FxContent.Replace("<PShader>",PShader);
+	FxContent.Replace("<VShader>",VShader);	
 	for(UINT i=0;i<4;i++)
 	{		
 		Temp.Format("<TextureAddrU%d>",i);
@@ -2396,18 +2491,18 @@ bool CD3DWOWM2ModelResource::BuildGlobalBoneAniCache()
 
 CD3DWOWM2ModelResource::BONE_ANI_CACHE * CD3DWOWM2ModelResource::BuildBoneAniCache(ANIMATION_SEQUENCE * pAniInfo)
 {
-	if(m_BoneAniCache.GetCount()>m_BoneAniCacheSize)
+	while(m_BoneAniCache.GetObjectCount()>m_BoneAniCacheSize)
 	{
-		m_BoneAniCache.Delete(m_BoneAniCache.GetHead());
+		m_BoneAniCache.DeleteObject(m_BoneAniCache.GetFirstObjectPos());
 	}
 	UINT FrameTimeSpan=1000/m_BoneAniCacheFreq;
 	UINT FrameCount=ceil((float)pAniInfo->Length/FrameTimeSpan);
-	BONE_ANI_CACHE& AniCache=m_BoneAniCache.InsertAfter();
-	AniCache.AniIndex=pAniInfo->Index;
-	AniCache.Bones.Resize(m_Bones.GetCount());
+	BONE_ANI_CACHE * pAniCache=m_BoneAniCache.GetObject(m_BoneAniCache.PushBack());
+	pAniCache->AniIndex=pAniInfo->Index;
+	pAniCache->Bones.Resize(m_Bones.GetCount());
 	for(UINT i=0;i<m_Bones.GetCount();i++)
 	{		
-		BONE_ANI_CACHE_FRAME& BoneFrames=AniCache.Bones[i];
+		BONE_ANI_CACHE_FRAME& BoneFrames=pAniCache->Bones[i];
 		BoneFrames.BoneID=i;			
 		BoneFrames.Matrix.Resize(FrameCount);		
 		for(UINT j=0;j<FrameCount;j++)
@@ -2422,18 +2517,18 @@ CD3DWOWM2ModelResource::BONE_ANI_CACHE * CD3DWOWM2ModelResource::BuildBoneAniCac
 				m_Bones[i].Scalings);			
 		}		
 	}	
-	return &AniCache;
+	return pAniCache;
 }
 
 CD3DWOWM2ModelResource::BONE_ANI_CACHE * CD3DWOWM2ModelResource::FindBoneAniCache(UINT AniIndex)
 {
-	void * Pos=m_BoneAniCache.GetHead();
+	void * Pos=m_BoneAniCache.GetFirstObjectPos();
 	while(Pos)
 	{
-		BONE_ANI_CACHE& AniCache=m_BoneAniCache.GetNextObject(Pos);
-		if(AniCache.AniIndex==AniIndex)
+		BONE_ANI_CACHE * pAniCache=m_BoneAniCache.GetNext(Pos);
+		if(pAniCache->AniIndex==AniIndex)
 		{
-			return &AniCache;
+			return pAniCache;
 		}
 	}
 	return NULL;
@@ -2508,6 +2603,10 @@ bool CD3DWOWM2ModelResource::IsAniBone(UINT Bone)
 {
 	if(Bone<m_Bones.GetCount())
 	{
+		if(m_Bones[Bone].Flags&(BONE_FLAG_BILLBOARD|BONE_FLAG_BILLBOARD_HORIZONTAL))
+		{
+			return true;
+		}
 		for(UINT j=0;j<m_Bones[Bone].Translations.Animations.GetCount();j++)
 		{
 			if(m_Bones[Bone].Translations.Animations[j].TimeStamps.GetCount())
@@ -2533,6 +2632,26 @@ bool CD3DWOWM2ModelResource::IsAniBone(UINT Bone)
 	return false;
 }
 
+void CD3DWOWM2ModelResource::CheckSkins(LPCTSTR szModelPath)
+{
+	IFileAccessor * pFile=CD3DWOWM2Model::CreateFileAccessor();
+	if(pFile)
+	{		
+		CEasyString SkinFileName;
+		for(UINT i=0;i<MAX_M2_SKIN;i++)
+		{
+			SkinFileName.Format("%s%02d.skin",(LPCTSTR)szModelPath,i);
+			if(pFile->Open(SkinFileName,IFileAccessor::modeRead))
+			{
+				m_SkinFiles.Add(SkinFileName);
+				pFile->Close();
+			}
+
+		}
+		SAFE_RELEASE(pFile);
+	}		
+	
+}
 
 }
 

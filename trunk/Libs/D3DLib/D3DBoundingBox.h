@@ -33,21 +33,23 @@ public:
 	CD3DBoundingBox(D3DXVECTOR3 Min,D3DXVECTOR3 Max);
 	~CD3DBoundingBox(){}
 
-	void ComputeFromVertex(LPVOID pVertext,int VertexCount,int VertexSize);
-	void ComputeFromVertexWithTransform(LPVOID pVertext,int VertexCount,int VertexSize,const CD3DMatrix& TransformMat);
-	void AppendFromVertex(LPVOID pVertext,int VertexCount,int VertexSize);
-	void AppendFromVertexWithTransform(LPVOID pVertext,int VertexCount,int VertexSize,const CD3DMatrix& TransformMat);
+	void ComputeFromVertex(LPVOID pVertext,UINT VertexCount,UINT VertexSize);
+	void ComputeFromVertexWithTransform(LPVOID pVertext,UINT VertexCount,UINT VertexSize,const CD3DMatrix& TransformMat);
+	void AppendFromVertex(LPVOID pVertext,UINT VertexCount,UINT VertexSize);
+	void AppendFromVertexWithTransform(LPVOID pVertext,UINT VertexCount,UINT VertexSize,const CD3DMatrix& TransformMat);
 
 	CD3DBoundingBox operator+(const CD3DBoundingBox& Box);
 	CD3DBoundingBox& operator+=(const CD3DBoundingBox& Box);
 
-	CD3DVector3 GetBoxPoint(int Index);
-	CD3DVector3 GetSize();
+	CD3DVector3 GetBoxPoint(int Index) const;
+	CD3DVector3 GetSize() const;
+	CD3DVector3 GetCenter() const;
 
 	CD3DBoundingBox operator*(const CD3DMatrix& Mat);
 	void operator*=(const CD3DMatrix& Mat);
 
-	bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly=true) const;
+	bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly) const;
+	bool LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance) const;
 	void Rebuild();
 	int CheckRelation(const CD3DBoundingBox& BBox) const;
 	int CheckRelation(const CD3DVector3& Point) const;
@@ -89,11 +91,11 @@ inline CD3DBoundingBox::CD3DBoundingBox(D3DXVECTOR3 Min,D3DXVECTOR3 Max)
 	m_Max=Max;
 }
 
-inline void CD3DBoundingBox::ComputeFromVertex(LPVOID pVertext,int VertexCount,int VertexSize)
+inline void CD3DBoundingBox::ComputeFromVertex(LPVOID pVertext,UINT VertexCount,UINT VertexSize)
 {
 	D3DXComputeBoundingBox((D3DXVECTOR3 *)pVertext,VertexCount,VertexSize,&m_Min,&m_Max);
 }
-inline void CD3DBoundingBox::ComputeFromVertexWithTransform(LPVOID pVertext,int VertexCount,int VertexSize,const CD3DMatrix& TransformMat)
+inline void CD3DBoundingBox::ComputeFromVertexWithTransform(LPVOID pVertext,UINT VertexCount,UINT VertexSize,const CD3DMatrix& TransformMat)
 {
 	CD3DVector3 * pVertex=(CD3DVector3 *)pVertext;
 	m_Min=(*pVertex)*TransformMat;
@@ -117,7 +119,7 @@ inline void CD3DBoundingBox::ComputeFromVertexWithTransform(LPVOID pVertext,int 
 			m_Max.z=WorldVertex.z;
 	}
 }
-inline void CD3DBoundingBox::AppendFromVertex(LPVOID pVertext,int VertexCount,int VertexSize)
+inline void CD3DBoundingBox::AppendFromVertex(LPVOID pVertext,UINT VertexCount,UINT VertexSize)
 {
 	CD3DVector3 Min,Max;
 	D3DXComputeBoundingBox((D3DXVECTOR3 *)pVertext,VertexCount,VertexSize,&Min,&Max);
@@ -136,7 +138,7 @@ inline void CD3DBoundingBox::AppendFromVertex(LPVOID pVertext,int VertexCount,in
 		m_Max.z=Max.z;
 }
 
-inline void CD3DBoundingBox::AppendFromVertexWithTransform(LPVOID pVertext,int VertexCount,int VertexSize,const CD3DMatrix& TransformMat)
+inline void CD3DBoundingBox::AppendFromVertexWithTransform(LPVOID pVertext,UINT VertexCount,UINT VertexSize,const CD3DMatrix& TransformMat)
 {
 	for(UINT i=0;i<VertexCount;i++)
 	{
@@ -190,7 +192,7 @@ inline CD3DBoundingBox& CD3DBoundingBox::operator+=(const CD3DBoundingBox& Box)
 	return *this;
 }
 
-inline CD3DVector3 CD3DBoundingBox::GetBoxPoint(int Index)
+inline CD3DVector3 CD3DBoundingBox::GetBoxPoint(int Index)  const
 {
 	CD3DVector3 Point;
 
@@ -200,9 +202,14 @@ inline CD3DVector3 CD3DBoundingBox::GetBoxPoint(int Index)
 	return Point;
 }
 
-inline CD3DVector3 CD3DBoundingBox::GetSize()
+inline CD3DVector3 CD3DBoundingBox::GetSize()  const
 {
 	return m_Max-m_Min;
+}
+
+inline CD3DVector3 CD3DBoundingBox::GetCenter()  const
+{
+	return (m_Max+m_Min)/2;
 }
 
 inline CD3DBoundingBox CD3DBoundingBox::operator*(const CD3DMatrix& Mat)
@@ -263,6 +270,31 @@ inline void CD3DBoundingBox::Rebuild()
 	ComputeFromVertex(Points,8,sizeof(CD3DVector3));
 }
 
+inline bool CD3DBoundingBox::LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance) const
+{
+	int R1=CheckRelation(StartPoint);
+	int R2=CheckRelation(EndPoint);
+
+	if(R1==RELATION_TYPE_INCLUDE&&R2==RELATION_TYPE_INCLUDE)
+		return true;
+
+	CD3DVector3 Dir=(EndPoint-StartPoint);
+	FLOAT Len=Dir.Length();
+	Dir.Normalize();
+
+	CD3DVector3 P;
+	FLOAT D;
+	if(RayIntersect(StartPoint,Dir,P,D,false))
+	{
+		if(D<=Len)
+		{
+			IntersectPoint=P;
+			Distance=D;
+			return true;
+		}
+	}
+	return false;
+}
 inline int CD3DBoundingBox::CheckRelation(const CD3DBoundingBox& BBox)  const
 {
 	if(m_Max.x<BBox.m_Min.x||
@@ -309,7 +341,7 @@ inline int CD3DBoundingBox::CheckRelation(const CD3DVector3& Point)  const
 	return RELATION_TYPE_OUT;
 }
 
-int CD3DBoundingBox::CheckRelationRay(const CD3DVector3& Point,const CD3DVector3& Dir) const
+inline int CD3DBoundingBox::CheckRelationRay(const CD3DVector3& Point,const CD3DVector3& Dir) const
 {	
 	CD3DVector3 IntersectPoint;
 	FLOAT Distance;

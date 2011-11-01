@@ -32,9 +32,10 @@ CD3DGUI::CD3DGUI(IUIObjectCreator * pObjectCreator,HWND hParentWnd):CNameObject(
 {
 	m_pObjectCreator=pObjectCreator;
 	m_ReadyToWork=false;
-	m_ActiveWnd=NULL;
-	m_RecentMouseWnd=NULL;
-	m_CaptureAllWnd=NULL;
+	m_pActiveWnd=NULL;
+	m_pRecentMouseWnd=NULL;
+	m_pCaptureAllWnd=NULL;
+	m_pModalWnd=NULL;
 	m_hParentWnd=hParentWnd;
 }
 
@@ -56,7 +57,7 @@ CD3DWnd * CD3DGUI::CreateWnd(CEasyRect rect)
 	CD3DWnd * wnd;
 	wnd=new CD3DWnd(this);
 	wnd->SetRect(rect);	
-	wnd->TopTo();
+	wnd->TopTo(true);
 	return wnd;
 }
 
@@ -65,7 +66,7 @@ CD3DButton * CD3DGUI::CreateButton(CEasyRect rect)
 	CD3DButton * wnd;
 	wnd=new CD3DButton(this);
 	wnd->SetRect(rect);	
-	wnd->TopTo();
+	wnd->TopTo(true);
 	return wnd;
 }
 
@@ -74,7 +75,7 @@ CD3DEdit * CD3DGUI::CreateEdit(CEasyRect rect)
 	CD3DEdit * wnd;
 	wnd=new CD3DEdit(this);
 	wnd->SetRect(rect);	
-	wnd->TopTo();
+	wnd->TopTo(true);
 	return wnd;
 }
 
@@ -83,7 +84,7 @@ CD3DScrollBar * CD3DGUI::CreateScrollBar(CEasyRect rect)
 	CD3DScrollBar * wnd;
 	wnd=new CD3DScrollBar(this);
 	wnd->SetRect(rect);	
-	wnd->TopTo();
+	wnd->TopTo(true);
 	return wnd;
 }
 
@@ -92,7 +93,7 @@ CD3DSimpleList * CD3DGUI::CreateSimpleList(CEasyRect rect)
 	CD3DSimpleList * wnd;
 	wnd=new CD3DSimpleList(this);
 	wnd->SetRect(rect);	
-	wnd->TopTo();
+	wnd->TopTo(true);
 	return wnd;
 }
 
@@ -101,7 +102,7 @@ CD3DCombo * CD3DGUI::CreateCombo(CEasyRect rect)
 	CD3DCombo * wnd;
 	wnd=new CD3DCombo(this);
 	wnd->SetRect(rect);	
-	wnd->TopTo();
+	wnd->TopTo(true);
 	return wnd;
 }
 
@@ -110,7 +111,7 @@ CD3DProgressBar * CD3DGUI::CreateProgressBar(CEasyRect rect)
 	CD3DProgressBar * wnd;
 	wnd=new CD3DProgressBar(this);
 	wnd->SetRect(rect);	
-	wnd->TopTo();
+	wnd->TopTo(true);
 	return wnd;
 }
 
@@ -121,10 +122,10 @@ BOOL CD3DGUI::HandleMessage(UINT msg, WPARAM wParam , LPARAM lParam)
 
 	if(msg>=WM_D3DGUI_START)
 		return false;
-	if(m_ActiveWnd)
+	if(m_pActiveWnd)
 	{
-		if(!m_ActiveWnd->IsVisible())
-			ActiveWnd(m_ActiveWnd,false);
+		if(!m_pActiveWnd->IsVisible())
+			ActiveWnd(m_pActiveWnd,false);
 	}
 		
 	switch(msg)
@@ -145,15 +146,15 @@ BOOL CD3DGUI::HandleMessage(UINT msg, WPARAM wParam , LPARAM lParam)
 			//找到窗口
 			m_CurMouseX=LOWORD(lParam);
 			m_CurMouseY=HIWORD(lParam);	
-			pWnd=GetWndAtPos(m_CurMouseX,m_CurMouseY);			
+			pWnd=GetWndAtPos(m_CurMouseX,m_CurMouseY);
 			//处理MouseLeaveEnter消息
-			if(m_RecentMouseWnd!=pWnd)
+			if(m_pRecentMouseWnd!=pWnd)
 			{
-				if(m_RecentMouseWnd)
-					m_RecentMouseWnd->HandleMessage(m_RecentMouseWnd,WM_D3DGUI_MOUSE_LEAVE,wParam,lParam);
-				m_RecentMouseWnd=pWnd;
-				if(m_RecentMouseWnd)
-					m_RecentMouseWnd->HandleMessage(m_RecentMouseWnd,WM_D3DGUI_MOUSE_ENTER,wParam,lParam);					
+				if(m_pRecentMouseWnd)
+					m_pRecentMouseWnd->HandleMessage(m_pRecentMouseWnd,WM_D3DGUI_MOUSE_LEAVE,wParam,lParam);
+				m_pRecentMouseWnd=pWnd;
+				if(m_pRecentMouseWnd)
+					m_pRecentMouseWnd->HandleMessage(m_pRecentMouseWnd,WM_D3DGUI_MOUSE_ENTER,wParam,lParam);					
 			}	
 			//处理消息
 			if(ActiveMessage)
@@ -171,11 +172,11 @@ BOOL CD3DGUI::HandleMessage(UINT msg, WPARAM wParam , LPARAM lParam)
 		}
 		break;
 	case WM_KEYUP:
-	case WM_KEYDOWN:
+	case WM_KEYDOWN:		
 	case WM_CHAR:
 	default:
-		if(m_ActiveWnd)
-			return m_ActiveWnd->HandleMessage(m_ActiveWnd,msg,wParam,lParam);
+		if(m_pActiveWnd)
+			return m_pActiveWnd->HandleMessage(m_pActiveWnd,msg,wParam,lParam);
 		break;
 	}
 	return false;
@@ -192,10 +193,10 @@ void CD3DGUI::Update()
 {
 	CD3DWnd * pWnd;
 	LPVOID pos;
-	pos=m_D3DWndList.GetHead();
+	pos=m_D3DWndList.GetFirstObjectPos();
 	while(pos)
 	{
-		pWnd=m_D3DWndList.GetNextObject(pos);
+		pWnd=*m_D3DWndList.GetNext(pos);
 		pWnd->Update();
 	}
 }
@@ -207,77 +208,97 @@ bool CD3DGUI::LeftWndToTop(CD3DWnd * pWnd,CD3DWnd * Before)
 	pos=m_D3DWndList.Find(pWnd);
 	if(pos==NULL)
 		return false;
+	
+	LPVOID WndPos=m_D3DWndList.Find(pWnd);
+	if(WndPos==NULL)
+		return false;
+	LPVOID BeforePos=NULL;
 	if(Before)
-	{
 		LPVOID BeforePos=m_D3DWndList.Find(Before);
-		if(BeforePos==NULL)
-			return false;
-		m_D3DWndList.Delete(pos);
-		m_D3DWndList.InsertBefore(pWnd,BeforePos);
-	}
-	else
-	{
-		m_D3DWndList.Delete(pos);
-		m_D3DWndList.InsertBefore(pWnd);
-	}
+	
+	m_D3DWndList.MoveToBefore(WndPos,BeforePos);
+	
 	return true;
 }
 
-void CD3DGUI::ActiveWnd(CD3DWnd * pWnd, bool active)
+void CD3DGUI::ActiveWnd(CD3DWnd * pWnd, bool active,bool SendNotify)
 {
 	
 	if(active)
 	{
-		if(pWnd==m_ActiveWnd)
+		if(pWnd==m_pActiveWnd)
 			return;
 
-		if(m_ActiveWnd)
-			m_ActiveWnd->ActiveWnd(false);
-		m_ActiveWnd=pWnd;
-		if(m_ActiveWnd)
-			m_ActiveWnd->ActiveWnd(true);		
+		if(m_pActiveWnd)
+			m_pActiveWnd->ActiveWnd(false,SendNotify);
+		m_pActiveWnd=pWnd;
+		if(m_pActiveWnd)
+			m_pActiveWnd->ActiveWnd(true,SendNotify);		
 	}
 	else
 	{
+		if(pWnd!=m_pActiveWnd)
+			return;
+
+		if(m_pActiveWnd)
+			m_pActiveWnd->ActiveWnd(false,SendNotify);
+
+		m_pActiveWnd=NULL;
+
 		LPVOID pos;
 		
-		pos=m_D3DWndList.Find(pWnd);
-		pos=m_D3DWndList.GetNext(pos);
+		pos=m_D3DWndList.Find(m_pActiveWnd);
+		m_D3DWndList.GetNext(pos);
 		if(pos)
 		{
-			CD3DWnd * wnd=m_D3DWndList.GetObject(pos);
-			ActiveWnd(wnd,true);
+			CD3DWnd * m_pActiveWnd=*m_D3DWndList.GetNext(pos);
+			if(m_pActiveWnd)
+				m_pActiveWnd->ActiveWnd(true,SendNotify);
 		}	
-		else
-		{
-			m_ActiveWnd=NULL;
-		}
+		
 	}
 }
 
 CD3DWnd * CD3DGUI::GetWndAtPos(int x,int y)
 {
 	LPVOID pos;
-	CD3DWnd * pWnd;
+	CD3DWnd * pHitWnd=NULL;
 
-	if(m_CaptureAllWnd)
+	if(m_pCaptureAllWnd)
 	{
-		return m_CaptureAllWnd;
-	}	
-	pos=m_D3DWndList.GetHead();
+		return m_pCaptureAllWnd;
+	}
+
+	pos=m_D3DWndList.GetFirstObjectPos();
 	
 	while(pos)
 	{			
-		pWnd=m_D3DWndList.GetNextObject(pos);
+		CD3DWnd * pWnd=*m_D3DWndList.GetNext(pos);
 		if(pWnd->IsVisible())
 		{
 			CEasyRect rect=pWnd->GetWndRect();							
 			if(rect.PtInRect(CEasyPoint(x,y)))
-				return pWnd;
+			{
+				pHitWnd=pWnd;
+				break;
+			}
 		}
-		
 	}
-	return NULL;
+	
+	if(m_pModalWnd)
+	{
+		if(pHitWnd)
+		{
+			if(!m_pModalWnd->IsChildRecursion(pHitWnd))
+				pHitWnd=m_pModalWnd;
+		}
+		else
+		{
+			pHitWnd=m_pModalWnd;
+		}
+	}
+
+	return pHitWnd;
 }
 
 LPVOID CD3DGUI::GetFirstWndPosAtPos(int x,int y)
@@ -285,10 +306,10 @@ LPVOID CD3DGUI::GetFirstWndPosAtPos(int x,int y)
 	LPVOID pos;
 	CD3DWnd * pWnd;
 
-	pos=m_D3DWndList.GetHead();
+	pos=m_D3DWndList.GetFirstObjectPos();
 	while(pos)
 	{			
-		pWnd=m_D3DWndList.GetNextObject(pos);
+		pWnd=*m_D3DWndList.GetNext(pos);
 		if(pWnd->IsVisible())
 		{
 			CEasyRect rect=pWnd->GetWndRect();							
@@ -306,7 +327,7 @@ CD3DWnd * CD3DGUI::GetNextWndAtPos(LPVOID & Pos,int x,int y)
 	
 	while(Pos)
 	{			
-		pWnd=m_D3DWndList.GetNextObject(Pos);
+		pWnd=*m_D3DWndList.GetNext(Pos);
 		if(pWnd->IsVisible())
 		{
 			CEasyRect rect=pWnd->GetWndRect();							
@@ -330,18 +351,14 @@ bool CD3DGUI::AddRootWnd(CD3DWnd * child)
 
 bool CD3DGUI::DelRootWnd(CD3DWnd * child)
 {
-	LPVOID pos=m_RootWndList.GetHead();
-	LPVOID OldPos;
-	while(pos)
+
+	LPVOID pos=m_RootWndList.Find(child);
+	if(pos)
 	{
-		OldPos=pos;
-		if(m_RootWndList.GetNextObject(pos)==child)
-		{
-			m_RootWndList.Delete(OldPos);
-			return true;
-		}
+		m_RootWndList.DeleteObject(pos);
+		return true;
 	}
-	return true;
+	return false;
 }
 
 bool CD3DGUI::DelWnd(CD3DWnd * pWnd)
@@ -351,11 +368,11 @@ bool CD3DGUI::DelWnd(CD3DWnd * pWnd)
 	pos=m_D3DWndList.Find(pWnd);
 	if(pos)
 	{
-		if(pWnd==m_ActiveWnd)
-			ActiveWnd(m_ActiveWnd,false);
-		if(pWnd==m_RecentMouseWnd)
-			m_RecentMouseWnd=NULL;
-		m_D3DWndList.Delete(pos);
+		if(pWnd==m_pActiveWnd)
+			ActiveWnd(m_pActiveWnd,false);
+		if(pWnd==m_pRecentMouseWnd)
+			m_pRecentMouseWnd=NULL;
+		m_D3DWndList.DeleteObject(pos);
 		return true;
 	}
 	return false;
@@ -365,10 +382,10 @@ void CD3DGUI::Clear()
 {
 	CD3DWnd * pWnd;
 	LPVOID pos;
-	pos=m_RootWndList.GetHead();
+	pos=m_RootWndList.GetFirstObjectPos();
 	while(pos)
 	{
-		pWnd=m_RootWndList.GetNextObject(pos);
+		pWnd=*m_RootWndList.GetNext(pos);
 		SAFE_RELEASE(pWnd);
 	}
 	m_D3DWndList.Clear();	
@@ -376,11 +393,11 @@ void CD3DGUI::Clear()
 
 CD3DWnd * CD3DGUI::GetWndByName(LPCTSTR Name)
 {
-	LPVOID pos=m_D3DWndList.GetHead();
+	LPVOID pos=m_D3DWndList.GetFirstObjectPos();
 	
 	while(pos)
 	{
-		CD3DWnd * pWnd=m_D3DWndList.GetNextObject(pos);
+		CD3DWnd * pWnd=*m_D3DWndList.GetNext(pos);
 		if(strcmp(pWnd->GetName(),Name)==0)
 			return pWnd;
 	}
@@ -389,11 +406,11 @@ CD3DWnd * CD3DGUI::GetWndByName(LPCTSTR Name)
 
 CD3DWnd * CD3DGUI::GetWndByID(UINT ID)
 {
-	LPVOID pos=m_D3DWndList.GetHead();
+	LPVOID pos=m_D3DWndList.GetFirstObjectPos();
 
 	while(pos)
 	{
-		CD3DWnd * pWnd=m_D3DWndList.GetNextObject(pos);
+		CD3DWnd * pWnd=*m_D3DWndList.GetNext(pos);
 		if(pWnd->GetID()==ID)
 			return pWnd;
 	}
@@ -433,10 +450,10 @@ void CD3DGUI::SaveToXML(xml_node * pXMLNode)
 {
 	CD3DWnd * pWnd;
 	LPVOID pos;
-	pos=m_RootWndList.GetHead();
+	pos=m_RootWndList.GetFirstObjectPos();
 	while(pos)
 	{
-		pWnd=m_RootWndList.GetNextObject(pos);
+		pWnd=*m_RootWndList.GetNext(pos);
 		pWnd->SaveToXml(pXMLNode);			
 	}
 }
@@ -445,10 +462,10 @@ bool CD3DGUI::SaveToUSO(CUSOResourceManager * pResourceManager)
 {
 	CD3DWnd * pWnd;
 	LPVOID pos;
-	pos=m_RootWndList.GetHead();
+	pos=m_RootWndList.GetFirstObjectPos();
 	while(pos)
 	{
-		pWnd=m_RootWndList.GetNextObject(pos);
+		pWnd=*m_RootWndList.GetNext(pos);
 		pResourceManager->AddObject(pWnd);					
 	}
 	return true;

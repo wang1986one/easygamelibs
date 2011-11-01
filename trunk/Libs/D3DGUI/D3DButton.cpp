@@ -220,7 +220,7 @@ void CD3DButton::SaveToXml(xml_node * pXMLNode)
 	xml_node Texture=Wnd.append_child(node_element,"Texture");
 	SaveTextureToXML(Texture);
 	
-	if(m_ChildWndList.size()>0)
+	if(m_ChildWndList.GetCount())
 	{
 		xml_node Childs=Wnd.append_child(node_element,"Childs");
 		SaveChildsToXml(Childs);
@@ -279,7 +279,7 @@ bool CD3DButton::LoadFromXml(xml_node * pXMLNode)
 			break;
 		}
 	}
-	TopChild();
+	TopChild(true);
 	HandleMessage(this,WM_D3DGUI_CHILD_LOADED,GetID(),(LPARAM)this);
 	return true;
 }
@@ -433,7 +433,7 @@ void CD3DButton::PickResource(CUSOResourceManager * pResourceManager,UINT Param)
 		}
 	}		
 
-	for(int i=0;i<(int)m_ChildWndList.size();i++)
+	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{
 		m_ChildWndList[i]->PickResource(pResourceManager,Param);
 	}	

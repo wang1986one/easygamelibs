@@ -89,6 +89,11 @@ bool CD3DDevice::Create(D3DDEVICE_PARAMS& Params)
 
 bool CD3DDevice::Reset()
 {
+	for(UINT i=0;i<m_DefaultRenderTargetList.GetCount();i++)
+	{
+		SAFE_RELEASE(m_DefaultRenderTargetList[i]);
+	}	
+	SAFE_RELEASE(m_pDefaultDepthStencilBuffer);
 	if(m_D3DParams.PresentParams.Windowed)
 	{
 		 m_D3DParams.PresentParams.BackBufferFormat = D3DFMT_UNKNOWN;
@@ -96,6 +101,12 @@ bool CD3DDevice::Reset()
 		 m_D3DParams.PresentParams.BackBufferHeight = 0;
 	}	
 	HRESULT hr=m_pd3dDevice->Reset(&m_D3DParams.PresentParams);
+
+	for(UINT i=0;i<m_D3DCaps.NumSimultaneousRTs;i++)
+	{
+		m_pd3dDevice->GetRenderTarget(i,&m_DefaultRenderTargetList[i]);
+	}	
+	m_pd3dDevice->GetDepthStencilSurface(&m_pDefaultDepthStencilBuffer);
 	return SUCCEEDED(hr);
 }
 
@@ -274,6 +285,17 @@ bool CD3DDevice::CheckDeviceFormat(DWORD CheckFormat,DWORD Usage,DWORD RType)
 	return SUCCEEDED(m_pD3D->CheckDeviceFormat(m_D3DParams.Adapter,m_D3DParams.DeviceType,
 		m_D3DParams.PresentParams.BackBufferFormat,
 		Usage,(D3DRESOURCETYPE)RType,(D3DFORMAT)CheckFormat));
+}
+
+
+int CD3DDevice::Update(FLOAT Time)
+{
+	int ProcessCount=0;
+
+	ProcessCount+=m_pTextureManager->Update(Time);
+	ProcessCount+=m_pFXManager->Update(Time);
+
+	return ProcessCount;
 }
 
 }

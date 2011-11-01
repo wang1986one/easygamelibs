@@ -101,7 +101,7 @@ enum EASY_DATA_STORAGE_MODE
 #endif
 
 #include "lzma/LzmaLib.h"
-#include "lzo/\minilzo.h"
+#include "lzo/minilzo.h"
 
 
 #include "EasyTime.h"
@@ -114,6 +114,7 @@ enum EASY_DATA_STORAGE_MODE
 #include "FileLogPrinter.h"
 
 #ifdef WIN32
+#include "EasyTimerEx.h"
 #include "ExceptionParser.h"
 #include "PerformanceStatistician.h"
 #include "AutoPerformanceCounter.h"
@@ -161,11 +162,9 @@ enum EASY_DATA_STORAGE_MODE
 
 #include "EasyList.h"
 #include "IDStorage.h"
-#include "NameStorage.h"
-//#include "StaticList.h"
 #include "StaticMap.h"
 #include "TreeObject.h"
-#include "ObjectManager.h"
+
 
 #include "FloatRect.h"
 
@@ -184,7 +183,7 @@ enum EASY_DATA_STORAGE_MODE
 #include "GrowBuffer.h"
 #include "CycleBuffer.h"
 #include "CycleBufferEx.h"
-//#include "ThreadSafeList.h"
+#include "ThreadSafeList.h"
 #include "ThreadSafeIDStorage.h"
 #include "ThreadSafeCycleBuffer.h"
 #include "ThreadSafeCycleBufferEx.h"
@@ -214,7 +213,7 @@ enum EASY_DATA_STORAGE_MODE
 #include "WinServiceController.h"
 #endif
 
-typedef CNameStorage<CNameObject *> CNameObjectPtrMap;
+
 
 #ifdef WIN32
 #pragma comment(lib,"Dbghelp.lib")

@@ -20,22 +20,16 @@ protected:
 public:
 	CThreadSafeIDStorage()
 	{
-		m_pObjectBuff=NULL;
-		m_pFreeListHead=NULL;
-		m_pFreeListTail=NULL;
-		m_pObjectListHead=NULL;
-		m_pObjectListTail=NULL;
-		m_ObjectCount=0;
-		m_ObjectBuffSize=0;		
+		
 	}
 	~CThreadSafeIDStorage()
 	{
 		
 	}
-	bool Create(UINT Size)
+	bool Create(UINT Size,UINT GrowSize=0,UINT GrowLimit=0)
 	{	
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::Create(Size);
+		return CIDStorage::Create(Size,GrowSize,GrowLimit);
 	}
 	void Destory()
 	{
@@ -58,22 +52,22 @@ public:
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::NewObject();
 	}	
-	LPVOID InsertAfter(LPVOID Pos)
+	LPVOID InsertAfter(LPVOID Pos=NULL)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::InsertAfter(Pos);
 	}
-	LPVOID InsertAfter(const T& Object,LPVOID Pos)
+	LPVOID InsertAfter(const T& Object,LPVOID Pos=NULL)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::InsertAfter(Object,Pos);
 	}
-	LPVOID InsertBefore(LPVOID Pos)
+	LPVOID InsertBefore(LPVOID Pos=NULL)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::InsertBefore(Pos);
 	}
-	LPVOID InsertBefore(const T& Object,LPVOID Pos)
+	LPVOID InsertBefore(const T& Object,LPVOID Pos=NULL)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::InsertBefore(Object,Pos);
@@ -108,7 +102,7 @@ public:
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::GetObjectID(Pos);
 	}
-	bool DeleteObject(UINT ID)
+	BOOL DeleteObject(UINT ID)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::DeleteObject(ID);
@@ -124,15 +118,20 @@ public:
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::GetPrev(Pos);
 	}
-	BOOL MoveBeforeTo(LPVOID Pos,LPVOID Before)
+	BOOL MoveBeforeTo(LPVOID Pos,LPVOID Target)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::MoveBeforeTo(Pos,Before);
+		return CIDStorage::MoveBeforeTo(Pos,Target);
 	}
-	BOOL MoveAfterTo(LPVOID Pos,LPVOID After)
+	BOOL MoveAfterTo(LPVOID Pos,LPVOID Target)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::MoveAfterTo(Pos,After);
+		return CIDStorage::MoveAfterTo(Pos,Target);
+	}
+	BOOL MoveSorted(LPVOID Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::MoveSorted(Pos);
 	}
 	LPVOID PushFront()
 	{
@@ -168,6 +167,11 @@ public:
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CIDStorage::PopBack(Object);
+	}
+	LPVOID Find(const T& Object)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CIDStorage::Find(Object);		
 	}
 
 	void Verfy(UINT& UsedCount,UINT& FreeCount)

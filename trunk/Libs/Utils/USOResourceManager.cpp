@@ -28,12 +28,12 @@ CUSOResourceManager::CUSOResourceManager():CNameObject()
 CUSOResourceManager::~CUSOResourceManager(void)
 {
 	Destory();
+	ClearObjectCreateInfoByName();
+	ClearObjectCreateInfoByType();
 }
 
 void CUSOResourceManager::Destory()
 {
-	ClearObjectCreateInfoByName();
-	ClearObjectCreateInfoByType();
 	ClearAllObject();
 	ClearAllResource();
 }

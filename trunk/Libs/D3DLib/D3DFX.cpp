@@ -35,7 +35,7 @@ CD3DFX::CD3DFX(CD3DFXManager * pD3DFXManager):CNameObject()
 CD3DFX::~CD3DFX(void)
 {
 	Destory();
-	if(m_pManager)
+	if(m_pManager&&GetID())
 		m_pManager->DeleteFX(GetID());
 }
 
@@ -81,11 +81,11 @@ bool CD3DFX::LoadFromFile(LPCTSTR FileName)
 	PrintD3DDebugLog(0,"×°ÔØFX<%s>.....",(LPCTSTR)FxFileName);
 	if(pFile->Open(FxFileName,IFileAccessor::modeRead))
 	{
-		UINT64 Size=pFile->GetSize();
+		UINT Size=(UINT)pFile->GetSize();
 
 		m_EffectData.Create(Size+1);		
 
-		Size=pFile->Read(m_EffectData.GetBuffer(),Size);
+		Size=(UINT)pFile->Read(m_EffectData.GetBuffer(),Size);
 		m_EffectData.SetUsedSize(Size);
 		m_EffectData.PushConstBack(0,1);
 		
@@ -119,7 +119,7 @@ bool CD3DFX::LoadFromFileDirect(LPCTSTR FileName)
 		m_pManager->GetDevice()->GetD3DDevice(),
 		FxFileName,
 		NULL,
-		NULL,
+		m_pManager->GetBuildInFXIncludeParser(),
 		D3DXSHADER_DEBUG|D3DXSHADER_FORCE_VS_SOFTWARE_NOOPT,
 		pEffectPool,
 		&m_pEffect,
@@ -158,7 +158,7 @@ bool CD3DFX::LoadFromMemory(const void * pData,int DataSize)
 
 	
 	if(D3DXCreateEffectCompiler((LPCTSTR)m_EffectData.GetBuffer(),m_EffectData.GetUsedSize(),
-		NULL,NULL,
+		NULL,m_pManager->GetBuildInFXIncludeParser(),
 		0,
 		&pCompiler,
 		&pErrors)==D3D_OK)
@@ -170,6 +170,9 @@ bool CD3DFX::LoadFromMemory(const void * pData,int DataSize)
 			m_CompiledEffectData.PushBack(pCompiledData->GetBufferPointer(),
 				pCompiledData->GetBufferSize());
 			SAFE_RELEASE(pCompiledData);
+
+			if(pErrors)
+				PrintD3DLog(0,"%s",(char*)(pErrors->GetBufferPointer()));
 
 			return LoadFXDirect(m_CompiledEffectData.GetBuffer(),m_CompiledEffectData.GetUsedSize());
 		}
@@ -469,6 +472,17 @@ bool CD3DFX::SetBool(LPCTSTR ParamName,BOOL Value)
 	return false;
 }
 
+bool CD3DFX::SetValue(LPCTSTR ParamName,LPCVOID pData,UINT DataSize)
+{
+	HRESULT	hr;
+	hr=m_pEffect->SetValue(ParamName,pData,DataSize);
+	if(SUCCEEDED(hr))
+	{
+		return true;
+	} 
+	return false;
+}
+
 bool CD3DFX::GetInt(LPCTSTR ParamName,int& Value)
 {
 	HRESULT	hr;
@@ -529,7 +543,7 @@ bool CD3DFX::LoadFXDirect(const void * pData,int DataSize)
 		pData,
 		DataSize,
 		NULL,
-		NULL,
+		m_pManager->GetBuildInFXIncludeParser(),
 #ifdef D3D_DEBUG_INFO
 		D3DXSHADER_DEBUG|D3DXSHADER_SKIPOPTIMIZATION,		
 #else

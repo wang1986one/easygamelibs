@@ -14,80 +14,7 @@
 
 namespace D3DGUI{
 
-LPCTSTR DEFAULT_UI_WIN_RECT_FX_NT=
-	"texture TexLay0 < string name = \"test.jpg\"; >;"
-	"texture TexLay1 < string name = \"test1.jpg\"; >;"
-	"technique tec0"
-	"{"
-	"    pass p0"
-	"    {"
-	"		MultiSampleAntialias = FALSE;"
-	"		Lighting=false;"
-	"		zenable = false;"
-	"		zwriteenable = false;"
-	"		CullMode = ccw;"
-	"		fogenable = false;"
-	"		Texture[0] = <TexLay0>;"
-	"		AlphaTestEnable = false;"
-	"		AlphaBlendEnable = true;"
-	"		BlendOp = Add;"
-	"		SrcBlend = SrcAlpha;"
-	"		DestBlend = InvSrcAlpha;"
-	"		Texture[0] = <TexLay0>;"
-	"     	ColorOp[0] = SelectArg2;"
-	"       ColorArg1[0] = Texture;"
-	"       ColorArg2[0] = Diffuse;"      	
-	"       AlphaOp[0] = SelectArg2;"
-	"       AlphaArg1[0] = Texture;"
-	"       AlphaArg2[0] = diffuse;"
-	"		ColorOp[1] = disable;"
-	"		AlphaOp[1] = disable;"
-	"		AddressU[0] = clamp;"
-	"		AddressV[0] = clamp;"      
-	"		MinFilter[0] = none;"
-	"       MagFilter[0] = none;"
-	"       MipFilter[0] = none;"
-	"		VertexShader = NULL;							\r\n"
-	"		PixelShader  = NULL;							\r\n"
-	"    }"
-	"}";
-LPCTSTR DEFAULT_UI_WIN_RECT_FX=
-	"texture TexLay0 < string name = \"test.jpg\"; >;"
-	"texture TexLay1 < string name = \"test1.jpg\"; >;"
-	"technique tec0"
-	"{"
-	"    pass p0"
-	"    {"
-	"		MultiSampleAntialias = FALSE;"
-	"		Lighting=false;"
-	"		zenable = false;"
-	"		zwriteenable = false;"
-	"		CullMode = ccw;"
-	"		fogenable = false;"
-	"		Texture[0] = <TexLay0>;"
-	"		AlphaTestEnable = false;"
-	"		AlphaBlendEnable = true;"
-	"		BlendOp = Add;"
-	"		SrcBlend = SrcAlpha;"
-	"		DestBlend = InvSrcAlpha;"
-	"		Texture[0] = <TexLay0>;"
-	"     	ColorOp[0] = Modulate;"
-	"       ColorArg1[0] = Texture;"
-	"       ColorArg2[0] = Diffuse;"      	
-	"       AlphaOp[0] = Modulate;"
-	"       AlphaArg1[0] = Texture;"
-	"       AlphaArg2[0] = diffuse;"
-	"		ColorOp[1] = disable;"
-	"		AlphaOp[1] = disable;"
-	"		AddressU[0] = clamp;"
-	"		AddressV[0] = clamp;"      
-	"		MinFilter[0] = none;"
-	"       MagFilter[0] = none;"
-	"       MipFilter[0] = none;"
-	"		VertexShader = NULL;							\r\n"
-	"		PixelShader  = NULL;							\r\n"
-	"    }"
-	"}";
+
 
 IMPLEMENT_CLASS_INFO_STATIC(CD3DGUIWndRect,CD3DObject);
 
@@ -101,7 +28,8 @@ CD3DGUIWndRect::CD3DGUIWndRect():
 	m_SubMesh.SetVertexCount(4);
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
 	m_SubMesh.SetPrimitiveCount(2);	
-	m_SubMesh.SetVertices((BYTE *)m_Vertexs,sizeof(RECTVERTEX)*4);
+	m_SubMesh.SetVertices((BYTE *)m_Vertexs);
+	m_SubMesh.AllocVertexBufferR();
 	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	
 	m_VertexColor=D3DCOLOR_XRGB(255, 255, 255);
@@ -120,7 +48,8 @@ CD3DGUIWndRect::CD3DGUIWndRect(FLOAT_RECT& Rect):
 	m_SubMesh.SetVertexCount(4);
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
 	m_SubMesh.SetPrimitiveCount(2);	
-	m_SubMesh.SetVertices((BYTE *)m_Vertexs,sizeof(RECTVERTEX)*4);
+	m_SubMesh.SetVertices((BYTE *)m_Vertexs);
+	m_SubMesh.AllocVertexBufferR();
 	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	
 
@@ -141,7 +70,8 @@ void CD3DGUIWndRect::SetRender(CD3DBaseRender * pRender)
 	if(m_pRender)
 	{
 		SetDevice(m_pRender->GetDevice());
-		SetFXFromMemory("DefaultFX",DEFAULT_UI_WIN_RECT_FX_NT,(int)strlen(DEFAULT_UI_WIN_RECT_FX_NT));	
+		if(m_SubMesh.GetMaterial().GetFX()==NULL)
+			SetFXFromMemory("DEFAULT_UI_WIN_RECT_FX",DEFAULT_UI_WIN_RECT_FX,(int)strlen(DEFAULT_UI_WIN_RECT_FX));
 	}
 }
 
@@ -227,7 +157,8 @@ void CD3DGUIWndRect::SetTexture(IUITexture * pTexture)
 		m_SubMesh.GetMaterial().AddTexture(pTex,0);
 	if(pTex)
 		pTex->AddUseRef();
-	SetFXFromMemory("DefaultFXWithTexture",DEFAULT_UI_WIN_RECT_FX,(int)strlen(DEFAULT_UI_WIN_RECT_FX));
+	if(m_SubMesh.GetMaterial().GetFX()==NULL)
+		SetFXFromMemory("DEFAULT_UI_WIN_RECT_FX",DEFAULT_UI_WIN_RECT_FX,(int)strlen(DEFAULT_UI_WIN_RECT_FX));
 }
 
 IUITexture * CD3DGUIWndRect::GetTexture()
@@ -246,6 +177,19 @@ void CD3DGUIWndRect::SetUV(FLOAT_RECT * pUVRect)
 FLOAT_RECT CD3DGUIWndRect::GetUV()
 {
 	return m_TextureUV;
+}
+
+bool CD3DGUIWndRect::SetEffectMode(int Mode)
+{
+	switch(Mode)
+	{
+	case D3DGUI_EFFECT_INVERSE_COLOR:
+		return SetFXFromMemory("INVERSE_COLOR_FX",INVERSE_COLOR_FX,(int)strlen(INVERSE_COLOR_FX));
+	case D3DGUI_EFFECT_TEXTURE_FILTER:
+		return SetFXFromMemory("DEFAULT_UI_WIN_RECT_FX_TF",DEFAULT_UI_WIN_RECT_FX_TF,(int)strlen(DEFAULT_UI_WIN_RECT_FX_TF));
+	}
+	
+	return false;
 }
 
 bool CD3DGUIWndRect::SetFX(LPCTSTR FXFileName)
@@ -279,12 +223,19 @@ CEasyString CD3DGUIWndRect::GetFX()
 	return "";
 }
 
-void CD3DGUIWndRect::TopTo(IUIBaseRect* pRect)		//pWndRect==NULL,提到最高
+void CD3DGUIWndRect::TopTo(IUIBaseRect* pBeforeRect)
 {
-	if(pRect)
-		((CD3DUIRender *)GetRender())->MoveToTop(this,dynamic_cast<CD3DObject *>(pRect));
-	else
-		((CD3DUIRender *)GetRender())->MoveToTop(this);
+	((CD3DUIRender *)GetRender())->MoveToTop(this,dynamic_cast<CD3DObject *>(pBeforeRect));
+}
+
+void CD3DGUIWndRect::TopTo(IUIBaseRect** pRects,UINT RectCount,IUIBaseRect* pBeforeRect)
+{
+	CEasyArray<CD3DObject *> ObjectList(64,64);
+	for(UINT i=0;i<RectCount;i++)
+	{
+		ObjectList.Add(dynamic_cast<CD3DObject *>(pRects[i]));
+	}
+	((CD3DUIRender *)GetRender())->MoveToTop(ObjectList.GetBuffer(),RectCount,dynamic_cast<CD3DObject *>(pBeforeRect));
 }
 
 void  CD3DGUIWndRect::Release()
@@ -312,7 +263,7 @@ void CD3DGUIWndRect::Update(FLOAT Time)
 
 void CD3DGUIWndRect::CreateVertex()
 {
-	D3DLOCK_FOR_OBJECT_MODIFY
+	//D3DLOCK_FOR_OBJECT_MODIFY
 
 	FLOAT x1,y1,tx1,ty1;
 	FLOAT x2,y2,tx2,ty2;		
@@ -338,6 +289,7 @@ void CD3DGUIWndRect::CreateVertex()
 	m_Vertexs[2] = InitRECTVertex( D3DXVECTOR4(x1,y2,0.9f,1.0f), m_VertexColor, tx1, ty2 );
 	m_Vertexs[3] = InitRECTVertex( D3DXVECTOR4(x2,y2,0.9f,1.0f), m_VertexColor, tx2, ty2 );
 
+	m_IsRenderDataChanged=true;
 }
 
 }

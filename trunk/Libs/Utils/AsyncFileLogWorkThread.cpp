@@ -97,6 +97,17 @@ BOOL CAsyncFileLogWorkThread::OnRun()
 	}
 	else
 	{
+		CEasyTime CurTime;
+		CurTime.FetchLocalTime();
+
+		if(m_RecentLogTime.Year()!=CurTime.Year()||
+			m_RecentLogTime.Month()!=CurTime.Month()||
+			m_RecentLogTime.Day()!=CurTime.Day())
+		{
+			m_RecentLogTime=CurTime;
+			Init(m_LogFileName,0);
+		}
+
 		DoSleep(1);
 	}
 
@@ -117,44 +128,17 @@ void CAsyncFileLogWorkThread::OnTerminate()
 
 BOOL CAsyncFileLogWorkThread::PushLog(LPCTSTR LogData)
 {
-	CEasyTime CurTime;
-	CurTime.FetchLocalTime();
-
-	if(m_RecentLogTime.Year()!=CurTime.Year()||
-		m_RecentLogTime.Month()!=CurTime.Month()||
-		m_RecentLogTime.Day()!=CurTime.Day())
-	{
-		m_RecentLogTime=CurTime;
-		Init(m_LogFileName,0);
-	}
-
+	
 	int DataLen=(int)strlen(LogData);
 	m_LogDataBuffer.PushBack((LPVOID)LogData,DataLen);
 
 	return TRUE;
 }
 
-BOOL CAsyncFileLogWorkThread::WriteLogDirect(LPCTSTR LogData)
-{
-	CEasyTime CurTime;
-	CurTime.FetchLocalTime();
-
-	if(m_RecentLogTime.Year()!=CurTime.Year()||
-		m_RecentLogTime.Month()!=CurTime.Month()||
-		m_RecentLogTime.Day()!=CurTime.Day())
-	{
-		m_RecentLogTime=CurTime;
-		Init(m_LogFileName,0);
-	}
-
-	m_pLogFile->Write((LPVOID)LogData,strlen(LogData));
-
-	return TRUE;
-
-}
 
 void CAsyncFileLogWorkThread::CreateDir(LPCTSTR FilePath)
 {
 	CEasyString FileDir=GetPathDirectory(FilePath);
 	CreateDirEx(FileDir);
 }
+

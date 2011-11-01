@@ -684,8 +684,16 @@ inline CEasyString BolanToString(const ES_BOLAN& bolan)
 				OPERATOR_STRINGS[bolan.Index],(LPCTSTR)bolan.StrValue);
 			break;
 		default:
-			temp.Format("²Ù×÷·û<%s>",
-				OPERATOR_STRINGS[bolan.Index]);
+			if(bolan.Index<OPERATOR_MAX)
+			{
+				temp.Format("²Ù×÷·û<%s>",
+					OPERATOR_STRINGS[bolan.Index]);
+			}
+			else
+			{
+				temp.Format("Î´Öª²Ù×÷·û<%d>",
+					bolan.Index);
+			}
 		}
 		
 		break;

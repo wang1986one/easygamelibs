@@ -50,6 +50,8 @@ void CD3DBaseRender::Render()
 
 void CD3DBaseRender::Update(FLOAT Time)
 {
+	CD3DObject::m_UpdateCount=0;
+	CD3DObject::m_RenderDataUpdateCount=0;
 	for(int i=0;i<(int)m_RootObjectList.GetCount();i++)
 	{
 		m_RootObjectList[i]->Update(Time);
@@ -64,7 +66,7 @@ void CD3DBaseRender::Update(FLOAT Time)
 			{
 				for(int i=0;i<(int)m_RootObjectList.GetCount();i++)
 				{
-					PrepareRenderData(m_RootObjectList[i]);
+					m_RootObjectList[i]->OnPrepareRenderData();
 				}
 				m_PrepareRenderDataFailCount=0;
 			}
@@ -78,7 +80,7 @@ void CD3DBaseRender::Update(FLOAT Time)
 			Lock.Lock(m_RenderLock);
 			for(int i=0;i<(int)m_RootObjectList.GetCount();i++)
 			{
-				PrepareRenderData(m_RootObjectList[i]);
+				m_RootObjectList[i]->OnPrepareRenderData();
 			}
 			m_PrepareRenderDataFailCount=0;
 		}
@@ -102,7 +104,7 @@ bool CD3DBaseRender::AddRootObject(CD3DObject * pObj)
 	m_RootObjectList.Add(pObj);
 	return true;
 }
-bool CD3DBaseRender::DelObject(CD3DObject * pObj)
+bool CD3DBaseRender::DelObject(CD3DObject * pObj,bool IsRecursive)
 {
 	return false;
 }
@@ -113,6 +115,7 @@ bool CD3DBaseRender::DelRootObject(CD3DObject * pObj)
 		if(m_RootObjectList[i]==pObj)
 		{
 			m_RootObjectList.Delete(i);
+			pObj->SetRender(NULL);
 			return true;
 		}
 	}
@@ -246,18 +249,5 @@ void CD3DBaseRender::RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPC
 	}
 }
 
-
-void CD3DBaseRender::PrepareRenderData(CD3DObject * pObject)
-{
-	{
-		CAutoLock Lock(pObject->GetRenderLock());		
-
-		pObject->OnPrepareRenderData();
-	}
-	for(UINT i=0;i<pObject->GetChildCount();i++)
-	{
-		PrepareRenderData(pObject->GetChildByIndex(i));
-	}
-}
 
 }

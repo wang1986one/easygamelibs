@@ -177,7 +177,7 @@ void CD3DProgressBar::SaveToXml(xml_node * pXMLNode)
 		SaveTextureToXML(Texture);
 	}
 
-	if((int)m_ChildWndList.size()>0)
+	if((int)m_ChildWndList.GetCount())
 	{
 		xml_node Childs=Wnd.append_child(node_element,"Childs");
 		SaveChildsToXml(Childs);
@@ -239,7 +239,7 @@ bool CD3DProgressBar::LoadFromXml(xml_node * pXMLNode)
 		}
 	}
 
-	for(int i=(int)m_ChildWndList.size()-1;i>=0;i--)
+	for(int i=(int)m_ChildWndList.GetCount()-1;i>=0;i--)
 	{
 		if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DWnd))&&
@@ -251,7 +251,7 @@ bool CD3DProgressBar::LoadFromXml(xml_node * pXMLNode)
 			m_pBarWnd=pWnd;
 		}		
 	}
-	TopChild();
+	TopChild(true);
 	HandleMessage(this,WM_D3DGUI_CHILD_LOADED,GetID(),(LPARAM)this);
 	return true;
 }

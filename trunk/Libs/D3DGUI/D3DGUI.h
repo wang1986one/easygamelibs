@@ -31,9 +31,10 @@ protected:
 	CEasyList<CD3DWnd *>			m_D3DWndList;
 	CEasyList<CD3DWnd *>			m_RootWndList;
 	bool							m_ReadyToWork;
-	CD3DWnd *						m_ActiveWnd;
-	CD3DWnd *						m_RecentMouseWnd;
-	CD3DWnd *						m_CaptureAllWnd;
+	CD3DWnd *						m_pActiveWnd;
+	CD3DWnd *						m_pRecentMouseWnd;
+	CD3DWnd *						m_pCaptureAllWnd;
+	CD3DWnd *						m_pModalWnd;
 
 	int								m_CurMouseX;
 	int								m_CurMouseY;
@@ -58,10 +59,18 @@ public:
 	void Update();
 
 	bool LeftWndToTop(CD3DWnd * pWnd,CD3DWnd * Before=NULL);
-	void ActiveWnd(CD3DWnd * pWnd, bool active);
+	void ActiveWnd(CD3DWnd * pWnd, bool active,bool SendNotify=true);
 	void SetCaptureAllWnd(CD3DWnd * pCaptureAllWnd)
 	{
-		m_CaptureAllWnd=pCaptureAllWnd;
+		m_pCaptureAllWnd=pCaptureAllWnd;
+	}
+	void SetModalWnd(CD3DWnd * pModalWnd)
+	{
+		m_pModalWnd=pModalWnd;
+	}
+	CD3DWnd * GetModalWnd()
+	{
+		return m_pModalWnd;
 	}
 
 	IUIObjectCreator * GetObjectCreator()
@@ -83,20 +92,30 @@ public:
 
 	LPVOID GetFirstWndPos()
 	{
-		return m_D3DWndList.GetHead();
+		return m_D3DWndList.GetFirstObjectPos();
 	}
 	CD3DWnd * GetNextWnd(LPVOID& Pos)
 	{		
-		return m_D3DWndList.GetNextObject(Pos);
+		CD3DWnd ** ppWnd=m_D3DWndList.GetNext(Pos);
+		if(ppWnd)
+		{
+			return *ppWnd;
+		}
+		return NULL;
 	}
 
 	LPVOID GetFirstRootWndPos()
 	{
-		return m_RootWndList.GetHead();
+		return m_RootWndList.GetFirstObjectPos();
 	}
 	CD3DWnd * GetNextRootWnd(LPVOID& Pos)
 	{
-		return m_RootWndList.GetNextObject(Pos);
+		CD3DWnd ** ppWnd=m_RootWndList.GetNext(Pos);
+		if(ppWnd)
+		{
+			return *ppWnd;
+		}
+		return NULL;
 	}
 
 	bool AddRootWnd(CD3DWnd * child);

@@ -29,7 +29,8 @@ CD3DObjectResourceManager::~CD3DObjectResourceManager(void)
 	Pos=m_ObjectStorage.GetFirstObjectPos();
 	while(Pos)
 	{
-		CD3DObjectResource * pResource=*(m_ObjectStorage.GetNext(Pos));
+		CEasyString Key;
+		CD3DObjectResource * pResource=*(m_ObjectStorage.GetNextObject(Pos,Key));
 		PrintSystemLog(0,"对象资源<%s>未释放！",(LPCTSTR)pResource->GetName());
 
 	}
@@ -39,7 +40,9 @@ CD3DObjectResourceManager::~CD3DObjectResourceManager(void)
 
 bool CD3DObjectResourceManager::AddResource(CD3DObjectResource * pResource,LPCTSTR ResourceName)
 {	
-	UINT ID=m_ObjectStorage.AddObject(pResource,ResourceName);
+	CEasyString Key=ResourceName;
+	Key.MakeUpper();
+	UINT ID=m_ObjectStorage.Insert(Key,pResource);
 	if(ID)
 	{
 		pResource->SetID(ID);
@@ -48,6 +51,8 @@ bool CD3DObjectResourceManager::AddResource(CD3DObjectResource * pResource,LPCTS
 	}
 	else
 	{
+		PrintD3DLog(0,"将资源添加到对象资源管理器失败(%u,%u)",
+			m_ObjectStorage.GetObjectCount(),m_ObjectStorage.GetBufferSize());
 		return false;
 	}
 }
@@ -57,19 +62,31 @@ CD3DObjectResource * CD3DObjectResourceManager::DeleteResource(UINT ID)
 	CD3DObjectResource ** ppResource=m_ObjectStorage.GetObject(ID);
 	if(ppResource)
 	{
-		m_ObjectStorage.DeleteObject(ID);		
+		m_ObjectStorage.DeleteByID(ID);		
 		return *ppResource;
+	}
+	else
+	{
+		PrintD3DLog(0,"CD3DObjectResourceManager::DeleteResource:资源[%u]未找到",
+			ID);
 	}
 	return NULL;
 }
 
 CD3DObjectResource * CD3DObjectResourceManager::DeleteResource(LPCTSTR ResourceName)
 {
-	CD3DObjectResource * pResource=*(m_ObjectStorage.GetObject(ResourceName));
-	if(pResource)
+	CEasyString Key=ResourceName;
+	Key.MakeUpper();
+	CD3DObjectResource ** ppResource=m_ObjectStorage.Find(Key);
+	if(ppResource)
 	{
-		m_ObjectStorage.DeleteObject(pResource->GetID());		
-		return pResource;
+		m_ObjectStorage.DeleteByID((*ppResource)->GetID());		
+		return *ppResource;
+	}
+	else
+	{
+		PrintD3DLog(0,"CD3DObjectResourceManager::DeleteResource:资源[%s]未找到",
+			ResourceName);
 	}
 	return NULL;
 }
@@ -91,12 +108,14 @@ LPVOID CD3DObjectResourceManager::GetLastPos()
 
 CD3DObjectResource * CD3DObjectResourceManager::GetNext(LPVOID& Pos)
 {
-	return *m_ObjectStorage.GetNext(Pos);
+	CEasyString Key;
+	return *m_ObjectStorage.GetNextObject(Pos,Key);
 }
 
 CD3DObjectResource * CD3DObjectResourceManager::GetPrev(LPVOID& Pos)
 {
-	return *m_ObjectStorage.GetPrev(Pos);
+	CEasyString Key;
+	return *m_ObjectStorage.GetPrevObject(Pos,Key);
 }
 
 }

@@ -25,10 +25,18 @@ CD3DIFLTexture::CD3DIFLTexture(CD3DTextureManager * pManager):CD3DTexture(pManag
 {
 	m_CurFrame=0;
 	m_FlipStartTime=0.0f;
+	if(m_pManager)
+	{
+		m_pManager->AddAniTexture(this);
+	}
 }
 
 CD3DIFLTexture::~CD3DIFLTexture(void)
 {
+	if(m_pManager)
+	{
+		m_pManager->DelAniTexture(this);
+	}
 	Destory();
 }
 

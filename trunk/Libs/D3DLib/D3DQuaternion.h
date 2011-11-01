@@ -148,9 +148,9 @@ inline void CD3DQuaternion::GetYawPitchRoll(FLOAT& Yaw,FLOAT& Pitch,FLOAT& Roll,
 	{
 		// roll = atan2(localx.y, localx.x)
 		// pick parts of xAxis() implementation that we need
-		FLOAT fTx  = 2.0*x;
-		FLOAT fTy  = 2.0*y;
-		FLOAT fTz  = 2.0*z;
+		FLOAT fTx  = 2.0f*x;
+		FLOAT fTy  = 2.0f*y;
+		FLOAT fTz  = 2.0f*z;
 		FLOAT fTwz = fTz*w;
 		FLOAT fTxy = fTy*x;
 		FLOAT fTyy = fTy*y;

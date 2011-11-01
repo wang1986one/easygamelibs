@@ -19,15 +19,15 @@ class CNetConnection :
 	public CBaseTCPConnection,public IEpollEventHandler
 {
 protected:	
-	CNetServer*								m_pServer;	
-	volatile BOOL							m_WantClose;
-	bool									m_UseSafeDisconnect;
-	CThreadSafeList<CEpollEventObject *>	m_RecvQueue;
-	CThreadSafeList<CEpollEventObject *>	m_SendQueue;
-	CEpollEventRouter *						m_pEpollEventRouter;
+	CNetServer*									m_pServer;	
+	volatile BOOL								m_WantClose;
+	bool										m_UseSafeDisconnect;
+	CThreadSafeIDStorage<CEpollEventObject *>	m_RecvQueue;
+	CThreadSafeIDStorage<CEpollEventObject *>	m_SendQueue;
+	CEpollEventRouter *							m_pEpollEventRouter;
 
-	CEasyCriticalSection					m_RecvLock;
-	CEasyCriticalSection					m_SendLock;
+	CEasyCriticalSection						m_RecvLock;
+	CEasyCriticalSection						m_SendLock;
 
 	DECLARE_CLASS_INFO_STATIC(CNetConnection);
 public:

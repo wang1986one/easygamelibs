@@ -189,45 +189,45 @@ UINT CD3DRibbonEmitter::GetSmartStructSize(UINT Param)
 
 void CD3DRibbonEmitter::OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
-	//设置灯光
-	if(LightList.GetCount())
-	{		
-		D3DLIGHT9	Light;
-		char		szParamName[32];
-		pFX->SetInt("LightCount",LightList.GetCount());
-		for(UINT i=0;i<LightList.GetCount();i++)
-		{
-			LightList[i]->GetCurLight(Light);
-			sprintf_s(szParamName,32,"LightType[%d]",i);
-			pFX->SetInt(szParamName,Light.Type);
-			sprintf_s(szParamName,32,"LightPos[%d]",i);
-			pFX->SetVector(szParamName,CD3DVector3(Light.Position));
-			sprintf_s(szParamName,32,"LightDir[%d]",i);
-			pFX->SetVector(szParamName,CD3DVector3(Light.Direction));
-			sprintf_s(szParamName,32,"LightAmbient[%d]",i);
-			pFX->SetColor(szParamName,Light.Ambient);
-			sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
-			pFX->SetColor(szParamName,Light.Diffuse);
-			sprintf_s(szParamName,32,"LightSpecular[%d]",i);
-			pFX->SetColor(szParamName,Light.Specular);
-			sprintf_s(szParamName,32,"LightRange[%d]",i);
-			pFX->SetFloat(szParamName,Light.Range);
-			sprintf_s(szParamName,32,"LightAtn0[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation0);
-			sprintf_s(szParamName,32,"LightAtn1[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation1);
-			sprintf_s(szParamName,32,"LightAtn2[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation2);
-			//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Falloff);
-			//sprintf_s(szParamName,32,"LightTheta[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Theta);
-			//sprintf_s(szParamName,32,"LightPhi[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Phi);
+	////设置灯光
+	//if(LightList.GetCount())
+	//{		
+	//	D3DLIGHT9	Light;
+	//	char		szParamName[32];
+	//	pFX->SetInt("LightCount",LightList.GetCount());
+	//	for(UINT i=0;i<LightList.GetCount();i++)
+	//	{
+	//		LightList[i]->GetCurLight(Light);
+	//		sprintf_s(szParamName,32,"LightType[%d]",i);
+	//		pFX->SetInt(szParamName,Light.Type);
+	//		sprintf_s(szParamName,32,"LightPos[%d]",i);
+	//		pFX->SetVector(szParamName,CD3DVector3(Light.Position));
+	//		sprintf_s(szParamName,32,"LightDir[%d]",i);
+	//		pFX->SetVector(szParamName,CD3DVector3(Light.Direction));
+	//		sprintf_s(szParamName,32,"LightAmbient[%d]",i);
+	//		pFX->SetColor(szParamName,Light.Ambient);
+	//		sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
+	//		pFX->SetColor(szParamName,Light.Diffuse);
+	//		sprintf_s(szParamName,32,"LightSpecular[%d]",i);
+	//		pFX->SetColor(szParamName,Light.Specular);
+	//		sprintf_s(szParamName,32,"LightRange[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Range);
+	//		sprintf_s(szParamName,32,"LightAtn0[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Attenuation0);
+	//		sprintf_s(szParamName,32,"LightAtn1[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Attenuation1);
+	//		sprintf_s(szParamName,32,"LightAtn2[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Attenuation2);
+	//		//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
+	//		//pFX->SetFloat(szParamName,Light.Falloff);
+	//		//sprintf_s(szParamName,32,"LightTheta[%d]",i);
+	//		//pFX->SetFloat(szParamName,Light.Theta);
+	//		//sprintf_s(szParamName,32,"LightPhi[%d]",i);
+	//		//pFX->SetFloat(szParamName,Light.Phi);
 
-		}
+	//	}
 
-	}
+	//}
 	////设置雾
 	//CD3DSceneRender * pRender=(CD3DSceneRender *)GetRender();
 	//pFX->SetColor("FogColor",pRender->GetFogColor());
@@ -252,7 +252,7 @@ void CD3DRibbonEmitter::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX *
 	pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
 
 	//设置视投影矩阵
-	pFX->SetMatrix("ViewMatrix",pCamera->GetViewMatR());
+	//pFX->SetMatrix("ViewMatrix",pCamera->GetViewMatR());
 	//pFX->SetMatrix("ProjMatrix",pCamera->GetProjectMatR());
 }
 
@@ -274,42 +274,44 @@ void CD3DRibbonEmitter::Update(FLOAT Time)
 		CD3DRibbonEmitterResource::RIBBON_EMITTER_INFO * pRibbonEmitterInfo=m_pModelResource->GetRibbonEmitterInfo();
 
 		
-
-		if(m_IsPlaying&&IsVisible())
-		{
-			if(m_StartTime<0)
+		if(IsVisible()&&(!CheckFlag(CD3DObject::OBJECT_FLAG_CULLED)))
+		{	
+			if(m_IsPlaying)
 			{
-				m_StartTime=Time;		
-				m_RibbonCount=0;
-				m_RecentCreateTime=Time;
-				CD3DRibbonEmitterResource::RIBBON_PARAM Param;
-				if(m_pModelResource->MakeRibbonParam(0,true,Param))
+				if(m_StartTime<0)
 				{
-					BuildRibbon(pRibbonEmitterInfo,&Param,Time);				
-					CreateCount++;
+					m_StartTime=Time;		
+					m_RibbonCount=0;
+					m_RecentCreateTime=Time;
+					CD3DRibbonEmitterResource::RIBBON_PARAM Param;
+					if(m_pModelResource->MakeRibbonParam(0,true,Param))
+					{
+						BuildRibbon(pRibbonEmitterInfo,&Param,Time);				
+						CreateCount++;
+					}
 				}
+
+				UINT CurTime=(UINT)((Time-m_StartTime)*1000*m_PlaySpeedRate);
+
+				CD3DVector3 Pos(0,0,0);
+				Pos=Pos*GetWorldMatrix();
+				FLOAT ClipTime=(Time-m_RecentCreateTime)*m_PlaySpeedRate;
+				if(ClipTime>m_ClipLength)
+				{			
+					m_RecentCreateTime=Time;
+					CD3DRibbonEmitterResource::RIBBON_PARAM Param;
+					if(m_pModelResource->MakeRibbonParam(CurTime,true,Param))
+					{
+						BuildRibbon(pRibbonEmitterInfo,&Param,Time);					
+						CreateCount++;
+					}			
+				}	
 			}
-
-			UINT CurTime=(UINT)((Time-m_StartTime)*1000*m_PlaySpeedRate);
-
-			CD3DVector3 Pos(0,0,0);
-			Pos=Pos*GetWorldMatrix();
-			FLOAT ClipTime=(Time-m_RecentCreateTime)*m_PlaySpeedRate;
-			if(ClipTime>m_ClipLength)
+			
+			if(m_RibbonCount)
 			{			
-				m_RecentCreateTime=Time;
-				CD3DRibbonEmitterResource::RIBBON_PARAM Param;
-				if(m_pModelResource->MakeRibbonParam(CurTime,true,Param))
-				{
-					BuildRibbon(pRibbonEmitterInfo,&Param,Time);					
-					CreateCount++;
-				}			
-			}	
-		}
-		
-		if(m_RibbonCount)
-		{			
-			CreateCount+=DelRibbon(Time,pRibbonEmitterInfo->Length);
+				CreateCount+=DelRibbon(Time,pRibbonEmitterInfo->Length);
+			}
 		}
 		
 	}
@@ -318,11 +320,17 @@ void CD3DRibbonEmitter::Update(FLOAT Time)
 	{
 		m_SubMesh.SetVertexCount(m_RibbonCount*2);		
 		m_SubMesh.SetPrimitiveCount((m_RibbonCount-1)*2);
+		m_IsRenderDataChanged=true;
 	}
 
 	
 
 	//PrintSystemLog(0,"Particle=%u,%u",CreateCount,DeleteCount);
+}
+
+bool CD3DRibbonEmitter::NeedUpdateAni()
+{
+	return true;
 }
 
 bool CD3DRibbonEmitter::LoadFromResource(CD3DRibbonEmitterResource * pModelResource)
@@ -363,10 +371,12 @@ bool CD3DRibbonEmitter::LoadFromResource(CD3DRibbonEmitterResource * pModelResou
 	m_SubMesh.GetVertexFormat().FVF=D3DFVF_XYZB1|D3DFVF_DIFFUSE|D3DFVF_TEX1;
 	m_SubMesh.GetVertexFormat().VertexSize=sizeof(RIBBON_VERTEX);
 	m_SubMesh.GetVertexFormat().IndexSize=0;
-	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);
-	//m_SubMesh.SetVertexCount(m_MaxRibbonCount);
-	m_SubMesh.SetVertices((BYTE *)m_pRibbonVertexBuffer,sizeof(RIBBON_PAIR)*m_MaxRibbonCount);
+	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);	
+	m_SubMesh.SetVertices((BYTE *)m_pRibbonVertexBuffer);
+	m_SubMesh.SetVertexCount(m_MaxRibbonCount*2);
 	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
+	m_SubMesh.SetVertexCount(0);
+	m_SubMesh.AllocVertexBufferR();
 	m_SubMesh.AddProperty(CD3DSubMesh::SMF_IS_ANI_MESH);
 	
 	for(UINT i=0;i<m_MaxRibbonCount;i++)

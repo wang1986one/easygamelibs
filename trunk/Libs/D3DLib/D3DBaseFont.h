@@ -54,9 +54,6 @@ public:
 	virtual void SetLineSpace(int Space)=0;
 	virtual int GetLineSpace()=0;
 
-	virtual void Release();
-
-
 };
 
 inline void CD3DBaseFont::SetManager(CD3DFontManager * pManager)

@@ -57,11 +57,14 @@ public:
 	virtual void SetUV(FLOAT_RECT * pUVRect);
 	virtual FLOAT_RECT GetUV();
 
+	virtual bool SetEffectMode(int Mode);
+
 	virtual bool SetFX(LPCTSTR FXFileName);
 	virtual bool SetFXFromMemory(LPCTSTR FXName,LPCTSTR FXContent,int Size);
 	virtual CEasyString GetFX();
 
-	virtual void TopTo(IUIBaseRect* pRect);		//pWndRect==NULL,提到最高
+	virtual void TopTo(IUIBaseRect* pBeforeRect);
+	virtual void TopTo(IUIBaseRect** pRects,UINT RectCount,IUIBaseRect* pBeforeRect);
 
 	virtual void Release();
 	

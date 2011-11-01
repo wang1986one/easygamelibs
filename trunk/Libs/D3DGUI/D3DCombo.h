@@ -23,6 +23,7 @@ protected:
 	CD3DSimpleList *		m_pComboList;
 
 	bool					m_IsListShow;
+	UINT					m_ComboListOrginHeight;
 
 	DECLARE_CLASS_INFO(CD3DCombo)
 public:
@@ -50,13 +51,26 @@ public:
 	{
 		return m_pComboList;
 	}
+	void SetComboListHeight(UINT Height)
+	{
+		m_ComboListOrginHeight=Height;
+	}
 
 	void SelectItem(int Index);	
 
-	void AddItem(LPCTSTR ItemText);
-	void InsertItem(int Index,LPCTSTR ItemText);
+	int AddItem(LPCTSTR ItemText);
+	bool InsertItem(int Index,LPCTSTR ItemText);
 	bool DeleteItem(int Index);
 	void DeleteAllItem();
+
+	int GetItemCount();
+	bool SetItemText(int Index,LPCTSTR Text);
+	bool GetItemText(int Index,CEasyString& Text);
+	bool SetItemData(int Index,LPVOID pData);
+	LPVOID GetItemData(int Index);
+
+	int GetFirstSelectedItem();
+	int GetNextSelectedItem(int Index);
 
 	virtual void SaveToXml(xml_node * pXMLNode);
 	virtual bool LoadFromXml(xml_node * pXMLNode);

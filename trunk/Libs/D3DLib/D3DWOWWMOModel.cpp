@@ -31,6 +31,13 @@ CD3DWOWWMOModel::~CD3DWOWWMOModel(void)
 
 void CD3DWOWWMOModel::Destory()
 {
+	if(m_pRender)
+		m_pRender->DelObject(this);
+	if(m_pRender)
+		m_pRender->DelRootObject(this);
+
+	m_pRender=NULL;
+
 	CD3DBaseStaticModel::Destory();
 	
 	//ClearDoodads();
@@ -95,7 +102,7 @@ bool CD3DWOWWMOModel::LoadFromResource(CD3DWOWWMOModelResource * pModelResource)
 	SetName(m_pModelResource->GetName());
 
 	BuildGroups();
-	
+	m_IsRenderDataChanged=true;
 
 	return true;
 }
@@ -131,7 +138,7 @@ bool CD3DWOWWMOModel::ShowDoodads(UINT SetIndex)
 						pDoodadModel->SetDevice(GetDevice());
 
 						if(pDoodadModel->LoadFromResource(pDoodadInfo->pDoodadModel))
-						{
+						{						
 							if(pDoodadInfo->GroupIndex<m_GroupList.GetCount())
 							{
 								pDoodadModel->SetParent(m_GroupList[pDoodadInfo->GroupIndex]);
@@ -147,6 +154,12 @@ bool CD3DWOWWMOModel::ShowDoodads(UINT SetIndex)
 							pDoodadModel->SetGroupIndex(pDoodadInfo->GroupIndex);
 							pDoodadModel->Play(0,0,0,true);
 							m_DoodadList.Add(pDoodadModel);
+						
+
+							if(pDoodadModel->NeedUpdateAni())
+							{
+								m_NeedUpdateChilds.Add(pDoodadModel);
+							}
 						}
 						else
 						{
@@ -170,6 +183,7 @@ void CD3DWOWWMOModel::ClearDoodads()
 		SAFE_RELEASE(m_DoodadList[i]);
 	}
 	m_DoodadList.Clear();
+	m_NeedUpdateChilds.Clear();
 	m_CurDoodadSet=-1;
 }
 
@@ -177,18 +191,17 @@ void CD3DWOWWMOModel::DoPortalCull(CD3DCamera * pCamera)
 {	
 	if(pCamera)
 	{
-		CD3DVector3 CameraPos1=pCamera->GetWorldMatrixR().GetTranslation();
-		CD3DVector3 CameraPos=CD3DVector3(0.0f,0.0f,0.0f)*
+		CD3DVector3 CameraPos=pCamera->GetWorldMatrixR().GetTranslation();
+		CD3DVector3 CameraNearFacePos=CD3DVector3(0.0f,0.0f,0.0f)*
 			pCamera->GetProjectMatR().GetInverse()*pCamera->GetViewMatR().GetInverse();
 
 		CEasyArray<CD3DWOWWMOGroupModel *> Groups;
 		CEasyArray<CD3DObject *> Objects(100,100);
-
 		
-		GetGroupByPos(CameraPos,Groups);
+		GetGroupByPos(CameraNearFacePos,Groups);
 
 		//Doodad裁剪
-		//先剔除所有Doodad,和group，但不包括摄像机所在的group
+		//先剔除所有Doodad,和group，但不包括摄像机所在的group,外部group也不隐藏
 		//if(Groups.GetCount())
 		{
 			for(UINT i=0;i<m_DoodadList.GetCount();i++)
@@ -217,7 +230,7 @@ void CD3DWOWWMOModel::DoPortalCull(CD3DCamera * pCamera)
 				bool IsIn=false;
 				for(UINT g=0;g<Groups.GetCount();g++)
 				{
-					if(m_GroupList[i]==Groups[g])
+					if(m_GroupList[i]==Groups[g]||(m_GroupList[i]->GetGroupInfo()->Flags&WMOGF_OUTDOOR))
 					{
 						IsIn=true;
 						break;
@@ -247,7 +260,7 @@ void CD3DWOWWMOModel::DoPortalCull(CD3DCamera * pCamera)
 					//根据每一个Portal添加可见的Doodad
 					for(UINT i=0;i<pGroupInfo->PortalList.GetCount();i++)
 					{
-						CD3DVector3 CameraDir=pGroupInfo->PortalList[i].Center*pGroup->GetWorldMatrixR()-CameraPos1;
+						CD3DVector3 CameraDir=pGroupInfo->PortalList[i].Center*pGroup->GetWorldMatrixR()-CameraPos;
 						CD3DVector3 PortalNormal=pGroupInfo->PortalList[i].Normal*WorldScaleRotationMat;
 						if(CameraDir.Dot(PortalNormal)>0)
 						{
@@ -297,8 +310,11 @@ void CD3DWOWWMOModel::DoPortalCull(CD3DCamera * pCamera)
 								int Relation=Frustum.BoxLocation(BBox);
 								if(Relation!=CD3DFrustum::LR_OUT)
 								{
-									Objects[j]->RemoveFlagRecursive(CD3DObject::OBJECT_FLAG_PREPARE_RENDERED);
-									Objects.Delete(j);
+									if(Objects[j]->IsKindOfFast(GET_CLASS_INFO(CD3DWOWWMOGroupModel)))
+										Objects[j]->RemoveFlag(CD3DObject::OBJECT_FLAG_PREPARE_RENDERED);
+									else
+										Objects[j]->RemoveFlagRecursive(CD3DObject::OBJECT_FLAG_PREPARE_RENDERED);
+									Objects.Delete(j);									
 								}
 							}							
 						}
@@ -306,7 +322,9 @@ void CD3DWOWWMOModel::DoPortalCull(CD3DCamera * pCamera)
 				}
 			}
 		}
+		AddFlag(CD3DObject::OBJECT_FLAG_RENDERED);
 	}
+	
 }
 
 bool CD3DWOWWMOModel::CloneFrom(CNameObject * pObject,UINT Param)
@@ -436,35 +454,80 @@ void CD3DWOWWMOModel::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * p
 }
 
 
+void CD3DWOWWMOModel::OnPrepareRenderData()
+{
+	if(m_IsRenderDataChanged)
+	{
+		{
+			CAutoLock Lock(GetRenderLock());
+
+			m_WorldMatrixR=m_WorldMatrix;
+			for(int i=0;i<GetSubMeshCount();i++)
+			{
+				CD3DSubMesh * pSubMesh=GetSubMesh(i);
+				if(pSubMesh)
+				{
+					pSubMesh->OnPrepareRenderData();
+				}
+			}		
+
+			m_RenderDataUpdateCount++;
+		}
+
+		for(UINT i=0;i<m_ChildList.GetCount();i++)
+		{
+			((CD3DObject *)m_ChildList[i])->OnPrepareRenderData();
+		}
+
+	}
+	else
+	{
+		for(UINT i=0;i<m_NeedUpdateChilds.GetCount();i++)
+		{
+			m_NeedUpdateChilds[i]->OnPrepareRenderData();
+		}
+	}
+
+	m_IsRenderDataChanged=false;
+}
 
 void CD3DWOWWMOModel::Update(FLOAT Time)
 {
-	CD3DBaseStaticModel::Update(Time);
-	//if(GetRender())
-	//{
-	//	CD3DCamera * pCamera=GetRender()->GetCamera();
+	m_UpdateCount++;
+	bool NeedUpdateAll=false;
+	if(GetParent())
+	{
+		if(m_IsMatrixChanged||GetParent()->IsMatrixChanged())
+		{
+			m_WorldMatrix=m_LocalMatrix*GetParent()->GetWorldMatrix();
+			NeedUpdateAll=true;
+		}
+	}
+	else
+	{
+		if(m_IsMatrixChanged)
+		{
+			m_WorldMatrix=m_LocalMatrix;
+			NeedUpdateAll=true;
+		}
+	}
 
-	//	for(UINT i=0;i<m_DoodadList.GetCount();i++)
-	//	{			
-	//		CD3DBoundingBox BBox=(*m_DoodadList[i]->GetBoundingBox())*m_DoodadList[i]->GetWorldMatrix();
-	//		FLOAT Size=CD3DVector3(BBox.m_Max-BBox.m_Min).Length();
-	//		FLOAT Dis=CD3DVector3(m_DoodadList[i]->GetWorldMatrix().GetTranslation()-pCamera->GetWorldMatrix().GetTranslation()).Length();
-	//		if(Size<50)
-	//		{
-	//			if(Dis>300)
-	//			{
-	//				m_DoodadList[i]->SetVisibleRecursive(false);
-	//			}
-	//			else
-	//			{
-	//				m_DoodadList[i]->SetVisibleRecursive(true);
-	//			}
-	//		}			
-	//	}
+	if(NeedUpdateAll)
+	{
+		for(UINT i=0;i<m_ChildList.GetCount();i++)
+		{
+			((CD3DObject *)m_ChildList[i])->Update(Time);
+		}
+	}
+	else
+	{
+		for(UINT i=0;i<m_NeedUpdateChilds.GetCount();i++)
+		{
+			m_NeedUpdateChilds[i]->Update(Time);
+		}
+	}
 
-
-
-	//}
+	m_IsMatrixChanged=false;
 }
 
 
@@ -502,43 +565,91 @@ CD3DBoundingSphere * CD3DWOWWMOModel::GetBoundingSphere()
 
 bool CD3DWOWWMOModel::GetHeightByXZ(const CD3DVector3& Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight)
 {
-	if(GetBoundingBox())
-	{
-		CD3DVector3 RayPos=Pos;
-		CD3DVector3 RayDir(0,-1,0);
-		CD3DVector3 IntersectPoint;
-		FLOAT Distance;
-		RayPos.y=MaxHeight;
-		CD3DBoundingBox WMOBBox=(*GetBoundingBox())*GetWorldMatrix();
-		if(WMOBBox.RayIntersect(RayPos,RayDir,IntersectPoint,Distance))
-		{
-			FLOAT FinalHeight=MinHeight,FinalWaterHeight=MinHeight;
-			bool HaveHeight=false;
-
-			for(UINT i=0;i<m_GroupList.GetCount();i++)
-			{
-				FLOAT WMOHeight,WMOWaterHeight;
-				if(m_GroupList[i]->GetHeightByXZ(Pos,MinHeight,MaxHeight,WMOHeight,WMOWaterHeight))
-				{
-					HaveHeight=true;
-					if(WMOHeight>FinalHeight)
-						FinalHeight=WMOHeight;
-					if(WMOWaterHeight>FinalWaterHeight)
-						FinalWaterHeight=WMOWaterHeight;
-				}
-			}
-			if(HaveHeight)
-			{
-				Height=FinalHeight;
-				WaterHeight=FinalWaterHeight;
-			}
-
-			return HaveHeight;
-		}
-	}	
 	return false;
+	//if(GetBoundingBox())
+	//{
+	//	CD3DVector3 RayPos=Pos;
+	//	CD3DVector3 RayDir(0,-1,0);
+	//	CD3DVector3 IntersectPoint;
+	//	FLOAT Distance;
+	//	RayPos.y=MaxHeight;
+	//	CD3DBoundingBox WMOBBox=(*GetBoundingBox())*GetWorldMatrix();
+	//	if(WMOBBox.RayIntersect(RayPos,RayDir,IntersectPoint,Distance,true))
+	//	{
+	//		FLOAT FinalHeight=MinHeight,FinalWaterHeight=MinHeight;
+	//		bool HaveHeight=false;
+
+	//		for(UINT i=0;i<m_GroupList.GetCount();i++)
+	//		{
+	//			FLOAT WMOHeight,WMOWaterHeight;
+	//			if(m_GroupList[i]->GetHeightByXZ(Pos,MinHeight,MaxHeight,WMOHeight,WMOWaterHeight))
+	//			{
+	//				HaveHeight=true;
+	//				if(WMOHeight>FinalHeight)
+	//					FinalHeight=WMOHeight;
+	//				if(WMOWaterHeight>FinalWaterHeight)
+	//					FinalWaterHeight=WMOWaterHeight;
+	//			}
+	//		}
+	//		if(HaveHeight)
+	//		{
+	//			Height=FinalHeight;
+	//			WaterHeight=FinalWaterHeight;
+	//		}
+
+	//		return HaveHeight;
+	//	}
+	//}	
+	//return false;
 	
 }
+
+bool CD3DWOWWMOModel::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,bool TestOnly)
+{
+	return false;
+	//return RayIntersect(Point,Dir,IntersectPoint,Distance,RITM_INCLUDE_NO_COLLIDE_FACE,TestOnly);
+}
+bool CD3DWOWWMOModel::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,UINT TestMode,bool TestOnly)
+{
+	return false;
+	//if(GetBoundingBox())
+	//{
+	//	bool IsIntersect=false;
+	//	FLOAT FinalDis;
+	//	CD3DVector3 P;
+	//	FLOAT D=0;
+
+	//	CD3DBoundingBox WMOBBox=(*GetBoundingBox())*GetWorldMatrix();
+	//	if(WMOBBox.RayIntersect(Point,Dir,P,D,true))
+	//	{
+	//		for(UINT i=0;i<m_GroupList.GetCount();i++)
+	//		{
+	//			if(m_GroupList[i]->RayIntersect(Point,Dir,P,D,TestMode,TestOnly))
+	//			{
+	//				if(IsIntersect)
+	//				{
+	//					if(D<FinalDis)
+	//					{
+	//						IntersectPoint=P;
+	//						Distance=D;
+	//						FinalDis=D;
+	//					}
+	//				}
+	//				else
+	//				{
+	//					IsIntersect=true;
+	//					IntersectPoint=P;
+	//					Distance=D;
+	//					FinalDis=D;
+	//				}					
+	//			}
+	//		}			
+	//		return IsIntersect;
+	//	}
+	//}
+	//return false;
+}
+
 
 void CD3DWOWWMOModel::BuildGroups()
 {
@@ -584,7 +695,7 @@ void CD3DWOWWMOModel::GetGroupByPos(const CD3DVector3& Pos,CEasyArray<CD3DWOWWMO
 	
 	if(Groups.GetCount()==0)
 	{
-		Groups.Add(ExteriorGroups);
+		Groups.AddArray(ExteriorGroups);
 	}
 	
 }

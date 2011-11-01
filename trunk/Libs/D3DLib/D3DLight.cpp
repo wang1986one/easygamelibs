@@ -62,6 +62,19 @@ CD3DLight::CD3DLight(const D3DLIGHT9& Light)
 
 CD3DLight::~CD3DLight(void)
 {
+	Destory();
+}
+
+void CD3DLight::Destory()
+{
+	if(m_pRender)
+		m_pRender->DelObject(this);
+	if(m_pRender)
+		m_pRender->DelRootObject(this);
+
+	m_pRender=NULL;
+
+	CD3DObject::Destory();
 }
 
 void CD3DLight::SetLight(const D3DLIGHT9& Light)
@@ -149,7 +162,7 @@ bool CD3DLight::RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3
 
 		BBox=(*GetBoundingBox())*GetWorldMatrix();
 
-		return BBox.RayIntersect(Point,Dir,IntersectPoint,Distance);
+		return BBox.RayIntersect(Point,Dir,IntersectPoint,Distance,TestOnly);
 	}
 	
 	return false;

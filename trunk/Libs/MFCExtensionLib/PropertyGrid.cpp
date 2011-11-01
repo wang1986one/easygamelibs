@@ -89,6 +89,7 @@ void CPropertyGrid::SetProperty(PROPERTY_INFO * pInfo,bool AddWhileNotExist)
 	{
 		int Item=pPropertyInfo->BindRow;
 		*pPropertyInfo=*pInfo;
+		pPropertyInfo->BindRow=Item;
 		SetItemText(Item,1,pPropertyInfo->Value);
 	}
 	else if(AddWhileNotExist)

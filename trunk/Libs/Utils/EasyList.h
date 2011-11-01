@@ -15,21 +15,21 @@ template<class T>
 class CEasyList
 {
 protected:
-	struct OBJ_NODE
+	struct StorageNode
 	{
-		OBJ_NODE * pPrev;
-		OBJ_NODE * pNext;
+		StorageNode * pPrev;
+		StorageNode * pNext;
 		T Object;
 	};
-	OBJ_NODE *	m_pHead;
-	OBJ_NODE *	m_pTail;
-	UINT		m_Count;
+	StorageNode *	m_pObjectListHead;
+	StorageNode *	m_pObjectListTail;
+	UINT			m_ObjectCount;
 public:
 	CEasyList()
 	{
-		m_pHead=NULL;
-		m_pTail=NULL;
-		m_Count=0;
+		m_pObjectListHead=NULL;
+		m_pObjectListTail=NULL;
+		m_ObjectCount=0;
 	}
 	~CEasyList()
 	{
@@ -37,106 +37,212 @@ public:
 	}
 	void Clear()
 	{
-		while(m_pHead)
+		while(m_pObjectListHead)
 		{
-			OBJ_NODE * pNode=m_pHead;
-			m_pHead=m_pHead->pNext;
+			StorageNode * pNode=m_pObjectListHead;
+			m_pObjectListHead=m_pObjectListHead->pNext;
 			delete pNode;
 		}
-		m_pHead=NULL;
-		m_pTail=NULL;
-		m_Count=0;
+		m_pObjectListHead=NULL;
+		m_pObjectListTail=NULL;
+		m_ObjectCount=0;
 	}
-	UINT GetCount()
+	UINT GetObjectCount()
 	{
-		return m_Count;
+		return m_ObjectCount;
 	}
-	LPVOID GetHead()
+	LPVOID GetFirstObjectPos()
 	{
-		return m_pHead;
+		return m_pObjectListHead;
 	}
-	LPVOID GetTail()
+	LPVOID GetLastObjectPos()
 	{
-		return m_pTail;
+		return m_pObjectListTail;
 	}
-	T& GetObject(LPVOID Pos)
+	T * GetObject(LPVOID Pos)
 	{
-		OBJ_NODE * pNode=(OBJ_NODE *)Pos;
-		return pNode->Object;
+		StorageNode * pNode=(StorageNode *)Pos;
+		if(pNode)
+			return &(pNode->Object);
+		else
+			return NULL;
 	}
-	LPVOID GetPrev(LPVOID Pos)
+	T * GetNext(LPVOID& Pos)
 	{
-		OBJ_NODE * pNode=(OBJ_NODE *)Pos;
-		return pNode->pPrev;
-	}
-	T& GetPrevObject(LPVOID& Pos)
-	{
-		OBJ_NODE * pNode=(OBJ_NODE *)Pos;
-		Pos=pNode->pPrev;
-		return pNode->Object;
-	}	
-	LPVOID GetNext(LPVOID Pos)
-	{
-		OBJ_NODE * pNode=(OBJ_NODE *)Pos;
-		return pNode->pNext;
-	}
-	T& GetNextObject(LPVOID& Pos)
-	{
-		OBJ_NODE * pNode=(OBJ_NODE *)Pos;
-		Pos=pNode->pNext;
-		return pNode->Object;
-	}	
-	void InsertBefore(const T& Object,LPVOID Pos=NULL)
-	{
-		OBJ_NODE * pNode=new OBJ_NODE;		
-		pNode->Object=Object;
-		InsertBefore(pNode,Pos);
-	}
-	T& InsertBefore(LPVOID Pos=NULL)
-	{
-		OBJ_NODE * pNode=new OBJ_NODE;		
-		InsertBefore(pNode,Pos);
-		return pNode->Object;
-	}
-	void InsertAfter(const T& Object,LPVOID Pos=NULL)
-	{
-		OBJ_NODE * pNode=new OBJ_NODE;		
-		pNode->Object=Object;
-		InsertAfter(pNode,Pos);
-	}
-	T& InsertAfter(LPVOID Pos=NULL)
-	{
-		OBJ_NODE * pNode=new OBJ_NODE;		
-		InsertAfter(pNode,Pos);
-		return pNode->Object;
-	}	
-	void Delete(LPVOID Pos)
-	{
-		OBJ_NODE * pNode=(OBJ_NODE *)Pos;
-		Pick(pNode);
-		delete pNode;
-	}
-	void MoveToBefore(LPVOID Pos,LPVOID Target)
-	{
-		if(Pos!=Target)
+		if(Pos)
 		{
-			OBJ_NODE * pNode=(OBJ_NODE *)Pos;
-			Pick(pNode);
-			InsertBefore(pNode,Target);
+			StorageNode * pNode=(StorageNode *)Pos;
+			Pos=pNode->pNext;
+			return &(pNode->Object);
 		}
+		return NULL;
 	}
-	void MoveToAfter(LPVOID Pos,LPVOID Target)
+	T * GetPrev(LPVOID Pos)
 	{
-		if(Pos!=Target)
+		if(Pos)
 		{
-			OBJ_NODE * pNode=(OBJ_NODE *)Pos;
-			Pick(pNode);
-			InsertAfter(pNode,Target);
+			StorageNode * pNode=(StorageNode *)Pos;
+			Pos=pNode->pPrev;
+			return &(pNode->Object);
 		}
+		return NULL;
+	}
+	BOOL MoveToBefore(LPVOID Pos,LPVOID Target)
+	{
+		if(Pos&&Pos!=Target&&m_ObjectCount>1)
+		{
+			StorageNode * pNode=(StorageNode *)Pos;
+			Pick(pNode);
+			InsertNodeBefore(pNode,Target);
+			return TRUE;
+		}
+		return FALSE;
+	}
+	BOOL MoveToAfter(LPVOID Pos,LPVOID Target)
+	{
+		if(Pos&&Pos!=Target&&m_ObjectCount>1)
+		{
+			StorageNode * pNode=(StorageNode *)Pos;
+			Pick(pNode);
+			InsertNodeAfter(pNode,Target);
+			return TRUE;
+		}
+		return FALSE;
+	}
+
+	LPVOID InsertAfter(LPVOID Pos=NULL)
+	{
+		StorageNode * pNode=new StorageNode;
+		InsertNodeAfter(pNode,Pos);
+		return pNode;
+	}	
+
+	LPVOID InsertAfter(const T& Object,LPVOID Pos=NULL)
+	{
+		StorageNode * pNode=new StorageNode;		
+		pNode->Object=Object;
+		InsertNodeAfter(pNode,Pos);
+		return pNode;
+	}
+	
+	LPVOID InsertBefore(LPVOID Pos=NULL)
+	{
+		StorageNode * pNode=new StorageNode;		
+		InsertNodeBefore(pNode,Pos);
+		return pNode;
+	}
+	LPVOID InsertBefore(const T& Object,LPVOID Pos=NULL)
+	{
+		StorageNode * pNode=new StorageNode;
+		pNode->Object=Object;
+		InsertNodeBefore(pNode,Pos);
+		return pNode;
+	}
+	LPVOID InsertSorted(const T& Object)
+	{
+		StorageNode * pNode=new StorageNode;
+		if(pNode)
+		{	
+			pNode->Object=Object;
+			StorageNode * pHead=m_pObjectListHead;
+			while(pHead&&pHead->Object<Object)
+			{
+				pHead=pHead->pNext;
+			}
+			if(pHead)
+			{
+				InsertNodeBefore(pNode,pHead);
+			}
+			else
+			{
+				InsertNodeAfter(pNode,pHead);
+			}
+			return pNode;
+		}
+		return NULL;
+	}
+	
+	
+	BOOL DeleteObject(LPVOID Pos)
+	{
+		if(Pos)
+		{
+			StorageNode * pNode=(StorageNode *)Pos;
+			Pick(pNode);
+			delete pNode;
+			return TRUE;
+		}
+		return FALSE;
+	}
+	
+	LPVOID PushFront()
+	{
+		StorageNode * pNode=new StorageNode;
+		if(pNode)
+		{				
+			InsertNodeBefore(pNode,m_pObjectListHead);			
+			return pNode;
+		}
+		return NULL;
+	}
+
+	LPVOID PushFront(const T& Object)
+	{
+		StorageNode * pNode=(StorageNode *)PushFront();
+		if(pNode)
+		{			
+			pNode->Object=Object;
+			return pNode;
+		}
+		return NULL;
+	}
+
+	LPVOID PushBack()
+	{
+		StorageNode * pNode=new StorageNode;
+		if(pNode)
+		{				
+			InsertNodeAfter(pNode,m_pObjectListTail);			
+			return pNode;
+		}
+		return NULL;
+	}
+
+	LPVOID PushBack(const T& Object)
+	{
+		StorageNode * pNode=(StorageNode *)PushBack();
+		if(pNode)
+		{			
+			pNode->Object=Object;
+			return pNode;
+		}
+		return NULL;
+	}
+
+	BOOL PopFront(T& Object)
+	{
+		if(m_pObjectListHead)
+		{
+			Object=m_pObjectListHead->Object;
+			DeleteObject(m_pObjectListHead);
+			return TRUE;
+		}
+		return FALSE;
+	}	
+
+	BOOL PopBack(T& Object)
+	{
+		if(m_pObjectListTail)
+		{
+			Object=m_pObjectListTail->Object;
+			DeleteObject(m_pObjectListTail);
+			return TRUE;
+		}
+		return FALSE;
 	}
 	LPVOID Find(const T& Object)
 	{
-		OBJ_NODE * pNode=m_pHead;
+		StorageNode * pNode=m_pObjectListHead;
 		while(pNode)
 		{
 			if(pNode->Object==Object)
@@ -147,25 +253,25 @@ public:
 	}
 	
 protected:
-	void Pick(OBJ_NODE * pNode)
+	void Pick(StorageNode * pNode)
 	{
-		if(pNode==m_pHead)
-			m_pHead=pNode->pNext;
-		if(pNode==m_pTail)
-			m_pTail=pNode->pPrev;
+		if(pNode==m_pObjectListHead)
+			m_pObjectListHead=pNode->pNext;
+		if(pNode==m_pObjectListTail)
+			m_pObjectListTail=pNode->pPrev;
 
 		if(pNode->pPrev)
 			pNode->pPrev->pNext=pNode->pNext;
 		if(pNode->pNext)
 			pNode->pNext->pPrev=pNode->pPrev;
-		m_Count--;
+		m_ObjectCount--;
 	}
-	void InsertBefore(OBJ_NODE * pNode,LPVOID Pos)
+	void InsertNodeBefore(StorageNode * pNode,LPVOID Pos)
 	{		
-		OBJ_NODE * pBefore=(OBJ_NODE *)Pos;	
+		StorageNode * pBefore=(StorageNode *)Pos;	
 
 		if(pBefore==NULL)
-			pBefore=m_pHead;
+			pBefore=m_pObjectListHead;
 
 		if(pBefore)
 			pNode->pPrev=pBefore->pPrev;
@@ -179,23 +285,23 @@ protected:
 				pBefore->pPrev->pNext=pNode;
 			pBefore->pPrev=pNode;
 		}
-		if(m_pHead==NULL)
+		if(m_pObjectListHead==NULL)
 		{
-			m_pHead=pNode;
-			m_pTail=pNode;
+			m_pObjectListHead=pNode;
+			m_pObjectListTail=pNode;
 		}
-		else if(m_pHead==pBefore)
+		else if(m_pObjectListHead==pBefore)
 		{
-			m_pHead=pNode;
+			m_pObjectListHead=pNode;
 		}
-		m_Count++;		
+		m_ObjectCount++;		
 	}
-	void InsertAfter(OBJ_NODE * pNode,LPVOID Pos)
+	void InsertNodeAfter(StorageNode * pNode,LPVOID Pos)
 	{		
-		OBJ_NODE * pAfter=(OBJ_NODE *)Pos;	
+		StorageNode * pAfter=(StorageNode *)Pos;	
 
 		if(pAfter==NULL)
-			pAfter=m_pTail;
+			pAfter=m_pObjectListTail;
 
 		if(pAfter)
 			pNode->pNext=pAfter->pNext;
@@ -211,15 +317,15 @@ protected:
 			pAfter->pNext=pNode;
 		}
 
-		if(m_pTail==NULL)
+		if(m_pObjectListTail==NULL)
 		{
-			m_pHead=pNode;
-			m_pTail=pNode;
+			m_pObjectListHead=pNode;
+			m_pObjectListTail=pNode;
 		}
-		else if(m_pTail==pAfter)
+		else if(m_pObjectListTail==pAfter)
 		{
-			m_pTail=pNode;
+			m_pObjectListTail=pNode;
 		}
-		m_Count++;
+		m_ObjectCount++;
 	}
 };

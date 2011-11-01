@@ -32,7 +32,7 @@ struct SIMPLE_LIST_LINE_INFO
 	}
 };
 
-typedef std::vector<SIMPLE_LIST_LINE_INFO> CSimpleListLineInfos;
+typedef CEasyArray<SIMPLE_LIST_LINE_INFO> CSimpleListLineInfos;
 
 class CD3DSimpleList :
 	public CD3DWnd
@@ -77,6 +77,7 @@ public:
 	virtual void SetFont(LOGFONT * pLogFont);
 	virtual void SetFontAlign(DWORD Align);
 	virtual void SetFontSahdowWidth(DWORD ShadowWidth);
+	virtual void SetFontScale(FLOAT Scale);
 	virtual void SetVisible(bool IsVisible);
 
 	virtual void GetMiniSize(int& Width,int& Height);
@@ -134,7 +135,7 @@ public:
 	void ClearAllSelect();
 
 	int AddItem(LPCTSTR ItemText);
-	void InsertItem(int Index,LPCTSTR ItemText);
+	bool InsertItem(int Index,LPCTSTR ItemText);
 	bool DeleteItem(int Index);
 	void DeleteAllItem();
 
@@ -154,6 +155,11 @@ public:
 	virtual bool LoadFromXml(xml_node * pXMLNode);
 
 	void MakeItemVisible(int Index);
+
+	UINT GetItemHeight()
+	{
+		return m_LineHeight+m_LineSpace;
+	}
 
 protected:
 	virtual bool UpdateFont();

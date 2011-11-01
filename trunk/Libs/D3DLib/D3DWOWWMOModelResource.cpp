@@ -965,7 +965,7 @@ bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileN
 		GroupInfo.VertexList[i].Pos=BLZTranslationToD3D(pVertices->Vertices[i]);
 		GroupInfo.VertexList[i].Normal=BLZTranslationToD3D(pNormals->Normals[i]);
 		GroupInfo.VertexList[i].TextureCoord=pTextureUVs->TextureCoordinates[i];	
-		GroupInfo.VertexList[i].Diffuse=0xffffffff;
+		GroupInfo.VertexList[i].Diffuse=0xFFEEEEEE;
 	}
 
 	//三角面属性
@@ -1012,9 +1012,9 @@ bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileN
 		BatchInfo.VertexCount=pRenderBatchs->RenderBatchs[i].EndVertex-pRenderBatchs->RenderBatchs[i].StartVertex+1;
 
 		int MaterialIndex=pRenderBatchs->RenderBatchs[i].Material;
-		for(UINT j=BatchInfo.StartIndex;j<BatchInfo.StartIndex+BatchInfo.IndexCount;j++)
+		for(UINT j=0;j<BatchInfo.VertexCount;j++)
 		{
-			GroupInfo.VertexList[GroupInfo.IndexList[j]].Diffuse=pMaterials->Materials[MaterialIndex].TextureColor1;
+			GroupInfo.VertexList[j+BatchInfo.StartVertex].Diffuse=pMaterials->Materials[MaterialIndex].TextureColor1;
 			//GroupInfo.VertexList[GroupInfo.IndexList[j]].Diffuse=0xFFFFFFFF;
 		}
 
@@ -1023,7 +1023,6 @@ bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileN
 
 		GroupInfo.RenderBatchs.Add(BatchInfo);
 	}
-
 
 	return true;
 }
@@ -1035,7 +1034,7 @@ bool CD3DWOWWMOModelResource::LoadDoodads(UINT DoodadCount,UINT DoodadSetCount,B
 		UINT RealDoodadCount=pDoodads->ChunkSize/sizeof(SMODoodadInfo);
 		if(DoodadCount>RealDoodadCount)
 		{
-			PrintSystemLog(0,"CD3DWOWWMOModelResource::LoadDoodads:DoodadCount有误");
+			//PrintSystemLog(0,"CD3DWOWWMOModelResource::LoadDoodads:DoodadCount有误");
 			DoodadCount=RealDoodadCount;
 		}
 		m_DoodadInfos.Resize(DoodadCount);
@@ -1217,26 +1216,13 @@ CD3DFX * CD3DWOWWMOModelResource::BuildFX(UINT BlendMode,UINT TextureFlag)
 		break;	
 	}	
 
-	IFileAccessor * pFile;
+	
 
 	CEasyString FxContent;
 
-
-	pFile=CD3DFX::CreateFileAccessor();
-	if(pFile==NULL)
-		return NULL;
-	CEasyString FXFileName=CD3DFX::FindFileOne(WMO_MODEL_FX_FILE_NAME);
-	if(!pFile->Open(FXFileName,IFileAccessor::modeRead))
-	{
-		PrintD3DLog(0,"文件%s打开失败%d",(LPCTSTR)FXFileName,GetLastError());
-		pFile->Release();
-		return NULL;	
-	}
-	int FileSize=(int)pFile->GetSize();	
-	FxContent.Resize(FileSize);
-	pFile->Read((LPVOID)FxContent.GetBuffer(),FileSize);	
-	FxContent.SetLength(FileSize);
-	pFile->Release();
+	
+	FxContent=WMO_MODEL_FX;
+	
 	FxContent.Replace("<EnableZWrite>",EnableZWrite);
 	FxContent.Replace("<EnableFog>",EnableFog);
 	FxContent.Replace("<CullMode>",CullMode);
@@ -1279,8 +1265,8 @@ void CD3DWOWWMOModelResource::BuildSubMeshs()
 			pD3DSubMesh->SetIndexStart(StartIndex);
 			pD3DSubMesh->SetVertexStart(StartVertex);
 
-			pD3DSubMesh->SetIndices((BYTE *)m_Groups[i].IndexList.GetBuffer(),0);
-			pD3DSubMesh->SetVertices((BYTE *)m_Groups[i].VertexList.GetBuffer(),0);
+			pD3DSubMesh->SetIndices((BYTE *)m_Groups[i].IndexList.GetBuffer());
+			pD3DSubMesh->SetVertices((BYTE *)m_Groups[i].VertexList.GetBuffer());
 
 			pD3DSubMesh->SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 			pD3DSubMesh->SetOrginDataBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
@@ -1334,5 +1320,6 @@ void CD3DWOWWMOModelResource::BuildSubMeshs()
 		}
 	}
 }
+
 
 }

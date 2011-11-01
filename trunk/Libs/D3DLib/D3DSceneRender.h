@@ -59,12 +59,14 @@ public:
 		RBT_SUBMESH,
 	};
 	
-	struct RENDER_BATCH_INFO
+	struct RENDER_SUBMESH_INFO
 	{			
 		CD3DObject *			pObj;
 		CD3DSubMesh *			pSubMesh;
 		CD3DSubMeshMaterial *	pMaterial;
 	};
+
+	struct TREE_NODE;
 
 	struct RENDER_OBJECT_INFO
 	{
@@ -75,6 +77,15 @@ public:
 		CD3DSubMeshMaterial *	pMaterial;
 		bool					IsPreRenderd;
 		bool					IsRenderd;
+		CEasyArray<TREE_NODE *>	TreeNodes;
+
+	};
+
+	enum TREE_NODE_UPDATE_FLAG
+	{
+		TNUF_NONE,
+		TNUF_ADD_OBJECT,
+		TNUF_DEL_OBJECT,
 	};
 	
 	struct TREE_NODE
@@ -84,25 +95,60 @@ public:
 		TREE_NODE *							pParent;
 		UINT								Depth;
 		CD3DBoundingBox						NodeBox;
-		bool								HaveChild;
 		UINT								ChildCount;
-		UINT								ObjectCount;
 		CD3DBoundingFrame *					pBoundingFrame;
 		bool								IsRendered;
-		bool								IsModified;
 		bool								IsFixed;
+		int									UpdateFlag;
 		TREE_NODE()
 		{
 			ZeroMemory(Childs,sizeof(Childs));
 			pParent=NULL;
 			Depth=0;
-			HaveChild=false;
 			ChildCount=0;
-			ObjectCount=0;
 			pBoundingFrame=NULL;
-			IsRendered=false;
-			IsModified=true;
+			IsRendered=false;			
 			IsFixed=false;
+			UpdateFlag=TNUF_NONE;
+		}
+		bool AddObj(RENDER_OBJECT_INFO * pObj)
+		{
+			ObjectList.Add(pObj);
+			pObj->TreeNodes.Add(this);
+			UpdateFlag=TNUF_ADD_OBJECT;
+			return true;
+		}
+		bool DelObj(RENDER_OBJECT_INFO * pObj)
+		{
+			for(UINT i=0;i<ObjectList.GetCount();i++)
+			{
+				if(ObjectList[i]==pObj)
+				{				
+					return DelObj(i);
+				}
+			}
+			return false;
+		}
+		bool DelObj(UINT Index)
+		{
+			if(Index<ObjectList.GetCount())
+			{
+				RENDER_OBJECT_INFO * pObjectInfo=ObjectList[Index];
+				ObjectList.Delete(Index);
+				for(UINT i=0;i<pObjectInfo->TreeNodes.GetCount();i++)
+				{
+					if(pObjectInfo->TreeNodes[i]==this)
+					{
+						pObjectInfo->TreeNodes.Delete(i);
+						UpdateFlag=TNUF_DEL_OBJECT;
+						return true;
+					}
+				}
+				PrintD3DLog(0,"未能删除树节点记录");
+				UpdateFlag=TNUF_DEL_OBJECT;
+				return true;
+			}
+			return false;
 		}
 	};	
 
@@ -119,14 +165,22 @@ public:
 protected:
 
 	CD3DCamera *							m_pCamera;
+	CD3DCamera *							m_pBackGroundCamera;
 	CD3DFX *								m_pSharedParamFX;
+	CD3DLight *								m_pGlobalLight;
 	CEasyArray<CD3DLight *>					m_LightList;
 
 	D3DCOLOR								m_FogColor;
 	FLOAT									m_FogNear;
 	FLOAT									m_FogFar;	
 
+	D3DCOLOR								m_WaterColorLight;
+	D3DCOLOR								m_WaterColorDark;
+
+	D3DCOLOR								m_ShadowColor;
+
 	CEasyArray<CD3DObject *>				m_ObjectList;
+	CEasyArray<CD3DObject *>				m_BackGroundObjectList;
 	CEasyArray<CD3DWOWWMOModel *>			m_WMOObjectList;
 
 	UINT									m_TreeMode;
@@ -134,12 +188,13 @@ protected:
 	TREE_NODE *								m_pSelectedSceneTree;
 	CEasyArray<RENDER_OBJECT_INFO *>		m_SceneRenderUnitList;
 	CEasyArray<CD3DObject *>				m_SceneObjectList;
+	UINT									m_TreeDepthLimit;
 	UINT									m_MaxTreeDepth;
 
-	CEasyArray<RENDER_BATCH_INFO>			m_RenderBatchList;
-	CEasyArray<RENDER_BATCH_INFO>			m_TransparentSubMeshList;
+	CEasyArray<RENDER_SUBMESH_INFO>			m_RenderBatchList;
+	CEasyArray<RENDER_SUBMESH_INFO>			m_TransparentSubMeshList;
 	CD3DTexture *							m_pDepthTexture;
-
+	
 	UINT									m_TreeCheckCount;
 	UINT									m_ObjectCheckCount;
 	UINT									m_DirectRenderCount;
@@ -147,6 +202,16 @@ protected:
 	UINT									m_TreeCutCount;
 	UINT									m_ObjectCutCount;
 	UINT									m_HeightTestCount;
+	UINT									m_RayIntersectCount;
+	UINT									m_LineIntersectCount;
+
+	UINT									m_AddObjectSubMeshCount;
+	UINT									m_AddObjectTreeWalkCount;
+	UINT									m_AddObjectTreeAddCount;
+	UINT									m_AddObjectTreeCutCount;
+	UINT									m_AddObjectTreeUpdateCount;
+	UINT									m_AddObjectObjectTestCount;
+	
 
 	bool									m_ShowNodeFrame;
 
@@ -165,20 +230,34 @@ public:
 	CD3DSceneRender(void);
 	~CD3DSceneRender(void);
 
-	bool Create(CD3DDevice * pDevice,UINT TreeMode,CD3DBoundingBox SceneBox,int StartDepth);
+	bool Create(CD3DDevice * pDevice,UINT TreeMode,CD3DBoundingBox SceneBox,int StartDepth,int DepthLimit);
 	virtual void Destory();
 
 
 	virtual bool AddObject(CD3DObject * pObj,bool IsRecursive=true);	
-	virtual bool DelObject(CD3DObject * pObj);
+	virtual bool DelObject(CD3DObject * pObj,bool IsRecursive=true);
+
+
+	bool AddBackGroundObject(CD3DObject * pObj,bool IsRecursive=true);
 	
-	bool AddSceneObject(CD3DObject * pObject,bool IsRecursive=true,bool IsUpdateSceneTree=true);
+	bool AddSceneObject(CD3DObject * pObject,bool IsRecursive=true);
+
+	void SetGlobalLight(CD3DLight * pLight);
+	CD3DLight * GetGlobalLight();
+
+	void AddLight(CD3DLight * pLight);
+	bool DeleteLight(UINT Index);
+	bool DeleteLight(CD3DLight * pLight);
+	bool DeleteLight(LPCTSTR LightName);
 	
 
-	void UpdateSceneTree();
+	//void UpdateSceneTree();
 
 	virtual void SetCamera(CD3DCamera * pCamera);
 	virtual CD3DCamera * GetCamera();
+
+	void SetBackGroundCamera(CD3DCamera * pCamera);
+	CD3DCamera * GetBackGroundCamera();
 
 	virtual UINT GetLightCount();
 	virtual CD3DLight * GetLight(UINT Index);
@@ -188,11 +267,23 @@ public:
 	FLOAT GetFogFar();
 
 	void SetFog(D3DCOLOR FogColor,FLOAT FogNear,FLOAT FogFar);
+	void SetFogColor(D3DCOLOR Color);
+
+
+	D3DCOLOR GetWaterColorLight();
+	D3DCOLOR GetWaterColorDark();
+
+	void SetWaterColorLight(D3DCOLOR Color);
+	void SetWaterColorDark(D3DCOLOR Color);
 	
+	D3DCOLOR GetShadowColor();
+	void SetShadowColor(D3DCOLOR Color);
 
 	virtual void Render();
+	virtual void Update(FLOAT Time);
 
 	bool CreateDepthTexture();
+	bool ClearDepthTexture();
 
 	virtual CD3DTexture * GetDepthTexture();
 
@@ -215,9 +306,12 @@ public:
 	void HideCutObject(TREE_NODE * pTree);
 
 	void FindTreeByObject(TREE_NODE * pRoot,CD3DObject * pObject,CEasyArray<TREE_NODE *>& TreeList);
+	void FindTreeBySubMesh(TREE_NODE * pRoot,CD3DObject * pObject,CD3DSubMesh * pSubMesh,CEasyArray<TREE_NODE *>& TreeList);
 	TREE_NODE * FindTreeByBBox(TREE_NODE * pRoot,const CD3DBoundingBox& BBox);
 
 	bool GetHeightByXZ(const CD3DVector3 Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight);
+	bool RayIntersect(const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,CD3DObject ** ppIntersectObject,UINT TestMode);
+	bool LineIntersect(const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,CD3DObject ** ppIntersectObject,UINT TestMode);
 
 protected:
 
@@ -226,18 +320,16 @@ protected:
 	bool AddWMOObject(CD3DWOWWMOModel * pWMOObject);
 	bool DelWMOObject(CD3DWOWWMOModel * pWMOObject);
 
-	void AddLight(CD3DLight * pLight);
-	bool DeleteLight(UINT Index);
-	bool DeleteLight(CD3DLight * pLight);
-	bool DeleteLight(LPCTSTR LightName);
+	
 	
 	bool DeleteSceneObject(CD3DObject * pObject);
-	int DeleteObject(TREE_NODE * pNode,RENDER_OBJECT_INFO * pObjectInfo);
+	//int DeleteObjectFromTree(TREE_NODE * pNode,RENDER_OBJECT_INFO * pObjectInfo);
 	void DeleteSceneNode(TREE_NODE * pNode);
+	//void DeleteNodeChilds(TREE_NODE * pNode,TREE_NODE * pParent);
 	bool AddObjectToTree(TREE_NODE * pTree,CD3DObject * pObject,bool BeWalkTree);
 	void AddObjectToTree(TREE_NODE * pTree,RENDER_OBJECT_INFO * pObjectInfo);
 	void UpdateTree(TREE_NODE * pNode);
-	void CreateChilds(TREE_NODE * pNode,CD3DVector3 CutCenter);
+	void CreateChilds(TREE_NODE * pNode,CD3DVector3 CutCenter,bool IsFixed);	
 	void CutBBox(TREE_NODE * pNode,CD3DVector3 CutCenter,CD3DBoundingBox * ChildBBoxs);
 	
 	bool CanBeCut(TREE_NODE * pNode,CD3DVector3 CutCenter);
@@ -251,15 +343,30 @@ protected:
 	int CheckBBoxRelation(const CD3DBoundingBox& BBox1,const CD3DBoundingBox& BBox2);
 	CD3DVector3 GetBoxCutCenter(TREE_NODE * pNode);
 	bool HeightTest(TREE_NODE * pRoot,const CD3DVector3 Pos,FLOAT MinHeight,FLOAT MaxHeight,FLOAT& Height,FLOAT& WaterHeight);
+	bool RayIntersect(TREE_NODE * pRoot,const CD3DVector3& Point,const CD3DVector3& Dir,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,CD3DObject ** ppIntersectObject,UINT TestMode);
+	bool LineIntersect(TREE_NODE * pRoot,const CD3DVector3& StartPoint,const CD3DVector3& EndPoint,CD3DVector3& IntersectPoint,FLOAT& Distance,FLOAT& DotValue,CD3DObject ** ppIntersectObject,UINT TestMode);
 	
 	static int SubMeshCompare(const void * s1,const void * s2);
 
 	void RenderSubMeshEx(CD3DSubMesh * pSubMesh);
+
+	bool CanTestCollide(UINT64 SubMeshProperty,UINT TestMode);
 };
+
+
+inline CD3DLight * CD3DSceneRender::GetGlobalLight()
+{
+	return m_pGlobalLight;
+}
 
 inline CD3DCamera * CD3DSceneRender::GetCamera()
 {
 	return m_pCamera;
+}
+
+inline CD3DCamera * CD3DSceneRender::GetBackGroundCamera()
+{
+	return m_pBackGroundCamera;
 }
 
 inline UINT CD3DSceneRender::GetLightCount()
@@ -295,6 +402,40 @@ inline void CD3DSceneRender::SetFog(D3DCOLOR FogColor,FLOAT FogNear,FLOAT FogFar
 	m_FogColor=FogColor;
 	m_FogNear=FogNear;
 	m_FogFar=FogFar;
+}
+
+inline void CD3DSceneRender::SetFogColor(D3DCOLOR Color)
+{
+	m_FogColor=Color;
+}
+
+
+inline D3DCOLOR CD3DSceneRender::GetWaterColorLight()
+{
+	return m_WaterColorLight;
+}
+inline D3DCOLOR CD3DSceneRender::GetWaterColorDark()
+{
+	return m_WaterColorDark;
+}
+
+inline void CD3DSceneRender::SetWaterColorLight(D3DCOLOR Color)
+{
+	m_WaterColorLight=Color;
+}
+inline void CD3DSceneRender::SetWaterColorDark(D3DCOLOR Color)
+{
+	m_WaterColorDark=Color;
+}
+
+inline D3DCOLOR CD3DSceneRender::GetShadowColor()
+{
+	return m_ShadowColor;
+}
+
+inline void CD3DSceneRender::SetShadowColor(D3DCOLOR Color)
+{
+	m_ShadowColor=Color;
 }
 
 inline CD3DTexture * CD3DSceneRender::GetDepthTexture()

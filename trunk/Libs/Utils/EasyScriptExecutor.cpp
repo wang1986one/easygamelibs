@@ -1216,7 +1216,7 @@ int CEasyScriptExecutor::DoEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_B
 	if(pRightValue->Type!=BOLAN_TYPE_VARIABLE&&pRightValue->Type!=BOLAN_TYPE_VALUE)
 		return 3017;
 
-	pResult->ValueType=VALUE_TYPE_INT;
+	
 
 	switch(pLeftValue->ValueType)
 	{
@@ -1321,6 +1321,7 @@ int CEasyScriptExecutor::DoEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_B
 		break;
 	}
 
+	pResult->ValueType=VALUE_TYPE_INT;
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
 	//FUNCTION_END;
@@ -1337,7 +1338,7 @@ int CEasyScriptExecutor::DoDiff(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_
 	if(pRightValue->Type!=BOLAN_TYPE_VARIABLE&&pRightValue->Type!=BOLAN_TYPE_VALUE)
 		return 3017;
 
-	pResult->ValueType=VALUE_TYPE_INT;
+	
 
 	switch(pLeftValue->ValueType)
 	{
@@ -1442,6 +1443,7 @@ int CEasyScriptExecutor::DoDiff(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_
 		break;
 	}
 
+	pResult->ValueType=VALUE_TYPE_INT;
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
 	//FUNCTION_END;
@@ -1458,7 +1460,7 @@ int CEasyScriptExecutor::DoLess(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_
 	if(pRightValue->Type!=BOLAN_TYPE_VARIABLE&&pRightValue->Type!=BOLAN_TYPE_VALUE)
 		return 3017;
 
-	pResult->ValueType=VALUE_TYPE_INT;
+	
 
 	switch(pLeftValue->ValueType)
 	{
@@ -1563,6 +1565,7 @@ int CEasyScriptExecutor::DoLess(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_
 		break;
 	}
 
+	pResult->ValueType=VALUE_TYPE_INT;
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
 	//FUNCTION_END;
@@ -1580,7 +1583,7 @@ int CEasyScriptExecutor::DoMore(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_
 	if(pRightValue->Type!=BOLAN_TYPE_VARIABLE&&pRightValue->Type!=BOLAN_TYPE_VALUE)
 		return 3017;
 
-	pResult->ValueType=VALUE_TYPE_INT;
+	
 
 	switch(pLeftValue->ValueType)
 	{
@@ -1685,6 +1688,7 @@ int CEasyScriptExecutor::DoMore(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_
 		break;
 	}
 
+	pResult->ValueType=VALUE_TYPE_INT;
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
 	//FUNCTION_END;
@@ -1702,7 +1706,7 @@ int CEasyScriptExecutor::DoLessEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,
 	if(pRightValue->Type!=BOLAN_TYPE_VARIABLE&&pRightValue->Type!=BOLAN_TYPE_VALUE)
 		return 3017;
 
-	pResult->ValueType=VALUE_TYPE_INT;
+	
 
 	switch(pLeftValue->ValueType)
 	{
@@ -1807,6 +1811,7 @@ int CEasyScriptExecutor::DoLessEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,
 		break;
 	}
 
+	pResult->ValueType=VALUE_TYPE_INT;
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
 	//FUNCTION_END;
@@ -1824,7 +1829,7 @@ int CEasyScriptExecutor::DoMoreEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,
 	if(pRightValue->Type!=BOLAN_TYPE_VARIABLE&&pRightValue->Type!=BOLAN_TYPE_VALUE)
 		return 3017;
 
-	pResult->ValueType=VALUE_TYPE_INT;
+	
 
 	switch(pLeftValue->ValueType)
 	{
@@ -1929,6 +1934,7 @@ int CEasyScriptExecutor::DoMoreEqu(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,
 		break;
 	}
 
+	pResult->ValueType=VALUE_TYPE_INT;
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
 	//FUNCTION_END;
@@ -1945,7 +1951,7 @@ int CEasyScriptExecutor::DoNeg(ES_BOLAN * pValue,ES_BOLAN * pResult)
 	if(pValue->Type!=BOLAN_TYPE_VARIABLE&&pValue->Type!=BOLAN_TYPE_VALUE)
 		return 3017;
 
-	pResult->ValueType=pValue->ValueType;
+	
 	switch(pValue->ValueType)
 	{
 	case VALUE_TYPE_INT:
@@ -1965,6 +1971,8 @@ int CEasyScriptExecutor::DoNeg(ES_BOLAN * pValue,ES_BOLAN * pResult)
 	}
 
 	pResult->Type=BOLAN_TYPE_VALUE;
+	pResult->ValueType=pValue->ValueType;
+
 	return 0;
 	//FUNCTION_END;
 	//return 0;
@@ -1981,7 +1989,7 @@ int CEasyScriptExecutor::DoAnd(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_B
 	if(pRightValue->Type!=BOLAN_TYPE_VARIABLE&&pRightValue->Type!=BOLAN_TYPE_VALUE)
 		return 3017;
 
-	pResult->ValueType=VALUE_TYPE_INT;
+	
 
 	switch(pLeftValue->ValueType)
 	{
@@ -2073,6 +2081,7 @@ int CEasyScriptExecutor::DoAnd(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_B
 		return 3018;
 	}
 
+	pResult->ValueType=VALUE_TYPE_INT;
 	pResult->Type=BOLAN_TYPE_VALUE;
 	return 0;
 	//FUNCTION_END;
@@ -2089,7 +2098,7 @@ int CEasyScriptExecutor::DoOr(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BO
 	if(pRightValue->Type!=BOLAN_TYPE_VARIABLE&&pRightValue->Type!=BOLAN_TYPE_VALUE)
 		return 3017;
 
-	pResult->ValueType=VALUE_TYPE_INT;
+	
 
 	switch(pLeftValue->ValueType)
 	{
@@ -2182,6 +2191,7 @@ int CEasyScriptExecutor::DoOr(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BO
 	}
 
 	pResult->Type=BOLAN_TYPE_VALUE;
+	pResult->ValueType=VALUE_TYPE_INT;
 	return 0;
 	//FUNCTION_END;
 	//return 0;
@@ -2198,7 +2208,7 @@ int CEasyScriptExecutor::DoNot(ES_BOLAN * pValue,ES_BOLAN * pResult)
 	if(pValue->Type!=BOLAN_TYPE_VARIABLE&&pValue->Type!=BOLAN_TYPE_VALUE)
 		return 3017;
 
-	pResult->ValueType=VALUE_TYPE_INT;
+	
 	switch(pValue->ValueType)
 	{
 	case VALUE_TYPE_INT:
@@ -2218,6 +2228,7 @@ int CEasyScriptExecutor::DoNot(ES_BOLAN * pValue,ES_BOLAN * pResult)
 	}
 
 	pResult->Type=BOLAN_TYPE_VALUE;
+	pResult->ValueType=VALUE_TYPE_INT;
 	return 0;
 	//FUNCTION_END;
 	//return 0;

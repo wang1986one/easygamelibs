@@ -21,6 +21,7 @@ protected:
 	FLOAT_RECT			m_Rect;	
 	RECTVERTEX 			m_Vertexs[4];	
 	CD3DTextTexture*	m_pTexture;
+	FLOAT				m_Scale;
 
 	DECLARE_CLASS_INFO(CD3DGUITextRect)
 
@@ -47,7 +48,7 @@ public:
 
 	virtual bool SetFont(const LOGFONT* pLogFont);	
 	virtual void SetColor(DWORD Color);	
-	virtual void SetTextW(LPCWSTR szText);	
+	virtual void SetTextW(LPCWSTR szText,int StrLen);	
 	virtual void SetAlign(DWORD dwAlign);
 	virtual void SetShadowMode(DWORD ShadowMode);
 	virtual void SetShadowColor(DWORD ShadowColor);
@@ -55,6 +56,7 @@ public:
 	virtual void SetBKColor(DWORD Color);
 	virtual void SetCharSpace(int Space);
 	virtual void SetLineSpace(int Space);
+	virtual void SetScale(FLOAT Scale);
 
 	virtual LOGFONT* GetFont();	
 	virtual DWORD GetColor();	
@@ -66,23 +68,26 @@ public:
 	virtual DWORD GetBKColor();
 	virtual int GetCharSpace();
 	virtual int GetLineSpace();
+	virtual FLOAT GetScale();
 
 	virtual void EnableUpdate(bool AllowUpdate);
 	
 	virtual bool GetTextSizeW(LPCWSTR pText,int StrLen,FLOAT& Width,FLOAT& Height,LPINT pCharWidths=NULL);
 	virtual bool TranslateTextW(LPCWSTR pSrcText,int StrLen,LPWSTR pDestText,int& BufferSize);
 
+	virtual bool SetEffectMode(int Mode);
+
 	virtual bool SetFX(LPCTSTR FXFileName);
 	virtual bool SetFXFromMemory(LPCTSTR FXName,LPCTSTR FXContent,int Size);
 	virtual CEasyString GetFX();
 
-	virtual void TopTo(IUIBaseRect* pRect);
+	virtual void TopTo(IUIBaseRect* pBeforeRect);
+	virtual void TopTo(IUIBaseRect** pRects,UINT RectCount,IUIBaseRect* pBeforeRect);
 
 	virtual void Release();
 public:
 	virtual void OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
 	virtual void OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera);
-	virtual void OnPrepareRenderData();
 	virtual void Update(FLOAT Time);
 	virtual int GetSubMeshCount()
 	{

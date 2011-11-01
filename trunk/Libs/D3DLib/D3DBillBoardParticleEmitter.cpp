@@ -16,6 +16,7 @@ namespace D3DLib{
 IMPLEMENT_FILE_CHANNEL_MANAGER(CD3DBillBoardParticleEmitter)
 IMPLEMENT_CLASS_INFO(CD3DBillBoardParticleEmitter,CD3DBaseDynamicModel);
 
+UINT CD3DBillBoardParticleEmitter::m_BillBoardParticleEmitterUpdateCount=0;
 CD3DBillBoardParticleEmitter::CD3DBillBoardParticleEmitter(void)
 {
 	m_pModelResource=NULL;
@@ -215,45 +216,45 @@ UINT CD3DBillBoardParticleEmitter::GetSmartStructSize(UINT Param)
 
 void CD3DBillBoardParticleEmitter::OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
-	//设置灯光
-	if(LightList.GetCount())
-	{		
-		D3DLIGHT9	Light;
-		char		szParamName[32];
-		pFX->SetInt("LightCount",LightList.GetCount());
-		for(UINT i=0;i<LightList.GetCount();i++)
-		{
-			LightList[i]->GetCurLight(Light);
-			sprintf_s(szParamName,32,"LightType[%d]",i);
-			pFX->SetInt(szParamName,Light.Type);
-			sprintf_s(szParamName,32,"LightPos[%d]",i);
-			pFX->SetVector(szParamName,CD3DVector3(Light.Position));
-			sprintf_s(szParamName,32,"LightDir[%d]",i);
-			pFX->SetVector(szParamName,CD3DVector3(Light.Direction));
-			sprintf_s(szParamName,32,"LightAmbient[%d]",i);
-			pFX->SetColor(szParamName,Light.Ambient);
-			sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
-			pFX->SetColor(szParamName,Light.Diffuse);
-			sprintf_s(szParamName,32,"LightSpecular[%d]",i);
-			pFX->SetColor(szParamName,Light.Specular);
-			sprintf_s(szParamName,32,"LightRange[%d]",i);
-			pFX->SetFloat(szParamName,Light.Range);
-			sprintf_s(szParamName,32,"LightAtn0[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation0);
-			sprintf_s(szParamName,32,"LightAtn1[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation1);
-			sprintf_s(szParamName,32,"LightAtn2[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation2);
-			//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Falloff);
-			//sprintf_s(szParamName,32,"LightTheta[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Theta);
-			//sprintf_s(szParamName,32,"LightPhi[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Phi);
+	////设置灯光
+	//if(LightList.GetCount())
+	//{		
+	//	D3DLIGHT9	Light;
+	//	char		szParamName[32];
+	//	pFX->SetInt("LightCount",LightList.GetCount());
+	//	for(UINT i=0;i<LightList.GetCount();i++)
+	//	{
+	//		LightList[i]->GetCurLight(Light);
+	//		sprintf_s(szParamName,32,"LightType[%d]",i);
+	//		pFX->SetInt(szParamName,Light.Type);
+	//		sprintf_s(szParamName,32,"LightPos[%d]",i);
+	//		pFX->SetVector(szParamName,CD3DVector3(Light.Position));
+	//		sprintf_s(szParamName,32,"LightDir[%d]",i);
+	//		pFX->SetVector(szParamName,CD3DVector3(Light.Direction));
+	//		sprintf_s(szParamName,32,"LightAmbient[%d]",i);
+	//		pFX->SetColor(szParamName,Light.Ambient);
+	//		sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
+	//		pFX->SetColor(szParamName,Light.Diffuse);
+	//		sprintf_s(szParamName,32,"LightSpecular[%d]",i);
+	//		pFX->SetColor(szParamName,Light.Specular);
+	//		sprintf_s(szParamName,32,"LightRange[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Range);
+	//		sprintf_s(szParamName,32,"LightAtn0[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Attenuation0);
+	//		sprintf_s(szParamName,32,"LightAtn1[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Attenuation1);
+	//		sprintf_s(szParamName,32,"LightAtn2[%d]",i);
+	//		pFX->SetFloat(szParamName,Light.Attenuation2);
+	//		//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
+	//		//pFX->SetFloat(szParamName,Light.Falloff);
+	//		//sprintf_s(szParamName,32,"LightTheta[%d]",i);
+	//		//pFX->SetFloat(szParamName,Light.Theta);
+	//		//sprintf_s(szParamName,32,"LightPhi[%d]",i);
+	//		//pFX->SetFloat(szParamName,Light.Phi);
 
-		}
+	//	}
 
-	}
+	//}
 	////设置雾
 	//CD3DSceneRender * pRender=(CD3DSceneRender *)GetRender();
 	//pFX->SetColor("FogColor",pRender->GetFogColor());
@@ -281,9 +282,9 @@ void CD3DBillBoardParticleEmitter::OnPrepareRender(CD3DBaseRender * pRender,CD3D
 		pFX->SetVector("WorldTranslation",Vec);			
 	}
 
-	//设置视投影矩阵
-	pFX->SetMatrix("ViewMatrix",pCamera->GetViewMatR());
-	pFX->SetMatrix("ProjMatrix",pCamera->GetProjectMatR());
+	////设置视投影矩阵
+	//pFX->SetMatrix("ViewMatrix",pCamera->GetViewMatR());
+	//pFX->SetMatrix("ProjMatrix",pCamera->GetProjectMatR());
 
 	pFX->SetBool("TransformGravity",m_EnbaleGravityTransform);
 	pFX->SetInt("TextureTileRotation",m_TextureTileRotation);
@@ -332,9 +333,10 @@ void CD3DBillBoardParticleEmitter::Update(FLOAT Time)
 	int CreateCount=0;
 	int DeleteCount=0;
 
-	if(IsVisible()&&m_IsPlaying)
+	if(IsVisible()&&(!CheckFlag(CD3DObject::OBJECT_FLAG_CULLED)))
 	{		
-		if(m_pModelResource)
+		m_BillBoardParticleEmitterUpdateCount++;
+		if(m_pModelResource&&m_IsPlaying)
 		{
 			CD3DParticleEmitterResource::PARTICLE_PARAM Param;
 			if(m_pModelResource->MakeParticleParam(CurTime,true,Param))
@@ -352,29 +354,38 @@ void CD3DBillBoardParticleEmitter::Update(FLOAT Time)
 				}
 			}
 		}
-	}
-	for(int i=(int)m_ParticleCount-1;i>=0;i--)
-	{
-		for(int j=0;j<4;j++)
-		{
-			m_pParticleVertexBuffer[i].Vertex[j].Info.Life+=TimeSpan;
-		}
-		if(m_pParticleVertexBuffer[i].Vertex[0].Info.Life>=m_pParticleVertexBuffer[i].Vertex[0].Info.MaxLife)
-		{			
-			memmove(m_pParticleVertexBuffer+i,m_pParticleVertexBuffer+i+1,sizeof(PARTICLE_RECT)*(m_ParticleCount-i-1));
-			DeleteCount++;
-			m_ParticleCount--;			
-		}
-	}
 
-	if(CreateCount||DeleteCount)
-	{
-		m_SubMesh.SetVertexCount(m_ParticleCount*4);
-		m_SubMesh.SetIndexCount(m_ParticleCount*6);
-		m_SubMesh.SetPrimitiveCount(m_ParticleCount*2);
+		for(int i=(int)m_ParticleCount-1;i>=0;i--)
+		{
+			for(int j=0;j<4;j++)
+			{
+				m_pParticleVertexBuffer[i].Vertex[j].Info.Life+=TimeSpan;
+			}
+			if(m_pParticleVertexBuffer[i].Vertex[0].Info.Life>=m_pParticleVertexBuffer[i].Vertex[0].Info.MaxLife)
+			{			
+				memmove(m_pParticleVertexBuffer+i,m_pParticleVertexBuffer+i+1,sizeof(PARTICLE_RECT)*(m_ParticleCount-i-1));
+				DeleteCount++;
+				m_ParticleCount--;			
+			}
+		}
+
+		if(CreateCount||DeleteCount)
+		{
+			m_SubMesh.SetVertexCount(m_ParticleCount*4);
+			m_SubMesh.SetIndexCount(m_ParticleCount*6);
+			m_SubMesh.SetPrimitiveCount(m_ParticleCount*2);
+			m_IsRenderDataChanged=true;
+		}
 	}
+	
 
 	//PrintSystemLog(0,"Particle=%u,%u",CreateCount,DeleteCount);
+
+}
+
+bool CD3DBillBoardParticleEmitter::NeedUpdateAni()
+{
+	return true;
 }
 
 
@@ -442,12 +453,16 @@ bool CD3DBillBoardParticleEmitter::LoadFromResource(CD3DParticleEmitterResource 
 
 	m_SubMesh.SetDevice(GetDevice());
 	m_SubMesh.DeclareVertexFormat(ParticleVertexElements,sizeof(PARTICLE_VERTEX),sizeof(WORD));
-	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLELIST);
-	//m_SubMesh.SetVertexCount(m_MaxParticleCount);
-	//m_SubMesh.SetIndexCount(m_MaxParticleCount*6);
-	m_SubMesh.SetVertices((BYTE *)m_pParticleVertexBuffer,sizeof(PARTICLE_RECT)*m_MaxParticleCount);
-	m_SubMesh.SetIndices((BYTE *)m_pParticleIndexBuffer,sizeof(WORD)*m_MaxParticleCount*6);
+	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLELIST);	
+	m_SubMesh.SetVertices((BYTE *)m_pParticleVertexBuffer);
+	m_SubMesh.SetIndices((BYTE *)m_pParticleIndexBuffer);
 	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
+	m_SubMesh.SetVertexCount(m_MaxParticleCount*4);
+	m_SubMesh.SetIndexCount(m_MaxParticleCount*6);
+	m_SubMesh.AllocVertexBufferR();
+	m_SubMesh.AllocIndexBufferR();
+	m_SubMesh.SetVertexCount(0);
+	m_SubMesh.SetIndexCount(0);
 	m_SubMesh.AddProperty(CD3DSubMesh::SMF_IS_ANI_MESH);
 	for(UINT i=0;i<m_MaxParticleCount;i++)
 	{

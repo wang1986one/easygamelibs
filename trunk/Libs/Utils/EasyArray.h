@@ -99,7 +99,17 @@ public:
 		m_pBuffer[m_ArrayLength]=Value;
 		m_ArrayLength++;
 	}
-	void Add(const CEasyArray<T>& Array)
+	T * AddEmpty()
+	{
+		if(m_ArrayLength>=m_BufferSize)
+		{
+			ResizeBuffer(m_BufferSize+m_GrowSize);
+		}
+		ConstructObjects(m_pBuffer+m_ArrayLength,1);
+		m_ArrayLength++;
+		return m_pBuffer+m_ArrayLength-1;
+	}
+	void AddArray(const CEasyArray<T>& Array)
 	{
 		if(m_ArrayLength+Array.GetCount()>=m_BufferSize)
 		{
@@ -125,6 +135,26 @@ public:
 			ConstructObjects(m_pBuffer+BeforeIndex,1);
 			m_pBuffer[BeforeIndex]=Value;
 			m_ArrayLength++;
+			return true;
+		}
+		return false;
+	}
+	bool Insert(UINT BeforeIndex,const CEasyArray<T>& Array)
+	{
+		if(BeforeIndex<=m_ArrayLength&&Array.GetCount())
+		{
+			if(m_ArrayLength+Array.GetCount()>m_BufferSize)
+			{
+				ResizeBuffer(m_ArrayLength+Array.GetCount()+m_GrowSize);
+			}
+			if(m_ArrayLength-BeforeIndex)
+				memmove(m_pBuffer+BeforeIndex+Array.GetCount(),m_pBuffer+BeforeIndex,sizeof(T)*(m_ArrayLength-BeforeIndex));
+			ConstructObjects(m_pBuffer+BeforeIndex,Array.GetCount());
+			for(UINT i=0;i<Array.GetCount();i++)
+			{
+				m_pBuffer[BeforeIndex+i]=Array.GetObjectConst(i);
+			}			
+			m_ArrayLength+=Array.GetCount();
 			return true;
 		}
 		return false;

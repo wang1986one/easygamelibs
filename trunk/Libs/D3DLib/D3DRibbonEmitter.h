@@ -85,6 +85,7 @@ public:
 
 
 	virtual void Update(FLOAT Time);
+	virtual bool NeedUpdateAni();
 
 	bool LoadFromResource(CD3DRibbonEmitterResource * pModelResource);
 

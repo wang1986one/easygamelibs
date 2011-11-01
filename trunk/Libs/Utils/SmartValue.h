@@ -40,6 +40,7 @@ public:
 		VT_STRING_TINY,
 		VT_USTRING_TINY,
 		VT_STRUCT_TINY,
+		VT_BOOL,
 	};
 
 	CSmartValue(void)
@@ -182,6 +183,18 @@ public:
 			Create(VT_USTRING,(UINT)wcslen(Value));
 			SetString(Value,(UINT)wcslen(Value));
 		}
+	}
+	CSmartValue(bool Value)
+	{
+		m_pData=NULL;
+		m_DataLen=0;
+		m_IsSelfData=true;
+		m_AllowChange=true;
+		if(Value)
+		{
+			Create(VT_BOOL,0);
+			*this=Value;
+		}
 	}	
 
 	CSmartValue(const CSmartValue& Value)
@@ -288,6 +301,12 @@ public:
 			*((WORD *)(m_pData+sizeof(BYTE)))=0;
 			*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(WORD)))=0;
 			break;
+		case VT_BOOL:
+			m_DataLen=sizeof(bool)+sizeof(BYTE);
+			m_pData=new char[m_DataLen];
+			m_pData[0]=Type;
+			*((bool *)(m_pData+1))=false;
+			break;
 		default:
 			return false;
 		}
@@ -352,6 +371,9 @@ public:
 			break;
 		case VT_STRUCT_TINY:
 			m_DataLen=BinaryDataLen+sizeof(BYTE)+sizeof(WORD);
+			break;
+		case VT_BOOL:
+			m_DataLen=sizeof(bool)+sizeof(BYTE);
 			break;
 		default:
 			return false;
@@ -434,7 +456,11 @@ public:
 				m_pData[0]=ClearType;
 				*((WORD *)(m_pData+sizeof(BYTE)))=0;
 				*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(WORD)))=0;
-				break;		
+				break;
+			case VT_BOOL:
+				m_pData[0]=ClearType;
+				*((bool *)(m_pData+1))=false;
+				break;
 			}
 		}
 
@@ -495,6 +521,8 @@ public:
 			return *((WORD *)(m_pData+sizeof(BYTE)));
 		case VT_STRUCT_TINY:
 			return *((WORD *)(m_pData+sizeof(BYTE)));
+		case VT_BOOL:
+			return sizeof(bool);
 		}
 		return 0;
 	}
@@ -530,6 +558,8 @@ public:
 			return *((WORD *)(m_pData+sizeof(BYTE)))+sizeof(BYTE)+sizeof(WORD)+sizeof(wchar_t);
 		case VT_STRUCT_TINY:
 			return *((WORD *)(m_pData+sizeof(BYTE)))+sizeof(BYTE)+sizeof(WORD);
+		case VT_BOOL:
+			return sizeof(bool)+sizeof(BYTE);
 		}
 		return 0;
 	}
@@ -562,6 +592,8 @@ public:
 			return (char)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (char)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (char)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -586,9 +618,11 @@ public:
 		case VT_UBIGINT:
 			return (unsigned char)(*((unsigned __int64 *)(m_pData+1)));
 		case VT_FLOAT:
-			return (char)(*((float *)(m_pData+1)));
+			return (unsigned char)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (unsigned char)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (unsigned char)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -616,6 +650,8 @@ public:
 			return (short)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (short)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (short)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -643,6 +679,8 @@ public:
 			return (unsigned short)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (unsigned short)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (unsigned short)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -670,6 +708,8 @@ public:
 			return (int)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (int)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (int)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -697,6 +737,8 @@ public:
 			return (unsigned int)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (unsigned int)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (unsigned int)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -724,6 +766,8 @@ public:
 			return (long)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (long)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (long)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -751,6 +795,8 @@ public:
 			return (unsigned long)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (unsigned long)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (unsigned long)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -778,6 +824,8 @@ public:
 			return (__int64)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (__int64)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (__int64)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -805,6 +853,8 @@ public:
 			return (unsigned __int64)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (unsigned __int64)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (unsigned __int64)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -833,6 +883,8 @@ public:
 			return (float)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (float)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (float)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -861,6 +913,8 @@ public:
 			return (double)(*((float *)(m_pData+1)));
 		case VT_DOUBLE:
 			return (double)(*((double *)(m_pData+1)));
+		case VT_BOOL:
+			return (double)(*((bool *)(m_pData+1)));
 		}
 		return 0;
 	}
@@ -888,6 +942,36 @@ public:
 			return (wchar_t *)(m_pData+sizeof(BYTE)+sizeof(WORD));
 		}		
 		return pEmptyStr;
+	}
+
+	operator bool() const
+	{
+		switch(GetType())
+		{		
+		case VT_CHAR:
+			return (*((char *)(m_pData+1)))!=0;
+		case VT_UCHAR:
+			return (*((unsigned char *)(m_pData+1)))!=0;
+		case VT_SHORT:
+			return (*((short *)(m_pData+1)))!=0;
+		case VT_USHORT:
+			return (*((unsigned short *)(m_pData+1)))!=0;
+		case VT_INT:
+			return (*((int *)(m_pData+1)))!=0;
+		case VT_UINT:
+			return (*((unsigned int *)(m_pData+1)))!=0;
+		case VT_BIGINT:
+			return (*((__int64 *)(m_pData+1)))!=0;
+		case VT_UBIGINT:
+			return (*((unsigned __int64 *)(m_pData+1)))!=0;
+		case VT_FLOAT:
+			return (*((float *)(m_pData+1)))!=0;
+		case VT_DOUBLE:
+			return (*((double *)(m_pData+1)))!=0;
+		case VT_BOOL:
+			return (*((bool *)(m_pData+1)));
+		}
+		return false;
 	}
 	
 	void operator=(const CSmartValue& Value)
@@ -940,6 +1024,8 @@ public:
 		case VT_USTRING:
 			*this=(LPCWSTR)Value;
 			break;
+		case VT_BOOL:
+			*this=(bool)Value;
 		}
 	}
 	void operator=(char Value)
@@ -977,6 +1063,9 @@ public:
 			break;
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
+			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
 			break;
 		}
 	}
@@ -1016,6 +1105,9 @@ public:
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
 			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
+			break;
 		}
 	}
 	void operator=(short Value)
@@ -1053,6 +1145,9 @@ public:
 			break;
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
+			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
 			break;
 		}
 	}
@@ -1092,6 +1187,9 @@ public:
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
 			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
+			break;
 		}
 	}	
 	void operator=(int Value)
@@ -1129,6 +1227,9 @@ public:
 			break;
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
+			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
 			break;
 		}
 	}
@@ -1168,6 +1269,9 @@ public:
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
 			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
+			break;
 		}
 	}
 	void operator=(long Value)
@@ -1205,6 +1309,9 @@ public:
 			break;
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
+			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
 			break;
 		}
 	}
@@ -1244,6 +1351,9 @@ public:
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
 			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
+			break;
 		}
 	}
 	void operator=(__int64 Value)
@@ -1281,6 +1391,9 @@ public:
 			break;
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
+			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
 			break;
 		}
 	}
@@ -1320,6 +1433,9 @@ public:
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
 			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
+			break;
 		}
 	}
 	void operator=(float Value)
@@ -1357,6 +1473,9 @@ public:
 			break;
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
+			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
 			break;
 		}
 	}
@@ -1396,6 +1515,9 @@ public:
 			break;
 		case VT_DOUBLE:
 			*((double *)(m_pData+1))=(double)Value;
+			break;
+		case VT_BOOL:
+			*((bool *)(m_pData+1))=(Value!=0);
 			break;
 		}
 	}

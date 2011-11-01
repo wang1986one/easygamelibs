@@ -20,6 +20,9 @@ IMPLEMENT_CLASS_INFO(CD3DWOWADTModel,CD3DBaseStaticModel);
 CD3DWOWADTModel::CD3DWOWADTModel(void)
 {
 	m_pModelResource=NULL;
+	m_WaterColorLight=0xFF666666;
+	m_WaterColorDark=0xFF191919;
+
 }
 
 CD3DWOWADTModel::~CD3DWOWADTModel(void)
@@ -31,15 +34,8 @@ void CD3DWOWADTModel::Destory()
 {	
 	CD3DBaseStaticModel::Destory();
 
-	//for(UINT i=0;i<m_M2ObjectList.GetCount();i++)
-	//{
-	//	SAFE_RELEASE(m_M2ObjectList[i]);
-	//}
+	m_NeedUpdateChilds.Clear();
 	m_M2ObjectList.Clear();
-	//for(UINT i=0;i<m_WMOObjectList.GetCount();i++)
-	//{
-	//	SAFE_RELEASE(m_WMOObjectList[i]);
-	//}
 	m_WMOObjectList.Clear();
 	SAFE_RELEASE(m_pModelResource);
 	
@@ -55,7 +51,7 @@ bool CD3DWOWADTModel::Restore()
 	return true;
 }
 
-bool CD3DWOWADTModel::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask)
+bool CD3DWOWADTModel::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask,bool BeLoadObject)
 {
 	
 
@@ -65,7 +61,7 @@ bool CD3DWOWADTModel::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask)
 	if(!pResource)
 	{
 		pResource=new CD3DWOWADTModelResource(GetDevice()->GetObjectResourceManager());
-		if(!pResource->LoadFromFile(ModelFileName,IsBigAlphaMask))
+		if(!pResource->LoadFromFile(ModelFileName,IsBigAlphaMask,BeLoadObject))
 		{
 			pResource->Release();
 			return false;
@@ -84,12 +80,12 @@ bool CD3DWOWADTModel::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask)
 
 	SetName(ModelFileName);
 
-	bool Ret=LoadFromResource(pResource);
+	bool Ret=LoadFromResource(pResource,BeLoadObject);
 	SAFE_RELEASE(pResource);
 	return Ret;
 }
 
-bool CD3DWOWADTModel::LoadFromResource(CD3DWOWADTModelResource * pModelResource)
+bool CD3DWOWADTModel::LoadFromResource(CD3DWOWADTModelResource * pModelResource,bool BeLoadObject)
 {
 	if(GetDevice()==NULL)
 		return false;
@@ -100,9 +96,19 @@ bool CD3DWOWADTModel::LoadFromResource(CD3DWOWADTModelResource * pModelResource)
 	pModelResource->AddUseRef();
 	
 
-	if(!LoadObjects())
-		return false;
-	BuildBoundingBox();
+	if(BeLoadObject)
+	{
+		if(!LoadObjects())
+			return false;
+
+		CheckNeedUpdateObjects();
+	}
+	else
+	{
+		BuildBoundingBox();
+	}
+
+	m_IsRenderDataChanged=true;
 	return true;
 }
 
@@ -197,87 +203,33 @@ UINT CD3DWOWADTModel::GetSmartStructSize(UINT Param)
 
 void CD3DWOWADTModel::OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
-	//设置灯光
-	if(LightList.GetCount())
-	{		
-		D3DLIGHT9	Light;
-		char		szParamName[32];
-		pFX->SetInt("LightCount",LightList.GetCount());
-		for(UINT i=0;i<LightList.GetCount();i++)
-		{
-			LightList[i]->GetCurLight(Light);
-			sprintf_s(szParamName,32,"LightType[%d]",i);
-			pFX->SetInt(szParamName,Light.Type);
-			sprintf_s(szParamName,32,"LightPos[%d]",i);
-			pFX->SetVector(szParamName,CD3DVector3(Light.Position));
-			sprintf_s(szParamName,32,"LightDir[%d]",i);
-			pFX->SetVector(szParamName,CD3DVector3(Light.Direction));
-			sprintf_s(szParamName,32,"LightAmbient[%d]",i);
-			pFX->SetColor(szParamName,Light.Ambient);
-			sprintf_s(szParamName,32,"LightDiffuse[%d]",i);
-			pFX->SetColor(szParamName,Light.Diffuse);
-			sprintf_s(szParamName,32,"LightSpecular[%d]",i);
-			pFX->SetColor(szParamName,Light.Specular);
-			sprintf_s(szParamName,32,"LightRange[%d]",i);
-			pFX->SetFloat(szParamName,Light.Range);
-			sprintf_s(szParamName,32,"LightAtn0[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation0);
-			sprintf_s(szParamName,32,"LightAtn1[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation1);
-			sprintf_s(szParamName,32,"LightAtn2[%d]",i);
-			pFX->SetFloat(szParamName,Light.Attenuation2);
-			//sprintf_s(szParamName,32,"LightFalloff[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Falloff);
-			//sprintf_s(szParamName,32,"LightTheta[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Theta);
-			//sprintf_s(szParamName,32,"LightPhi[%d]",i);
-			//pFX->SetFloat(szParamName,Light.Phi);
-
-		}
-
-	}
-	////设置雾
-	//CD3DSceneRender * pRender=(CD3DSceneRender *)GetRender();
-	//if(pRender)
-	//{
-	//	pFX->SetColor("FogColor",pRender->GetFogColor());
-	//	pFX->SetFloat("FogNear",pRender->GetFogNear());
-	//	pFX->SetFloat("FogFar",pRender->GetFogFar());
-	//}
-
 	CD3DMatrix Mat=GetWorldMatrixR();
 	pFX->SetMatrix("WorldMatrix",Mat);
 
 
 	Mat=GetWorldMatrixR()*pCamera->GetViewMatR();
 	pFX->SetMatrix("WorldViewMatrix",Mat);
-	//pFX->SetMatrix("PrjMatrix",pCamera->GetProjectMatR());
 
-	//pFX->SetVector("CameraPos",pCamera->GetWorldMatrixR().GetTranslation());
-	//pFX->SetFloat("CameraNear",pCamera->GetNear());
-	//pFX->SetFloat("CameraFar",pCamera->GetFar());
+	if(pRender->IsKindOfFast(GET_CLASS_INFO(CD3DSceneRender)))
+	{
+		pFX->SetColor("WaterColorLight",((CD3DSceneRender *)pRender)->GetWaterColorLight());
+		pFX->SetColor("WaterColorDark",((CD3DSceneRender *)pRender)->GetWaterColorDark());
+		pFX->SetColor("ShadowColor",((CD3DSceneRender *)pRender)->GetShadowColor());
+	}
+	else
+	{
+		pFX->SetColor("WaterColorLight",m_WaterColorLight);
+		pFX->SetColor("WaterColorDark",m_WaterColorDark);
+	}
+	
 }
 void CD3DWOWADTModel::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
-	////设置材质
-	//D3DMATERIAL9 * pD3DMaterial;
-	//if(pSubMesh->IsSelected())
-	//	pD3DMaterial=&SELECTED_SUBMESH_MATERIAL;
-	//else
-	//	pD3DMaterial=&(pMaterial->GetMaterial());
-	//pFX->SetColor("MaterialAmbient",pD3DMaterial->Ambient);
-	//pFX->SetColor("MaterialDiffuse",pD3DMaterial->Diffuse);
-	//pFX->SetColor("MaterialSpecular",pD3DMaterial->Specular);
-	//pFX->SetColor("MaterialEmissive",pD3DMaterial->Emissive);
-	//pFX->SetFloat("MaterialPower",pD3DMaterial->Power);
-
-	//设置纹理
 
 	if(pSubMesh->GetProperty()&CD3DWOWADTModelResource::SMP_IS_WATER)
 	{
-		CD3DSceneRender * pRender=(CD3DSceneRender *)GetRender();
 		pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
-		pFX->SetTexture("TexLay1",pRender->GetDepthTexture());
+		pFX->SetTexture("TexLay1",((CD3DSceneRender *)pRender)->GetDepthTexture());
 	}
 	else
 	{
@@ -294,40 +246,92 @@ void CD3DWOWADTModel::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * p
 				pFX->SetTexture(szTexName,pMaterial->GetTexture(i));
 			}					
 		}
+		if(pSubMesh->IsSelected())
+		{
+			pFX->SetColor("GlobalColor",0xFFFF0000);
+		}
+		else
+		{
+			pFX->SetColor("GlobalColor",0xFFFFFFFF);
+		}
 	}
+}
+
+void CD3DWOWADTModel::OnPrepareRenderData()
+{
+	if(m_IsRenderDataChanged)
+	{
+		{
+			CAutoLock Lock(GetRenderLock());
+
+			m_WorldMatrixR=m_WorldMatrix;
+			for(int i=0;i<GetSubMeshCount();i++)
+			{
+				CD3DSubMesh * pSubMesh=GetSubMesh(i);
+				if(pSubMesh)
+				{
+					pSubMesh->OnPrepareRenderData();
+				}
+			}		
+
+			m_RenderDataUpdateCount++;
+		}
+
+		for(UINT i=0;i<m_ChildList.GetCount();i++)
+		{
+			((CD3DObject *)m_ChildList[i])->OnPrepareRenderData();
+		}
+		
+	}
+	else
+	{
+		for(UINT i=0;i<m_NeedUpdateChilds.GetCount();i++)
+		{
+			m_NeedUpdateChilds[i]->OnPrepareRenderData();
+		}
+	}
+
+	m_IsRenderDataChanged=false;
 }
 
 void CD3DWOWADTModel::Update(FLOAT Time)
 {
-	CD3DBaseStaticModel::Update(Time);
-	
-	//if(GetRender())
-	//{
-	//	CD3DCamera * pCamera=GetRender()->GetCamera();
+	//CD3DBaseStaticModel::Update(Time);
+	m_UpdateCount++;
+	bool NeedUpdateAll=false;
+	if(GetParent())
+	{
+		if(m_IsMatrixChanged||GetParent()->IsMatrixChanged())
+		{
+			m_WorldMatrix=m_LocalMatrix*GetParent()->GetWorldMatrix();
+			NeedUpdateAll=true;
+		}
+	}
+	else
+	{
+		if(m_IsMatrixChanged)
+		{
+			m_WorldMatrix=m_LocalMatrix;
+			NeedUpdateAll=true;
+		}
+	}
 
-	//	for(UINT i=0;i<m_M2ObjectList.GetCount();i++)
-	//	{
-	//	
-	//		CD3DBoundingBox BBox=(*m_M2ObjectList[i]->GetBoundingBox())*m_M2ObjectList[i]->GetWorldMatrix();
-	//		FLOAT Size=CD3DVector3(BBox.m_Max-BBox.m_Min).Length();
-	//		FLOAT Dis=CD3DVector3(m_M2ObjectList[i]->GetWorldMatrix().GetTranslation()-pCamera->GetWorldMatrix().GetTranslation()).Length();
-	//		if(Size<50)
-	//		{
-	//			if(Dis>300)
-	//			{
-	//				m_M2ObjectList[i]->SetVisibleRecursive(false);
-	//			}
-	//			else
-	//			{
-	//				m_M2ObjectList[i]->SetVisibleRecursive(true);
-	//			}
-	//		}
-	//		
-	//	}
-	//	
-
-	//	
-	//}
+	if(NeedUpdateAll)
+	{
+		for(UINT i=0;i<m_ChildList.GetCount();i++)
+		{
+			((CD3DObject *)m_ChildList[i])->Update(Time);
+		}
+	}
+	else
+	{
+		for(UINT i=0;i<m_NeedUpdateChilds.GetCount();i++)
+		{
+			m_NeedUpdateChilds[i]->Update(Time);
+		}
+	}
+		
+	m_IsMatrixChanged=false;
 }
 
 int CD3DWOWADTModel::GetSubMeshCount()
@@ -377,11 +381,14 @@ bool CD3DWOWADTModel::GetHeightByXZ(const CD3DVector3& Pos,FLOAT MinHeight,FLOAT
 				if(m_pModelResource->GetHeightByXZ(LocalPos.x,LocalPos.z,ADTHeight,ADTWaterHeight))
 				{
 					//PrintSystemLog(0,"%g,%s",ADTHeight,m_pModelResource->GetName());
-					HaveHeight=true;
-					if(ADTHeight>FinalHeight)
-						FinalHeight=ADTHeight;
-					if(ADTWaterHeight>FinalWaterHeight)
-						FinalWaterHeight=ADTWaterHeight;
+					if(ADTHeight<=MaxHeight)
+					{
+						HaveHeight=true;
+						if(ADTHeight>FinalHeight)
+							FinalHeight=ADTHeight;
+						if(ADTWaterHeight>FinalWaterHeight)
+							FinalWaterHeight=ADTWaterHeight;
+					}
 				}
 			}
 			if(IncludeChild)
@@ -428,12 +435,26 @@ bool CD3DWOWADTModel::LoadObjects()
 		{
 			CD3DWOWDoodadModel * pObject=new CD3DWOWDoodadModel();
 			pObject->SetDevice(GetDevice());
-			if(!pObject->LoadFromResource(pInfo->pModelResource))
+			if(pInfo->pModelResource)
 			{
-				PrintSystemLog(0,"地图对象装载失败");
-				SAFE_RELEASE(pObject);
-				return false;
-			}			
+				if(!pObject->LoadFromResource(pInfo->pModelResource))
+				{
+					PrintSystemLog(0,"地图对象装载失败");
+					SAFE_RELEASE(pObject);
+					return false;
+				}		
+			}
+			else
+			{
+				if(!pObject->LoadFromFile(pInfo->ModelFilePath))
+				{
+					PrintSystemLog(0,"地图对象装载失败");
+					SAFE_RELEASE(pObject);
+					return false;
+				}
+				pInfo->pModelResource=pObject->GetModelResource();
+				pInfo->pModelResource->AddUseRef();
+			}
 			CD3DMatrix Mat=CD3DMatrix::FromScale(pInfo->Scale,pInfo->Scale,pInfo->Scale)*
 				CD3DMatrix::FromRotationQuaternion(pInfo->Orientation)*
 				CD3DMatrix::FromTranslation(pInfo->Position);
@@ -445,7 +466,8 @@ bool CD3DWOWADTModel::LoadObjects()
 			ObjectName.Format("%u",
 				pInfo->ID);
 			pObject->SetName(ObjectName);
-			m_M2ObjectList.Add(pObject);
+			pObject->AddFlag((pInfo->Flag>>CD3DWOWADTModelResource::DOODAD_FLAG_SHIFT)&CD3DWOWADTModelResource::DOODAD_FLAG_MASK);
+			m_M2ObjectList.Add(pObject);			
 		}
 	}
 
@@ -456,12 +478,26 @@ bool CD3DWOWADTModel::LoadObjects()
 		{
 			CD3DWOWWMOModel * pObject=new CD3DWOWWMOModel();
 			pObject->SetDevice(GetDevice());
-			if(!pObject->LoadFromResource(pInfo->pModelResource))
+			if(pInfo->pModelResource)
 			{
-				PrintSystemLog(0,"地图对象装载失败");
-				SAFE_RELEASE(pObject);
-				return false;
-			}			
+				if(!pObject->LoadFromResource(pInfo->pModelResource))
+				{
+					PrintSystemLog(0,"地图对象装载失败");
+					SAFE_RELEASE(pObject);
+					return false;
+				}
+			}
+			else
+			{
+				if(!pObject->LoadFromFile(pInfo->ModelFilePath))
+				{
+					PrintSystemLog(0,"地图对象装载失败");
+					SAFE_RELEASE(pObject);
+					return false;
+				}
+				pInfo->pModelResource=pObject->GetModelResource();
+				pInfo->pModelResource->AddUseRef();
+			}
 			CD3DMatrix Mat=CD3DMatrix::FromRotationQuaternion(pInfo->Orientation)*
 				CD3DMatrix::FromTranslation(pInfo->Position);
 			pObject->SetLocalMatrix(Mat);
@@ -471,10 +507,14 @@ bool CD3DWOWADTModel::LoadObjects()
 			ObjectName.Format("%u",
 				pInfo->ID);
 			pObject->SetName(ObjectName);
+			pObject->AddFlag((pInfo->Flag>>CD3DWOWADTModelResource::DOODAD_FLAG_SHIFT)&CD3DWOWADTModelResource::DOODAD_FLAG_MASK);
 			
-			m_WMOObjectList.Add(pObject);
+			m_WMOObjectList.Add(pObject);			
 		}
 	}	
+
+	BuildBoundingBox();
+
 	return true;
 }
 
@@ -490,6 +530,22 @@ void CD3DWOWADTModel::BuildBoundingBox()
 	{
 		if(m_WMOObjectList[i]->GetBoundingBox()->IsValid())
 			m_BoundingBox.Merge((*m_WMOObjectList[i]->GetBoundingBox())*m_WMOObjectList[i]->GetLocalMatrix());
+	}
+}
+
+void CD3DWOWADTModel::CheckNeedUpdateObjects()
+{
+	m_NeedUpdateChilds.Clear();
+	for(UINT i=0;i<m_M2ObjectList.GetCount();i++)
+	{
+		if(m_M2ObjectList[i]->NeedUpdateAni())
+		{
+			m_NeedUpdateChilds.Add(m_M2ObjectList[i]);
+		}
+	}
+	for(UINT i=0;i<m_WMOObjectList.GetCount();i++)
+	{
+		m_NeedUpdateChilds.Add(m_WMOObjectList[i]);
 	}
 }
 

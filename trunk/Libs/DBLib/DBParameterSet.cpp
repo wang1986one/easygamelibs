@@ -55,7 +55,7 @@ CDBValue& CDBParameterSet::GetParam(int Index)
 	return m_EmptyValue;
 }
 
-bool CDBParameterSet::AddParam(DB_PARAM_INFO& ParamInfo,CDBValue Value)
+bool CDBParameterSet::AddParam(DB_PARAM_INFO& ParamInfo,const CDBValue& Value)
 {
 	m_Params.resize(m_Params.size()+1);
 	m_Params.back().ParamInfo=ParamInfo;
@@ -71,7 +71,7 @@ bool CDBParameterSet::AddParam(DB_PARAM_INFO& ParamInfo)
 	return true;
 }
 
-bool CDBParameterSet::SetParam(int Index,DB_PARAM_INFO& ParamInfo,CDBValue Value)
+bool CDBParameterSet::SetParam(int Index,DB_PARAM_INFO& ParamInfo,const CDBValue& Value)
 {
 	if((UINT)Index<m_Params.size())
 	{

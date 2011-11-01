@@ -98,7 +98,7 @@ bool CD3DRibbonEmitterResource::MakeRibbonParam(UINT Time,bool IsLoop,RIBBON_PAR
 	
 	UINT AniLength=0;
 	if(m_RibbonEmitterInfo.Color.GlobalSequenceID>=0&&
-		m_RibbonEmitterInfo.Color.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_RibbonEmitterInfo.Color.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_RibbonEmitterInfo.Color.GlobalSequenceID];
 	}
@@ -111,7 +111,7 @@ bool CD3DRibbonEmitterResource::MakeRibbonParam(UINT Time,bool IsLoop,RIBBON_PAR
 
 	AniLength=0;
 	if(m_RibbonEmitterInfo.Opacity.GlobalSequenceID>=0&&
-		m_RibbonEmitterInfo.Opacity.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_RibbonEmitterInfo.Opacity.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_RibbonEmitterInfo.Opacity.GlobalSequenceID];
 	}
@@ -125,7 +125,7 @@ bool CD3DRibbonEmitterResource::MakeRibbonParam(UINT Time,bool IsLoop,RIBBON_PAR
 
 	AniLength=0;
 	if(m_RibbonEmitterInfo.Above.GlobalSequenceID>=0&&
-		m_RibbonEmitterInfo.Above.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_RibbonEmitterInfo.Above.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_RibbonEmitterInfo.Above.GlobalSequenceID];
 	}
@@ -137,7 +137,7 @@ bool CD3DRibbonEmitterResource::MakeRibbonParam(UINT Time,bool IsLoop,RIBBON_PAR
 
 	AniLength=0;
 	if(m_RibbonEmitterInfo.Below.GlobalSequenceID>=0&&
-		m_RibbonEmitterInfo.Below.GlobalSequenceID<m_GlobalSequences.GetCount())
+		m_RibbonEmitterInfo.Below.GlobalSequenceID<(int)m_GlobalSequences.GetCount())
 	{
 		AniLength=m_GlobalSequences[m_RibbonEmitterInfo.Below.GlobalSequenceID];
 	}
@@ -330,7 +330,7 @@ CD3DFX * CD3DRibbonEmitterResource::BuildRibbonFX(UINT RenderFlag,UINT BlendingM
 	BlendOp="Add";
 	SrcBlend="SrcAlpha";
 	DestBlend="InvSrcAlpha";
-	DiffuseFunction="CaculateDiffuse(Pos)";
+	DiffuseFunction="CaculateDiffuse(Pos,float3(0,0,0))";
 
 	switch(BlendingMode)
 	{	
@@ -358,26 +358,8 @@ CD3DFX * CD3DRibbonEmitterResource::BuildRibbonFX(UINT RenderFlag,UINT BlendingM
 		break;
 	}		
 
-	IFileAccessor * pFile;
+	CEasyString FxContent=M2_RIBBON_FX;
 
-	CEasyString FxContent;
-
-
-	pFile=CD3DFX::CreateFileAccessor();
-	if(pFile==NULL)
-		return NULL;
-	CEasyString FXFileName=CD3DFX::FindFileOne(M2_RIBBON_FX_FILE_NAME);
-	if(!pFile->Open(FXFileName,IFileAccessor::modeRead))
-	{
-		PrintD3DLog(0,"文件%s打开失败%d",(LPCTSTR)FXFileName,GetLastError());
-		pFile->Release();
-		return NULL;	
-	}
-	int FileSize=(int)pFile->GetSize();	
-	FxContent.Resize(FileSize);
-	pFile->Read((LPVOID)FxContent.GetBuffer(),FileSize);	
-	FxContent.SetLength(FileSize);
-	pFile->Release();
 	FxContent.Replace("<EnableZWrite>",EnableZWrite);
 	FxContent.Replace("<EnableFog>",EnableFog);
 	FxContent.Replace("<CullMode>",CullMode);

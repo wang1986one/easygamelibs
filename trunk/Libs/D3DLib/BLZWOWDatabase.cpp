@@ -95,12 +95,57 @@ LPCTSTR ITEM_PATH_BY_SLOT[IISI_MAX]=
 
 IMPLEMENT_FILE_CHANNEL_MANAGER(CBLZWOWDatabase)
 
+
+
+bool CBLZWOWDatabase::BLZ_DB_LIGHT_INFO::GetColor(UINT ColorIndex,UINT Time,D3DCOLOR& Color)
+{
+	if(ColorIndex<DBC_LICI_MAX)
+	{
+		if(Colors[ColorIndex].GetCount())
+		{
+			UINT Frame=0;
+			while(Frame<Colors[ColorIndex].GetCount()-1&&Time>=Colors[ColorIndex][Frame+1].Time)
+			{
+				Frame++;
+			}
+			if(Frame>=Colors[ColorIndex].GetCount()-1)
+			{
+				Color=Colors[ColorIndex][Frame].Color;
+			}
+			else if(Time<=Colors[ColorIndex][0].Time)
+			{
+				Color=Colors[ColorIndex][0].Color;
+			}
+			else
+			{
+				float S=((float)(Time-Colors[ColorIndex][Frame].Time))/(Colors[ColorIndex][Frame+1].Time-Colors[ColorIndex][Frame].Time);
+				BYTE Color1[4],Color2[4];
+				memcpy(Color1,&(Colors[ColorIndex][Frame].Color),sizeof(D3DCOLOR));
+				memcpy(Color2,&(Colors[ColorIndex][Frame+1].Color),sizeof(D3DCOLOR));
+				for(UINT i=0;i<4;i++)
+				{
+					Color1[i]=Color1[i]+(BYTE)((Color2[i]-Color1[i])*S);
+				}
+				memcpy(&Color,Color1,sizeof(D3DCOLOR));
+			}
+			Color|=0xFF000000;
+			return true;
+		}
+	}
+	return false;
+}
+
 CBLZWOWDatabase::CBLZWOWDatabase(void)
 {
 	m_CharRaceMax=0;
 }
 
 CBLZWOWDatabase::~CBLZWOWDatabase(void)
+{
+	Destory();
+}
+
+void CBLZWOWDatabase::Destory()
 {
 	//PrintSystemLog(0,"卸载CharSectionData");
 	m_CharSectionData.Clear();
@@ -143,30 +188,15 @@ CBLZWOWDatabase::~CBLZWOWDatabase(void)
 	m_MapInfo.Clear();
 
 	m_LiquidTypeInfo.Clear();
+
+	m_LightInfoList.Clear();
+	m_LightInfoMapByParamID.Clear();
+	m_MapLightInfos.Clear();
 }
 
 bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 {
-	m_CharSectionData.Clear();
-
-	m_AnimationData.Clear();
-
-	m_CharHairSubMeshInfo.Clear();
-
-	m_CharWhiskerSubMeshInfo.Clear();
-
-	m_CharRaceInfo.Clear();
-	m_CreatureDisplayInfo.Clear();
-	m_CreatureModelInfo.Clear();
-
-	m_ItemClass.Clear();
-	m_ItemSubClassMask.Clear();
-	m_ItemData.Clear();
-
-	m_ItemDisplayInfo.Clear();
-	m_HelmetGeosetVisibleInfo.Clear();
-
-	m_MapInfo.Clear();
+	Destory();
 
 	CEasyString FileName;
 	UINT LoadTime;
@@ -397,6 +427,40 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 	PrintSystemLog(0,"装载%s花了%u毫秒",
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
+	FileName=BLZ_DBC_LIGHT_FILE_NAME;
+	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
+	LoadTime=CEasyTimer::GetTime();
+	if(!LoadMapLightInfos(FileName))
+	{
+		ErrorMsg=FileName+"装载失败！";
+		return false;
+	}
+	PrintSystemLog(0,"装载%s花了%u毫秒",
+		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
+
+
+	FileName=BLZ_DBC_LIGHT_PARAMS_FILE_NAME;
+	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
+	LoadTime=CEasyTimer::GetTime();
+	if(!LoadLightParams(FileName))
+	{
+		ErrorMsg=FileName+"装载失败！";
+		return false;
+	}
+	PrintSystemLog(0,"装载%s花了%u毫秒",
+		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
+
+	FileName=BLZ_DBC_LIGHT_INT_BAND_FILE_NAME;
+	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
+	LoadTime=CEasyTimer::GetTime();
+	if(!LoadLightColors(FileName))
+	{
+		ErrorMsg=FileName+"装载失败！";
+		return false;
+	}
+	PrintSystemLog(0,"装载%s花了%u毫秒",
+		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
+
 	PrintSystemLog(0,"CBLZWOWDatabase装载完毕");
 
 	return true;
@@ -597,11 +661,10 @@ bool CBLZWOWDatabase::LoadAnimationData(LPCTSTR FileName)
 
 		m_AnimationData[i].ID=pRecord[i].ID;
 		m_AnimationData[i].Name=pStringTable+pRecord[i].Name;
-		m_AnimationData[i].WeaponState=pRecord[i].WeaponState;
+		m_AnimationData[i].WeaponFlags=pRecord[i].WeaponFlags;
+		m_AnimationData[i].BodyFlags=pRecord[i].BodyFlags;
 		m_AnimationData[i].Flags=pRecord[i].Flags;
-		m_AnimationData[i].Preceeding=pRecord[i].Preceeding;
-		m_AnimationData[i].RealId=pRecord[i].RealId;
-		m_AnimationData[i].Group=pRecord[i].Group;		
+		m_AnimationData[i].Fallback=pRecord[i].Fallback;
 
 		m_AnimationData[i].Name.Trim();	
 		
@@ -803,16 +866,18 @@ bool CBLZWOWDatabase::LoadCharRaceInfo(LPCTSTR FileName)
 		m_CharRaceInfo[i].MaleModelID=pRecord[i].MaleModel;	
 		m_CharRaceInfo[i].FemaleModelID=pRecord[i].FemaleModel;	
 		m_CharRaceInfo[i].Abbrev=pStringTable+pRecord[i].Abbrev;
-		m_CharRaceInfo[i].Faction=pRecord[i].Faction;		
+		m_CharRaceInfo[i].BaseLanguage=pRecord[i].BaseLanguage;		
 		m_CharRaceInfo[i].CreatureType=pRecord[i].CreatureType;	
 		m_CharRaceInfo[i].InternalName=pStringTable+pRecord[i].InternalName;	
-		m_CharRaceInfo[i].Camera=pRecord[i].Camera;	
-		m_CharRaceInfo[i].RaceName=UTF8ToLocal(pStringTable+pRecord[i].RaceNameMale[BLZ_DBC_STR_LOCAL_ZH_CN],
-			strlen(pStringTable+pRecord[i].RaceNameMale[BLZ_DBC_STR_LOCAL_ZH_CN]));
-		m_CharRaceInfo[i].Feature1=pStringTable+pRecord[i].Feature1;		
-		m_CharRaceInfo[i].Feature2=pStringTable+pRecord[i].Feature2;		
-		m_CharRaceInfo[i].Feature3=pStringTable+pRecord[i].Feature3;		
+		m_CharRaceInfo[i].CinematicSequenceID=pRecord[i].CinematicSequenceID;
+		m_CharRaceInfo[i].Alliance=pRecord[i].Alliance;	
+		m_CharRaceInfo[i].RaceName=UTF8ToLocal(pStringTable+pRecord[i].RaceNameNeutral[BLZ_DBC_STR_LOCAL_ZH_CN],
+			strlen(pStringTable+pRecord[i].RaceNameNeutral[BLZ_DBC_STR_LOCAL_ZH_CN]));
+		m_CharRaceInfo[i].FacialHairCustomization1=pStringTable+pRecord[i].FacialHairCustomization1;		
+		m_CharRaceInfo[i].FacialHairCustomization2=pStringTable+pRecord[i].FacialHairCustomization2;		
+		m_CharRaceInfo[i].HairCustomization=pStringTable+pRecord[i].HairCustomization;		
 		m_CharRaceInfo[i].Expansion=pRecord[i].Expansion;		
+		m_CharRaceInfo[i].UnalteredVisualRaceID=pRecord[i].UnalteredVisualRaceID;		
 			
 	}	
 
@@ -877,6 +942,7 @@ bool CBLZWOWDatabase::LoadCreatureDisplayInfo(LPCTSTR FileName)
 		pCreatureDisplayInfo->Skin2=pStringTable+pRecord[i].Skin2;						
 		pCreatureDisplayInfo->Skin3=pStringTable+pRecord[i].Skin3;	
 		pCreatureDisplayInfo->Icon=pStringTable+pRecord[i].Icon;	
+		pCreatureDisplayInfo->SizeClass=pRecord[i].SizeClass;
 		pCreatureDisplayInfo->BloodLevelID=pRecord[i].BloodLevelID;			
 		pCreatureDisplayInfo->BloodID=pRecord[i].BloodID;		
 		pCreatureDisplayInfo->NPCSoundID=pRecord[i].NPCSoundID;		
@@ -996,15 +1062,27 @@ bool CBLZWOWDatabase::LoadCreatureModelInfo(LPCTSTR FileName)
 	for(UINT i=0;i<pHeader->RecordCount;i++)
 	{
 		BLZ_DB_CREATURE_MODEL_INFO * pCreatureModelInfo=m_CreatureModelInfo.New(pRecord[i].ID);
-		pCreatureModelInfo->ID=pRecord[i].ID;				
-		pCreatureModelInfo->Flags=pRecord[i].Flags;
-		pCreatureModelInfo->ModelPath=pStringTable+pRecord[i].ModelPath;
-		pCreatureModelInfo->AltermateModel=pStringTable+pRecord[i].AltermateModel;
-		pCreatureModelInfo->Scale=pRecord[i].Scale;
-		pCreatureModelInfo->BloodLevelID=pRecord[i].BloodLevelID;
-		pCreatureModelInfo->SoundDataID=pRecord[i].SoundDataID;
-		pCreatureModelInfo->CollisionWidth=pRecord[i].CollisionWidth;
-		pCreatureModelInfo->CollisionHeight=pRecord[i].CollisionHeight;		
+		pCreatureModelInfo->ID=								pRecord[i].ID;							
+		pCreatureModelInfo->Flags=							pRecord[i].Flags;						
+		pCreatureModelInfo->ModelPath=						pStringTable+pRecord[i].ModelPath;					
+		pCreatureModelInfo->AltermateModel=					pStringTable+pRecord[i].AltermateModel;	
+		pCreatureModelInfo->Scale=							pRecord[i].Scale;						
+		pCreatureModelInfo->BloodLevelID=					pRecord[i].BloodLevelID;
+		pCreatureModelInfo->FootPrintID=					pRecord[i].FootPrintID;			
+		pCreatureModelInfo->FootPrintTextureLength= 		pRecord[i].FootPrintTextureLength; 
+		pCreatureModelInfo->FootPrintTextureWidth= 			pRecord[i].FootPrintTextureWidth; 	
+		pCreatureModelInfo->FootPrintParticleScale= 		pRecord[i].FootPrintParticleScale; 
+		pCreatureModelInfo->FoleyMaterialID=				pRecord[i].FoleyMaterialID;		
+		pCreatureModelInfo->FootStepShakeSizeID=			pRecord[i].FootStepShakeSizeID;	
+		pCreatureModelInfo->DeathThudShakeSize= 			pRecord[i].DeathThudShakeSize; 	
+		pCreatureModelInfo->SoundDataID=					pRecord[i].SoundDataID;				
+		pCreatureModelInfo->CollisionWidth= 				pRecord[i].CollisionWidth; 			
+		pCreatureModelInfo->CollisionHeight=				pRecord[i].CollisionHeight;
+		pCreatureModelInfo->MountHeight=					pRecord[i].MountHeight;
+		pCreatureModelInfo->BoundingBox.m_Min= 				pRecord[i].BoundingBoxMin;
+		pCreatureModelInfo->BoundingBox.m_Max= 				pRecord[i].BoundingBoxMax;
+		pCreatureModelInfo->WorldEffectScale= 				pRecord[i].WorldEffectScale ; 		
+		pCreatureModelInfo->AttachedEffectScale= 			pRecord[i].AttachedEffectScale; 	
 	}	
 
 
@@ -1125,7 +1203,6 @@ bool CBLZWOWDatabase::LoadItemClass(LPCTSTR FileName)
 	for(UINT i=0;i<pHeader->RecordCount;i++)
 	{
 		m_ItemClass[i].ClassID=pRecord[i].ClassID;				
-		m_ItemClass[i].SubClassID=pRecord[i].SubClassID;
 		m_ItemClass[i].IsWeapon=(pRecord[i].IsWeapon!=0);
 		m_ItemClass[i].Name=UTF8ToLocal(pStringTable+pRecord[i].Name[BLZ_DBC_STR_LOCAL_ZH_CN],
 			strlen(pStringTable+pRecord[i].Name[BLZ_DBC_STR_LOCAL_ZH_CN]));
@@ -1177,6 +1254,7 @@ bool CBLZWOWDatabase::LoadItemSubClass(LPCTSTR FileName)
 
 			Info.ClassID=pRecord[i].ClassID;
 			Info.SubClassID=pRecord[i].SubClassID;
+			Info.SubClassMark=pRecord[i].SubClassMark;
 			Info.HandsNumber=pRecord[i].HandsNumber;		
 			Info.Name=UTF8ToLocal(pStringTable+pRecord[i].Name[BLZ_DBC_STR_LOCAL_ZH_CN],
 				strlen(pStringTable+pRecord[i].Name[BLZ_DBC_STR_LOCAL_ZH_CN]));
@@ -1294,6 +1372,9 @@ CEasyString CBLZWOWDatabase::UTF8ToLocal(LPCTSTR szStr,int StrLen)
 
 bool CBLZWOWDatabase::LoadItemData(LPCTSTR FileName)
 {
+	CBLZDBCFile DBCFile;
+
+	
 	IFileAccessor * pFile;
 
 	CEasyBuffer DBData;
@@ -1302,41 +1383,32 @@ bool CBLZWOWDatabase::LoadItemData(LPCTSTR FileName)
 	pFile=CreateFileAccessor();
 	if(pFile==NULL)
 		return false;
+
 	if(!pFile->Open(FileName,IFileAccessor::modeRead))
 	{
 		pFile->Release();
 		return false;	
 	}
-	int FileSize=(int)pFile->GetSize();	
-	DBData.Create(FileSize);
-	pFile->Read(DBData.GetBuffer(),FileSize);
-	DBData.SetUsedSize(FileSize);
+	if(!DBCFile.Load(pFile,BLZ_DBC_ITEM_DATA_RECORD_SIZE))
+	{
+		pFile->Release();
+		return false;	
+	}
 	pFile->Release();
 
-	BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)DBData.GetBuffer();
-	if(pHeader->Tag!=BLZ_DBC_HEADER_TAG)
-		return false;
 
-	if(pHeader->RecordSize!=BLZ_DBC_ITEM_DATA_RECORD_SIZE)
-		return false;
-
-
-	DBC_ITEM_DATA * pRecord=(DBC_ITEM_DATA *)((BYTE *)DBData.GetBuffer()+sizeof(BLZ_DBC_HEADER));
-	char * pStringTable=(char *)((BYTE *)DBData.GetBuffer()+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*pHeader->RecordCount);
-
-
-
-	for(UINT i=0;i<pHeader->RecordCount;i++)
+	for(UINT i=0;i<DBCFile.GetRecordCount();i++)
 	{
-		BLZ_DB_ITEM_DATA& Info=m_ItemData[pRecord[i].ItemID];
+		UINT ItemID=DBCFile.GetDataUint(i,0);
+		BLZ_DB_ITEM_DATA& Info=m_ItemData[ItemID];
 
-		Info.ItemID=pRecord[i].ItemID;
-		Info.ItemClass=pRecord[i].ItemClass;
-		Info.ItemSubClass=pRecord[i].ItemSubClass;
-		Info.MaterialID=pRecord[i].MaterialID;
-		Info.ItemDisplayInfo=pRecord[i].ItemDisplayInfo;
-		Info.InventorySlotID=pRecord[i].InventorySlotID;
-		Info.SheathID=pRecord[i].SheathID;	
+		Info.ItemID=ItemID;
+		Info.ItemClass=DBCFile.GetDataUint(i,1);
+		Info.ItemSubClass=DBCFile.GetDataUint(i,2);
+		Info.MaterialID=DBCFile.GetDataUint(i,4);
+		Info.ItemDisplayInfo=DBCFile.GetDataUint(i,5);
+		Info.InventorySlotID=DBCFile.GetDataUint(i,6);
+		Info.SheathID=DBCFile.GetDataUint(i,7);
 
 		
 		//Info.Type=0;
@@ -1605,6 +1677,18 @@ CBLZWOWDatabase::BLZ_DB_MAP_INFO * CBLZWOWDatabase::GetMapInfo(UINT Index)
 	return m_MapInfo.GetObject(Index);
 }
 
+CBLZWOWDatabase::BLZ_DB_MAP_INFO * CBLZWOWDatabase::FindMapInfo(UINT MapID)
+{
+	for(UINT i=0;i<m_MapInfo.GetCount();i++)
+	{
+		if(m_MapInfo[i].ID==MapID)
+		{
+			return m_MapInfo.GetObject(i);
+		}
+	}
+	return NULL;
+}
+
 bool CBLZWOWDatabase::LoadLiquidTypeInfo(LPCTSTR FileName)
 {
 	IFileAccessor * pFile;
@@ -1693,7 +1777,7 @@ bool CBLZWOWDatabase::LoadMiniMapInfo(LPCTSTR FileName)
 	}
 	pFile->Release();
 
-	for(UINT i=0;i<FileInfos.GetLineCount();i++)
+	for(int i=0;i<FileInfos.GetLineCount();i++)
 	{
 		CEasyString Line=FileInfos[i];
 		if(_strnicmp(Line,"dir: ",5)==0)
@@ -1725,6 +1809,238 @@ LPCTSTR CBLZWOWDatabase::GetMiniMapRealFileName(LPCTSTR FileName)
 		return pRealFileName->GetBuffer();
 	}
 	return NULL;
+}
+
+bool CBLZWOWDatabase::LoadMapLightInfos(LPCTSTR FileName)
+{
+	IFileAccessor * pFile;
+
+	pFile=CreateFileAccessor();
+	if(pFile==NULL)
+		return false;
+	if(!pFile->Open(FileName,IFileAccessor::modeRead))
+	{
+		pFile->Release();
+		return false;	
+	}
+	CBLZDBCFile DBCFile;
+	if(!DBCFile.Load(pFile,BLZ_DBC_LIGHT_RECORD_SIZE))
+		return false;	
+
+	m_LightInfoList.Resize(DBCFile.GetRecordCount());
+	for(UINT i=0;i<DBCFile.GetRecordCount();i++)
+	{
+		m_LightInfoList[i].ID=DBCFile.GetDataUint(i,0);
+		m_LightInfoList[i].MapID=DBCFile.GetDataUint(i,1);
+		m_LightInfoList[i].Pos.x=DBCFile.GetDataFloat(i,2)/36.0f;
+		m_LightInfoList[i].Pos.y=DBCFile.GetDataFloat(i,3)/36.0f;
+		m_LightInfoList[i].Pos.z=-DBCFile.GetDataFloat(i,4)/36.0f;
+		m_LightInfoList[i].IsGlobal=(m_LightInfoList[i].Pos.x==0.0f&&m_LightInfoList[i].Pos.y==.0f&&m_LightInfoList[i].Pos.z==0.0f);
+		m_LightInfoList[i].FallOffStart=DBCFile.GetDataFloat(i,5)/36.0f;
+		m_LightInfoList[i].FallOffEnd=DBCFile.GetDataFloat(i,6)/36.0f;
+		m_LightInfoList[i].ParamID=DBCFile.GetDataUint(i,7);
+		
+		m_LightInfoMapByParamID[m_LightInfoList[i].ParamID].Add(m_LightInfoList.GetObject(i));
+		m_MapLightInfos[m_LightInfoList[i].MapID].Add(m_LightInfoList.GetObject(i));
+		//AddLightInfoSorted(m_MapLightInfos[m_LightInfoList[i].MapID],m_LightInfoList.GetObject(i));
+	}
+	DBCFile.Close();
+	pFile->Release();
+	return true;
+}
+
+
+bool CBLZWOWDatabase::LoadLightParams(LPCTSTR FileName)
+{
+	IFileAccessor * pFile;
+
+	pFile=CreateFileAccessor();
+	if(pFile==NULL)
+		return false;
+	if(!pFile->Open(FileName,IFileAccessor::modeRead))
+	{
+		pFile->Release();
+		return false;	
+	}
+	CBLZDBCFile DBCFile;
+	if(!DBCFile.Load(pFile,BLZ_DBC_LIGHT_PARAMS_RECORD_SIZE))
+		return false;	
+	
+	for(UINT i=0;i<DBCFile.GetRecordCount();i++)
+	{
+		UINT ID=DBCFile.GetDataUint(i,0);
+		CEasyArray<CBLZWOWDatabase::BLZ_DB_LIGHT_INFO *> * pLightInfos=m_LightInfoMapByParamID.Find(ID);
+		if(pLightInfos)
+		{
+			for(UINT j=0;j<pLightInfos->GetCount();j++)
+			{
+				BLZ_DB_LIGHT_INFO * pInfo=(*pLightInfos)[j];
+				pInfo->IsHighLightSky=DBCFile.GetDataUint(i,1)!=0;
+				pInfo->SkyboxID=DBCFile.GetDataUint(i,2);
+				pInfo->CloudTypeID=DBCFile.GetDataUint(i,3);
+				pInfo->Glow=DBCFile.GetDataFloat(i,4);
+				pInfo->WaterShallowAlpha=DBCFile.GetDataFloat(i,5);
+				pInfo->WaterDeepAlpha=DBCFile.GetDataFloat(i,6);
+				pInfo->OceanShallowAlpha=DBCFile.GetDataFloat(i,7);
+				pInfo->OceanDeepAlpha=DBCFile.GetDataFloat(i,8);
+			}
+		}	
+	}
+	DBCFile.Close();
+	pFile->Release();
+	return true;
+}
+
+bool CBLZWOWDatabase::LoadLightColors(LPCTSTR FileName)
+{
+	IFileAccessor * pFile;
+
+	pFile=CreateFileAccessor();
+	if(pFile==NULL)
+		return false;
+	if(!pFile->Open(FileName,IFileAccessor::modeRead))
+	{
+		pFile->Release();
+		return false;	
+	}
+	CBLZDBCFile DBCFile;
+	if(!DBCFile.Load(pFile,BLZ_DBC_LIGHT_INT_BAND_RECORD_SIZE))
+		return false;	
+
+	for(UINT i=0;i<DBCFile.GetRecordCount();i++)
+	{
+		UINT ID=DBCFile.GetDataUint(i,0);
+		UINT Index=ID%DBC_LICI_MAX;
+		ID=ID/DBC_LICI_MAX;
+		CEasyArray<CBLZWOWDatabase::BLZ_DB_LIGHT_INFO *> * pLightInfos=m_LightInfoMapByParamID.Find(ID);
+		if(pLightInfos)
+		{
+			for(UINT j=0;j<pLightInfos->GetCount();j++)
+			{
+				BLZ_DB_LIGHT_INFO * pInfo=(*pLightInfos)[j];
+				UINT Count=DBCFile.GetDataUint(i,1);
+				pInfo->Colors[Index].Resize(Count);
+				for(UINT k=0;k<Count;k++)
+				{
+					pInfo->Colors[Index][k].Time=DBCFile.GetDataUint(i,2+k)*30;
+					pInfo->Colors[Index][k].Color=DBCFile.GetDataUint(i,18+k);
+				}				
+			}
+		}	
+	}
+	DBCFile.Close();
+	pFile->Release();
+	return true;
+}
+
+CEasyArray<CBLZWOWDatabase::BLZ_DB_LIGHT_INFO *> * CBLZWOWDatabase::GetMapLightInfos(UINT MapID)
+{
+	return m_MapLightInfos.Find(MapID);
+}
+
+bool CBLZWOWDatabase::GetMapLightColor(UINT MapID,CD3DVector3 Pos,UINT ColorIndex,UINT Time,D3DCOLOR& Color)
+{
+	if(ColorIndex<DBC_LICI_MAX)
+	{
+		CEasyArray<BLZ_DB_LIGHT_INFO *> * pLightInfos=GetMapLightInfos(MapID);
+		if(pLightInfos)
+		{
+			float TotalWeight=0.0f;
+			
+			for(UINT i=0;i<pLightInfos->GetCount();i++)
+			{
+				BLZ_DB_LIGHT_INFO * pInfo=(*pLightInfos)[i];				
+				float Dis=(pInfo->Pos-Pos).Length();
+				if(pInfo->Colors[ColorIndex].GetCount()==0)
+				{
+					pInfo->BlendWeight=0.0f;
+				}
+				else if(pInfo->IsGlobal)
+				{
+					pInfo->BlendWeight=0.0f;
+				}
+				else if(Dis<=pInfo->FallOffStart)
+				{
+					pInfo->BlendWeight=1.0f;
+					TotalWeight+=pInfo->BlendWeight;
+				}
+				else if(Dis<=pInfo->FallOffEnd)
+				{
+					pInfo->BlendWeight=(Dis-pInfo->FallOffStart)/(pInfo->FallOffEnd-pInfo->FallOffStart);
+					TotalWeight+=pInfo->BlendWeight;
+				}
+				else
+				{
+					pInfo->BlendWeight=0.0f;
+				}
+			}
+			if(TotalWeight>0.0f)
+			{
+				Color=0;
+				for(UINT i=0;i<pLightInfos->GetCount();i++)
+				{
+					BLZ_DB_LIGHT_INFO * pInfo=(*pLightInfos)[i];
+					if(pInfo->BlendWeight>0.0f)
+					{
+						D3DCOLOR OneColor=0;
+						pInfo->GetColor(ColorIndex,Time,OneColor);
+						OneColor=D3DCOLOR_MUL(OneColor,pInfo->BlendWeight/TotalWeight);
+						Color=D3DCOLOR_ADD(Color,OneColor);
+					}
+				}
+				return true;
+			}
+			else
+			{
+				for(UINT i=0;i<pLightInfos->GetCount();i++)
+				{
+					BLZ_DB_LIGHT_INFO * pInfo=(*pLightInfos)[i];
+					if(pInfo->IsGlobal)
+					{
+						return pInfo->GetColor(ColorIndex,Time,Color);					
+					}
+				}
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void CBLZWOWDatabase::PrintColors(BLZ_DB_LIGHT_INFO * pInfo)
+{
+	for(UINT i=0;i<DBC_LICI_MAX;i++)
+	{
+		PrintSystemLog(0,"Color(%d):",i);
+		for(UINT j=0;j<pInfo->Colors[i].GetCount();j++)
+		{
+			PrintSystemLog(0,"	C=(%d,%d,%d),T=%u",
+				D3DCOLOR_RED(pInfo->Colors[i][j].Color),
+				D3DCOLOR_GREEN(pInfo->Colors[i][j].Color),
+				D3DCOLOR_BLUE(pInfo->Colors[i][j].Color),
+				pInfo->Colors[i][j].Time);
+		}
+	}
+}
+
+void CBLZWOWDatabase::AddLightInfoSorted(CEasyArray<BLZ_DB_LIGHT_INFO *>& LightList,BLZ_DB_LIGHT_INFO * pLightInfo)
+{
+	if(pLightInfo->IsGlobal)
+	{
+		LightList.Add(pLightInfo);
+	}
+	else
+	{
+		for(UINT i=0;i<LightList.GetCount();i++)
+		{
+			if(LightList[i]->IsGlobal||LightList[i]->FallOffStart>pLightInfo->FallOffStart)
+			{
+				LightList.Insert(i,pLightInfo);
+				return;
+			}
+		}
+		LightList.Add(pLightInfo);
+	}
 }
 
 }

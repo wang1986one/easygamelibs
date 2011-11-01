@@ -10,6 +10,13 @@ CBLZDBCFile::CBLZDBCFile(void)
 	m_pData=NULL;
 	m_DataSize=0;
 	m_IsSelfRelease=false;
+	m_RecordCount=0;
+	m_FieldCount=0;
+	m_RecordSize=0;
+	m_StringTableSize=0;
+	m_pRecordData=NULL;
+	m_pStringTable=NULL;
+
 
 }
 
@@ -51,17 +58,52 @@ bool CBLZDBCFile::Load(BYTE * pData,UINT DataSize,UINT RecordSize,bool IsSelfRel
 	m_DataSize=DataSize;
 	m_IsSelfRelease=IsSelfRelease;
 
-	BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)m_pData;
-	if(pHeader->Tag!=BLZ_DBC_HEADER_TAG)
-		return false;
-
-	if(RecordSize)
+	DWORD Tag=*((DWORD *)m_pData);
+	if(Tag==BLZ_DBC_HEADER_TAG)
 	{
-		if(pHeader->RecordSize!=RecordSize)
-			return false;
-	}
+		BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)m_pData;
 
-	return true;
+		if(RecordSize)
+		{
+			if(pHeader->RecordSize!=RecordSize)
+				return false;
+		}
+
+		m_RecordCount=pHeader->RecordCount;
+		m_FieldCount=pHeader->FieldCount;
+		m_RecordSize=pHeader->RecordSize;
+		m_StringTableSize=pHeader->StringBlockSize;
+		m_pRecordData=m_pData+sizeof(BLZ_DBC_HEADER);
+		m_pStringTable=(char *)(m_pData+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*pHeader->RecordCount);
+
+		return true;
+	}
+	else if(Tag==BLZ_DB2_HEADER_TAG)
+	{
+		BLZ_DB2_HEADER * pHeader=(BLZ_DB2_HEADER *)m_pData;
+
+		m_RecordCount=pHeader->RecordCount;
+		m_FieldCount=pHeader->FieldCount;
+		m_RecordSize=pHeader->RecordSize;
+		m_StringTableSize=pHeader->StringBlockSize;
+		if(pHeader->LastRowIndex)
+		{
+			m_pRecordData=m_pData+sizeof(BLZ_DB2_HEADER)+(pHeader->LastRowIndex-pHeader->FirstRowIndex+1)*6;
+			m_pStringTable=(char *)(m_pData+sizeof(BLZ_DBC_HEADER)+(pHeader->LastRowIndex-pHeader->FirstRowIndex+1)*6+
+				pHeader->RecordSize*pHeader->RecordCount);
+		}
+		else
+		{
+			m_pRecordData=m_pData+sizeof(BLZ_DB2_HEADER);
+			m_pStringTable=(char *)(m_pData+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*pHeader->RecordCount);
+		}
+		
+
+		return true;
+	}
+	return false;
+
+	
 }
 
 void CBLZDBCFile::Close()
@@ -73,73 +115,69 @@ void CBLZDBCFile::Close()
 	m_pData=NULL;
 	m_DataSize=0;
 	m_IsSelfRelease=false;
+	m_RecordCount=0;
+	m_FieldCount=0;
+	m_RecordSize=0;
+	m_StringTableSize=0;
+	m_pRecordData=NULL;
+	m_pStringTable=NULL;
 }
 
 UINT CBLZDBCFile::GetRecordSize()
 {
-	BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)m_pData;
-	return pHeader->RecordSize;
+	return m_RecordSize;
 }
 
 UINT CBLZDBCFile::GetRecordCount()
 {
-	BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)m_pData;
-	return pHeader->RecordCount;
+	return m_RecordCount;
 }
 UINT CBLZDBCFile::GetFieldCount()
 {
-	BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)m_pData;
-	return pHeader->FieldCount;
+	return m_FieldCount;
 }
 int CBLZDBCFile::GetDataInt(UINT Record,UINT Field)
 {
-	BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)m_pData;
-	if(Record<pHeader->RecordCount&&Field<pHeader->FieldCount)
+	if(m_pRecordData&&Record<m_RecordCount&&Field<m_FieldCount)
 	{
-		int * pRecord=(int *)(m_pData+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*Record);
+		int * pRecord=(int *)(m_pRecordData+m_RecordSize*Record);
 		return pRecord[Field];
 	}
 	return 0;
 }
 UINT CBLZDBCFile::GetDataUint(UINT Record,UINT Field)
 {
-	BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)m_pData;
-	if(Record<pHeader->RecordCount&&Field<pHeader->FieldCount)
+	if(m_pRecordData&&Record<m_RecordCount&&Field<m_FieldCount)
 	{
-		UINT * pRecord=(UINT *)(m_pData+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*Record);
+		UINT * pRecord=(UINT *)(m_pRecordData+m_RecordSize*Record);
 		return pRecord[Field];
 	}
 	return 0;
 }
 float CBLZDBCFile::GetDataFloat(UINT Record,UINT Field)
 {
-	BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)m_pData;
-	if(Record<pHeader->RecordCount&&Field<pHeader->FieldCount)
+	if(m_pRecordData&&Record<m_RecordCount&&Field<m_FieldCount)
 	{
-		float * pRecord=(float *)(m_pData+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*Record);
+		float * pRecord=(float *)(m_pRecordData+m_RecordSize*Record);
 		return pRecord[Field];
 	}
 	return 0;
 }
 LPCSTR CBLZDBCFile::GetDataString(UINT Record,UINT Field)
 {
-	BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)m_pData;
-	if(Record<pHeader->RecordCount&&Field<pHeader->FieldCount)
+	if(m_pRecordData&&Record<m_RecordCount&&Field<m_FieldCount)
 	{
-		UINT * pRecord=(UINT *)(m_pData+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*Record);
-		char * pStringTable=(char *)(m_pData+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*pHeader->RecordCount);
-		return pStringTable+pRecord[Field];
+		UINT * pRecord=(UINT *)(m_pRecordData+m_RecordSize*Record);
+		return m_pStringTable+pRecord[Field];
 	}
 	return NULL;
 }
 CEasyString CBLZDBCFile::GetDataLocalString(UINT Record,UINT Field)
 {
-	BLZ_DBC_HEADER * pHeader=(BLZ_DBC_HEADER *)m_pData;
-	if(Record<pHeader->RecordCount&&Field<pHeader->FieldCount)
+	if(m_pRecordData&&Record<m_RecordCount&&Field<m_FieldCount)
 	{
-		UINT * pRecord=(UINT *)(m_pData+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*Record);
-		char * pStringTable=(char *)(m_pData+sizeof(BLZ_DBC_HEADER)+pHeader->RecordSize*pHeader->RecordCount);
-		char * pString=pStringTable+pRecord[Field];
+		UINT * pRecord=(UINT *)(m_pRecordData+m_RecordSize*Record);
+		char * pString=m_pStringTable+pRecord[Field];
 
 		WCHAR	Buffer[1024];
 

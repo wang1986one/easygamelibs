@@ -144,7 +144,7 @@ BOOL CD3DSimpleList::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lP
 						Select--;
 						SelectItem(Select);
 						MakeItemVisible(Select);
-						HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_SELCHANGE,Select,(LPARAM)this);
+						HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_SELCHANGE,(WPARAM)GetID(),Select);
 						m_RecentSelect=Select;
 					}
 				}
@@ -158,7 +158,7 @@ BOOL CD3DSimpleList::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lP
 						Select++;
 						SelectItem(Select);
 						MakeItemVisible(Select);
-						HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_SELCHANGE,Select,(LPARAM)this);
+						HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_SELCHANGE,(WPARAM)GetID(),Select);
 						m_RecentSelect=Select;
 					}
 				}
@@ -200,7 +200,7 @@ BOOL CD3DSimpleList::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lP
 				}
 				if(m_RecentSelect!=index)
 				{					
-					HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_SELCHANGE,index,(LPARAM)this);
+					HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_SELCHANGE,(WPARAM)GetID(),index);
 					m_RecentSelect=index;
 				}
 				
@@ -214,7 +214,7 @@ BOOL CD3DSimpleList::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lP
 			int index=XYToItemIndex(xPos,yPos);
 			if(index>=0)
 			{
-				HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_LCLICK,index,(LPARAM)this);
+				HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_LCLICK,(WPARAM)GetID(),index);
 			}
 		}
 		return true;
@@ -225,7 +225,7 @@ BOOL CD3DSimpleList::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lP
 			int index=XYToItemIndex(xPos,yPos);
 			if(index>=0)
 			{
-				HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_LDBCLICK,index,(LPARAM)this);
+				HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_LDBCLICK,(WPARAM)GetID(),index);
 			}
 		}
 		return true;
@@ -236,7 +236,7 @@ BOOL CD3DSimpleList::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lP
 		}
 		return true;
 	case WM_D3DGUI_SCROLL_BAR_SCROLL:
-		ScrollTo((int)wParam);		
+		ScrollTo((int)lParam);		
 		return true;
 	}	
 	return false;
@@ -261,7 +261,7 @@ void CD3DSimpleList::SetFont(LOGFONT * pLogFont)
 	if(pLogFont)
 	{
 		m_LogFont=*pLogFont;
-		m_LineHeight=m_LogFont.lfHeight+m_FontShadowWidth*2+1;
+		m_LineHeight=(m_LogFont.lfHeight+m_FontShadowWidth*2+1)*m_FontScale;
 		m_WantUpdateFont=true;	
 		UpdateFont();
 	}
@@ -277,7 +277,15 @@ void CD3DSimpleList::SetFontAlign(DWORD Align)
 void CD3DSimpleList::SetFontSahdowWidth(DWORD ShadowWidth)
 {
 	m_FontShadowWidth=ShadowWidth;
-	m_LineHeight=m_LogFont.lfHeight+m_FontShadowWidth*2+1;
+	m_LineHeight=(m_LogFont.lfHeight+m_FontShadowWidth*2+1)*m_FontScale;
+	m_WantUpdateFont=true;
+	UpdateFont();
+}
+
+void CD3DSimpleList::SetFontScale(FLOAT Scale)
+{
+	m_FontScale=Scale;
+	m_LineHeight=(m_LogFont.lfHeight+m_FontShadowWidth*2+1)*m_FontScale;
 	m_WantUpdateFont=true;
 	UpdateFont();
 }
@@ -371,7 +379,7 @@ void CD3DSimpleList::UpdateText()
 
 	
 	//更新文字
-	for(int i=0;i<(int)m_LineInfos.size()-m_FirstVisibleLine;i++)
+	for(int i=0;i<(int)m_LineInfos.GetCount()-m_FirstVisibleLine;i++)
 	{
 		
 		if(TextRect(i)==NULL)
@@ -387,7 +395,8 @@ void CD3DSimpleList::UpdateText()
 				TextRect(i)->EnableUpdate(false);
 				TextRect(i)->SetRect(&Rect);
 				
-				TextRect(i)->SetTextW((LPCWSTR)m_LineInfos[i+m_FirstVisibleLine].Text);
+				TextRect(i)->SetTextW((LPCWSTR)m_LineInfos[i+m_FirstVisibleLine].Text,
+					m_LineInfos[i+m_FirstVisibleLine].Text.GetLength());
 				TextRect(i)->EnableUpdate(true);
 
 				Rect.top=Rect.bottom+m_LineSpace;	
@@ -421,7 +430,7 @@ void CD3DSimpleList::UpdateSelect()
 
 	FLOAT_RECT Rect(ClientRect);
 
-	for(int i=0;i<(int)m_LineInfos.size()-m_FirstVisibleLine;i++)
+	for(int i=0;i<(int)m_LineInfos.GetCount()-m_FirstVisibleLine;i++)
 	{			
 		Rect.bottom=Rect.top+m_LineHeight;
 		if(Rect.bottom<=(FLOAT)ClientRect.bottom)
@@ -432,7 +441,7 @@ void CD3DSimpleList::UpdateSelect()
 				{
 					SelectRect(i)=CreateRect();
 					RebuildOrder();			
-					SelectRect(i)->SetFXFromMemory("EditSelectRectFX",SELECTED_RECT_FX,(int)strlen(SELECTED_RECT_FX));
+					SelectRect(i)->SetEffectMode(D3DGUI_EFFECT_INVERSE_COLOR);
 				}
 				if(SelectRect(i))
 				{
@@ -466,8 +475,8 @@ void CD3DSimpleList::ScrollTo(int Line)
 {
 	m_FirstVisibleLine=Line;
 
-	if(m_FirstVisibleLine>(int)m_LineInfos.size()-m_CurVisibleLineCount)
-		m_FirstVisibleLine=(int)m_LineInfos.size()-m_CurVisibleLineCount;
+	if(m_FirstVisibleLine>(int)m_LineInfos.GetCount()-m_CurVisibleLineCount)
+		m_FirstVisibleLine=(int)m_LineInfos.GetCount()-m_CurVisibleLineCount;
 	if(m_FirstVisibleLine<0)
 		m_FirstVisibleLine=0;	
 
@@ -502,7 +511,7 @@ void CD3DSimpleList::SelectItem(int Index)
 {
 	if(!m_AllowMutliSelect)
 		ClearAllSelect();
-	if(Index>=0&&Index<(int)m_LineInfos.size())
+	if(Index>=0&&Index<(int)m_LineInfos.GetCount())
 	{
 		m_LineInfos[Index].IsSelected=true;		
 		UpdateSelect();
@@ -525,8 +534,8 @@ void CD3DSimpleList::SelectItemRange(int Start,int End)
 	}
 	if(Start<0)
 		Start=0;
-	if(End>=(int)m_LineInfos.size())
-		End=(int)m_LineInfos.size()-1;
+	if(End>=(int)m_LineInfos.GetCount())
+		End=(int)m_LineInfos.GetCount()-1;
 	
 	for(int i=Start;i<=End;i++)
 	{
@@ -537,7 +546,7 @@ void CD3DSimpleList::SelectItemRange(int Start,int End)
 
 void CD3DSimpleList::ClearAllSelect()
 {
-	for(int i=0;i<(int)m_LineInfos.size();i++)
+	for(int i=0;i<(int)m_LineInfos.GetCount();i++)
 	{
 		m_LineInfos[i].IsSelected=false;
 	}
@@ -548,31 +557,33 @@ int CD3DSimpleList::AddItem(LPCTSTR ItemText)
 {
 	SIMPLE_LIST_LINE_INFO Info;
 	Info.Text=ItemText;
-	m_LineInfos.push_back(Info);
+	m_LineInfos.Add(Info);
 	CheckScroll();
 	UpdateText();
-	return (int)m_LineInfos.size()-1;
+	return (int)m_LineInfos.GetCount()-1;
 }
 
-void CD3DSimpleList::InsertItem(int Index,LPCTSTR ItemText)
+bool CD3DSimpleList::InsertItem(int Index,LPCTSTR ItemText)
 {
 	SIMPLE_LIST_LINE_INFO Info;
 	Info.Text=ItemText;
-	if(Index<0)
-		m_LineInfos.insert(m_LineInfos.begin(),Info);
-	else if(Index>=(int)m_LineInfos.size())
-		m_LineInfos.push_back(Info);
+	
+	if(m_LineInfos.Insert(Index,Info))
+	{
+		CheckScroll();
+		UpdateText();
+		return true;
+	}
 	else
-		m_LineInfos.insert(m_LineInfos.begin()+Index,Info);
-	CheckScroll();
-	UpdateText();
+	{
+		return false;
+	}	
 }
 
 bool CD3DSimpleList::DeleteItem(int Index)
 {
-	if(Index>=0&&Index<(int)m_LineInfos.size())
+	if(m_LineInfos.Delete(Index))
 	{
-		m_LineInfos.erase(m_LineInfos.begin()+Index);
 		CheckScroll();
 		UpdateText();
 		return true;
@@ -582,19 +593,19 @@ bool CD3DSimpleList::DeleteItem(int Index)
 
 void CD3DSimpleList::DeleteAllItem()
 {
-	m_LineInfos.clear();
+	m_LineInfos.Clear();
 	CheckScroll();
 	UpdateText();
 }
 
 int CD3DSimpleList::GetItemCount()
 {
-	return (int)m_LineInfos.size();
+	return (int)m_LineInfos.GetCount();
 }
 
 int CD3DSimpleList::GetFirstSelectedItem()
 {
-	for(int i=0;i<(int)m_LineInfos.size();i++)
+	for(int i=0;i<(int)m_LineInfos.GetCount();i++)
 	{
 		if(m_LineInfos[i].IsSelected)
 			return i;
@@ -604,7 +615,7 @@ int CD3DSimpleList::GetFirstSelectedItem()
 
 int CD3DSimpleList::GetNextSelectedItem(int Index)
 {
-	for(int i=Index+1;i<(int)m_LineInfos.size();i++)
+	for(int i=Index+1;i<(int)m_LineInfos.GetCount();i++)
 	{
 		if(m_LineInfos[i].IsSelected)
 			return i;
@@ -614,7 +625,7 @@ int CD3DSimpleList::GetNextSelectedItem(int Index)
 
 bool CD3DSimpleList::SetItemText(int Index,LPCTSTR Text)
 {
-	if(Index>=0&&Index<(int)m_LineInfos.size())
+	if(Index>=0&&Index<(int)m_LineInfos.GetCount())
 	{
 		m_LineInfos[Index].Text=Text;
 		return true;
@@ -624,7 +635,7 @@ bool CD3DSimpleList::SetItemText(int Index,LPCTSTR Text)
 
 bool CD3DSimpleList::GetItemText(int Index,CEasyString& Text)
 {
-	if(Index>=0&&Index<(int)m_LineInfos.size())
+	if(Index>=0&&Index<(int)m_LineInfos.GetCount())
 	{		
 		Text=m_LineInfos[Index].Text;
 		return true;
@@ -634,7 +645,7 @@ bool CD3DSimpleList::GetItemText(int Index,CEasyString& Text)
 
 bool CD3DSimpleList::SetItemData(int Index,LPVOID pData)
 {
-	if(Index>=0&&Index<(int)m_LineInfos.size())
+	if(Index>=0&&Index<(int)m_LineInfos.GetCount())
 	{		
 		m_LineInfos[Index].pItemData=pData;
 		return true;
@@ -644,7 +655,7 @@ bool CD3DSimpleList::SetItemData(int Index,LPVOID pData)
 
 LPVOID CD3DSimpleList::GetItemData(int Index)
 {
-	if(Index>=0&&Index<(int)m_LineInfos.size())
+	if(Index>=0&&Index<(int)m_LineInfos.GetCount())
 	{		
 		return m_LineInfos[Index].pItemData;
 	}
@@ -679,7 +690,7 @@ void CD3DSimpleList::SaveToXml(xml_node * pXMLNode)
 	}
 	
 
-	if(m_ChildWndList.size()>0)
+	if(m_ChildWndList.GetCount())
 	{
 		xml_node Childs=Wnd.append_child(node_element,"Childs");
 		SaveChildsToXml(Childs);
@@ -745,7 +756,7 @@ bool CD3DSimpleList::LoadFromXml(xml_node * pXMLNode)
 		}
 	}
 	//识别内部对象
-	for(int i=(int)m_ChildWndList.size()-1;i>=0;i--)
+	for(int i=(int)m_ChildWndList.GetCount()-1;i>=0;i--)
 	{
 		if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DScrollBar))&&
@@ -757,7 +768,7 @@ bool CD3DSimpleList::LoadFromXml(xml_node * pXMLNode)
 			m_pScrollBar=pScrollBar;
 		}
 	}
-	TopChild();
+	TopChild(true);
 	HandleMessage(this,WM_D3DGUI_CHILD_LOADED,GetID(),(LPARAM)this);
 	return true;
 }
@@ -796,7 +807,8 @@ bool CD3DSimpleList::UpdateFont()
 				TextRect(i)->SetShadowColor(m_FontShadowColor);
 				TextRect(i)->SetShadowWidth(m_FontShadowWidth);	
 				TextRect(i)->SetCharSpace(m_FontCharSpace);	
-				TextRect(i)->SetLineSpace(m_FontLineSpace);	
+				TextRect(i)->SetLineSpace(m_FontLineSpace);
+				TextRect(i)->SetScale(m_FontScale);
 				m_FontCharSpace=TextRect(i)->GetCharSpace();
 				m_FontLineSpace=TextRect(i)->GetLineSpace();
 				TextRect(i)->EnableUpdate(true);				
@@ -838,7 +850,7 @@ void CD3DSimpleList::CheckScroll()
 	if(!m_IsVisible)
 		return;
 
-	if((int)m_LineInfos.size()>m_CurVisibleLineCount)
+	if((int)m_LineInfos.GetCount()>m_CurVisibleLineCount)
 	{
 		if(!m_pScrollBar->IsVisible())
 		{
@@ -848,7 +860,7 @@ void CD3DSimpleList::CheckScroll()
 			Rect.right+=m_ScrollBarWidth;
 			m_pScrollBar->SetRect(Rect);
 		}
-		m_pScrollBar->SetMaxScrollPos((int)m_LineInfos.size()-m_CurVisibleLineCount);
+		m_pScrollBar->SetMaxScrollPos((int)m_LineInfos.GetCount()-m_CurVisibleLineCount);
 		ScrollTo(m_FirstVisibleLine);
 		
 	}

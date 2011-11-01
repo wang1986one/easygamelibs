@@ -23,6 +23,11 @@ CD3DRenderThread::~CD3DRenderThread(void)
 
 BOOL CD3DRenderThread::OnStart()
 {
+	if(!CD3DDevice::IsUseMultiThreadRender())
+	{
+		PrintD3DLog(0,"未采用多线程模式创建设备,渲染线程无法启用");
+		return FALSE;
+	}
 	m_FrameCountTimer.SaveTime();
 	return m_pDevice!=NULL;
 }
@@ -101,8 +106,9 @@ void CD3DRenderThread::DoRender(RENDER_INSTANCE * pRenderInstance)
 			CD3DSceneRender * pSceneRender=(CD3DSceneRender *)pRenderInstance->RenderList[i];
 			if(pSceneRender->GetDepthTexture())
 			{
+				pSceneRender->ClearDepthTexture();
 				m_pDevice->SetRenderTarget(1,pSceneRender->GetDepthTexture(),0);
-				m_pDevice->Clear(pRenderInstance->ClearColor);
+				//m_pDevice->Clear(pRenderInstance->ClearColor);
 			}
 		}
 		pRenderInstance->RenderList[i]->Render();	

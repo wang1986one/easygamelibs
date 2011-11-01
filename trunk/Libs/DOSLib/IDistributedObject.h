@@ -21,25 +21,23 @@
 
 #define DECLARE_DOS_MSG_MAP(ClassName)		\
 	protected:\
-	OBJECT_ID	m_##ClassName##CurMsgSenderID;\
-	CDOSMessage * m_p##ClassName##CurMsg;\
-	CEasyMap<MSG_ID_TYPE,DOS_MSG_HANDLE_INFO>		m_MsgFnMap;\
 	OBJECT_ID& GetCurMsgSenderID()\
 	{\
-		return m_##ClassName##CurMsgSenderID;\
+		return m_CurMsgSenderID;\
 	}\
 	CDOSMessage * GetCurMsg()\
 	{\
-		return m_p##ClassName##CurMsg;\
+		return m_pCurHandleMsg;\
 	}\
 	void InitDOSMsgMap();\
 	BOOL HandleMsg(MSG_ID_TYPE MsgID,CSmartStruct& MsgPacket);\
 	virtual BOOL OnMessage(CDOSMessage * pMessage);
 
+
 #define START_DOS_MSG_MAP(ClassName)	\
 	void ClassName::InitDOSMsgMap()\
 	{
-	
+
 #define DOS_MSG_MAP(MsgHandlerClassName) \
 		MsgHandlerClassName::InitMsgMap(m_MsgFnMap);
 
@@ -56,8 +54,8 @@
 	}\
 	BOOL ClassName::OnMessage(CDOSMessage * pMessage)\
 	{\
-		m_##ClassName##CurMsgSenderID=pMessage->GetSenderID();\
-		m_p##ClassName##CurMsg=pMessage;\
+		m_CurMsgSenderID=pMessage->GetSenderID();\
+		m_pCurHandleMsg=pMessage;\
 		return HandleMsg(pMessage->GetMsgID(),pMessage->GetDataPacket());\
 	}
 
@@ -65,13 +63,11 @@
 
 
 
-#define DECLARE_DOS_MSG_MAP_CLIENT(ClassName)		\
+#define DECLARE_DOS_MSG_MAP_CLIENT(ClassName) \
 	protected:\
-	CDOSSimpleMessage * m_p##ClassName##CurMsg;\
-	CEasyMap<MSG_ID_TYPE,DOS_MSG_HANDLE_INFO>		m_MsgFnMap;\
 	CDOSSimpleMessage * GetCurMsg()\
 	{\
-		return m_p##ClassName##CurMsg;\
+		return m_pCurHandleMsg;\
 	}\
 	void InitDOSMsgMap();\
 	BOOL HandleMsg(MSG_ID_TYPE MsgID,CSmartStruct& MsgPacket);\
@@ -97,10 +93,32 @@
 	}\
 	BOOL ClassName::OnDOSMessage(CDOSSimpleMessage * pMessage)\
 	{\
-		m_p##ClassName##CurMsg=pMessage;\
+		m_pCurHandleMsg=pMessage;\
 		return HandleMsg(pMessage->GetMsgID(),pMessage->GetDataPacket());\
 	}
 
+
+class CBaseMsgHandler
+{
+public:
+	CBaseMsgHandler()
+	{
+
+	}
+	virtual ~CBaseMsgHandler()
+	{
+
+	}
+
+};
+
+typedef int (CBaseMsgHandler::*DOS_MSG_HANDLE_FN)(CSmartStruct& MsgPacket);
+
+struct DOS_MSG_HANDLE_INFO
+{
+	CBaseMsgHandler *	pObject;
+	DOS_MSG_HANDLE_FN	pFN;
+};
 
 enum COMMON_RESULT_CODE
 {
@@ -152,7 +170,11 @@ public:
 	virtual BOOL RegisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_TYPE * pMsgIDList,int CmdCount)=0;
 	virtual BOOL UnregisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_TYPE * pMsgIDList,int CmdCount)=0;
 
-	virtual void PrintLog(int Level,DWORD Color,LPCTSTR Format,va_list vl)=0;
+	virtual BOOL AddConcernedObject(OBJECT_ID ObjectID,bool NeedTest)=0;
+	virtual BOOL DeleteConcernedObject(OBJECT_ID ObjectID)=0;
+
+	virtual BOOL FindObject(UINT ObjectType)=0;
+	virtual BOOL ReportObject(OBJECT_ID TargetID,const CSmartStruct& ObjectInfo)=0;
 
 	virtual BOOL RegisterObject(DOS_OBJECT_REGISTER_INFO_EX& ObjectRegisterInfo)=0;
 	virtual void Release()=0;
@@ -160,13 +182,22 @@ public:
 
 class IDistributedObject:public CNameObject
 {
+protected:
+	OBJECT_ID									m_CurMsgSenderID;
+	CDOSMessage *								m_pCurHandleMsg;
+	CEasyMap<MSG_ID_TYPE,DOS_MSG_HANDLE_INFO>	m_MsgFnMap;
 public:
 	virtual BOOL Initialize(IDistributedObjectOperator * pOperator)=0;
 	virtual void Destory()=0;
 
-	virtual BOOL OnPreTranslateMessage(CDOSMessage * pMessage)=0;
-	virtual BOOL OnMessage(CDOSMessage * pMessage)=0;
-	virtual int Update(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT)=0;
+	virtual BOOL OnPreTranslateMessage(CDOSMessage * pMessage){return FALSE;}
+	virtual BOOL OnMessage(CDOSMessage * pMessage){return FALSE;}
+	virtual BOOL OnSystemMessage(CDOSMessage * pMessage){return FALSE;}
+	virtual void OnConcernedObjectLost(OBJECT_ID ObjectID){}
+	virtual BOOL OnFindObject(OBJECT_ID CallerID){return FALSE;}
+	virtual void OnObjectReport(OBJECT_ID ObjectID,const CSmartStruct& ObjectInfo){}
+	virtual int Update(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT){return 0;}
+
 };
 
 class IDistributedObjectManager
@@ -175,24 +206,3 @@ public:
 	virtual BOOL RegisterObject( DOS_OBJECT_REGISTER_INFO_EX& ObjectRegisterInfo)=0;
 };
 
-class CBaseMsgHandler
-{
-public:
-	CBaseMsgHandler()
-	{
-
-	}
-	virtual ~CBaseMsgHandler()
-	{
-
-	}
-
-};
-
-typedef int (CBaseMsgHandler::*DOS_MSG_HANDLE_FN)(CSmartStruct& MsgPacket);
-
-struct DOS_MSG_HANDLE_INFO
-{
-	CBaseMsgHandler *	pObject;
-	DOS_MSG_HANDLE_FN	pFN;
-};

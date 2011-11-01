@@ -80,6 +80,7 @@ public:
 	virtual bool CreateTexture(int Width,int Height,DWORD PixelFormat,DWORD Usage=0,DWORD Pool=D3DPOOL_MANAGED,UINT MipLevels=1);
 
 	virtual bool LoadTexture(LPCTSTR TextureFileName,UINT MipLevels=1,bool UseFilter=true,bool IsManaged=true,D3DCOLOR KeyColor=0);
+	virtual bool LoadTexture(IFileAccessor * pFileAccessor,UINT MipLevels=1,bool UseFilter=true,bool IsManaged=true,D3DCOLOR KeyColor=0);
 	virtual bool LoadTextureFromMemory(LPVOID pData,int DataSize,UINT MipLevels=1,bool UseFilter=true,bool IsManaged=true,D3DCOLOR KeyColor=0);
 	virtual LPDIRECT3DTEXTURE9  GetD3DTexture()
 	{return m_pTexture;}
@@ -97,10 +98,10 @@ public:
 	{return m_TextureInfo.Height;}
 
 	virtual FLOAT GetUS()
-	{return (FLOAT)m_TextureInfo.Width/m_TextureSurfaceInfo.Width;}
+	{return ((FLOAT)m_TextureInfo.Width-0.5f)/m_TextureSurfaceInfo.Width;}
 
 	virtual FLOAT GetVS()
-	{return (FLOAT)m_TextureInfo.Height/m_TextureSurfaceInfo.Height;}
+	{return ((FLOAT)m_TextureInfo.Height-0.5f)/m_TextureSurfaceInfo.Height;}
 
 	const LPCTSTR GetFilePath()
 	{return GetName();}

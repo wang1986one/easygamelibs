@@ -7,7 +7,6 @@ IMPLEMENT_FILE_CHANNEL_MANAGER(CBLZWDTFile)
 
 CBLZWDTFile::CBLZWDTFile(void)
 {
-	ZeroMemory(m_MapAreaInfo,sizeof(m_MapAreaInfo));
 	m_IsBigAlphaMask=false;
 }
 
@@ -51,7 +50,8 @@ bool CBLZWDTFile::Load(IFileAccessor * pFile)
 	m_IsBigAlphaMask=(pMPHD->Flags&WDT_MPHD_FLAG_BIG_ALPHA_MASK)!=0;
 	if(pMAIN)
 	{
-		memcpy(m_MapAreaInfo,pMAIN->MapAreaInfo,sizeof(m_MapAreaInfo));
+		m_MapAreaInfo.Resize(64*64);
+		memcpy(m_MapAreaInfo.GetBuffer(),pMAIN->MapAreaInfo,sizeof(pMAIN->MapAreaInfo));
 	}
 	if(pMODF)
 	{		

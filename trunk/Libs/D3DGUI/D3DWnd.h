@@ -61,7 +61,7 @@ protected:
 	WIN_BORDERS				m_Borders;
 
 	IUITexture *			m_pTexture;
-	CEasyRect					m_TextureRect;	
+	CEasyRect				m_TextureRect;	
 
 	bool					m_IsVisible;
 
@@ -74,12 +74,15 @@ protected:
 	bool					m_CanResize;
 	int						m_Resizing;	
 
+	UINT					m_TabIndex;
+	bool					m_IsTabContainer;
 	bool					m_IsEnable;
 	bool					m_CanGetFocus;
 	bool					m_IsTopmost;
 
 	CD3DWnd	*				m_pParentWnd;
-	std::vector<CD3DWnd *>	m_ChildWndList;
+	CEasyArray<CD3DWnd *>	m_ChildWndList;
+	CEasyArray<CD3DWnd *>	m_TabWndList;
 	
 	bool					m_IsActive;
 	bool					m_IsCaptureAll;
@@ -93,6 +96,7 @@ protected:
 	DWORD					m_FontShadowWidth;
 	int						m_FontCharSpace;
 	int						m_FontLineSpace;
+	FLOAT					m_FontScale;
 
 	DWORD					m_BKColor;
 
@@ -134,7 +138,9 @@ public:
 
 	virtual void SetBorders(WIN_BORDERS& Borders);
 	virtual void GetBorders(WIN_BORDERS& Borders);
+	virtual int GetBorder(UINT Index);
 
+	virtual bool SetEffectMode(UINT Index,int EffectMode);
 	
 		
 	virtual void SetParent(CD3DWnd * parent,bool IsUpdateParent=true);
@@ -148,6 +154,7 @@ public:
 	virtual void SetFontShadowWidth(DWORD ShadowWidth);
 	virtual void SetFontCharSpace(int Space);
 	virtual void SetFontLineSpace(int Space);
+	virtual void SetFontScale(FLOAT Scale);
 
 	virtual LOGFONT * GetFont();
 	virtual DWORD GetFontColor();
@@ -157,6 +164,7 @@ public:
 	virtual DWORD GetFontShadowWidth();
 	virtual int GetFontCharSpace();
 	virtual int GetFontLineSpace();
+	virtual FLOAT GetFontScale();
 	
 	
 
@@ -179,7 +187,8 @@ public:
 	void ClientToScreen(POINT * point);
 	void ScreenToClient(POINT * point);	
 
-	virtual void ActiveWnd(bool bActive);
+	virtual void ActiveWnd(bool bActive,bool SendNotify=true);
+	virtual void ActiveNextChildWnd(CD3DWnd * pCurWnd);
 
 
 	virtual void EnableDrag(bool bCanDrag)
@@ -202,7 +211,7 @@ public:
 		return m_CanResize;
 	}
 
-	virtual void TopTo(CD3DWnd * Before=NULL);	
+	virtual void TopTo(bool bRedraw,CD3DWnd * Before=NULL);	
 
 	virtual void SetVisible(bool IsVisible);
 	virtual bool IsVisible()
@@ -216,6 +225,20 @@ public:
 	{
 		return m_IsEnable;
 	}
+
+	UINT GetTabIndex()
+	{
+		return m_TabIndex;
+	}
+
+	void SetTabIndex(UINT Index);
+
+	bool IsTabContainer()
+	{
+		return m_IsTabContainer;
+	}
+
+	void EnableTabContainer(bool Enbale);
 
 	void EnableFocus(bool Enable)
 	{
@@ -278,17 +301,17 @@ public:
 
 	virtual void OnLoaded();
 
-	int GetChildWndCount()
+	UINT GetChildWndCount()
 	{
-		return (int)m_ChildWndList.size();
+		return m_ChildWndList.GetCount();
 	}
 
-	CD3DWnd * GetChildWnd(int Index)
+	CD3DWnd * GetChildWnd(UINT Index)
 	{
-		if(Index>=0&&Index<(int)m_ChildWndList.size())
+		if(Index<m_ChildWndList.GetCount())
 			return m_ChildWndList[Index];
 		else
-			return false;
+			return NULL;
 	}
 
 	CD3DWnd * GetChildWndByID(int ID);
@@ -333,11 +356,15 @@ protected:
 	bool AddChildWnd(CD3DWnd * child);
 	bool DelChildWnd(CD3DWnd * child);
 
+	bool AddTabWnd(CD3DWnd * child);
+	bool DelTabWnd(CD3DWnd * child);	
+
 	virtual bool UpdateFont();
 	void UpdateChildRects();
 
-	virtual IUIBaseRect * GetTopRect();
-	void TopChild();
+	IUIBaseRect * GetTopRect();
+	void GetRectIncludeChild(CEasyArray<IUIBaseRect *>& RectList);
+	void TopChild(bool Redraw);
 
 	virtual IUIWndRect * CreateRect();
 	virtual IUITextRect * CreateTextRect();

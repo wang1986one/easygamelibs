@@ -152,6 +152,8 @@ public:
 		return m_IsUseMultiThreadRender;
 	}
 
+	int Update(FLOAT Time);
+
 };
 
 }

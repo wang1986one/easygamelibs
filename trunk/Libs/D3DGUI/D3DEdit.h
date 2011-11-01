@@ -54,6 +54,7 @@ protected:
 	bool				m_IsCaretValidate;
 	bool				m_AutoWrap;
 	bool				m_IsReadyOnly;
+	bool				m_IsEncryption;
 	
 	int					m_LineHeight;
 	CEditLineList		m_LineInfos;
@@ -62,7 +63,7 @@ protected:
 	int					m_CurVisibleLineCount;
 	
 	
-	DWORD			m_CaretColor;
+	DWORD				m_CaretColor;
 	int					m_CaretRectIndex;
 	int					m_CurCaretRow;
 	int					m_CurCaretCol;
@@ -109,11 +110,12 @@ public:
 
 	virtual CEasyRect GetCenterRect();
 
-	virtual void ActiveWnd(bool bActive);
+	virtual void ActiveWnd(bool bActive,bool SendNotify);
 
 	virtual void SetFont(LOGFONT * pLogFont);
 	virtual void SetFontAlign(DWORD Align);
 	virtual void SetFontSahdowWidth(DWORD ShadowWidth);
+	virtual void SetFontScale(FLOAT Scale);
 
 	virtual void SetVisible(bool IsVisible);
 
@@ -162,6 +164,11 @@ public:
 	bool IsReadyOnly()
 	{
 		return m_IsReadyOnly;
+	}
+	void SetEncryption(bool IsEncryption);
+	bool IsEncryption()
+	{
+		return m_IsEncryption;
 	}
 
 	void SetFirstVisibleLine(int LineIndex);

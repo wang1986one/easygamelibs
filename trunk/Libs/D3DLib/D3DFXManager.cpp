@@ -23,6 +23,7 @@ CD3DFXManager::CD3DFXManager(CD3DDevice * pD3DDevice,int StorageSize):CNameObjec
 	m_pEffectPool=NULL;
 	D3DXCreateEffectPool(&m_pEffectPool);
 	m_FXStorage.Create(StorageSize);
+	m_DelayReleaseTime=0;
 }
 
 CD3DFXManager::~CD3DFXManager(void)
@@ -33,8 +34,11 @@ CD3DFXManager::~CD3DFXManager(void)
 	Pos=m_FXStorage.GetFirstObjectPos();
 	while(Pos)
 	{
-		CD3DFX * pFx=*(m_FXStorage.GetNext(Pos));
-		PrintSystemLog(0,"FX<%s>未释放！",(LPCTSTR)pFx->GetName());
+		CEasyString Key;
+		FX_INFO * pFXInfo=m_FXStorage.GetNextObject(Pos,Key);
+		if(m_DelayReleaseTime==0)
+			PrintSystemLog(0,"FX<%s>未释放！",(LPCTSTR)pFXInfo->pFX->GetName());
+		SAFE_RELEASE(pFXInfo->pFX);
 	}
 	m_FXStorage.Destory();
 #endif
@@ -47,8 +51,9 @@ bool CD3DFXManager::Reset()
 	Pos=m_FXStorage.GetFirstObjectPos();
 	while(Pos)
 	{		
-		CD3DFX * pFx=*(m_FXStorage.GetNext(Pos));
-		pFx->Reset();
+		CEasyString Key;
+		FX_INFO * pFXInfo=m_FXStorage.GetNextObject(Pos,Key);
+		pFXInfo->pFX->Reset();
 	}
 	return true;
 }
@@ -60,43 +65,69 @@ bool CD3DFXManager::Restore()
 	Pos=m_FXStorage.GetFirstObjectPos();
 	while(Pos)
 	{		
-		CD3DFX * pFx=*(m_FXStorage.GetNext(Pos));
-		pFx->Restore();
+		CEasyString Key;
+		FX_INFO * pFXInfo=m_FXStorage.GetNextObject(Pos,Key);
+		pFXInfo->pFX->Restore();
 	}
 	return true;
 }
 
 bool CD3DFXManager::AddFX(CD3DFX * pFX,LPCTSTR Name)
 {
-	UINT ID=m_FXStorage.AddObject(pFX,Name);
+	CEasyString Key=Name;
+	Key.MakeUpper();
+	FX_INFO FXInfo;
+	FXInfo.pFX=pFX;
+	FXInfo.IsPrepareRelease=false;
+	UINT ID=m_FXStorage.Insert(Key,FXInfo);
 	if(ID)
 	{
-		pFX->SetID(ID);
-		pFX->SetName(Name);
+		FXInfo.pFX->SetID(ID);
+		FXInfo.pFX->SetName(Name);
+		if(m_DelayReleaseTime)
+		{
+			FXInfo.pFX->AddUseRef();
+		}		
 		return true;
 	}
 	else
 	{
+		PrintD3DLog(0,"将FX加入FX管理器失败(%u,%u)",
+			m_FXStorage.GetObjectCount(),m_FXStorage.GetBufferSize());
 		return false;
 	}
 }
 
 bool CD3DFXManager::DeleteFX(UINT ID)
-{
-	
-	return m_FXStorage.DeleteObject(ID);		
-		
-}
-
-bool CD3DFXManager::DeleteFX(LPCTSTR TextureName)
-{
-	CD3DFX ** ppFX=m_FXStorage.GetObject(TextureName);
-	if(ppFX)
+{	
+	if(m_FXStorage.DeleteByID(ID))
 	{
-		m_FXStorage.DeleteObject((*ppFX)->GetID());		
 		return true;
 	}
-	return false;
+	else
+	{
+		PrintD3DLog(0,"CD3DFXManager::DeleteFX:FX[%u]未找到",
+			ID);
+		return false;
+	}		
+}
+
+bool CD3DFXManager::DeleteFX(LPCTSTR Name)
+{
+	CEasyString Key=Name;
+	Key.MakeUpper();
+	FX_INFO * pFXInfo=m_FXStorage.Find(Key);
+	if(pFXInfo)
+	{
+		m_FXStorage.DeleteByID(pFXInfo->pFX->GetID());		
+		return true;
+	}
+	else
+	{
+		PrintD3DLog(0,"CD3DFXManager::DeleteFX:FX[%s]未找到",
+			Name);
+		return false;
+	}
 }
 
 CD3DFX * CD3DFXManager::LoadFX(LPCTSTR FileName)
@@ -166,12 +197,45 @@ LPVOID CD3DFXManager::GetLastPos()
 
 CD3DFX * CD3DFXManager::GetNext(LPVOID& Pos)
 {
-	return *m_FXStorage.GetNext(Pos);
+	CEasyString Key;
+	return m_FXStorage.GetNextObject(Pos,Key)->pFX;
 }
 
 CD3DFX * CD3DFXManager::GetPrev(LPVOID& Pos)
 {
-	return *m_FXStorage.GetPrev(Pos);
+	CEasyString Key;
+	return m_FXStorage.GetPrevObject(Pos,Key)->pFX;
+}
+
+int CD3DFXManager::Update(FLOAT Time)
+{
+	if(m_DelayReleaseTime)
+	{
+		void * Pos;
+		Pos=m_FXStorage.GetFirstObjectPos();
+		while(Pos)
+		{		
+			CEasyString Key;
+			FX_INFO * pFXInfo=m_FXStorage.GetNextObject(Pos,Key);
+			if(pFXInfo->pFX->GetUseRef()==1)
+			{
+				if(pFXInfo->IsPrepareRelease)
+				{
+					if(pFXInfo->ReleaseTimer.IsTimeOut(m_DelayReleaseTime))
+					{
+						//PrintD3DDebugLog(0,"CD3DFXManager::Update:已延时删除FX:%s",pFXInfo->pFX->GetName());
+						SAFE_RELEASE(pFXInfo->pFX);						
+					}
+				}
+				else
+				{
+					pFXInfo->IsPrepareRelease=true;
+					pFXInfo->ReleaseTimer.SaveTime();
+				}
+			}
+		}
+	}
+	return 0;
 }
 
 }
