@@ -126,3 +126,6 @@ inline UINT GetCurProcessID()
 {
 	return GetCurrentProcessId();
 }
+
+extern CEasyString GetFontNameEN(LOGFONT * pFont);
+extern CEasyString GetFontNameCN(LOGFONT * pFont);

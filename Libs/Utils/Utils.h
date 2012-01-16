@@ -16,6 +16,24 @@
 
 #define UTILS_VERSION	"2.0.0.0"
 
+
+
+#if defined _WIN32 || defined __CYGWIN__  
+	#define UTILS_DLL_IMPORT __declspec(dllimport)  
+	#define UTILS_DLL_EXPORT __declspec(dllexport)  
+	#define UTILS_DLL_LOCAL
+#else 
+	#if __GNUC__ >= 4    
+		#define UTILS_DLL_IMPORT __attribute__ ((visibility("default")))   
+		#define UTILS_DLL_EXPORT __attribute__ ((visibility("default")))    
+		#define UTILS_DLL_LOCAL  __attribute__ ((visibility("hidden")))  
+	#else    
+		#define UTILS_DLL_IMPORT    
+		#define UTILS_DLL_EXPORT   
+		#define UTILS_DLL_LOCAL  
+	#endif
+#endif
+
 #ifdef WIN32
 
 #include "Win32AddOn.h"
@@ -82,12 +100,15 @@ enum EASY_DATA_STORAGE_MODE
 #include "SmartValue.h"
 #include "SmartStruct.h"
 
+
+
+#include "AutoReadLock.h"
+#include "AutoWriteLock.h"
+
 #include "StaticObject.h"
 #include "NameObject.h"
 
-#include "AutoLock.h"
-#include "AutoReadLock.h"
-#include "AutoWriteLock.h"
+
 
 #include "ILogPrinter.h"
 #include "LogManager.h"
@@ -106,7 +127,7 @@ enum EASY_DATA_STORAGE_MODE
 
 #include "EasyTime.h"
 #include "EasyTimer.h"
-
+#include "EasyTimerEx.h"
 
 
 
@@ -114,15 +135,15 @@ enum EASY_DATA_STORAGE_MODE
 #include "FileLogPrinter.h"
 
 #ifdef WIN32
-#include "EasyTimerEx.h"
+
 #include "ExceptionParser.h"
-#include "PerformanceStatistician.h"
-#include "AutoPerformanceCounter.h"
-#include "ThreadPerformanceCounter.h"
+
 #endif
 
 
-
+#include "PerformanceStatistician.h"
+#include "AutoPerformanceCounter.h"
+#include "ThreadPerformanceCounter.h"
 
 
 

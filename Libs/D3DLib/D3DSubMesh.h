@@ -99,10 +99,13 @@ protected:
 	BYTE*					m_pIndexBufferR;
 	bool					m_IsIndexBufferRSelfDelete;
 
-	////以下给渲染器使用
-	//bool					m_IsTransparent;
-	//bool					m_IsCulled;
-	//bool					m_IsSelected;
+	UINT					m_PrimitiveCountR;
+	UINT					m_VertexCountR;
+	UINT					m_StartVertexR;
+	UINT					m_IndexCountR;	
+	UINT					m_StartIndexR;
+
+	
 public:
 
 	CD3DSubMesh(void);
@@ -198,6 +201,12 @@ public:
 	void AllocIndexBufferR();
 	BYTE * GetIndexBufferR();
 
+	UINT GetPrimitiveCountR();
+	UINT GetVertexCountR();
+	UINT GetVertexStartR();
+	UINT GetIndexCountR();
+	UINT GetIndexStartR();
+
 	void OnPrepareRenderData();
 
 
@@ -214,6 +223,7 @@ public:
 
 
 	bool CheckValid();
+	bool CheckValidR();
 protected:
 	
 };
@@ -455,4 +465,41 @@ inline BYTE * CD3DSubMesh::GetIndexBufferR()
 	else
 		return m_pIndexBuffer;
 }
+
+inline UINT CD3DSubMesh::GetPrimitiveCountR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender())
+		return m_PrimitiveCountR;
+	else
+		return m_PrimitiveCount;
+}
+inline UINT CD3DSubMesh::GetVertexCountR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender())
+		return m_VertexCountR;
+	else
+		return m_VertexCount;
+}
+inline UINT CD3DSubMesh::GetVertexStartR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender())
+		return m_StartVertexR;
+	else
+		return m_StartVertex;
+}
+inline UINT CD3DSubMesh::GetIndexCountR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender())
+		return m_IndexCountR;
+	else
+		return m_IndexCount;
+}
+inline UINT CD3DSubMesh::GetIndexStartR()
+{
+	if(CD3DDevice::IsUseMultiThreadRender())
+		return m_StartIndexR;
+	else
+		return m_StartIndex;
+}
+
 }

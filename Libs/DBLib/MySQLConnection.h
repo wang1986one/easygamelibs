@@ -29,6 +29,7 @@ protected:
 	MYSQL_HANDLE		m_MySQLHandle;
 	MYSQL_STMT_HANDLE	m_MySQLStmt;
 	CMySQLDatabase *	m_pDatabase;
+	bool				m_UseSTMTMode;
 
 	DECLARE_CLASS_INFO(CMySQLConnection)
 public:

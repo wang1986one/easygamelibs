@@ -71,11 +71,12 @@ BOOL CLinuxFileAccessor::Open(LPCTSTR FileName,int OpenMode)
 		m_IsWriteFlush=true;
 	else
 		m_IsWriteFlush=false;
-
-	m_FileDescriptor=open(FileName,Flag);
+	
+	m_FileDescriptor=open(FileName,Flag,S_IRWXU);
 
 	if(m_FileDescriptor==INVALID_HANDLE_VALUE)
 	{
+		printf("File Create Failed:%d\r\n",errno);
 		return false;
 	}
 	else

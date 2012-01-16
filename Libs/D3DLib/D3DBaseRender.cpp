@@ -122,13 +122,22 @@ bool CD3DBaseRender::DelRootObject(CD3DObject * pObj)
 	return false;
 }
 
+void CD3DBaseRender::RemoveAllObject()
+{
+	for(size_t i=0;i<m_RootObjectList.GetCount();i++)
+	{
+		m_RootObjectList[i]->SetRender(NULL);
+	}
+	m_RootObjectList.Clear();
+}
+
 void CD3DBaseRender::RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPCTSTR RenderTech)
 {	
 	m_SubMeshCount++;
-	m_FaceCount+=pSubMesh->GetPrimitiveCount();
-	m_VertexCount+=pSubMesh->GetVertexCount();
+	m_FaceCount+=pSubMesh->GetPrimitiveCountR();
+	m_VertexCount+=pSubMesh->GetVertexCountR();
 
-	if(pSubMesh->GetPrimitiveCount()<=0)
+	if(pSubMesh->GetPrimitiveCountR()<=0)
 		return;
 
 
@@ -151,7 +160,7 @@ void CD3DBaseRender::RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPC
 	if(pSubMesh->GetRenderBufferUsed()==CD3DSubMesh::BUFFER_USE_DX)
 	{
 		m_pDevice->GetD3DDevice()->SetStreamSource( 0, pSubMesh->GetDXVertexBuffer(), 0, pSubMesh->GetVertexFormat().VertexSize );
-		if(pSubMesh->GetIndexCount())
+		if(pSubMesh->GetIndexCountR())
 			m_pDevice->GetD3DDevice()->SetIndices(pSubMesh->GetDXIndexBuffer());
 	}
 
@@ -169,21 +178,21 @@ void CD3DBaseRender::RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPC
 		{
 			if(pRenderFX->BeginPass(i))
 			{
-				if(pSubMesh->GetIndexCount())
+				if(pSubMesh->GetIndexCountR())
 				{
 					if(pSubMesh->GetRenderBufferUsed()==CD3DSubMesh::BUFFER_USE_DX)
 					{
 						hr=m_pDevice->GetD3DDevice()->DrawIndexedPrimitive((D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(),
-							pSubMesh->GetVertexStart(),pSubMesh->GetVertexStart(),pSubMesh->GetVertexCount(),
-							pSubMesh->GetIndexStart(),pSubMesh->GetPrimitiveCount());
+							pSubMesh->GetVertexStartR(),pSubMesh->GetVertexStartR(),pSubMesh->GetVertexCountR(),
+							pSubMesh->GetIndexStartR(),pSubMesh->GetPrimitiveCountR());
 					}
 					else
 					{
 						hr=m_pDevice->GetD3DDevice()->DrawIndexedPrimitiveUP((D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(),
-							pSubMesh->GetVertexStart(),
-							pSubMesh->GetVertexStart()+pSubMesh->GetVertexCount(),
-							pSubMesh->GetPrimitiveCount(),
-							pSubMesh->GetIndexBufferR()+pSubMesh->GetVertexFormat().IndexSize*pSubMesh->GetIndexStart(),
+							pSubMesh->GetVertexStartR(),
+							pSubMesh->GetVertexStartR()+pSubMesh->GetVertexCountR(),
+							pSubMesh->GetPrimitiveCountR(),
+							pSubMesh->GetIndexBufferR()+pSubMesh->GetVertexFormat().IndexSize*pSubMesh->GetIndexStartR(),
 							IndexFormat,
 							pSubMesh->GetVertexBufferR(),
 							pSubMesh->GetVertexFormat().VertexSize);
@@ -194,13 +203,13 @@ void CD3DBaseRender::RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPC
 					if(pSubMesh->GetRenderBufferUsed()==CD3DSubMesh::BUFFER_USE_DX)
 					{
 						hr=m_pDevice->GetD3DDevice()->DrawPrimitive( (D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(), 
-							pSubMesh->GetVertexStart(), pSubMesh->GetPrimitiveCount() );
+							pSubMesh->GetVertexStartR(), pSubMesh->GetPrimitiveCountR() );
 					}
 					else
 					{
 						hr=m_pDevice->GetD3DDevice()->DrawPrimitiveUP( (D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(), 
-							pSubMesh->GetPrimitiveCount(), 
-							pSubMesh->GetVertexBufferR()+pSubMesh->GetVertexFormat().VertexSize*pSubMesh->GetVertexStart(),
+							pSubMesh->GetPrimitiveCountR(), 
+							pSubMesh->GetVertexBufferR()+pSubMesh->GetVertexFormat().VertexSize*pSubMesh->GetVertexStartR(),
 							pSubMesh->GetVertexFormat().VertexSize );
 					}
 				}
@@ -211,21 +220,21 @@ void CD3DBaseRender::RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPC
 	}
 	else
 	{
-		if(pSubMesh->GetIndexCount())
+		if(pSubMesh->GetIndexCountR())
 		{
 			if(pSubMesh->GetRenderBufferUsed()==CD3DSubMesh::BUFFER_USE_DX)
 			{
 				hr=m_pDevice->GetD3DDevice()->DrawIndexedPrimitive((D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(),
-					pSubMesh->GetVertexStart(),pSubMesh->GetVertexStart(),pSubMesh->GetVertexCount(),
-					pSubMesh->GetIndexStart(),pSubMesh->GetPrimitiveCount());
+					pSubMesh->GetVertexStartR(),pSubMesh->GetVertexStartR(),pSubMesh->GetVertexCountR(),
+					pSubMesh->GetIndexStartR(),pSubMesh->GetPrimitiveCountR());
 			}
 			else
 			{
 				hr=m_pDevice->GetD3DDevice()->DrawIndexedPrimitiveUP((D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(),
-					pSubMesh->GetVertexStart(),
-					pSubMesh->GetVertexStart()+pSubMesh->GetVertexCount(),
-					pSubMesh->GetPrimitiveCount(),
-					pSubMesh->GetIndexBufferR()+pSubMesh->GetVertexFormat().IndexSize*pSubMesh->GetIndexStart(),
+					pSubMesh->GetVertexStartR(),
+					pSubMesh->GetVertexStartR()+pSubMesh->GetVertexCountR(),
+					pSubMesh->GetPrimitiveCountR(),
+					pSubMesh->GetIndexBufferR()+pSubMesh->GetVertexFormat().IndexSize*pSubMesh->GetIndexStartR(),
 					IndexFormat,
 					pSubMesh->GetVertexBufferR(),
 					pSubMesh->GetVertexFormat().VertexSize);
@@ -236,13 +245,13 @@ void CD3DBaseRender::RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPC
 			if(pSubMesh->GetRenderBufferUsed()==CD3DSubMesh::BUFFER_USE_DX)
 			{
 				hr=m_pDevice->GetD3DDevice()->DrawPrimitive( (D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(), 
-					pSubMesh->GetVertexStart(), pSubMesh->GetPrimitiveCount() );
+					pSubMesh->GetVertexStartR(), pSubMesh->GetPrimitiveCountR() );
 			}
 			else
 			{
 				hr=m_pDevice->GetD3DDevice()->DrawPrimitiveUP( (D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(), 
-					pSubMesh->GetPrimitiveCount(), 
-					pSubMesh->GetVertexBufferR()+pSubMesh->GetVertexFormat().VertexSize*pSubMesh->GetVertexStart(),
+					pSubMesh->GetPrimitiveCountR(), 
+					pSubMesh->GetVertexBufferR()+pSubMesh->GetVertexFormat().VertexSize*pSubMesh->GetVertexStartR(),
 					pSubMesh->GetVertexFormat().VertexSize );
 			}
 		}

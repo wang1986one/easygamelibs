@@ -11,7 +11,7 @@
 /****************************************************************************/
 #pragma once
 
-typedef std::vector<CEasyString> CFilePathList;
+typedef CEasyMap<CEasyString,CEasyString> CFilePathList;
 
 #define DECLARE_FILE_PATH_MANAGER  \
 	protected:\
@@ -21,8 +21,8 @@ typedef std::vector<CEasyString> CFilePathList;
 		static void ClearPath();\
 		static CEasyString FindFileOne(LPCTSTR FileName);\
 		static CFilePathList& GetFilePathList();\
-		static void AppendPathList(CFilePathList& PathList);\
-		static void AssignPathList(CFilePathList& PathList);
+		static void AddPathList(CFilePathList& PathList);\
+		static void AddPathList(CEasyArray<CEasyString>& PathList);
 
 #define DECLARE_FILE_CHANNEL_MANAGER  \
 	protected:\
@@ -37,11 +37,13 @@ typedef std::vector<CEasyString> CFilePathList;
 	CFilePathList ClassName::m_FilePathList;\
 	void ClassName::AddPath(LPCTSTR Path)\
 	{	\
-		m_FilePathList.push_back(CEasyString(Path));\
+		CEasyString ThePath(Path);\
+		ThePath.MakeUpper();\
+		m_FilePathList.Insert(ThePath,ThePath);\
 	}\
 	void ClassName::ClearPath()\
 	{\
-		m_FilePathList.clear();\
+		m_FilePathList.Clear();\
 	}\
 	CEasyString ClassName::FindFileOne(LPCTSTR FileName)\
 	{\
@@ -51,9 +53,12 @@ typedef std::vector<CEasyString> CFilePathList;
 			FileFind.FindNext();\
 			return FileFind.GetFilePath();\
 		}\
-		for(int i=0;i<(int)m_FilePathList.size();i++)\
+		void * Pos=m_FilePathList.GetFirstObjectPos();\
+		while(Pos)\
 		{\
-			if(FileFind.FindFirst(m_FilePathList[i]+"/"+FileName))\
+			CEasyString Key;\
+			m_FilePathList.GetNextObject(Pos,Key);\
+			if(FileFind.FindFirst(Key+"/"+FileName))\
 			{\
 				FileFind.FindNext();	\
 				return FileFind.GetFilePath();\
@@ -65,16 +70,24 @@ typedef std::vector<CEasyString> CFilePathList;
 	{\
 		return m_FilePathList;\
 	}\
-	void ClassName::AppendPathList(CFilePathList& PathList)\
+	void ClassName::AddPathList(CFilePathList& PathList)\
 	{\
-		for(int i=0;i<(int)PathList.size();i++)\
+		void * Pos=PathList.GetFirstObjectPos();\
+		while(Pos)\
 		{\
-			m_FilePathList.push_back(PathList[i]);\
+			CEasyString Key;\
+			PathList.GetNextObject(Pos,Key);\
+			m_FilePathList.Insert(Key,Key);\
 		}\
 	}\
-	void ClassName::AssignPathList(CFilePathList& PathList)\
+	void ClassName::AddPathList(CEasyArray<CEasyString>& PathList)\
 	{\
-		m_FilePathList.assign(PathList.begin(),PathList.end());\
+		for(UINT i=0;i<PathList.GetCount();i++)\
+		{\
+			CEasyString ThePath(PathList[i]);\
+			ThePath.MakeUpper();\
+			m_FilePathList.Insert(ThePath,ThePath);\
+		}\
 	}
 
 #define IMPLEMENT_FILE_CHANNEL_MANAGER(ClassName) \

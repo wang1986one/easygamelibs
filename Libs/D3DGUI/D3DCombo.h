@@ -23,7 +23,7 @@ protected:
 	CD3DSimpleList *		m_pComboList;
 
 	bool					m_IsListShow;
-	UINT					m_ComboListOrginHeight;
+	UINT					m_ComboListHeight;
 
 	DECLARE_CLASS_INFO(CD3DCombo)
 public:
@@ -53,7 +53,11 @@ public:
 	}
 	void SetComboListHeight(UINT Height)
 	{
-		m_ComboListOrginHeight=Height;
+		m_ComboListHeight=Height;
+	}
+	UINT GetComboListHeight()
+	{
+		return m_ComboListHeight;
 	}
 
 	void SelectItem(int Index);	
@@ -76,6 +80,8 @@ public:
 	virtual bool LoadFromXml(xml_node * pXMLNode);
 
 protected:
+	void SaveFrameToXML(xml_node& Frame);
+	void LoadFrameFromXML(xml_node& Frame);
 	virtual void GetMiniSize(int& Width,int& Height);
 };
 

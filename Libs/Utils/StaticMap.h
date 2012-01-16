@@ -79,7 +79,7 @@ protected:
 		KEY_TYPE			Key;
 		void InitObject()
 		{
-			Object=NULL;
+			pObject=NULL;
 		}
 		OBJECT_TYPE& GetObjectRef()
 		{
@@ -121,7 +121,7 @@ protected:
 		KEY_TYPE			Key;
 		void InitObject()
 		{
-			Object=NULL;
+			pObject=NULL;
 		}
 		OBJECT_TYPE& GetObjectRef()
 		{
@@ -218,6 +218,8 @@ public:
 	}
 	void Clear()
 	{
+		m_pFreeListHead=NULL;
+		m_pFreeListTail=NULL;
 		m_pObjectListHead=NULL;
 		m_pObjectListTail=NULL;
 		m_pTreeRoot=NULL;

@@ -266,7 +266,7 @@ void CNetConnection::OnDisconnection()
 {
 }
 
-BOOL CNetConnection::QuerySend(LPCVOID pData,int Size)
+BOOL CNetConnection::Send(LPCVOID pData,int Size)
 {		
 	//CAutoLock Lock(m_EasyCriticalSection);
 	

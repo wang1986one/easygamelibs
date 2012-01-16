@@ -40,6 +40,8 @@ public:
 	virtual bool AddObject(CD3DObject * pObj,bool IsRecursive=true);
 	virtual bool DelObject(CD3DObject * pObj,bool IsRecursive=true);
 
+	virtual void RemoveAllObject();
+
 	bool MoveToTop(CD3DObject * pObj,CD3DObject *pBefore);
 	bool MoveToTop(CD3DObject ** ppObj,UINT ObjectCount,CD3DObject *pBefore);
 

@@ -164,14 +164,14 @@ public:
 	struct CAMERA_INFO
 	{
 		UINT						Type;
-		FLOAT						FOV;
 		FLOAT						FarClipping;	
 		FLOAT						NearClipping;	
 		CD3DVector3					Position;
 		CD3DVector3					Target;
 		ANIMATION_TRANSLATION_BLOCK	TranslationPos;	
 		ANIMATION_TRANSLATION_BLOCK	TranslationTar;
-		ANIMATION_SCALING_BLOCK		Scaling;		
+		ANIMATION_SCALING_BLOCK		Scaling;
+		ANIMATION_BLOCK<FLOAT>		FOV;
 	};
 
 protected:

@@ -58,6 +58,7 @@ public:
 
 	virtual BOOL OnStart();
 	virtual BOOL OnRun();
+	virtual void OnTerminate();
 
 	BOOL PushMessage(OBJECT_ID ObjectID,CDOSMessagePacket * pPacket);
 protected:

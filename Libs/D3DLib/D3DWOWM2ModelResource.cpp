@@ -281,6 +281,7 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR szModelFileName)
 		return false;
 	if(!pFile->Open(szModelFileName,IFileAccessor::modeRead))
 	{
+		PrintD3DLog(0,"文件%s打开失败",szModelFileName);
 		pFile->Release();
 		return false;	
 	}
@@ -1244,7 +1245,7 @@ bool CD3DWOWM2ModelResource::LoadSkin(LPCTSTR SkinFileName,CEasyArray<CD3DSubMes
 		pD3DSubMesh->SetVertexStart(StartVertex);
 		pD3DSubMesh->SetVertexCount(EndVertex-StartVertex+1);
 
-		pD3DSubMesh->SetID(pSubMesh[i].ID);
+		pD3DSubMesh->SetID(pSubMesh[i].ID+i*10000);
 		CEasyString SubMeshName;
 		int Part=pSubMesh[i].ID/100;
 		int Type=pSubMesh[i].ID%100;
@@ -1973,6 +1974,7 @@ bool CD3DWOWM2ModelResource::LoadRibbonEmitters(BYTE * pModelData)
 
 	M2_MODEL_RENDER_FLAG * pRenderFlags=(M2_MODEL_RENDER_FLAG *)(pModelData+pHeader->RenderFlagsOffset);
 
+
 	m_RibbonEmitters.Resize(pHeader->RibbonEmittersCount);
 	for(UINT i=0;i<pHeader->RibbonEmittersCount;i++)
 	{
@@ -1993,6 +1995,8 @@ bool CD3DWOWM2ModelResource::LoadParticleEmitters(BYTE * pModelData)
 
 	//PrintSystemLog(0,"一共有%u个粒子生成器",
 	//	pHeader->ParticleEmittersCount);
+
+	int size=sizeof(M2_PARTICLE_EMITTER);
 
 	M2_PARTICLE_EMITTER * pParticleEmitters=(M2_PARTICLE_EMITTER *)(pModelData+pHeader->ParticleEmittersOffset);
 
@@ -2151,7 +2155,7 @@ bool CD3DWOWM2ModelResource::LoadCameraInfos(BYTE * pModelData)
 	for(UINT i=0;i<pHeader->CamerasCount;i++)
 	{
 		m_CameraInfos[i].Type=pCameraInfos[i].Type;
-		m_CameraInfos[i].FOV=pCameraInfos[i].FOV*35*D3DX_PI/180;
+		//m_CameraInfos[i].FOV=pCameraInfos[i].FOV*35*D3DX_PI/180;
 		m_CameraInfos[i].FarClipping=pCameraInfos[i].FarClipping;
 		m_CameraInfos[i].NearClipping=pCameraInfos[i].NearClipping;
 		m_CameraInfos[i].Position=BLZTranslationToD3D(pCameraInfos[i].Position);
@@ -2160,6 +2164,15 @@ bool CD3DWOWM2ModelResource::LoadCameraInfos(BYTE * pModelData)
 		LoadAniBlockTranslation(pModelData,pCameraInfos[i].TranslationPos,m_CameraInfos[i].TranslationPos);
 		LoadAniBlockTranslation(pModelData,pCameraInfos[i].TranslationTar,m_CameraInfos[i].TranslationTar);
 		LoadAniBlockScaling(pModelData,pCameraInfos[i].Scaling,m_CameraInfos[i].Scaling);
+		LoadAniBlockFloat(pModelData,pCameraInfos[i].FOV,m_CameraInfos[i].FOV);
+
+		for(UINT j=0;j<m_CameraInfos[i].FOV.Animations.GetCount();j++)
+		{
+			for(UINT k=0;k<m_CameraInfos[i].FOV.Animations[j].Keys.GetCount();k++)
+			{
+				m_CameraInfos[i].FOV.Animations[j].Keys[k]=m_CameraInfos[i].FOV.Animations[j].Keys[k]*35*D3DX_PI/180;
+			}
+		}
 	}
 
 	return true;
@@ -2191,7 +2204,7 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMesh * pSubMesh)
 	UINT64 BlendMode=(SubMeshProperty&SMP_BLEND_MODE_MASK)>>SMP_BLEND_MODE_SHIFT;
 	UINT64 MeshFlag=(SubMeshProperty&SMP_MESH_FLAG_MASK)>>SMP_MESH_FLAG_SHIFT;
 	
-	FXName.Format("M2Model\\0x%llX",SubMeshProperty);
+	FXName.Format("M2Model\\FX%02llX_%02llX_%02llX",RenderFlag,BlendMode,MeshFlag);
 	
 	if(SubMeshProperty&CD3DSubMesh::SMF_IS_ANI_MESH)
 	{
@@ -2300,7 +2313,7 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMesh * pSubMesh)
 		UINT64 TextureFlag=(TextureProperty&TF_TEXTURE_FLAG_MASK)>>TF_TEXTURE_FLAG_SHIFT;		
 
 
-		Temp.Format("_0x%llX",TextureProperty);
+		Temp.Format("_TEX%02llX_%02llX",TextureBlendMode,TextureFlag);
 		FXName+=Temp;
 		if(TextureFlag&D3D_TEX_FLAG_WRAP_X)
 		{

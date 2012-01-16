@@ -93,7 +93,7 @@ public:
 	CEasyTime(const time_t Time)
 	{
 		tm Tm;
-		gmtime_s(&Tm,&Time);
+		localtime_s(&Tm,&Time);
 		m_wYear=1900+Tm.tm_year;
 		m_wDayOfYear=Tm.tm_yday;
 		m_wMonth=Tm.tm_mon+1;
@@ -103,7 +103,7 @@ public:
 		m_wMinute=Tm.tm_min;
 		m_wSecond=Tm.tm_sec;
 		m_wMilliseconds=0;
-	}	
+	}
 	~CEasyTime()
 	{
 
@@ -141,7 +141,7 @@ public:
 	}
 	void GetTime(SYSTEMTIME& Time) const
 	{
-		Time.wYear=m_wYear;		
+		Time.wYear=m_wYear;
 		Time.wMonth=m_wMonth;
 		Time.wDayOfWeek=m_wDayOfWeek;
 		Time.wDay=m_wDay;
@@ -193,7 +193,7 @@ public:
 	CEasyTime& operator=(const time_t Time)
 	{
 		tm Tm;
-		gmtime_s(&Tm,&Time);
+		localtime_s(&Tm,&Time);
 		m_wYear=1900+Tm.tm_year;
 		m_wDayOfYear=Tm.tm_yday;
 		m_wMonth=Tm.tm_mon+1;
@@ -243,7 +243,7 @@ public:
 		Tm.tm_min=m_wMinute;
 		Tm.tm_sec=m_wSecond;
 
-		Time=_mkgmtime(&Tm);
+		Time=mktime(&Tm);
 	}
 	operator tm() const
 	{
@@ -257,7 +257,7 @@ public:
 		GetTime(Time);
 		return Time;
 	}
-	
+
 #ifdef WIN32
 	void FetchLocalTime()
 	{
@@ -288,12 +288,34 @@ public:
 #else
 	void FetchLocalTime()
 	{
-		*this=time(NULL);
-		ToLocalTime();
+		tm Tm;
+		time_t Time=time(NULL);
+		localtime_s(&Tm,&Time);
+		m_wYear=1900+Tm.tm_year;
+		m_wDayOfYear=Tm.tm_yday;
+		m_wMonth=Tm.tm_mon+1;
+		m_wDayOfWeek=Tm.tm_wday;
+		m_wDay=Tm.tm_mday;
+		m_wHour=Tm.tm_hour;
+		m_wMinute=Tm.tm_min;
+		m_wSecond=Tm.tm_sec;
+		m_wMilliseconds=0;
+
 	}
 	void FetchSystemTime()
 	{
-		*this=time(NULL);
+		tm Tm;
+		time_t Time=time(NULL);
+		gmtime_s(&Tm,&Time);
+		m_wYear=1900+Tm.tm_year;
+		m_wDayOfYear=Tm.tm_yday;
+		m_wMonth=Tm.tm_mon+1;
+		m_wDayOfWeek=Tm.tm_wday;
+		m_wDay=Tm.tm_mday;
+		m_wHour=Tm.tm_hour;
+		m_wMinute=Tm.tm_min;
+		m_wSecond=Tm.tm_sec;
+		m_wMilliseconds=0;
 	}
 	void ToSystemTime()
 	{
@@ -413,7 +435,7 @@ public:
 		size_t Len=_tcsftime(szFormatBuffer,BufferLen-1,szFormat,&Time);
 		if(szFormatBuffer)
 			szFormatBuffer[BufferLen-1]=0;
-		return Len;		
+		return Len;
 	}
 	void Format(CEasyString& FormatBuffer,LPCTSTR szFormat) const
 	{
@@ -426,7 +448,7 @@ public:
 	{
 		time_t StartTime_t,EndTime_t;
 		StartTime.GetTime(StartTime_t);
-		EndTime.GetTime(EndTime_t);		
+		EndTime.GetTime(EndTime_t);
 		return (int)(EndTime_t/86400-StartTime_t/86400);
 	}
 
@@ -434,7 +456,7 @@ public:
 	{
 		CEasyTime Today;
 
-		Today.FetchLocalTime();		
+		Today.FetchLocalTime();
 		return GetDayDiff(*this,Today);
 	}
 
@@ -442,7 +464,7 @@ public:
 	{
 		CEasyTime Today;
 
-		Today.FetchLocalTime();		
+		Today.FetchLocalTime();
 		return GetDayDiff(Today,*this);
 	}
 
@@ -450,7 +472,7 @@ public:
 	{
 		time_t StartTime_t,EndTime_t;
 		StartTime.GetTime(StartTime_t);
-		EndTime.GetTime(EndTime_t);		
+		EndTime.GetTime(EndTime_t);
 		return (int)(EndTime_t/60-StartTime_t/60);
 	}
 
@@ -458,7 +480,7 @@ public:
 	{
 		CEasyTime Today;
 
-		Today.FetchLocalTime();		
+		Today.FetchLocalTime();
 		return GetMinuteDiff(*this,Today);
 	}
 
@@ -466,7 +488,7 @@ public:
 	{
 		CEasyTime Today;
 
-		Today.FetchLocalTime();		
+		Today.FetchLocalTime();
 		return GetMinuteDiff(Today,*this);
 	}
 

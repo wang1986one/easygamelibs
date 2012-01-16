@@ -87,6 +87,7 @@ public:
 	~CD3DWOWM2Model(void);
 
 	virtual void Destory();
+	virtual void DestoryModel();
 
 	virtual bool Reset();
 	virtual bool Restore();

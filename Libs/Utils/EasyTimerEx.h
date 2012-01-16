@@ -12,7 +12,7 @@
 #pragma once
 
 
-#define MAXTIME64	(UINT64(0xffffffffffffffff))
+#define MAXTIME64	(UINT64(0xffffffffffffffffLL))
 
 
 inline UINT64	GetTimeToTimeEx(UINT64 t1,UINT64 t2 )
@@ -26,6 +26,8 @@ protected:
 	UINT64	m_dwSavedTime;
 	UINT64	m_dwTimeoutTime;
 	static UINT64	m_PerformanceFrequency;
+
+	friend class CQueryPerformanceFrequency;
 public:
 	enum
 	{
@@ -33,30 +35,31 @@ public:
 	};
 	CEasyTimerEx():m_dwSavedTime(0),m_dwTimeoutTime(0)
 	{
-		QueryPerformanceFrequency((LARGE_INTEGER*)&m_PerformanceFrequency);
-		m_PerformanceFrequency=m_PerformanceFrequency/TIME_UNIT_PER_SECOND;
+
 	}
 	CEasyTimerEx(const CEasyTimerEx& Timer)
 	{
 		m_dwSavedTime=Timer.m_dwSavedTime;
 		m_dwTimeoutTime=Timer.m_dwTimeoutTime;
-		QueryPerformanceFrequency((LARGE_INTEGER*)&m_PerformanceFrequency);
-		m_PerformanceFrequency=m_PerformanceFrequency/TIME_UNIT_PER_SECOND;
 	}
 	CEasyTimerEx& operator=(const CEasyTimerEx& Timer)
 	{
 		m_dwSavedTime=Timer.m_dwSavedTime;
 		m_dwTimeoutTime=Timer.m_dwTimeoutTime;
-		QueryPerformanceFrequency((LARGE_INTEGER*)&m_PerformanceFrequency);
-		m_PerformanceFrequency=m_PerformanceFrequency/TIME_UNIT_PER_SECOND;
 		return *this;
 	}
 
 	static inline UINT64	GetTime()
 	{
 		UINT64 Time;
+#ifdef WIN32
 		QueryPerformanceCounter((LARGE_INTEGER*)&Time);
-		Time=Time/m_PerformanceFrequency;
+		Time=Time*TIME_UNIT_PER_SECOND/m_PerformanceFrequency;
+#else
+		timespec OrginTime;		
+		clock_gettime(CLOCK_MONOTONIC,&OrginTime);
+		Time=(UINT64)OrginTime.tv_sec*1000000000+OrginTime.tv_nsec;
+#endif
 		return Time;
 	}
 
@@ -135,4 +138,13 @@ public:
 
 };
 
-
+#ifdef WIN32
+class CQueryPerformanceFrequency
+{
+public:
+	CQueryPerformanceFrequency()
+	{
+		QueryPerformanceFrequency((LARGE_INTEGER*)&CEasyTimerEx::m_PerformanceFrequency);		
+	}
+};
+#endif

@@ -416,16 +416,16 @@ bool CBLZWOWDatabase::LoadDBCs(LPCTSTR DBCPath,CEasyString& ErrorMsg)
 		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
 	
-	FileName=BLZ_TRS_MINI_MAP_TEXTURE_FILES;
-	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
-	LoadTime=CEasyTimer::GetTime();
-	if(!LoadMiniMapInfo(FileName))
-	{
-		ErrorMsg=FileName+"装载失败！";
-		return false;
-	}
-	PrintSystemLog(0,"装载%s花了%u毫秒",
-		(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
+	//FileName=BLZ_TRS_MINI_MAP_TEXTURE_FILES;
+	//PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
+	//LoadTime=CEasyTimer::GetTime();
+	//if(!LoadMiniMapInfo(FileName))
+	//{
+	//	ErrorMsg=FileName+"装载失败！";
+	//	return false;
+	//}
+	//PrintSystemLog(0,"装载%s花了%u毫秒",
+	//	(LPCTSTR)FileName,GetTimeToTime(LoadTime,CEasyTimer::GetTime()));
 
 	FileName=BLZ_DBC_LIGHT_FILE_NAME;
 	PrintSystemLog(0,"装载%s",(LPCTSTR)FileName);
@@ -1648,20 +1648,11 @@ bool CBLZWOWDatabase::LoadMapInfo(LPCTSTR FileName)
 		Info.HordeDesc=					UTF8ToLocal(pStringTable+pRecord[i].HordeDesc[BLZ_DBC_STR_LOCAL_ZH_CN],
 			strlen(pStringTable+pRecord[i].HordeDesc[BLZ_DBC_STR_LOCAL_ZH_CN]));
 		Info.LoadingScreen=				pRecord[i].LoadingScreen;			
-		Info.BattlefieldMapIconScale=	pRecord[i].BattlefieldMapIconScale;
-		Info.Requirement;				UTF8ToLocal(pStringTable+pRecord[i].Requirement[BLZ_DBC_STR_LOCAL_ZH_CN],
-			strlen(pStringTable+pRecord[i].Requirement[BLZ_DBC_STR_LOCAL_ZH_CN]));
-		Info.Heroic=					UTF8ToLocal(pStringTable+pRecord[i].Heroic[BLZ_DBC_STR_LOCAL_ZH_CN],
-			strlen(pStringTable+pRecord[i].Heroic[BLZ_DBC_STR_LOCAL_ZH_CN]));
+		Info.BattlefieldMapIconScale=	pRecord[i].BattlefieldMapIconScale;	
 		Info.ParentArea=				pRecord[i].ParentArea;
 		Info.XCoord=					pRecord[i].XCoord;					
-		Info.YCoord=					pRecord[i].YCoord;					
-		Info.ResetTimeRaid=				pRecord[i].ResetTimeRaid;			
-		Info.ResetTimeHeroicRaid=		pRecord[i].ResetTimeHeroicRaid;			
-		Info.TimeOfDayOverride=			pRecord[i].TimeOfDayOverride;		
+		Info.YCoord=					pRecord[i].YCoord;	
 		Info.ExpansionID=				pRecord[i].ExpansionID;			
-			
-
 	}		
 
 	return true;
@@ -1713,15 +1704,14 @@ bool CBLZWOWDatabase::LoadLiquidTypeInfo(LPCTSTR FileName)
 		m_LiquidTypeInfo[i].Type=DBCFile.GetDataUint(i,3);
 		m_LiquidTypeInfo[i].SoundEntriesID=DBCFile.GetDataUint(i,4);
 		m_LiquidTypeInfo[i].SpellID=DBCFile.GetDataUint(i,5);
-		m_LiquidTypeInfo[i].LiquidMaterialID=DBCFile.GetDataUint(i,15);
-		m_LiquidTypeInfo[i].TextureList[0]=DBCFile.GetDataString(i,16);
-		m_LiquidTypeInfo[i].TextureList[1]=DBCFile.GetDataString(i,17);
-		m_LiquidTypeInfo[i].TextureList[2]=DBCFile.GetDataString(i,18);
-		m_LiquidTypeInfo[i].TextureList[3]=DBCFile.GetDataString(i,19);
-		m_LiquidTypeInfo[i].TextureList[4]=DBCFile.GetDataString(i,20);
-		m_LiquidTypeInfo[i].TextureList[5]=DBCFile.GetDataString(i,21);
-		m_LiquidTypeInfo[i].TextureList[6]=DBCFile.GetDataString(i,22);
-		m_LiquidTypeInfo[i].TextureList[7]=DBCFile.GetDataString(i,23);
+		m_LiquidTypeInfo[i].TextureList[0]=DBCFile.GetDataString(i,15);
+		m_LiquidTypeInfo[i].TextureList[1]=DBCFile.GetDataString(i,16);
+		m_LiquidTypeInfo[i].TextureList[2]=DBCFile.GetDataString(i,17);
+		m_LiquidTypeInfo[i].TextureList[3]=DBCFile.GetDataString(i,18);
+		m_LiquidTypeInfo[i].TextureList[4]=DBCFile.GetDataString(i,19);
+		m_LiquidTypeInfo[i].TextureList[5]=DBCFile.GetDataString(i,20);
+		m_LiquidTypeInfo[i].TextureList[6]=DBCFile.GetDataString(i,21);
+		m_LiquidTypeInfo[i].TextureList[7]=DBCFile.GetDataString(i,22);
 	}
 	DBCFile.Close();
 	pFile->Release();
@@ -1756,60 +1746,60 @@ void CBLZWOWDatabase::BuildCreatureModelInfo()
 }
 
 
-bool CBLZWOWDatabase::LoadMiniMapInfo(LPCTSTR FileName)
-{
-	IFileAccessor * pFile;
+//bool CBLZWOWDatabase::LoadMiniMapInfo(LPCTSTR FileName)
+//{
+//	IFileAccessor * pFile;
+//
+//	pFile=CreateFileAccessor();
+//	if(pFile==NULL)
+//		return false;
+//	if(!pFile->Open(FileName,IFileAccessor::modeRead))
+//	{
+//		pFile->Release();
+//		return false;	
+//	}
+//	CStringFile FileInfos;
+//
+//	if(!FileInfos.LoadFile(pFile))
+//	{
+//		pFile->Release();
+//		return false;
+//	}
+//	pFile->Release();
+//
+//	for(int i=0;i<FileInfos.GetLineCount();i++)
+//	{
+//		CEasyString Line=FileInfos[i];
+//		if(_strnicmp(Line,"dir: ",5)==0)
+//		{
+//			
+//		}
+//		else
+//		{
+//			int Pos=Line.Find('\t');
+//			if(Pos>=0)
+//			{
+//				CEasyString Key=Line.Left(Pos);
+//				CEasyString MiniMapFileName=Line.Right(Line.GetLength()-Pos-1);
+//				Key.MakeUpper();
+//				m_MiniMapFileInfos.Insert(Key,MiniMapFileName);
+//			}
+//		}
+//	}
+//	return true;
+//}
 
-	pFile=CreateFileAccessor();
-	if(pFile==NULL)
-		return false;
-	if(!pFile->Open(FileName,IFileAccessor::modeRead))
-	{
-		pFile->Release();
-		return false;	
-	}
-	CStringFile FileInfos;
-
-	if(!FileInfos.LoadFile(pFile))
-	{
-		pFile->Release();
-		return false;
-	}
-	pFile->Release();
-
-	for(int i=0;i<FileInfos.GetLineCount();i++)
-	{
-		CEasyString Line=FileInfos[i];
-		if(_strnicmp(Line,"dir: ",5)==0)
-		{
-			
-		}
-		else
-		{
-			int Pos=Line.Find('\t');
-			if(Pos>=0)
-			{
-				CEasyString Key=Line.Left(Pos);
-				CEasyString MiniMapFileName=Line.Right(Line.GetLength()-Pos-1);
-				Key.MakeUpper();
-				m_MiniMapFileInfos.Insert(Key,MiniMapFileName);
-			}
-		}
-	}
-	return true;
-}
-
-LPCTSTR CBLZWOWDatabase::GetMiniMapRealFileName(LPCTSTR FileName)
-{
-	CEasyString MiniMapFileName=FileName;
-	MiniMapFileName.MakeUpper();
-	CEasyString * pRealFileName=m_MiniMapFileInfos.Find(MiniMapFileName);
-	if(pRealFileName)
-	{
-		return pRealFileName->GetBuffer();
-	}
-	return NULL;
-}
+//LPCTSTR CBLZWOWDatabase::GetMiniMapRealFileName(LPCTSTR FileName)
+//{
+//	CEasyString MiniMapFileName=FileName;
+//	MiniMapFileName.MakeUpper();
+//	CEasyString * pRealFileName=m_MiniMapFileInfos.Find(MiniMapFileName);
+//	if(pRealFileName)
+//	{
+//		return pRealFileName->GetBuffer();
+//	}
+//	return NULL;
+//}
 
 bool CBLZWOWDatabase::LoadMapLightInfos(LPCTSTR FileName)
 {
@@ -1883,6 +1873,7 @@ bool CBLZWOWDatabase::LoadLightParams(LPCTSTR FileName)
 				pInfo->WaterDeepAlpha=DBCFile.GetDataFloat(i,6);
 				pInfo->OceanShallowAlpha=DBCFile.GetDataFloat(i,7);
 				pInfo->OceanDeepAlpha=DBCFile.GetDataFloat(i,8);
+				pInfo->LightParamFlag=DBCFile.GetDataUint(i,9);
 			}
 		}	
 	}

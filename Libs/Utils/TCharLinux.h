@@ -29,6 +29,9 @@ typedef char TCHAR;
 #define _tcsncpy_s		strncpy_s
 #define _tcstol			strtol
 #define _tcstod			strtod
+#define _tcstoul		strtoul
+#define _tcstoi64		strtoll
+#define _tcstoui64		strtoull
 #define _tcstok_s		strtok_s
 #define _itot_s			_itoa_s
 #define _ltot_s			_ltoa_s

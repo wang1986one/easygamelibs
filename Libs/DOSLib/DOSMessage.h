@@ -41,6 +41,10 @@ public:
 		m_MsgHeader.MsgID=0;		
 		m_MsgHeader.MsgFlag=0;
 	}
+	DOS_SIMPLE_MESSAGE_HEAD& GetMsgHeader()
+	{
+		return m_MsgHeader;
+	}
 	void SetMsgID(MSG_ID_TYPE CmdID)
 	{
 		m_MsgHeader.MsgID=CmdID;
@@ -106,11 +110,11 @@ protected:
 				MSG_LEN_TYPE	MsgLen;		
 				MSG_ID_TYPE		MsgID;
 				WORD			MsgFlag;
-				OBJECT_ID		SenderID;
+				OBJECT_ID_BASE	SenderID;
 			};
 			struct  
 			{
-				OBJECT_ID										Reserve;
+				OBJECT_ID_BASE									Reserve;
 				CDOSSimpleMessage::DOS_SIMPLE_MESSAGE_HEAD		SimpleMsgHeader;
 			};
 		};
@@ -313,4 +317,5 @@ enum DOS_SYSTEM_MESSAGE
 enum DOS_MESSAGE_FLAG
 {
 	DOS_MESSAGE_FLAG_SYSTEM_MESSAGE=1,
+	DOS_MESSAGE_FLAG_COMPRESSED=(1<<1),
 };

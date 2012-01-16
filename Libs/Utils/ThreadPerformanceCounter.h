@@ -10,7 +10,6 @@ protected:
 	UINT			m_CycleCount;
 	UINT			m_CPUCount;
 	UINT64			m_StartCPUUsedTime;
-	UINT64			m_PerformanceFrequency;
 	volatile float	m_CycleTime;
 	volatile float	m_CPUUsedRate;
 public:

@@ -36,8 +36,13 @@ bool CD3DUIRender::Create(CD3DDevice * pDevice)
 
 void CD3DUIRender::Destory()
 {
-	m_ObjectList.Clear();
-	m_RootObjectList.Clear();
+	CAutoLockEx Lock;
+	if(CD3DDevice::IsUseMultiThreadRender())
+	{
+		Lock.Lock(m_RenderLock);
+	}
+
+	RemoveAllObject();
 	CD3DBaseRender::Destory();
 }
 
@@ -237,6 +242,16 @@ bool CD3DUIRender::DelObject(CD3DObject * pObj,bool IsRecursive)
 		}
 	}
 	return false;
+}
+
+void CD3DUIRender::RemoveAllObject()
+{
+	CD3DBaseRender::RemoveAllObject();
+	for(UINT i=0;i<m_ObjectList.GetCount();i++)
+	{
+		m_ObjectList[i]->SetRender(NULL);		
+	}
+	m_ObjectList.Clear();
 }
 
 bool CD3DUIRender::MoveToTop(CD3DObject * pObj,CD3DObject *pBefore)

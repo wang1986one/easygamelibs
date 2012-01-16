@@ -56,14 +56,15 @@ BOOL CD3DRenderThread::OnRun()
 		//	{
 		//		if(m_RenderInstances[j].RenderList[i]->IsKindOf(GET_CLASS_INFO(CD3DSceneRender)))
 		//		{
-		//			PrintSystemLog(0,"FrameRate=%g,TreeCheck=%u,TreeCut=%u,ObjectCheck=%u,DirectRenderCount=%u,BranchObjectCheckCount=%u,ObjectCutCount=%u",
+		//			PrintSystemLog(0,"FrameRate=%g,TreeCheck=%u,TreeCut=%u,ObjectCheck=%u,DirectRenderCount=%u,BranchObjectCheckCount=%u,ObjectCutCount=%u,MergeRender=%d",
 		//				m_FrameRate,
 		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetTreeCheckCount(),
 		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetTreeCutCount(),
 		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetObjectCheckCount(),
 		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetDirectRenderCount(),
 		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetBranchObjectCheckCount(),
-		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetObjectCutCount());
+		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetObjectCutCount(),
+		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetMergeSubMeshRenderCount());
 		//		}
 
 		//	}	

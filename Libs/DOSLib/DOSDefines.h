@@ -18,7 +18,7 @@
 
 typedef WORD	ROUTE_ID_TYPE;
 
-struct OBJECT_ID
+struct OBJECT_ID_BASE
 {
 	union
 	{
@@ -31,13 +31,26 @@ struct OBJECT_ID
 			WORD RouterID;
 		};
 	};
+};
+
+struct OBJECT_ID:public OBJECT_ID_BASE
+{
 	OBJECT_ID()
 	{
 		ID=0;
 	}	
+	OBJECT_ID(const OBJECT_ID_BASE& ObjectID)
+	{
+		ID=ObjectID.ID;
+	}
 	OBJECT_ID(unsigned __int64 Value)
 	{
 		ID=Value;
+	}
+	OBJECT_ID& operator=(const OBJECT_ID_BASE& ObjectID)
+	{
+		ID=ObjectID.ID;
+		return *this;
 	}
 	bool operator==(const OBJECT_ID& ObjectID)
 	{
@@ -94,6 +107,7 @@ struct DOS_CONFIG
 	UINT										ProxySendDelay;
 	UINT										ProxySendQueryLimit;
 	UINT										ProxyKeepAliveTime;
+	UINT										ProxyMsgMinCompressSize;
 
 	UINT										MemoryPoolBlockSize;
 	UINT										MemoryPoolLeveSize;
@@ -120,6 +134,7 @@ struct DOS_CONFIG
 		ProxySendDelay=0;
 		ProxySendQueryLimit=0;
 		ProxyKeepAliveTime=3*60*1000;
+		ProxyMsgMinCompressSize=0;
 		MemoryPoolBlockSize=0;
 		MemoryPoolLeveSize=0;
 		MemoryPoolLevelCount=0;

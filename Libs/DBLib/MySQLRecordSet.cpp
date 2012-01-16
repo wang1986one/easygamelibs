@@ -284,11 +284,18 @@ int CMySQLRecordSet::FetchRow()
 			UINT Size=ValueLen[j];
 			UINT DigitalSize=m_pColumnInfos[j].DigitSize;
 			int DBType=CMySQLConnection::MySQLTypeToDBLibType(m_pColumnInfos[j].Type,Size,DigitalSize);
-			m_RowBuffer[j].SetEmptyValue(DBType,Size,DigitalSize);
-			CMySQLConnection::MySQLStrValueToDBValue(
-				m_pColumnInfos[j].Type,RowData[j],
-				ValueLen[j],m_pColumnInfos[j].DigitSize,
-				m_RowBuffer[j].GetBuffer(),m_RowBuffer[j].GetLength());
+			if(RowData[j])
+			{
+				m_RowBuffer[j].SetEmptyValue(DBType,Size,DigitalSize);
+				CMySQLConnection::MySQLStrValueToDBValue(
+					m_pColumnInfos[j].Type,RowData[j],
+					ValueLen[j],m_pColumnInfos[j].DigitSize,
+					m_RowBuffer[j].GetBuffer(),m_RowBuffer[j].GetLength());
+			}
+			else
+			{
+				m_RowBuffer[j].SetNULLValue(DBType);
+			}
 		}
 		return DBERR_SUCCEED;
 	}

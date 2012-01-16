@@ -66,6 +66,7 @@ public:
 	virtual bool AddRootObject(CD3DObject * pObj);
 	virtual bool DelObject(CD3DObject * pObj,bool IsRecursive=true);
 	virtual bool DelRootObject(CD3DObject * pObj);
+	virtual void RemoveAllObject();
 
 
 	int GetRenderObjectCount();

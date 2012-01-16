@@ -29,155 +29,155 @@ public:
 	bool Create(UINT Size,UINT GrowSize=0,UINT GrowLimit=0)
 	{	
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::Create(Size,GrowSize,GrowLimit);
+		return CIDStorage<T,StorageMode>::Create(Size,GrowSize,GrowLimit);
 	}
 	void Destory()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		CIDStorage::Destory();
+		CIDStorage<T,StorageMode>::Destory();
 	}
 	void Clear()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		CIDStorage::Clear();
+		CIDStorage<T,StorageMode>::Clear();
 	}
 	UINT NewObject(T** ppObject)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::NewObject(ppObject);
+		return CIDStorage<T,StorageMode>::NewObject(ppObject);
 	}	
 
 	T* NewObject()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::NewObject();
+		return CIDStorage<T,StorageMode>::NewObject();
 	}	
 	LPVOID InsertAfter(LPVOID Pos=NULL)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::InsertAfter(Pos);
+		return CIDStorage<T,StorageMode>::InsertAfter(Pos);
 	}
 	LPVOID InsertAfter(const T& Object,LPVOID Pos=NULL)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::InsertAfter(Object,Pos);
+		return CIDStorage<T,StorageMode>::InsertAfter(Object,Pos);
 	}
 	LPVOID InsertBefore(LPVOID Pos=NULL)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::InsertBefore(Pos);
+		return CIDStorage<T,StorageMode>::InsertBefore(Pos);
 	}
 	LPVOID InsertBefore(const T& Object,LPVOID Pos=NULL)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::InsertBefore(Object,Pos);
+		return CIDStorage<T,StorageMode>::InsertBefore(Object,Pos);
 	}
 	LPVOID InsertSorted(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::InsertSorted(Object);
+		return CIDStorage<T,StorageMode>::InsertSorted(Object);
 	}
 	UINT AddObject(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::AddObject(Object);
+		return CIDStorage<T,StorageMode>::AddObject(Object);
 	}		
 	LPVOID GetObjectPos(UINT ID)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::GetObjectPos(ID);
+		return CIDStorage<T,StorageMode>::GetObjectPos(ID);
 	}
 	T* GetObject(LPVOID Pos)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::GetObject(Pos);
+		return CIDStorage<T,StorageMode>::GetObject(Pos);
 	}	
 	T* GetObject(UINT ID)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::GetObject(ID);
+		return CIDStorage<T,StorageMode>::GetObject(ID);
 	}
 	UINT GetObjectID(LPVOID Pos)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::GetObjectID(Pos);
+		return CIDStorage<T,StorageMode>::GetObjectID(Pos);
 	}
 	BOOL DeleteObject(UINT ID)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::DeleteObject(ID);
+		return CIDStorage<T,StorageMode>::DeleteObject(ID);
 	}	
 	T* GetNext(LPVOID& Pos)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::GetNext(Pos);
+		return CIDStorage<T,StorageMode>::GetNext(Pos);
 	}
 
 	T* GetPrev(LPVOID& Pos)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::GetPrev(Pos);
+		return CIDStorage<T,StorageMode>::GetPrev(Pos);
 	}
 	BOOL MoveBeforeTo(LPVOID Pos,LPVOID Target)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::MoveBeforeTo(Pos,Target);
+		return CIDStorage<T,StorageMode>::MoveBeforeTo(Pos,Target);
 	}
 	BOOL MoveAfterTo(LPVOID Pos,LPVOID Target)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::MoveAfterTo(Pos,Target);
+		return CIDStorage<T,StorageMode>::MoveAfterTo(Pos,Target);
 	}
 	BOOL MoveSorted(LPVOID Pos)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::MoveSorted(Pos);
+		return CIDStorage<T,StorageMode>::MoveSorted(Pos);
 	}
 	LPVOID PushFront()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::PushFront();
+		return CIDStorage<T,StorageMode>::PushFront();
 	}
 
 	LPVOID PushFront(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::PushFront(Object);
+		return CIDStorage<T,StorageMode>::PushFront(Object);
 	}
 
 	LPVOID PushBack()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::PushBack();
+		return CIDStorage<T,StorageMode>::PushBack();
 	}
 
 	LPVOID PushBack(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::PushBack(Object);
+		return CIDStorage<T,StorageMode>::PushBack(Object);
 	}
 
 	BOOL PopFront(T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::PopFront(Object);
+		return CIDStorage<T,StorageMode>::PopFront(Object);
 	}
 
 	BOOL PopBack(T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::PopBack(Object);
+		return CIDStorage<T,StorageMode>::PopBack(Object);
 	}
 	LPVOID Find(const T& Object)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CIDStorage::Find(Object);		
+		return CIDStorage<T,StorageMode>::Find(Object);		
 	}
 
 	void Verfy(UINT& UsedCount,UINT& FreeCount)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 
-		CIDStorage::Verfy(UsedCount,FreeCount);
+		CIDStorage<T,StorageMode>::Verfy(UsedCount,FreeCount);
 	}
 };

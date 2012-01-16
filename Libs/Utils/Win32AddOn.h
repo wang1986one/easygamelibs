@@ -167,4 +167,5 @@ inline bool SetEnvVar(LPCTSTR pszVarName,LPTSTR pszValue)
 }
 
 #include "EasyCriticalSectionWin.h"
+#include "AutoLock.h"
 #include "EasyReadWriteLockWin.h"

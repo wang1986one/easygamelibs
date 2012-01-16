@@ -107,3 +107,20 @@ public:
 
 
 
+template <class T>
+class CStaticObject4
+{
+public:
+	static T * GetInstance()
+	{
+		if(m_pInstance==NULL)
+		{
+			m_pInstance=new T;
+		}
+		return m_pInstance;
+	}
+protected:
+	static T * m_pInstance;
+};
+template <class T>
+T  * CStaticObject4<T>::m_pInstance=NULL;

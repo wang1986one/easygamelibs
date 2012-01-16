@@ -77,7 +77,7 @@ void CD3DWnd::InitWnd(CD3DGUI *  pGUI)
 
 	ZeroMemory(&m_LogFont,sizeof(m_LogFont));
 
-	strcpy_s(m_LogFont.lfFaceName,LF_FACESIZE,"ËÎÌו");
+	strcpy_s(m_LogFont.lfFaceName,LF_FACESIZE,"SimSun");
 	m_LogFont.lfHeight=16;
 	m_LogFont.lfWidth=0;
 	m_LogFont.lfEscapement=0;
@@ -1129,9 +1129,7 @@ bool CD3DWnd::LoadFromFile(LPCTSTR FileName,LPCTSTR WndName)
 	Xml.parse_file(FileName,pug::parse_trim_attribute);
 	xml_node GUI=Xml.document();
 	if(!GUI.moveto_child("D3DGUI"))
-		return false;
-	CEasyString UIPath=GetPathDirectory(MakeFullPath(FileName));
-	m_pGUI->GetObjectCreator()->SetTextureDir(UIPath);
+		return false;	
 
 	for(int i=0;i<(int)GUI.children();i++)
 	{

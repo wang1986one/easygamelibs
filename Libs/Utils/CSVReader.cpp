@@ -241,7 +241,7 @@ bool CCSVReader::Save(IFileAccessor * pFileAccessor,bool WriteHeader)
 
 	assert(BufferLen==DataLen);
 
-	bool Ret=pFileAccessor->Write(pSaveBuffer,DataLen);
+	bool Ret=pFileAccessor->Write(pSaveBuffer,DataLen)==DataLen;
 
 	SAFE_DELETE_ARRAY(pSaveBuffer);
 	return Ret;

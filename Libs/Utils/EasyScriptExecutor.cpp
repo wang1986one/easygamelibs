@@ -23,7 +23,7 @@ LPCTSTR KEYWORD_STRINGS[KW_MAX]=
 
 
 
-char * ESGetErrorMsg(int ErrCode)
+const char * ESGetErrorMsg(int ErrCode)
 {
 	switch(ErrCode)
 	{

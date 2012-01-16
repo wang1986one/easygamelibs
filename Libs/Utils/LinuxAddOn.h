@@ -32,6 +32,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <unistd.h>
 #include "atomic_ops/include/atomic_ops.h"
 #include "TCharLinux.h"
 
@@ -61,6 +62,8 @@ typedef long long LONG64;
 typedef long long INT64;
 typedef unsigned long long ULONG64;
 typedef unsigned long long UINT64;
+typedef unsigned long long LONGLONG;
+typedef unsigned long long DWORD64;
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
@@ -92,6 +95,19 @@ typedef unsigned long DWORD_PTR, *PDWORD_PTR;
 #define _atoi64			atoll
 #define GetLastError()	errno
 
+#ifdef _UNICODE
+
+
+#else
+
+#define _tstoi			atoi
+#define _tstoi64		atoll
+#define _tstof			atof
+#define _tcscpy_s		strcpy_s
+#define _tcprintf		printf
+
+#endif
+
 
 #define MAKEWORD(a, b)      ((WORD)(((BYTE)(((DWORD_PTR)(a)) & 0xff)) | ((WORD)((BYTE)(((DWORD_PTR)(b)) & 0xff))) << 8))
 #define MAKELONG(a, b)      ((LONG)(((WORD)(((DWORD_PTR)(a)) & 0xffff)) | ((DWORD)((WORD)(((DWORD_PTR)(b)) & 0xffff))) << 16))
@@ -99,6 +115,8 @@ typedef unsigned long DWORD_PTR, *PDWORD_PTR;
 #define HIWORD(l)           ((WORD)((((DWORD_PTR)(l)) >> 16) & 0xffff))
 #define LOBYTE(w)           ((BYTE)(((DWORD_PTR)(w)) & 0xff))
 #define HIBYTE(w)           ((BYTE)((((DWORD_PTR)(w)) >> 8) & 0xff))
+
+#define __forceinline	inline
 
 inline int fopen_s(FILE ** _File, const char * _Filename, const char * _Mode)
 {
@@ -115,6 +133,8 @@ inline int strcpy_s(char * _Dst, size_t _SizeInBytes, const char * _Src)
 	strcpy(_Dst,_Src);
 	return 0;
 }
+
+
 
 inline int wcscpy_s(wchar_t * _Dst, size_t _SizeInWords, const wchar_t * _Src)
 {
@@ -181,7 +201,7 @@ inline int _ltoa_s(long _Val, char * _DstBuf, size_t _Size, int _Radix)
 	return 0;
 }
 
-#define sprintf_s(_DstBuf, _SizeInBytes, _Format, ...)	sprintf(_DstBuf,_Format,__VA_ARGS__)
+#define sprintf_s(_DstBuf, _SizeInBytes, _Format, ...)	sprintf(_DstBuf,_Format,##__VA_ARGS__)
 #define _vscprintf(_Format, _ArgList)		vsnprintf(NULL,0,_Format,_ArgList)
 #define _vscwprintf(_Format, _ArgList)		vswprintf(NULL,0,_Format,_ArgList)
 
@@ -245,10 +265,67 @@ inline int strncat_s(char * _Dst, size_t _SizeInBytes, const char * _Src, size_t
 	return 0;
 }
 
+inline int _tcsicmp(LPCTSTR _String1, LPCTSTR _String2)
+{
+#ifdef _UNICODE
+	return 0;
+#else
+	return strcasecmp(_String1,_String2);
+#endif
+
+}
+
 inline int localtime_s(struct tm * _Tm, const time_t * _Time)
 {
-	*_Tm=*localtime(_Time);
+	localtime_r(_Time,_Tm);
 	return 0;
+}
+
+inline int gmtime_s(struct tm* _tm,const time_t* time)
+{
+	gmtime_r(time,_tm);
+	return 0;
+}
+
+inline time_t _mkgmtime(struct tm * _Tm)
+{
+	return mktime(_Tm);
+}
+
+inline UINT GetCurProcessID()
+{
+	return getpid();
+}
+
+inline size_t GetEnvVar(LPCTSTR pszVarName,LPTSTR pszValue,size_t nBufferLen)
+{
+	size_t ValueLen=0;
+#ifdef _UNICODE
+	//_wgetenv_s(&ValueLen,pszValue,nBufferLen,pszVarName);
+#else
+	char * szValue=getenv(pszVarName);
+	if(szValue)
+	{
+		ValueLen=strlen(szValue);
+		if(pszValue&&nBufferLen>=ValueLen)
+		{
+			strcpy(pszValue,szValue);
+		}
+	}
+#endif
+	return ValueLen;
+}
+
+inline bool SetEnvVar(LPCTSTR pszVarName,LPTSTR pszValue)
+{
+#ifdef _UNICODE
+	//if(_wputenv_s(pszVarName,pszValue)==0)
+	//	return true;
+#else	
+	if(setenv(pszVarName,pszValue,1)==0)
+		return true;
+#endif
+	return false;
 }
 
 inline unsigned int AtomicInc(volatile unsigned int * pVal)
@@ -260,7 +337,7 @@ inline unsigned int AtomicInc(volatile unsigned int * pVal)
 
 inline unsigned int AtomicDec(volatile unsigned int * pVal)
 {
-	return AO_int_fetch_and_sub1_read(pVal)+1;
+	return AO_int_fetch_and_sub1_read(pVal)-1;
 }
 
 
@@ -276,8 +353,9 @@ inline unsigned int AtomicSub(volatile unsigned int * pVal,int SubVal)
 
 inline int AtomicCompareAndSet(volatile unsigned int * pVal,unsigned int CompValue,unsigned int NewVal)
 {
-	return AO_int_compare_and_swap(pVal,CompValue,NewVal)
+	return AO_int_compare_and_swap_full(pVal,CompValue,NewVal);
 }
+
 
 
 #define ZeroMemory(Destination,Length) memset((Destination),0,(Length))
@@ -290,6 +368,7 @@ using namespace pug;
 
 
 #include "EasyCriticalSectionLinux.h"
+#include "AutoLock.h"
 #include "EasyReadWriteLockLinux.h"
 
 typedef struct tagRECT

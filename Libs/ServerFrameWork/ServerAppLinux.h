@@ -18,6 +18,7 @@ class CServerApp
 {
 protected:
 	volatile UINT		m_WantExist;
+	IBaseServer *		m_pServer;
 public:
 	CServerApp(void);
 	~CServerApp(void);

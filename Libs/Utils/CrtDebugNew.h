@@ -12,12 +12,10 @@
 #pragma once
 
 
-
 void* operator new( size_t size, LPCTSTR file, int line );
 void operator delete( void* address, LPCTSTR file, int line );
 void* operator new[]( size_t size, LPCTSTR file, int line );
 void operator delete[]( void* address , LPCTSTR file, int line );
 
 #define new new( __FILE__, __LINE__ )
-
 

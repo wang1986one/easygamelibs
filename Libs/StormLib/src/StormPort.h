@@ -26,23 +26,26 @@
 #ifndef __STORMPORT_H__
 #define __STORMPORT_H__
 
+#ifndef __cplusplus
+  #define bool char
+  #define true 1
+  #define false 0
+#endif
+
 // Defines for Windows
 #if !defined(PLATFORM_DEFINED) && (defined(WIN32) || defined(WIN64))
 
   // In MSVC 8.0, there are some functions declared as deprecated.
   #if _MSC_VER >= 1400
-    #ifndef _CRT_SECURE_NO_DEPRECATE
-      #define _CRT_SECURE_NO_DEPRECATE
-    #endif
-    #ifndef _CRT_NON_CONFORMING_SWPRINTFS
-      #define _CRT_NON_CONFORMING_SWPRINTFS
-    #endif
+  #define _CRT_SECURE_NO_DEPRECATE
+  #define _CRT_NON_CONFORMING_SWPRINTFS
   #endif
 
-  #include <assert.h>      
-  #include <ctype.h>      
-  #include <stdio.h>      
-  #include <windows.h>      
+  #include <tchar.h>
+  #include <assert.h>
+  #include <ctype.h>
+  #include <stdio.h>
+  #include <windows.h>
   #define PLATFORM_LITTLE_ENDIAN
 
   #ifdef WIN64
@@ -114,6 +117,7 @@
   typedef long           LONG_PTR;
   typedef long           INT_PTR;
   typedef long long      LONGLONG;
+  typedef unsigned long long ULONGLONG;
   typedef void         * HANDLE;
   typedef void         * LPOVERLAPPED; // Unsupported on Linux and Mac
   typedef char           TCHAR;
@@ -122,25 +126,6 @@
   typedef DWORD        * LPDWORD;
   typedef BYTE         * LPBYTE;
 
-  typedef union _LARGE_INTEGER
-  {
-  #ifdef PLATFORM_LITTLE_ENDIAN
-    struct
-    {
-        DWORD LowPart;
-        LONG HighPart;
-    };
-  #else
-    struct
-    {
-        LONG HighPart;
-        DWORD LowPart;
-    };
-  #endif
-    LONGLONG QuadPart;
-  }
-  LARGE_INTEGER, *PLARGE_INTEGER;
-  
   #ifdef PLATFORM_32BIT
     #define _LZMA_UINT32_IS_ULONG
   #endif
@@ -156,9 +141,18 @@
   #define FILE_CURRENT  SEEK_CUR
   #define FILE_END      SEEK_END
 
-  #define _stricmp strcasecmp
+  #define _T(x)     x
+  #define _tcslen   strlen
+  #define _tcscpy   strcpy
+  #define _tcscat   strcat
+  #define _tcsrchr  strrchr
+  #define _tprintf  printf
+  #define _stprintf sprintf
+  #define _tremove  remove
+
+  #define _stricmp  strcasecmp
   #define _strnicmp strncasecmp
-  
+
   void  SetLastError(int err);
   int   GetLastError();
 
@@ -207,26 +201,36 @@
     #define    BSWAP_INT16_SIGNED(a)            (a)
     #define    BSWAP_INT32_UNSIGNED(a)          (a)
     #define    BSWAP_INT32_SIGNED(a)            (a)
+    #define    BSWAP_INT64_SIGNED(a)            (a)
+    #define    BSWAP_INT64_UNSIGNED(a)          (a)
     #define    BSWAP_ARRAY16_UNSIGNED(a,b)      {}
     #define    BSWAP_ARRAY32_UNSIGNED(a,b)      {}
+    #define    BSWAP_ARRAY64_UNSIGNED(a,b)      {}
     #define    BSWAP_PART_HEADER(a)             {}
     #define    BSWAP_TMPQUSERDATA(a)            {}
     #define    BSWAP_TMPQHEADER(a)              {}
 #else
-    extern uint16_t SwapUShort(uint16_t);
-    extern uint32_t SwapULong(uint32_t);
-    extern int16_t SwapShort(uint16_t);
-    extern int32_t SwapLong(uint32_t);
-    extern void ConvertUnsignedLongBuffer(void * ptr, size_t length);
-    extern void ConvertUnsignedShortBuffer(void * ptr, size_t length);
-    extern void ConvertTMPQUserData(void *userData);
-    extern void ConvertTMPQHeader(void *header);
-    #define    BSWAP_INT16_SIGNED(a)            SwapShort((a))
-    #define    BSWAP_INT16_UNSIGNED(a)          SwapUShort((a))
-    #define    BSWAP_INT32_SIGNED(a)            SwapLong((a))
-    #define    BSWAP_INT32_UNSIGNED(a)          SwapULong((a))
-    #define    BSWAP_ARRAY16_UNSIGNED(a,b)      ConvertUnsignedShortBuffer((a),(b))
-    #define    BSWAP_ARRAY32_UNSIGNED(a,b)      ConvertUnsignedLongBuffer((a),(b))
+    int16_t  SwapInt16(uint16_t);
+    uint16_t SwapUInt16(uint16_t);
+    int32_t  SwapInt32(uint32_t);
+    uint32_t SwapUInt32(uint32_t);
+    int64_t  SwapInt64(uint64_t);
+    uint64_t SwapUInt64(uint64_t);
+    void ConvertUInt16Buffer(void * ptr, size_t length);
+    void ConvertUInt32Buffer(void * ptr, size_t length);
+    void ConvertUInt64Buffer(void * ptr, size_t length);
+    void ConvertPartHeader(void * partHeader);
+    void ConvertTMPQUserData(void *userData);
+    void ConvertTMPQHeader(void *header);
+    #define    BSWAP_INT16_SIGNED(a)            SwapInt16((a))
+    #define    BSWAP_INT16_UNSIGNED(a)          SwapUInt16((a))
+    #define    BSWAP_INT32_SIGNED(a)            SwapInt32((a))
+    #define    BSWAP_INT32_UNSIGNED(a)          SwapUInt32((a))
+    #define    BSWAP_INT64_SIGNED(a)            SwapInt64((a))
+    #define    BSWAP_INT64_UNSIGNED(a)          SwapUInt64((a))
+    #define    BSWAP_ARRAY16_UNSIGNED(a,b)      ConvertUInt16Buffer((a),(b))
+    #define    BSWAP_ARRAY32_UNSIGNED(a,b)      ConvertUInt32Buffer((a),(b))
+    #define    BSWAP_ARRAY64_UNSIGNED(a,b)      ConvertUInt64Buffer((a),(b))
     #define    BSWAP_PART_HEADER(a)             ConvertPartHeader(a)
     #define    BSWAP_TMPQUSERDATA(a)            ConvertTMPQUserData((a))
     #define    BSWAP_TMPQHEADER(a)              ConvertTMPQHeader((a))

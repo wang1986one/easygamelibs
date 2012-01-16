@@ -168,7 +168,8 @@ LPCSTR CBLZDBCFile::GetDataString(UINT Record,UINT Field)
 	if(m_pRecordData&&Record<m_RecordCount&&Field<m_FieldCount)
 	{
 		UINT * pRecord=(UINT *)(m_pRecordData+m_RecordSize*Record);
-		return m_pStringTable+pRecord[Field];
+		if(pRecord[Field]<m_StringTableSize)
+			return m_pStringTable+pRecord[Field];
 	}
 	return NULL;
 }
@@ -177,13 +178,17 @@ CEasyString CBLZDBCFile::GetDataLocalString(UINT Record,UINT Field)
 	if(m_pRecordData&&Record<m_RecordCount&&Field<m_FieldCount)
 	{
 		UINT * pRecord=(UINT *)(m_pRecordData+m_RecordSize*Record);
-		char * pString=m_pStringTable+pRecord[Field];
 
-		WCHAR	Buffer[1024];
+		if(pRecord[Field]<m_StringTableSize)
+		{
+			char * pString=m_pStringTable+pRecord[Field];
 
-		int len=MultiByteToWideChar(CP_UTF8,0,pString,strlen(pString),Buffer,1024);
-		Buffer[len]=0;
-		return Buffer;
+			WCHAR	Buffer[1024];
+
+			int len=MultiByteToWideChar(CP_UTF8,0,pString,strlen(pString),Buffer,1024);
+			Buffer[len]=0;
+			return Buffer;
+		}
 	}
 	return "";
 }

@@ -9,7 +9,6 @@ CThreadPerformanceCounter::CThreadPerformanceCounter(void)
 	m_CycleCount=0;
 	m_CPUCount=1;
 	m_StartCPUUsedTime=0;
-	m_PerformanceFrequency=1;
 	m_CycleTime=0;
 	m_CPUUsedRate=0;
 }
@@ -23,12 +22,14 @@ void CThreadPerformanceCounter::Init(HANDLE ThreadHandle,UINT CountIntervalTime)
 	m_TreadHandle=ThreadHandle;
 	m_CountIntervalTime=CountIntervalTime;
 	m_CountIntervalTimer.SaveTime();
-	QueryPerformanceCounter((LARGE_INTEGER *)&m_StartPerformanceCount);
-	QueryPerformanceFrequency((LARGE_INTEGER *)&m_PerformanceFrequency);
+	m_StartPerformanceCount=CEasyTimerEx::GetTime();
+	m_CycleCount=0;
+
+#ifdef WIN32
 	SYSTEM_INFO	si;
 	GetSystemInfo( &si );
 	m_CPUCount=si.dwNumberOfProcessors;
-	m_CycleCount=0;
+	
 	FILETIME CreationTime,ExitTime,KernelTime,UserTime;
 	if(!GetThreadTimes(m_TreadHandle,
 		&CreationTime,&ExitTime,
@@ -38,6 +39,13 @@ void CThreadPerformanceCounter::Init(HANDLE ThreadHandle,UINT CountIntervalTime)
 	}
 	m_StartCPUUsedTime=((UINT64)KernelTime.dwLowDateTime)|(((UINT64)KernelTime.dwHighDateTime)<<32);
 	m_StartCPUUsedTime+=((UINT64)UserTime.dwLowDateTime)|(((UINT64)UserTime.dwHighDateTime)<<32);
+#else
+	m_CPUCount=sysconf(_SC_NPROCESSORS_CONF);
+
+	timespec OrginTime;		
+	clock_gettime(CLOCK_THREAD_CPUTIME_ID,&OrginTime);
+	m_StartCPUUsedTime=(UINT64)OrginTime.tv_sec*1000000000+OrginTime.tv_nsec;
+#endif
 }
 
 void CThreadPerformanceCounter::DoPerformanceCount()
@@ -49,15 +57,15 @@ void CThreadPerformanceCounter::DoPerformanceCount()
 		{
 			m_CountIntervalTimer.SaveTime();
 
-			UINT64 CurPerformanceCount;
-			QueryPerformanceCounter((LARGE_INTEGER *)&CurPerformanceCount);
-			float CPUTime=(float)(CurPerformanceCount-m_StartPerformanceCount)/m_PerformanceFrequency;		
+			UINT64 CurPerformanceCount=CEasyTimerEx::GetTime();
+			float CPUTime=(float)(CurPerformanceCount-m_StartPerformanceCount)/CEasyTimerEx::TIME_UNIT_PER_SECOND;		
 			m_StartPerformanceCount=CurPerformanceCount;
 
 			m_CycleTime=CPUTime*1000.0f/m_CycleCount;
 			m_CycleCount=0;
 
 			UINT64 CurCPUUsedTime;
+#ifdef WIN32
 			FILETIME CreationTime,ExitTime,KernelTime,UserTime;
 			if(!GetThreadTimes(m_TreadHandle,
 				&CreationTime,&ExitTime,
@@ -67,6 +75,11 @@ void CThreadPerformanceCounter::DoPerformanceCount()
 			}
 			CurCPUUsedTime=((UINT64)KernelTime.dwLowDateTime)|(((UINT64)KernelTime.dwHighDateTime)<<32);
 			CurCPUUsedTime+=((UINT64)UserTime.dwLowDateTime)|(((UINT64)UserTime.dwHighDateTime)<<32);
+#else
+			timespec OrginTime;		
+			clock_gettime(CLOCK_THREAD_CPUTIME_ID,&OrginTime);
+			CurCPUUsedTime=(UINT64)OrginTime.tv_sec*1000000000+OrginTime.tv_nsec;
+#endif
 
 			m_CPUUsedRate=(float)(CurCPUUsedTime-m_StartCPUUsedTime)/(CPUTime*m_CPUCount*10000000.0f);
 

@@ -21,7 +21,7 @@ enum FILE_CHANNELS
 };
 
 
-class CFileSystemManager:public CStaticObject3<CFileSystemManager>
+class CFileSystemManager:public CStaticObject<CFileSystemManager>
 {
 protected:
 	IFileObjectCreator *		m_FileObjectCreators[FILE_CHANNEL_MAX];

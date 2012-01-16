@@ -35,11 +35,20 @@ CD3DSubMesh::CD3DSubMesh(void)
 	m_Flag=0;
 	m_RenderBufferUsed=BUFFER_USE_DX;
 	m_OrginDataBufferUsed=BUFFER_USE_DX;
+	
+	SetVisible(true);
+
+
 	m_pVertexBufferR=NULL;
 	m_IsVertexBufferRSelfDelete=false;
 	m_pIndexBufferR=NULL;
 	m_IsIndexBufferRSelfDelete=false;
-	SetVisible(true);
+
+	m_PrimitiveCountR=0;
+	m_VertexCountR=0;
+	m_StartVertexR=0;
+	m_IndexCountR=0;	
+	m_StartIndexR=0;
 
 }
 
@@ -65,11 +74,19 @@ CD3DSubMesh::CD3DSubMesh(CD3DDevice * pDevice)
 	m_Flag=0;
 	m_RenderBufferUsed=BUFFER_USE_DX;
 	m_OrginDataBufferUsed=BUFFER_USE_DX;
+	
+	SetVisible(true);
+
 	m_pVertexBufferR=NULL;
 	m_IsVertexBufferRSelfDelete=false;
 	m_pIndexBufferR=NULL;
 	m_IsIndexBufferRSelfDelete=false;
-	SetVisible(true);
+
+	m_PrimitiveCountR=0;
+	m_VertexCountR=0;
+	m_StartVertexR=0;
+	m_IndexCountR=0;	
+	m_StartIndexR=0;
 }
 
 CD3DSubMesh::~CD3DSubMesh(void)
@@ -489,6 +506,7 @@ void CD3DSubMesh::AllocVertexBufferR()
 	if(CD3DDevice::IsUseMultiThreadRender())
 	{
 		m_pVertexBufferR=new BYTE[m_VertexFormat.VertexSize*m_VertexCount];	
+		//ZeroMemory(m_pVertexBufferR,m_VertexFormat.VertexSize*m_VertexCount);
 		m_IsVertexBufferRSelfDelete=true;	
 	}
 }
@@ -503,6 +521,7 @@ void CD3DSubMesh::AllocIndexBufferR()
 	if(CD3DDevice::IsUseMultiThreadRender())
 	{
 		m_pIndexBufferR=new BYTE[m_VertexFormat.IndexSize*m_IndexCount];	
+		//ZeroMemory(m_pIndexBufferR,m_VertexFormat.IndexSize*m_IndexCount);
 		m_IsIndexBufferRSelfDelete=true;	
 	}
 }
@@ -521,6 +540,12 @@ void CD3DSubMesh::OnPrepareRenderData()
 			m_pIndexBuffer+m_VertexFormat.IndexSize*m_StartIndex,
 			m_VertexFormat.IndexSize*m_IndexCount);
 	}
+
+	m_PrimitiveCountR=m_PrimitiveCount;
+	m_VertexCountR=m_VertexCount;
+	m_StartVertexR=m_StartVertex;
+	m_IndexCountR=m_IndexCount;	
+	m_StartIndexR=m_StartIndex;
 }
 
 bool CD3DSubMesh::SortByName(CD3DSubMesh * pSubMesh1,CD3DSubMesh * pSubMesh2)
@@ -899,5 +924,39 @@ bool CD3DSubMesh::CheckValid()
 	return true;
 }
 
+bool CD3DSubMesh::CheckValidR()
+{
+	if(GetRenderBufferUsed()==BUFFER_USE_CUSTOM)
+	{
+		for(UINT i=m_StartIndexR;i<m_StartIndexR+m_IndexCountR;i++)
+		{
+			UINT Index;
+			if(m_VertexFormat.IndexSize==2)
+			{
+				Index=((WORD *)GetIndexBufferR())[i];
+			}
+			else
+			{
+				Index=((DWORD *)GetIndexBufferR())[i];
+			}
+			if(Index<m_StartVertexR||Index>=m_StartVertexR+m_VertexCountR)
+			{
+				PrintD3DLog(0,"CD3DSubMesh::CheckValidR:索引值超出顶点范围");
+				return false;
+			}
+		}
+		for(UINT i=m_StartVertexR;i<m_StartVertexR+m_VertexCountR;i++)
+		{
+			float VertexValue=*((float *)(GetVertexBufferR()+i*m_VertexFormat.VertexSize));
+			if(VertexValue<-1e10f&&VertexValue>1e10f)
+			{
+				PrintD3DLog(0,"CD3DSubMesh::CheckValidR:顶点数值异常");
+				return false;
+			}
+			BYTE LastByte=(GetVertexBufferR()+i*m_VertexFormat.VertexSize)[m_VertexFormat.VertexSize-1];
+		}
+	}
+	return true;
+}
 
 }

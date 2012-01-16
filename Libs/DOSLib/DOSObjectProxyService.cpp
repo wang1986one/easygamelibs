@@ -54,6 +54,16 @@ BOOL CDOSObjectProxyService::OnStart()
 		return FALSE;
 	}
 
+	if(((CDOSServer *)GetServer())->GetConfig().ProxyMsgMinCompressSize)
+	{
+		if (lzo_init() != LZO_E_OK)
+		{
+			PrintDOSLog(0xff0000,"代理服务开启消息压缩失败");
+			return FALSE;
+		}
+		PrintDOSDebugLog(0xff0000,"代理服务开启消息压缩");
+	}
+
 	if(!Create(IPPROTO_TCP,
 		DEFAULT_SERVER_ACCEPT_QUEUE,
 		DEFAULT_SERVER_RECV_DATA_QUEUE,

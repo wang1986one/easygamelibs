@@ -355,7 +355,6 @@ bool CD3DRibbonEmitter::LoadFromResource(CD3DRibbonEmitterResource * pModelResou
 	if(m_MaxRibbonCount>MAX_RIBBON_COUNT)
 		m_MaxRibbonCount=MAX_RIBBON_COUNT;	
 	m_pRibbonVertexBuffer=new RIBBON_PAIR[m_MaxRibbonCount];
-	
 
 	D3DCOLORVALUE WhiteColor={1.0f,1.0f,1.0f,1.0f};
 	D3DCOLORVALUE GrayColor={0.8f,0.8f,0.8f,1.0f};
@@ -374,9 +373,9 @@ bool CD3DRibbonEmitter::LoadFromResource(CD3DRibbonEmitterResource * pModelResou
 	m_SubMesh.SetPrimitiveType(D3DPT_TRIANGLESTRIP);	
 	m_SubMesh.SetVertices((BYTE *)m_pRibbonVertexBuffer);
 	m_SubMesh.SetVertexCount(m_MaxRibbonCount*2);
+	m_SubMesh.AllocVertexBufferR();
 	m_SubMesh.SetRenderBufferUsed(CD3DSubMesh::BUFFER_USE_CUSTOM);
 	m_SubMesh.SetVertexCount(0);
-	m_SubMesh.AllocVertexBufferR();
 	m_SubMesh.AddProperty(CD3DSubMesh::SMF_IS_ANI_MESH);
 	
 	for(UINT i=0;i<m_MaxRibbonCount;i++)

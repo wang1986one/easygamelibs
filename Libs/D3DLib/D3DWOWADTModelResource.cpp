@@ -70,774 +70,26 @@ bool CD3DWOWADTModelResource::Restore()
 
 bool CD3DWOWADTModelResource::LoadFromFile(LPCTSTR ModelFileName,bool IsBigAlphaMask,bool BeLoadObject)
 {
-	IFileAccessor * pFile;	
+	
 
 	Destory();
 
-	pFile=CD3DWOWWMOModel::CreateFileAccessor();
-	if(pFile==NULL)
+	if(!LoadTerrain(ModelFileName))
 		return false;
-	if(!pFile->Open(ModelFileName,IFileAccessor::modeRead))
-	{
-		pFile->Release();
-		return false;	
-	}
 
-	SetName(ModelFileName);
+	CEasyString FileName=ModelFileName;
 
-	CBLZChunkFile ADTChunk;
-
-	if(!ADTChunk.Load(pFile))
-	{
-		pFile->Release();
+	int Pos=FileName.ReverseFind('.');
+	if(Pos<0)
 		return false;
-	}
-	pFile->Release();	
+ 
+	FileName=FileName.Left(Pos);
 
-	BLZ_CHUNK_VERSION * pVersion=(BLZ_CHUNK_VERSION *)ADTChunk.GetFirstChunk(CHUNK_ID_VERSION);
+	if(!LoadTextureInfo(FileName+"_tex0.adt",IsBigAlphaMask))
+		return false;
 
-	BLZ_CHUNK_MHDR * pMHDR=(BLZ_CHUNK_MHDR *)ADTChunk.GetFirstChunk(CHUNK_ID_ADT_MHDR);
-
-	UINT OffsetStart=sizeof(BLZ_CHUNK_VERSION)+sizeof(BLZ_CHUNK_HEADER);
-
-	BLZ_CHUNK_MCIN * pMCIN=(BLZ_CHUNK_MCIN *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MCIN,OffsetStart+pMHDR->MCINChunkOffset);
-
-	BLZ_CHUNK_MTEX * pMTEX=(BLZ_CHUNK_MTEX *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MTEX,OffsetStart+pMHDR->MTEXChunkOffset);
-
-	BLZ_CHUNK_MMDX * pMMDX=(BLZ_CHUNK_MMDX *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MMDX,OffsetStart+pMHDR->MMDXChunkOffset);
-
-	BLZ_CHUNK_MMID * pMMID=(BLZ_CHUNK_MMID *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MMID,OffsetStart+pMHDR->MMIDChunkOffset);
-
-	BLZ_CHUNK_MWMO * pMWMO=(BLZ_CHUNK_MWMO *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MWMO,OffsetStart+pMHDR->MWMOChunkOffset);
-
-	BLZ_CHUNK_MWID * pMWID=(BLZ_CHUNK_MWID *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MWID,OffsetStart+pMHDR->MWIDChunkOffset);
-
-	BLZ_CHUNK_MDDF * pMDDF=(BLZ_CHUNK_MDDF *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MDDF,OffsetStart+pMHDR->MDDFChunkOffset);
-
-	BLZ_CHUNK_MODF * pMODF=(BLZ_CHUNK_MODF *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MODF,OffsetStart+pMHDR->MODFChunkOffset);
-
-	BLZ_CHUNK_MH2O * pMH2O=(BLZ_CHUNK_MH2O *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MH2O,OffsetStart+pMHDR->MH2OChunkOffset);
-
-	BLZ_CHUNK_MFBO * pMFBO=(BLZ_CHUNK_MFBO *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MFBO,OffsetStart+pMHDR->MFBOChunkOffset);
-
-	BLZ_CHUNK_MTFX * pMTFX=(BLZ_CHUNK_MTFX *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MTFX,OffsetStart+pMHDR->MTFXChunkOffset);
-
-	CEasyArray<CSmartPtr<CD3DTexture> >		TextureList;
-	CEasyArray<TEXTURE_LAYER_INFO>			TextureLayerInfos;
-
-	
-	UINT Ptr=0;
-	UINT TextureCount=0;
-	while(Ptr<pMTEX->ChunkSize)
-	{
-		TextureCount++;
-		Ptr+=strlen(pMTEX->TextureFileNames+Ptr)+1;
-	}
-	TextureList.Resize(TextureCount);
-	Ptr=0;
-	TextureCount=0;
-	while(Ptr<pMTEX->ChunkSize)
-	{
-		CEasyString TextureFileName=pMTEX->TextureFileNames+Ptr;
-		TextureFileName.MakeUpper();
-		TextureFileName.Replace(".BLP","_S.BLP");
-		TextureList[TextureCount]=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(TextureFileName);
-		TextureCount++;
-		Ptr+=strlen(pMTEX->TextureFileNames+Ptr)+1;
-	}
-
-	
-
-	CEasyArray<CD3DSubMesh *> LiquidSubMeshList;
-
-	CBLZChunkFile::CChunkList * pChunkList=ADTChunk.GetChunks(CHUNK_ID_ADT_MCNK);
-	m_SubMeshList.Create(pChunkList->GetCount());
-	TextureLayerInfos.Resize(pChunkList->GetCount());
-	for(UINT i=0;i<pChunkList->GetCount();i++)
-	{
-		CBLZChunkFile MCNKChunk;
-
-		MCNKChunk.Load((BYTE *)((*pChunkList)[i]),((*pChunkList)[i])->ChunkSize+sizeof(BLZ_CHUNK_HEADER));
-
-		BLZ_CHUNK_MCNK * pMCNK=(BLZ_CHUNK_MCNK *)MCNKChunk.GetFirstChunk(CHUNK_ID_ADT_MCNK);
-		BLZ_CHUNK_MCVT * pMCVT=(BLZ_CHUNK_MCVT *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCVT,pMCNK->MCVTOffset);
-		BLZ_CHUNK_MCCV * pMCCV=(BLZ_CHUNK_MCCV *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCCV,pMCNK->MCCVOffset);
-		BLZ_CHUNK_MCNR * pMCNR=(BLZ_CHUNK_MCNR *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCNR,pMCNK->MCNROffset);
-		BLZ_CHUNK_MCLY * pMCLY=(BLZ_CHUNK_MCLY *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCLY,pMCNK->MCLYOffset);
-		BLZ_CHUNK_MCAL * pMCAL=(BLZ_CHUNK_MCAL *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCAL,pMCNK->MCALOffset);
-		BLZ_CHUNK_MCSH * pMCSH=(BLZ_CHUNK_MCSH *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCSH,pMCNK->MCSHOffset);
-		BLZ_CHUNK_MCLQ * pMCLQ=(BLZ_CHUNK_MCLQ *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCLQ,pMCNK->MCLQOffset);
-		
-		
-		//if(pMCCV)
-		//{
-		//	PrintSystemLog(0,"%d有顶点色",
-		//		i);
-		//}		
-		
-
-		if(!LoadAlphaLayer(TextureLayerInfos[i],pMCNK->LayerCount,pMCLY,pMCAL,i,IsBigAlphaMask))
-			return false;
-
-		if((pMCNK->Flags&MCNK_FLAG_MCSH_AVAILABLE)&&pMCSH)
-		{
-			LoadShadowMap(TextureLayerInfos[i],pMCSH,i);
-		}
-
-
-		CD3DSubMesh * pD3DSubMesh=new CD3DSubMesh(m_pManager->GetDevice());
-
-
-		UINT IndexCount=3*4*64;
-
-		UINT VertexCount=145;
-
-		pD3DSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_DIFFUSE|D3DFVF_TEX1;
-		pD3DSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_VERTEXT);
-		pD3DSubMesh->GetVertexFormat().IndexSize=sizeof(WORD);
-		pD3DSubMesh->SetPrimitiveType(D3DPT_TRIANGLELIST);
-		pD3DSubMesh->SetPrimitiveCount(IndexCount/3);		
-		pD3DSubMesh->SetVertexCount(VertexCount);
-		pD3DSubMesh->SetIndexCount(IndexCount);
-
-		pD3DSubMesh->AllocDXIndexBuffer();
-		pD3DSubMesh->AllocDXVertexBuffer();
-
-		D3DCOLORVALUE WhiteColor={1.0f,1.0f,1.0f,1.0f};
-		D3DCOLORVALUE GrayColor={0.8f,0.8f,0.8f,1.0f};
-		D3DCOLORVALUE BlackColor={0.0f,0.0f,0.0f,1.0f};
-
-		pD3DSubMesh->GetMaterial().GetMaterial().Ambient=WhiteColor;
-		pD3DSubMesh->GetMaterial().GetMaterial().Diffuse=WhiteColor;
-		pD3DSubMesh->GetMaterial().GetMaterial().Specular=WhiteColor;
-		pD3DSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
-		pD3DSubMesh->GetMaterial().GetMaterial().Power=40.0f;
-
-		CD3DFX * pFX=BuildFX(i,TextureLayerInfos[i].LayerCount,TextureLayerInfos[i].pShadowMap!=NULL,IsBigAlphaMask);
-		pD3DSubMesh->GetMaterial().SetFX(pFX);
-
-		
-		for(UINT j=0;j<TextureLayerInfos[i].LayerCount;j++)
-		{			
-			CD3DTexture * pTexture=TextureList[TextureLayerInfos[i].Layers[j].TextureIndex];
-			pD3DSubMesh->GetMaterial().AddTexture(pTexture,0);
-			if(pTexture)
-				pTexture->AddUseRef();
-			if(TextureLayerInfos[i].Layers[j].Flag&MLIF_ALPHA_MAP)
-			{
-				pD3DSubMesh->GetMaterial().AddTexture(TextureLayerInfos[i].Layers[j].pAlphaMap,TP_ALPHA_MAP);
-				if(TextureLayerInfos[i].Layers[j].pAlphaMap)
-					TextureLayerInfos[i].Layers[j].pAlphaMap->AddUseRef();
-			}			
-		}
-
-		if(TextureLayerInfos[i].pShadowMap)
-		{
-			pD3DSubMesh->GetMaterial().AddTexture(TextureLayerInfos[i].pShadowMap,TP_SHADOW_MAP);
-			TextureLayerInfos[i].pShadowMap->AddUseRef();
-		}
-		
-
-		WORD * pModelIndices=NULL;
-		pD3DSubMesh->GetDXIndexBuffer()->Lock(0,0,(LPVOID *)&pModelIndices,0);
-
-		MODEL_VERTEXT * pModelVertices=NULL;
-		pD3DSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pModelVertices,0);
-		
-
-		CD3DVector3 Pos=pMCNK->Position;
-		Pos.x=BLZ_ADT_MAP_TRANS_VALUE-Pos.x;
-		Pos.y=BLZ_ADT_MAP_TRANS_VALUE-Pos.y;
-
-		Pos=BLZTranslationToD3D(Pos);
-
-		if(i==0)
-			m_Position=Pos;
-
-		m_TerrainHeightInfo[i].HaveWater=false;
-		for(UINT h=0;h<TERRAIN_BLOCK_HEIGHT_COUNT;h++)
-		{
-			m_TerrainHeightInfo[i].TerrainHeight[h]=pMCVT->Heights[h]+Pos.y;
-		}
-
-		m_TerrainHoleInfo[i]=pMCNK->Holes;
-
-		//CD3DSubMesh * pNormalSubMesh=new CD3DSubMesh;
-
-		//pNormalSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE;
-		//pNormalSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_NORMAL_VERTEXT);
-		//pNormalSubMesh->SetVertexCount(VertexCount*2);
-		//pNormalSubMesh->SetPrimitiveCount(VertexCount);
-		//pNormalSubMesh->SetPrimitiveType(D3DPT_LINELIST);
-
-		//pNormalSubMesh->AllocDXVertexBuffer(m_pManager->GetDevice());
-
-		//pNormalSubMesh->GetMaterial().SetFX(
-		//	m_pManager->GetDevice()->GetFXManager()->
-		//	LoadFXFromMemory("DEFAULT_NORMAL_FX_NT",(void *)DEFAULT_NORMAL_FX_NT,
-		//	(int)strlen(DEFAULT_NORMAL_FX_NT)));
-
-
-
-		//MODEL_NORMAL_VERTEXT * pNormalVertices=NULL;
-		//pNormalSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pNormalVertices,0);
-
-	
-
-		float Pitch=BLZ_ADT_MAP_TILE_SIZE/16;
-
-		UINT VertexIndex=0;
-		int Line=0;
-		while(VertexIndex<145)
-		{
-			if(Line&1)
-			{
-				//8 vertices/line
-				for(int x=0;x<8;x++)
-				{
-					pModelVertices[VertexIndex].Pos.x=Pitch+Pitch*x*2;
-					pModelVertices[VertexIndex].Pos.z=-Pitch*Line;					
-					pModelVertices[VertexIndex].Pos.y=pMCVT->Heights[VertexIndex];
-					pModelVertices[VertexIndex].Pos+=Pos;
-
-					CD3DVector3 Normal;
-					Normal.z=pMCNR->Normals[VertexIndex][0]/127.0f;
-					Normal.x=-pMCNR->Normals[VertexIndex][1]/127.0f;
-					Normal.y=pMCNR->Normals[VertexIndex][2]/127.0f;
-					pModelVertices[VertexIndex].Normal=Normal;
-
-					pModelVertices[VertexIndex].Color=0xffffffff;
-
-					pModelVertices[VertexIndex].Tex.x=(x*2.0f+1.0f)/16.0f;
-					pModelVertices[VertexIndex].Tex.y=Line/16.0f;
-
-					//pNormalVertices[VertexIndex*2].Pos=pModelVertices[VertexIndex].Pos;
-					//pNormalVertices[VertexIndex*2].Color=0xFFFF0000;
-					//pNormalVertices[VertexIndex*2+1].Pos=pModelVertices[VertexIndex].Pos+pModelVertices[VertexIndex].Normal*2;
-					//pNormalVertices[VertexIndex*2+1].Color=0xFF0000FF;
-					
-
-					VertexIndex++;
-				}
-
-			}
-			else
-			{
-				//9 vertices/line
-				for(int x=0;x<9;x++)
-				{
-					pModelVertices[VertexIndex].Pos.x=Pitch*x*2;
-					pModelVertices[VertexIndex].Pos.z=-Pitch*Line;
-					pModelVertices[VertexIndex].Pos.y=pMCVT->Heights[VertexIndex];					
-					pModelVertices[VertexIndex].Pos+=Pos;
-
-					CD3DVector3 Normal;
-					Normal.z=pMCNR->Normals[VertexIndex][0]/127.0f;
-					Normal.x=-pMCNR->Normals[VertexIndex][1]/127.0f;
-					Normal.y=pMCNR->Normals[VertexIndex][2]/127.0f;
-					pModelVertices[VertexIndex].Normal=Normal;		
-
-					pModelVertices[VertexIndex].Color=0xffffffff;
-
-					pModelVertices[VertexIndex].Tex.x=(x*2.0f)/16.0f;
-					pModelVertices[VertexIndex].Tex.y=Line/16.0f;
-
-
-					//pNormalVertices[VertexIndex*2].Pos=pModelVertices[VertexIndex].Pos;
-					//pNormalVertices[VertexIndex*2].Color=0xFFFF0000;
-					//pNormalVertices[VertexIndex*2+1].Pos=pModelVertices[VertexIndex].Pos+pModelVertices[VertexIndex].Normal*2;
-					//pNormalVertices[VertexIndex*2+1].Color=0xFF0000FF;
-	
-
-					VertexIndex++;
-				}
-			}
-			Line++;
-		}	
-
-		
-		UINT IndexIndex=0;
-		for(int y=0;y<8;y++)
-		{
-			for(int x=0;x<8;x++)
-			{
-				if((ADT_HOLE_MASK[y/2][x/2]&((WORD)pMCNK->Holes))==0)
-				{
-					pModelIndices[IndexIndex]	=(y*8+(y+1)*9)+x;
-					pModelIndices[IndexIndex+1]	=(y*8+(y+1)*9)+x+8;
-					pModelIndices[IndexIndex+2]	=(y*8+(y+1)*9)+x-9;
-
-
-					pModelIndices[IndexIndex+3]	=(y*8+(y+1)*9)+x;
-					pModelIndices[IndexIndex+4]	=(y*8+(y+1)*9)+x+9;
-					pModelIndices[IndexIndex+5]	=(y*8+(y+1)*9)+x+8;
-
-
-					pModelIndices[IndexIndex+6]	=(y*8+(y+1)*9)+x;
-					pModelIndices[IndexIndex+7]	=(y*8+(y+1)*9)+x-8;
-					pModelIndices[IndexIndex+8]	=(y*8+(y+1)*9)+x+9;
-
-
-					pModelIndices[IndexIndex+9]	=(y*8+(y+1)*9)+x;
-					pModelIndices[IndexIndex+10]=(y*8+(y+1)*9)+x-9;
-					pModelIndices[IndexIndex+11]=(y*8+(y+1)*9)+x-8;				
-
-					IndexIndex+=3*4;
-				}
-			}
-		}
-
-		//pNormalSubMesh->GetDXVertexBuffer()->Unlock();
-
-		pD3DSubMesh->SetIndexCount(IndexIndex);
-		pD3DSubMesh->SetPrimitiveCount(IndexIndex/3);
-
-		pD3DSubMesh->GetDXVertexBuffer()->Unlock();
-
-		pD3DSubMesh->GetDXIndexBuffer()->Unlock();
-
-		pD3DSubMesh->AddProperty(CD3DSubMesh::SMF_HAVE_COLLIDE);
-
-		pD3DSubMesh->SetID(i);
-		CEasyString SubMeshName;
-		//SubMeshName.Format("%s\\%d",ModelFileName,i);
-		SubMeshName.Format("%d",i);
-		pD3DSubMesh->SetName(SubMeshName);
-
-		
-
-
-		if(pMH2O)
-		{
-			m_TerrainHeightInfo[i].HaveWater=true;
-			memset(m_TerrainHeightInfo[i].WaterHeight,0xFF,sizeof(m_TerrainHeightInfo[i].WaterHeight));
-			MH2OInfo * pWaterInfo=(MH2OInfo *)((BYTE *)pMH2O+sizeof(BLZ_CHUNK_HEADER)+pMH2O->Header[i].InformationOffset);			
-			UINT LayerCount=pMH2O->Header[i].LayerCount;
-			for(UINT l=0;l<LayerCount;l++)
-			{
-				CD3DSubMesh * pWaterSubMesh=new CD3DSubMesh(m_pManager->GetDevice());
-
-				IndexCount=pWaterInfo[l].Width*pWaterInfo[l].Height*2*3;
-
-				VertexCount=(pWaterInfo[l].Width+1)*(pWaterInfo[l].Height+1);
-
-				pWaterSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1;
-				pWaterSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_LIQUID_VERTEXT);
-				pWaterSubMesh->GetVertexFormat().IndexSize=sizeof(WORD);
-				pWaterSubMesh->SetPrimitiveType(D3DPT_TRIANGLELIST);
-				pWaterSubMesh->SetPrimitiveCount(IndexCount/3);		
-				pWaterSubMesh->SetVertexCount(VertexCount);
-				pWaterSubMesh->SetIndexCount(IndexCount);
-
-				pWaterSubMesh->AllocDXIndexBuffer();
-				pWaterSubMesh->AllocDXVertexBuffer();
-
-
-				pWaterSubMesh->GetMaterial().GetMaterial().Ambient=WhiteColor;
-				pWaterSubMesh->GetMaterial().GetMaterial().Diffuse=WhiteColor;
-				pWaterSubMesh->GetMaterial().GetMaterial().Specular=WhiteColor;
-				pWaterSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
-				pWaterSubMesh->GetMaterial().GetMaterial().Power=40.0f;
-
-				pFX=BuildLiquidFX();
-				pWaterSubMesh->GetMaterial().SetFX(pFX);
-				pWaterSubMesh->SetTransparent(true);
-
-				CD3DTexture * pLiquidTexture=LoadLiquidTexture(pWaterInfo[l].LiquidType);
-
-				if(pLiquidTexture)
-				{
-					pWaterSubMesh->GetMaterial().AddTexture(pLiquidTexture,0);
-				}
-
-				float * pHeightMap=NULL;
-				BYTE * pAlphaMap=NULL;
-
-				
-				if(pWaterInfo[l].HeightMapOffset)
-				{
-					BYTE * pData=(BYTE *)pMH2O+sizeof(BLZ_CHUNK_HEADER)+pWaterInfo[l].HeightMapOffset;
-					if((pWaterInfo[l].Flags&MH2OF_NO_HEIGHT_MAP)==0)
-					{
-						pHeightMap=(float *)pData;
-						pData+=sizeof(float)*(pWaterInfo[l].Width+1)*(pWaterInfo[l].Height+1);
-					}
-					//if(pWaterInfo[l].Flags&MH2OF_HAVE_HEIGHT_MAP)
-					{
-						pAlphaMap=pData;
-					}
-				}
-
-				pModelIndices=NULL;
-				pWaterSubMesh->GetDXIndexBuffer()->Lock(0,0,(LPVOID *)&pModelIndices,0);
-
-				MODEL_LIQUID_VERTEXT * pLiquidVertices=NULL;
-				pWaterSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pLiquidVertices,0);
-
-
-				VertexIndex=0;
-				for(int y=pWaterInfo[l].YOffset;y<=pWaterInfo[l].YOffset+pWaterInfo[l].Height;y++)
-				{
-					for(int x=pWaterInfo[l].XOffset;x<=pWaterInfo[l].XOffset+pWaterInfo[l].Width;x++)
-					{
-						pLiquidVertices[VertexIndex].Pos.x=Pitch*x*2;
-						pLiquidVertices[VertexIndex].Pos.z=-Pitch*y*2;
-
-						pLiquidVertices[VertexIndex].Pos+=Pos;
-
-						int Index=(y-pWaterInfo[l].YOffset)*(pWaterInfo[l].Width+1)+(x-pWaterInfo[l].XOffset);
-
-						assert(y*8+x<TERRAIN_BLOCK_WATER_HEIGHT_COUNT);
-
-						if(pHeightMap)
-						{
-							pLiquidVertices[VertexIndex].Pos.y=pHeightMap[Index];
-							m_TerrainHeightInfo[i].WaterHeight[y*9+x]=pHeightMap[Index];
-						}
-						else
-						{
-							pLiquidVertices[VertexIndex].Pos.y=pWaterInfo[l].HeightLevel1;
-							m_TerrainHeightInfo[i].WaterHeight[y*9+x]=pWaterInfo[l].HeightLevel1;
-						}
-
-						if(pAlphaMap)
-						{
-							pLiquidVertices[VertexIndex].Color=(((pAlphaMap[Index])&0xFF)<<24);
-						}
-						else
-						{
-							pLiquidVertices[VertexIndex].Color=0xFF000000;
-						}
-
-						pLiquidVertices[VertexIndex].Tex.x=(x*2.0f)/16.0f;
-						pLiquidVertices[VertexIndex].Tex.y=y*2/16.0f;
-
-						VertexIndex++;
-					}
-				}
-
-				BYTE * pRenderMask=NULL;
-				if(pWaterInfo[l].Mask2Offset)
-					pRenderMask=((BYTE *)pMH2O+sizeof(BLZ_CHUNK_HEADER)+pWaterInfo[l].Mask2Offset);
-
-				IndexIndex=0;
-
-				for(int y=0;y<pWaterInfo[l].Height;y++)
-				{
-					for(int x=0;x<pWaterInfo[l].Width;x++)
-					{
-						//if(WantRenderWater(pRenderMask,y*pWaterInfo[l].Width+x))						
-						{
-							pModelIndices[IndexIndex]	=y*(pWaterInfo[l].Width+1)+x;
-							pModelIndices[IndexIndex+1]	=y*(pWaterInfo[l].Width+1)+x+1;
-							pModelIndices[IndexIndex+2]	=(y+1)*(pWaterInfo[l].Width+1)+x;
-
-
-							pModelIndices[IndexIndex+3]	=(y+1)*(pWaterInfo[l].Width+1)+x;
-							pModelIndices[IndexIndex+4]	=y*(pWaterInfo[l].Width+1)+x+1;
-							pModelIndices[IndexIndex+5]	=(y+1)*(pWaterInfo[l].Width+1)+x+1;
-
-							IndexIndex+=6;
-						}
-					}
-					
-				}
-
-				pWaterSubMesh->SetIndexCount(IndexIndex);
-				pWaterSubMesh->SetPrimitiveCount(IndexIndex/3);
-
-
-				pWaterSubMesh->GetDXVertexBuffer()->Unlock();
-
-				pWaterSubMesh->GetDXIndexBuffer()->Unlock();
-
-				pWaterSubMesh->SetID(1000+i);
-
-				pWaterSubMesh->SetProperty(pWaterSubMesh->GetProperty()|SMP_IS_WATER);
-
-				//SubMeshName.Format("%s\\W%d-%d",ModelFileName,i,l);
-				SubMeshName.Format("W%d-%d",i,l);
-				pWaterSubMesh->SetName(SubMeshName);
-
-				LiquidSubMeshList.Add(pWaterSubMesh);
-				pD3DSubMesh->AddProperty(SMP_RENDER_TO_DEPTH);				
-			}
-		}
-		else if(pMCNK->LiquidSize>sizeof(BLZ_CHUNK_HEADER))
-		{
-
-			m_TerrainHeightInfo[i].HaveWater=true;
-			memset(m_TerrainHeightInfo[i].WaterHeight,0xFF,sizeof(m_TerrainHeightInfo[i].WaterHeight));
-
-			CD3DSubMesh * pWaterSubMesh=new CD3DSubMesh(m_pManager->GetDevice());
-
-
-			IndexCount=8*8*2*3;
-
-			VertexCount=9*9;
-
-			pWaterSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1;
-			pWaterSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_LIQUID_VERTEXT);
-			pWaterSubMesh->GetVertexFormat().IndexSize=sizeof(WORD);
-			pWaterSubMesh->SetPrimitiveType(D3DPT_TRIANGLELIST);
-			pWaterSubMesh->SetPrimitiveCount(IndexCount/3);		
-			pWaterSubMesh->SetVertexCount(VertexCount);
-			pWaterSubMesh->SetIndexCount(IndexCount);
-
-			pWaterSubMesh->AllocDXIndexBuffer();
-			pWaterSubMesh->AllocDXVertexBuffer();
-			
-
-			pWaterSubMesh->GetMaterial().GetMaterial().Ambient=WhiteColor;
-			pWaterSubMesh->GetMaterial().GetMaterial().Diffuse=WhiteColor;
-			pWaterSubMesh->GetMaterial().GetMaterial().Specular=WhiteColor;
-			pWaterSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
-			pWaterSubMesh->GetMaterial().GetMaterial().Power=40.0f;
-
-			pFX=BuildLiquidFX();
-			pWaterSubMesh->GetMaterial().SetFX(pFX);
-			pWaterSubMesh->SetTransparent(true);
-
-			int LiguidType;
-			if(pMCNK->Flags&MCNK_FLAG_SLIME)
-			{
-				LiguidType=WLT_SLIMA;
-			}
-			else if(pMCNK->Flags&MCNK_FLAG_MAGMA)
-			{
-				LiguidType=WLT_MAGMA;
-			}
-			else if(pMCNK->Flags&MCNK_FLAG_OCEAN)
-			{
-				LiguidType=WLT_OCEAN;
-			}
-			else
-			{
-				LiguidType=WLT_RIVER;
-			}
-
-			CD3DTexture * pLiquidTexture=LoadLiquidTexture(LiguidType);
-
-			if(pLiquidTexture)
-			{
-				pWaterSubMesh->GetMaterial().AddTexture(pLiquidTexture,0);
-			}
-
-
-
-			pModelIndices=NULL;
-			pWaterSubMesh->GetDXIndexBuffer()->Lock(0,0,(LPVOID *)&pModelIndices,0);
-
-			MODEL_LIQUID_VERTEXT * pLiquidVertices=NULL;
-			pWaterSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pLiquidVertices,0);
-
-			
-
-			VertexIndex=0;
-			for(int y=0;y<9;y++)
-			{
-				for(int x=0;x<9;x++)
-				{
-					pLiquidVertices[VertexIndex].Pos.x=Pitch*x*2;
-					pLiquidVertices[VertexIndex].Pos.z=-Pitch*y*2;
-
-					pLiquidVertices[VertexIndex].Pos+=Pos;
-
-
-					pLiquidVertices[VertexIndex].Pos.y=pMCLQ->LiquidInfo[y][x].Height;
-
-					
-					
-					if(pLiquidVertices[VertexIndex].Pos.y<pMCLQ->MinHeight)
-						pLiquidVertices[VertexIndex].Pos.y=pMCLQ->MinHeight;
-					if(pLiquidVertices[VertexIndex].Pos.y>pMCLQ->MaxHeight)
-						pLiquidVertices[VertexIndex].Pos.y=pMCLQ->MaxHeight;
-
-					m_TerrainHeightInfo[i].WaterHeight[y*9+x]=pLiquidVertices[VertexIndex].Pos.y;
-
-								
-
-					pLiquidVertices[VertexIndex].Color=(((pMCLQ->LiquidInfo[y][x].Color1)&0xFF)<<24);
-
-					pLiquidVertices[VertexIndex].Tex.x=(x*2.0f)/16.0f;
-					pLiquidVertices[VertexIndex].Tex.y=y*2/16.0f;
-
-					VertexIndex++;
-				}
-			}
-
-			IndexIndex=0;
-
-			for(int y=0;y<8;y++)
-			{
-				for(int x=0;x<8;x++)
-				{
-					if((pMCLQ->RenderFlag[y][x]&8)==0)
-					{
-						pModelIndices[IndexIndex]	=y*9+x;
-						pModelIndices[IndexIndex+1]	=y*9+x+1;
-						pModelIndices[IndexIndex+2]	=(y+1)*9+x;
-
-
-						pModelIndices[IndexIndex+3]	=(y+1)*9+x;
-						pModelIndices[IndexIndex+4]	=y*9+x+1;
-						pModelIndices[IndexIndex+5]	=(y+1)*9+x+1;
-
-						IndexIndex+=6;
-					}
-				}
-			}
-
-			pWaterSubMesh->SetIndexCount(IndexIndex);
-			pWaterSubMesh->SetPrimitiveCount(IndexIndex/3);
-
-
-			pWaterSubMesh->GetDXVertexBuffer()->Unlock();
-
-			pWaterSubMesh->GetDXIndexBuffer()->Unlock();
-
-			pWaterSubMesh->SetID(1000+i);
-			pWaterSubMesh->SetProperty(pWaterSubMesh->GetProperty()|SMP_IS_WATER);
-
-			//SubMeshName.Format("%s\\L%d",ModelFileName,i);
-			SubMeshName.Format("L%d",i);
-			pWaterSubMesh->SetName(SubMeshName);
-
-			LiquidSubMeshList.Add(pWaterSubMesh);
-			pD3DSubMesh->AddProperty(SMP_RENDER_TO_DEPTH);			
-		}
-
-		m_SubMeshList.Add(pD3DSubMesh);
-
-		//m_SubMeshList.Add(pNormalSubMesh);
-		
-	}
-	
-	
-	for(UINT i=0;i<LiquidSubMeshList.GetCount();i++)
-	{
-		m_SubMeshList.Add(LiquidSubMeshList[i]);
-	}
-
-	UINT Count=pMDDF->ChunkSize/sizeof(ADT_M2_OBJECT_INFO);
-	m_M2ObjectList.Resize(Count);
-	for(UINT i=0;i<Count;i++)
-	{
-		m_M2ObjectList[i].ID=pMDDF->M2Objects[i].ID;
-		m_M2ObjectList[i].pModelResource=NULL;
-		CEasyString ObjectFileName=pMMDX->M2FileNames+pMMID->M2FileNameIndices[pMDDF->M2Objects[i].Index];
-		int Pos=ObjectFileName.ReverseFind('.');
-		if(Pos>=0)
-		{
-			ObjectFileName=ObjectFileName.Left(Pos);
-			ObjectFileName+=".m2";
-
-
-			m_M2ObjectList[i].pModelResource=NULL;
-			m_M2ObjectList[i].ModelFilePath=ObjectFileName;
-			m_M2ObjectList[i].Position.x=pMDDF->M2Objects[i].Position.x;
-			m_M2ObjectList[i].Position.y=pMDDF->M2Objects[i].Position.y;
-			m_M2ObjectList[i].Position.z=-pMDDF->M2Objects[i].Position.z;					
-			m_M2ObjectList[i].Orientation=CD3DQuaternion::FromRotationYawPitchRoll(
-				-pMDDF->M2Objects[i].Orientation.y*PI/180.0f,
-				-pMDDF->M2Objects[i].Orientation.x*PI/180.0f,
-				pMDDF->M2Objects[i].Orientation.z*PI/180.0f);
-			m_M2ObjectList[i].Orientation.Normalize();
-			m_M2ObjectList[i].Scale=pMDDF->M2Objects[i].Scale/1024.0f;
-			m_M2ObjectList[i].Flag=pMDDF->M2Objects[i].Flags;
-			
-			if(BeLoadObject)
-			{
-				CD3DWOWM2ModelResource* pResource=
-					dynamic_cast<CD3DWOWM2ModelResource*>(m_pManager->GetResource(ObjectFileName));
-				if(!pResource)
-				{
-					pResource=new CD3DWOWM2ModelResource(m_pManager);
-					if(pResource->LoadFromFile(ObjectFileName))
-					{
-						//PrintSystemLog(0,"加载了[%s]",(LPCTSTR)ObjectFileName);
-						if(!m_pManager->AddResource(pResource,ObjectFileName))
-						{
-							pResource->Release();
-							pResource=NULL;
-						}
-					}
-					else
-					{
-						PrintD3DLog(0,"加载M2文件%s失败",(LPCTSTR)ObjectFileName);
-						pResource->Release();
-						pResource=NULL;
-					}						
-				}
-				else
-				{
-					pResource->AddUseRef();
-				}	
-				m_M2ObjectList[i].pModelResource=pResource;
-			}
-			
-		}			
-		
-		
-	}
-
-
-	Count=pMODF->ChunkSize/sizeof(ADT_WMO_OBJECT_INFO);
-	m_WMOObjectList.Resize(Count);
-	for(UINT i=0;i<Count;i++)
-	{
-		m_WMOObjectList[i].ID=pMODF->WMOObjects[i].ID;
-		CEasyString FileName=pMWMO->WMOFileNames+pMWID->WMOFileNameIndices[pMODF->WMOObjects[i].Index];
-		//FileName.MakeUpper();
-		//FileName.Replace(".MDX",".M2");
-
-		m_WMOObjectList[i].pModelResource=NULL;
-		
-		m_WMOObjectList[i].ModelFilePath=FileName;
-		m_WMOObjectList[i].Position.x=pMODF->WMOObjects[i].Position.x;
-		m_WMOObjectList[i].Position.y=pMODF->WMOObjects[i].Position.y;
-		m_WMOObjectList[i].Position.z=-pMODF->WMOObjects[i].Position.z;		
-
-		m_WMOObjectList[i].Orientation=CD3DQuaternion::FromRotationYawPitchRoll(
-			-pMODF->WMOObjects[i].Orientation.y*PI/180.0f,
-			-pMODF->WMOObjects[i].Orientation.x*PI/180.0f,
-			pMODF->WMOObjects[i].Orientation.z*PI/180.0f);
-		m_WMOObjectList[i].Orientation.Normalize();
-		m_WMOObjectList[i].DoodadSet=pMODF->WMOObjects[i].DoodadSet;
-		m_WMOObjectList[i].Flag=pMODF->WMOObjects[i].Flags;
-
-		if(BeLoadObject)
-		{
-			CD3DWOWWMOModelResource* pResource=
-				dynamic_cast<CD3DWOWWMOModelResource*>(m_pManager->GetResource(FileName));
-			if(!pResource)
-			{
-				pResource=new CD3DWOWWMOModelResource(m_pManager);
-				if(pResource->LoadFromFile(FileName))
-				{
-					//PrintSystemLog(0,"加载了[%s]",(LPCTSTR)FileName);
-					if(!m_pManager->AddResource(pResource,FileName))
-					{
-						pResource->Release();
-						pResource=NULL;
-					}
-				}
-				else
-				{
-					PrintD3DLog(0,"加载WMO文件%s失败",(LPCTSTR)FileName);
-					pResource->Release();
-					pResource=NULL;
-				}						
-			}
-			else
-			{
-				pResource->AddUseRef();
-			}
-
-			m_WMOObjectList[i].pModelResource=pResource;
-		}
-					
-	}
+	if(!LoadObjectsInfo(FileName+"_obj0.adt",BeLoadObject))
+		return false;
 
 	CreateBounding();
 	return true;
@@ -962,6 +214,852 @@ bool CD3DWOWADTModelResource::GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT&
 				 WaterHeight=h3+u*(h2-h1)+v*(h1-h3);
 			 }
 		 }
+	}
+
+	return true;
+}
+
+bool CD3DWOWADTModelResource::LoadTerrain(LPCTSTR ModelFileName)
+{
+	IFileAccessor * pFile;	
+
+	pFile=CD3DWOWWMOModel::CreateFileAccessor();
+	if(pFile==NULL)
+		return false;
+	if(!pFile->Open(ModelFileName,IFileAccessor::modeRead))
+	{
+		PrintD3DLog(0,"文件%s打开失败",ModelFileName);
+		pFile->Release();
+		return false;	
+	}
+
+	SetName(ModelFileName);
+
+	CBLZChunkFile ADTChunk;
+
+	if(!ADTChunk.Load(pFile))
+	{
+		pFile->Release();
+		return false;
+	}
+	pFile->Release();	
+
+	BLZ_CHUNK_VERSION * pVersion=(BLZ_CHUNK_VERSION *)ADTChunk.GetFirstChunk(CHUNK_ID_VERSION);
+
+	BLZ_CHUNK_MHDR * pMHDR=(BLZ_CHUNK_MHDR *)ADTChunk.GetFirstChunk(CHUNK_ID_ADT_MHDR);
+
+	UINT OffsetStart=sizeof(BLZ_CHUNK_VERSION)+sizeof(BLZ_CHUNK_HEADER);
+
+	
+
+	BLZ_CHUNK_MH2O * pMH2O=(BLZ_CHUNK_MH2O *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MH2O,OffsetStart+pMHDR->MH2OChunkOffset);
+
+	BLZ_CHUNK_MFBO * pMFBO=(BLZ_CHUNK_MFBO *)ADTChunk.GetChunkByOffset(CHUNK_ID_ADT_MFBO,OffsetStart+pMHDR->MFBOChunkOffset);
+
+	CEasyArray<CD3DSubMesh *> LiquidSubMeshList;
+
+	CBLZChunkFile::CChunkList * pChunkList=ADTChunk.GetChunks(CHUNK_ID_ADT_MCNK);
+	m_SubMeshList.Create(pChunkList->GetCount());
+	
+	for(UINT i=0;i<pChunkList->GetCount();i++)
+	{
+		CBLZChunkFile MCNKChunk;
+
+		MCNKChunk.Load((BYTE *)((*pChunkList)[i]),((*pChunkList)[i])->ChunkSize+sizeof(BLZ_CHUNK_HEADER));
+
+		BLZ_CHUNK_MCNK * pMCNK=(BLZ_CHUNK_MCNK *)MCNKChunk.GetFirstChunk(CHUNK_ID_ADT_MCNK);
+		BLZ_CHUNK_MCVT * pMCVT=(BLZ_CHUNK_MCVT *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCVT,pMCNK->MCVTOffset);
+		BLZ_CHUNK_MCCV * pMCCV=(BLZ_CHUNK_MCCV *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCCV,pMCNK->MCCVOffset);
+		BLZ_CHUNK_MCNR * pMCNR=(BLZ_CHUNK_MCNR *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCNR,pMCNK->MCNROffset);	
+		BLZ_CHUNK_MCLQ * pMCLQ=(BLZ_CHUNK_MCLQ *)MCNKChunk.GetChunkByOffset(CHUNK_ID_ADT_MCLQ,pMCNK->MCLQOffset);
+	
+
+
+		CD3DSubMesh * pD3DSubMesh=new CD3DSubMesh(m_pManager->GetDevice());
+
+
+		UINT IndexCount=3*4*64;
+
+		UINT VertexCount=145;
+
+		pD3DSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_DIFFUSE|D3DFVF_TEX1;
+		pD3DSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_VERTEXT);
+		pD3DSubMesh->GetVertexFormat().IndexSize=sizeof(WORD);
+		pD3DSubMesh->SetPrimitiveType(D3DPT_TRIANGLELIST);
+		pD3DSubMesh->SetPrimitiveCount(IndexCount/3);		
+		pD3DSubMesh->SetVertexCount(VertexCount);
+		pD3DSubMesh->SetIndexCount(IndexCount);
+
+		pD3DSubMesh->AllocDXIndexBuffer();
+		pD3DSubMesh->AllocDXVertexBuffer();
+
+		D3DCOLORVALUE WhiteColor={1.0f,1.0f,1.0f,1.0f};
+		D3DCOLORVALUE GrayColor={0.8f,0.8f,0.8f,1.0f};
+		D3DCOLORVALUE BlackColor={0.0f,0.0f,0.0f,1.0f};
+
+		pD3DSubMesh->GetMaterial().GetMaterial().Ambient=WhiteColor;
+		pD3DSubMesh->GetMaterial().GetMaterial().Diffuse=WhiteColor;
+		pD3DSubMesh->GetMaterial().GetMaterial().Specular=WhiteColor;
+		pD3DSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
+		pD3DSubMesh->GetMaterial().GetMaterial().Power=40.0f;
+
+		
+
+
+		WORD * pModelIndices=NULL;
+		pD3DSubMesh->GetDXIndexBuffer()->Lock(0,0,(LPVOID *)&pModelIndices,0);
+
+		MODEL_VERTEXT * pModelVertices=NULL;
+		pD3DSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pModelVertices,0);
+
+
+		CD3DVector3 Pos=pMCNK->Position;
+		Pos.x=BLZ_ADT_MAP_TRANS_VALUE-Pos.x;
+		Pos.y=BLZ_ADT_MAP_TRANS_VALUE-Pos.y;
+
+		Pos=BLZTranslationToD3D(Pos);
+
+		if(i==0)
+			m_Position=Pos;
+
+		m_TerrainHeightInfo[i].HaveWater=false;
+		for(UINT h=0;h<TERRAIN_BLOCK_HEIGHT_COUNT;h++)
+		{
+			m_TerrainHeightInfo[i].TerrainHeight[h]=pMCVT->Heights[h]+Pos.y;
+		}
+
+		m_TerrainHoleInfo[i]=pMCNK->Holes;
+
+		//CD3DSubMesh * pNormalSubMesh=new CD3DSubMesh;
+
+		//pNormalSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE;
+		//pNormalSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_NORMAL_VERTEXT);
+		//pNormalSubMesh->SetVertexCount(VertexCount*2);
+		//pNormalSubMesh->SetPrimitiveCount(VertexCount);
+		//pNormalSubMesh->SetPrimitiveType(D3DPT_LINELIST);
+
+		//pNormalSubMesh->AllocDXVertexBuffer(m_pManager->GetDevice());
+
+		//pNormalSubMesh->GetMaterial().SetFX(
+		//	m_pManager->GetDevice()->GetFXManager()->
+		//	LoadFXFromMemory("DEFAULT_NORMAL_FX_NT",(void *)DEFAULT_NORMAL_FX_NT,
+		//	(int)strlen(DEFAULT_NORMAL_FX_NT)));
+
+
+
+		//MODEL_NORMAL_VERTEXT * pNormalVertices=NULL;
+		//pNormalSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pNormalVertices,0);
+
+
+
+		float Pitch=BLZ_ADT_MAP_TILE_SIZE/16;
+
+		UINT VertexIndex=0;
+		int Line=0;
+		while(VertexIndex<145)
+		{
+			if(Line&1)
+			{
+				//8 vertices/line
+				for(int x=0;x<8;x++)
+				{
+					pModelVertices[VertexIndex].Pos.x=Pitch+Pitch*x*2;
+					pModelVertices[VertexIndex].Pos.z=-Pitch*Line;					
+					pModelVertices[VertexIndex].Pos.y=pMCVT->Heights[VertexIndex];
+					pModelVertices[VertexIndex].Pos+=Pos;
+
+					CD3DVector3 Normal;
+					Normal.z=pMCNR->Normals[VertexIndex][0]/127.0f;
+					Normal.x=-pMCNR->Normals[VertexIndex][1]/127.0f;
+					Normal.y=pMCNR->Normals[VertexIndex][2]/127.0f;
+					pModelVertices[VertexIndex].Normal=Normal;
+
+					pModelVertices[VertexIndex].Color=0xffffffff;
+
+					pModelVertices[VertexIndex].Tex.x=(x*2.0f+1.0f)/16.0f;
+					pModelVertices[VertexIndex].Tex.y=Line/16.0f;
+
+					//pNormalVertices[VertexIndex*2].Pos=pModelVertices[VertexIndex].Pos;
+					//pNormalVertices[VertexIndex*2].Color=0xFFFF0000;
+					//pNormalVertices[VertexIndex*2+1].Pos=pModelVertices[VertexIndex].Pos+pModelVertices[VertexIndex].Normal*2;
+					//pNormalVertices[VertexIndex*2+1].Color=0xFF0000FF;
+
+
+					VertexIndex++;
+				}
+
+			}
+			else
+			{
+				//9 vertices/line
+				for(int x=0;x<9;x++)
+				{
+					pModelVertices[VertexIndex].Pos.x=Pitch*x*2;
+					pModelVertices[VertexIndex].Pos.z=-Pitch*Line;
+					pModelVertices[VertexIndex].Pos.y=pMCVT->Heights[VertexIndex];					
+					pModelVertices[VertexIndex].Pos+=Pos;
+
+					CD3DVector3 Normal;
+					Normal.z=pMCNR->Normals[VertexIndex][0]/127.0f;
+					Normal.x=-pMCNR->Normals[VertexIndex][1]/127.0f;
+					Normal.y=pMCNR->Normals[VertexIndex][2]/127.0f;
+					pModelVertices[VertexIndex].Normal=Normal;		
+
+					pModelVertices[VertexIndex].Color=0xffffffff;
+
+					pModelVertices[VertexIndex].Tex.x=(x*2.0f)/16.0f;
+					pModelVertices[VertexIndex].Tex.y=Line/16.0f;
+
+
+					//pNormalVertices[VertexIndex*2].Pos=pModelVertices[VertexIndex].Pos;
+					//pNormalVertices[VertexIndex*2].Color=0xFFFF0000;
+					//pNormalVertices[VertexIndex*2+1].Pos=pModelVertices[VertexIndex].Pos+pModelVertices[VertexIndex].Normal*2;
+					//pNormalVertices[VertexIndex*2+1].Color=0xFF0000FF;
+
+
+					VertexIndex++;
+				}
+			}
+			Line++;
+		}	
+
+		
+
+		UINT IndexIndex=0;
+		for(int y=0;y<8;y++)
+		{
+			for(int x=0;x<8;x++)
+			{
+				if((ADT_HOLE_MASK[y/2][x/2]&((WORD)pMCNK->Holes))==0)
+				{
+					pModelIndices[IndexIndex]	=(y*8+(y+1)*9)+x;
+					pModelIndices[IndexIndex+1]	=(y*8+(y+1)*9)+x+8;
+					pModelIndices[IndexIndex+2]	=(y*8+(y+1)*9)+x-9;
+
+
+					pModelIndices[IndexIndex+3]	=(y*8+(y+1)*9)+x;
+					pModelIndices[IndexIndex+4]	=(y*8+(y+1)*9)+x+9;
+					pModelIndices[IndexIndex+5]	=(y*8+(y+1)*9)+x+8;
+
+
+					pModelIndices[IndexIndex+6]	=(y*8+(y+1)*9)+x;
+					pModelIndices[IndexIndex+7]	=(y*8+(y+1)*9)+x-8;
+					pModelIndices[IndexIndex+8]	=(y*8+(y+1)*9)+x+9;
+
+
+					pModelIndices[IndexIndex+9]	=(y*8+(y+1)*9)+x;
+					pModelIndices[IndexIndex+10]=(y*8+(y+1)*9)+x-9;
+					pModelIndices[IndexIndex+11]=(y*8+(y+1)*9)+x-8;				
+
+					IndexIndex+=3*4;
+				}
+			}
+		}
+
+		//pNormalSubMesh->GetDXVertexBuffer()->Unlock();
+
+		pD3DSubMesh->SetIndexCount(IndexIndex);
+		pD3DSubMesh->SetPrimitiveCount(IndexIndex/3);
+
+		pD3DSubMesh->GetDXVertexBuffer()->Unlock();
+
+		pD3DSubMesh->GetDXIndexBuffer()->Unlock();
+
+		pD3DSubMesh->AddProperty(CD3DSubMesh::SMF_HAVE_COLLIDE);
+
+		pD3DSubMesh->SetID(i);
+		CEasyString SubMeshName;
+		//SubMeshName.Format("%s\\%d",ModelFileName,i);
+		SubMeshName.Format("%d",i);
+		pD3DSubMesh->SetName(SubMeshName);
+
+
+
+
+		if(pMH2O)
+		{
+			m_TerrainHeightInfo[i].HaveWater=true;
+			memset(m_TerrainHeightInfo[i].WaterHeight,0xFF,sizeof(m_TerrainHeightInfo[i].WaterHeight));
+			MH2OInfo * pWaterInfo=(MH2OInfo *)((BYTE *)pMH2O+sizeof(BLZ_CHUNK_HEADER)+pMH2O->Header[i].InformationOffset);			
+			UINT LayerCount=pMH2O->Header[i].LayerCount;
+			for(UINT l=0;l<LayerCount;l++)
+			{
+				CD3DSubMesh * pWaterSubMesh=new CD3DSubMesh(m_pManager->GetDevice());
+
+				IndexCount=pWaterInfo[l].Width*pWaterInfo[l].Height*2*3;
+
+				VertexCount=(pWaterInfo[l].Width+1)*(pWaterInfo[l].Height+1);
+
+				pWaterSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1;
+				pWaterSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_LIQUID_VERTEXT);
+				pWaterSubMesh->GetVertexFormat().IndexSize=sizeof(WORD);
+				pWaterSubMesh->SetPrimitiveType(D3DPT_TRIANGLELIST);
+				pWaterSubMesh->SetPrimitiveCount(IndexCount/3);		
+				pWaterSubMesh->SetVertexCount(VertexCount);
+				pWaterSubMesh->SetIndexCount(IndexCount);
+
+				pWaterSubMesh->AllocDXIndexBuffer();
+				pWaterSubMesh->AllocDXVertexBuffer();
+
+
+				pWaterSubMesh->GetMaterial().GetMaterial().Ambient=WhiteColor;
+				pWaterSubMesh->GetMaterial().GetMaterial().Diffuse=WhiteColor;
+				pWaterSubMesh->GetMaterial().GetMaterial().Specular=WhiteColor;
+				pWaterSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
+				pWaterSubMesh->GetMaterial().GetMaterial().Power=40.0f;
+
+				CD3DFX * pFX=BuildLiquidFX();
+				pWaterSubMesh->GetMaterial().SetFX(pFX);
+				pWaterSubMesh->SetTransparent(true);
+
+				CD3DTexture * pLiquidTexture=LoadLiquidTexture(pWaterInfo[l].LiquidType);
+
+				if(pLiquidTexture)
+				{
+					pWaterSubMesh->GetMaterial().AddTexture(pLiquidTexture,0);
+				}
+
+				float * pHeightMap=NULL;
+				BYTE * pAlphaMap=NULL;
+
+
+				if(pWaterInfo[l].HeightMapOffset)
+				{
+					BYTE * pData=(BYTE *)pMH2O+sizeof(BLZ_CHUNK_HEADER)+pWaterInfo[l].HeightMapOffset;
+					if((pWaterInfo[l].Flags&MH2OF_NO_HEIGHT_MAP)==0)
+					{
+						pHeightMap=(float *)pData;
+						pData+=sizeof(float)*(pWaterInfo[l].Width+1)*(pWaterInfo[l].Height+1);
+					}
+					//if(pWaterInfo[l].Flags&MH2OF_HAVE_HEIGHT_MAP)
+					{
+						pAlphaMap=pData;
+					}
+				}
+
+				pModelIndices=NULL;
+				pWaterSubMesh->GetDXIndexBuffer()->Lock(0,0,(LPVOID *)&pModelIndices,0);
+
+				MODEL_LIQUID_VERTEXT * pLiquidVertices=NULL;
+				pWaterSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pLiquidVertices,0);
+
+
+				VertexIndex=0;
+				for(int y=pWaterInfo[l].YOffset;y<=pWaterInfo[l].YOffset+pWaterInfo[l].Height;y++)
+				{
+					for(int x=pWaterInfo[l].XOffset;x<=pWaterInfo[l].XOffset+pWaterInfo[l].Width;x++)
+					{
+						pLiquidVertices[VertexIndex].Pos.x=Pitch*x*2;
+						pLiquidVertices[VertexIndex].Pos.z=-Pitch*y*2;
+
+						pLiquidVertices[VertexIndex].Pos+=Pos;
+
+						int Index=(y-pWaterInfo[l].YOffset)*(pWaterInfo[l].Width+1)+(x-pWaterInfo[l].XOffset);
+
+						assert(y*8+x<TERRAIN_BLOCK_WATER_HEIGHT_COUNT);
+
+						if(pHeightMap)
+						{
+							pLiquidVertices[VertexIndex].Pos.y=pHeightMap[Index];
+							m_TerrainHeightInfo[i].WaterHeight[y*9+x]=pHeightMap[Index];
+						}
+						else
+						{
+							pLiquidVertices[VertexIndex].Pos.y=pWaterInfo[l].HeightLevel1;
+							m_TerrainHeightInfo[i].WaterHeight[y*9+x]=pWaterInfo[l].HeightLevel1;
+						}
+
+						if(pAlphaMap)
+						{
+							pLiquidVertices[VertexIndex].Color=(((pAlphaMap[Index])&0xFF)<<24);
+						}
+						else
+						{
+							pLiquidVertices[VertexIndex].Color=0xFF000000;
+						}
+
+						pLiquidVertices[VertexIndex].Tex.x=(x*2.0f)/16.0f;
+						pLiquidVertices[VertexIndex].Tex.y=y*2/16.0f;
+
+						VertexIndex++;
+					}
+				}
+
+				BYTE * pRenderMask=NULL;
+				if(pWaterInfo[l].Mask2Offset)
+					pRenderMask=((BYTE *)pMH2O+sizeof(BLZ_CHUNK_HEADER)+pWaterInfo[l].Mask2Offset);
+
+				IndexIndex=0;
+
+				for(int y=0;y<pWaterInfo[l].Height;y++)
+				{
+					for(int x=0;x<pWaterInfo[l].Width;x++)
+					{
+						if(WantRenderWater(pRenderMask,y*pWaterInfo[l].Width+x))						
+						{
+							pModelIndices[IndexIndex]	=y*(pWaterInfo[l].Width+1)+x;
+							pModelIndices[IndexIndex+1]	=y*(pWaterInfo[l].Width+1)+x+1;
+							pModelIndices[IndexIndex+2]	=(y+1)*(pWaterInfo[l].Width+1)+x;
+
+
+							pModelIndices[IndexIndex+3]	=(y+1)*(pWaterInfo[l].Width+1)+x;
+							pModelIndices[IndexIndex+4]	=y*(pWaterInfo[l].Width+1)+x+1;
+							pModelIndices[IndexIndex+5]	=(y+1)*(pWaterInfo[l].Width+1)+x+1;
+
+							IndexIndex+=6;
+						}
+					}
+
+				}
+
+				pWaterSubMesh->SetIndexCount(IndexIndex);
+				pWaterSubMesh->SetPrimitiveCount(IndexIndex/3);
+
+
+				pWaterSubMesh->GetDXVertexBuffer()->Unlock();
+
+				pWaterSubMesh->GetDXIndexBuffer()->Unlock();
+
+				pWaterSubMesh->SetID(1000+i);
+
+				pWaterSubMesh->SetProperty(pWaterSubMesh->GetProperty()|SMP_IS_WATER);
+
+				SubMeshName.Format("W%d-%d",i,l);
+				pWaterSubMesh->SetName(SubMeshName);
+
+				LiquidSubMeshList.Add(pWaterSubMesh);
+				pD3DSubMesh->AddProperty(SMP_RENDER_TO_DEPTH);				
+			}
+		}
+		else if(pMCNK->LiquidSize>sizeof(BLZ_CHUNK_HEADER))
+		{
+
+			m_TerrainHeightInfo[i].HaveWater=true;
+			memset(m_TerrainHeightInfo[i].WaterHeight,0xFF,sizeof(m_TerrainHeightInfo[i].WaterHeight));
+
+			CD3DSubMesh * pWaterSubMesh=new CD3DSubMesh(m_pManager->GetDevice());
+
+
+			IndexCount=8*8*2*3;
+
+			VertexCount=9*9;
+
+			pWaterSubMesh->GetVertexFormat().FVF=D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1;
+			pWaterSubMesh->GetVertexFormat().VertexSize=sizeof(MODEL_LIQUID_VERTEXT);
+			pWaterSubMesh->GetVertexFormat().IndexSize=sizeof(WORD);
+			pWaterSubMesh->SetPrimitiveType(D3DPT_TRIANGLELIST);
+			pWaterSubMesh->SetPrimitiveCount(IndexCount/3);		
+			pWaterSubMesh->SetVertexCount(VertexCount);
+			pWaterSubMesh->SetIndexCount(IndexCount);
+
+			pWaterSubMesh->AllocDXIndexBuffer();
+			pWaterSubMesh->AllocDXVertexBuffer();
+
+
+			pWaterSubMesh->GetMaterial().GetMaterial().Ambient=WhiteColor;
+			pWaterSubMesh->GetMaterial().GetMaterial().Diffuse=WhiteColor;
+			pWaterSubMesh->GetMaterial().GetMaterial().Specular=WhiteColor;
+			pWaterSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
+			pWaterSubMesh->GetMaterial().GetMaterial().Power=40.0f;
+
+			CD3DFX * pFX=BuildLiquidFX();
+			pWaterSubMesh->GetMaterial().SetFX(pFX);
+			pWaterSubMesh->SetTransparent(true);
+
+			int LiguidType;
+			if(pMCNK->Flags&MCNK_FLAG_SLIME)
+			{
+				LiguidType=WLT_SLIMA;
+			}
+			else if(pMCNK->Flags&MCNK_FLAG_MAGMA)
+			{
+				LiguidType=WLT_MAGMA;
+			}
+			else if(pMCNK->Flags&MCNK_FLAG_OCEAN)
+			{
+				LiguidType=WLT_OCEAN;
+			}
+			else
+			{
+				LiguidType=WLT_RIVER;
+			}
+
+			CD3DTexture * pLiquidTexture=LoadLiquidTexture(LiguidType);
+
+			if(pLiquidTexture)
+			{
+				pWaterSubMesh->GetMaterial().AddTexture(pLiquidTexture,0);
+			}
+
+
+
+			pModelIndices=NULL;
+			pWaterSubMesh->GetDXIndexBuffer()->Lock(0,0,(LPVOID *)&pModelIndices,0);
+
+			MODEL_LIQUID_VERTEXT * pLiquidVertices=NULL;
+			pWaterSubMesh->GetDXVertexBuffer()->Lock(0,0,(LPVOID *)&pLiquidVertices,0);
+
+
+
+			VertexIndex=0;
+			for(int y=0;y<9;y++)
+			{
+				for(int x=0;x<9;x++)
+				{
+					pLiquidVertices[VertexIndex].Pos.x=Pitch*x*2;
+					pLiquidVertices[VertexIndex].Pos.z=-Pitch*y*2;
+
+					pLiquidVertices[VertexIndex].Pos+=Pos;
+
+
+					pLiquidVertices[VertexIndex].Pos.y=pMCLQ->LiquidInfo[y][x].Height;
+
+
+
+					if(pLiquidVertices[VertexIndex].Pos.y<pMCLQ->MinHeight)
+						pLiquidVertices[VertexIndex].Pos.y=pMCLQ->MinHeight;
+					if(pLiquidVertices[VertexIndex].Pos.y>pMCLQ->MaxHeight)
+						pLiquidVertices[VertexIndex].Pos.y=pMCLQ->MaxHeight;
+
+					m_TerrainHeightInfo[i].WaterHeight[y*9+x]=pLiquidVertices[VertexIndex].Pos.y;
+
+
+
+					pLiquidVertices[VertexIndex].Color=(((pMCLQ->LiquidInfo[y][x].Color1)&0xFF)<<24);
+
+					pLiquidVertices[VertexIndex].Tex.x=(x*2.0f)/16.0f;
+					pLiquidVertices[VertexIndex].Tex.y=y*2/16.0f;
+
+					VertexIndex++;
+				}
+			}
+
+			IndexIndex=0;
+
+			for(int y=0;y<8;y++)
+			{
+				for(int x=0;x<8;x++)
+				{
+					if((pMCLQ->RenderFlag[y][x]&8)==0)
+					{
+						pModelIndices[IndexIndex]	=y*9+x;
+						pModelIndices[IndexIndex+1]	=y*9+x+1;
+						pModelIndices[IndexIndex+2]	=(y+1)*9+x;
+
+
+						pModelIndices[IndexIndex+3]	=(y+1)*9+x;
+						pModelIndices[IndexIndex+4]	=y*9+x+1;
+						pModelIndices[IndexIndex+5]	=(y+1)*9+x+1;
+
+						IndexIndex+=6;
+					}
+				}
+			}
+
+			pWaterSubMesh->SetIndexCount(IndexIndex);
+			pWaterSubMesh->SetPrimitiveCount(IndexIndex/3);
+
+
+			pWaterSubMesh->GetDXVertexBuffer()->Unlock();
+
+			pWaterSubMesh->GetDXIndexBuffer()->Unlock();
+
+			pWaterSubMesh->SetID(1000+i);
+			pWaterSubMesh->SetProperty(pWaterSubMesh->GetProperty()|SMP_IS_WATER);
+
+			SubMeshName.Format("L%d",i);
+			pWaterSubMesh->SetName(SubMeshName);
+
+			LiquidSubMeshList.Add(pWaterSubMesh);
+			pD3DSubMesh->AddProperty(SMP_RENDER_TO_DEPTH);			
+		}
+
+		m_SubMeshList.Add(pD3DSubMesh);
+
+
+	}
+
+
+	for(UINT i=0;i<LiquidSubMeshList.GetCount();i++)
+	{
+		m_SubMeshList.Add(LiquidSubMeshList[i]);
+	}	
+	return true;
+}
+
+bool CD3DWOWADTModelResource::LoadObjectsInfo(LPCTSTR ModelFileName,bool BeLoadObject)
+{
+	IFileAccessor * pFile;	
+
+	pFile=CD3DWOWWMOModel::CreateFileAccessor();
+	if(pFile==NULL)
+		return false;
+	if(!pFile->Open(ModelFileName,IFileAccessor::modeRead))
+	{
+		PrintD3DLog(0,"文件%s打开失败",ModelFileName);
+		pFile->Release();
+		return false;	
+	}
+
+	SetName(ModelFileName);
+
+	CBLZChunkFile ADTChunk;
+
+	if(!ADTChunk.Load(pFile))
+	{
+		pFile->Release();
+		return false;
+	}
+	pFile->Release();	
+
+	BLZ_CHUNK_VERSION * pVersion=(BLZ_CHUNK_VERSION *)ADTChunk.GetFirstChunk(CHUNK_ID_VERSION);
+
+	BLZ_CHUNK_MMDX * pMMDX=(BLZ_CHUNK_MMDX *)ADTChunk.GetFirstChunk(CHUNK_ID_ADT_MMDX);
+
+	BLZ_CHUNK_MMID * pMMID=(BLZ_CHUNK_MMID *)ADTChunk.GetFirstChunk(CHUNK_ID_ADT_MMID);
+
+	BLZ_CHUNK_MWMO * pMWMO=(BLZ_CHUNK_MWMO *)ADTChunk.GetFirstChunk(CHUNK_ID_ADT_MWMO);
+
+	BLZ_CHUNK_MWID * pMWID=(BLZ_CHUNK_MWID *)ADTChunk.GetFirstChunk(CHUNK_ID_ADT_MWID);
+
+	BLZ_CHUNK_MDDF * pMDDF=(BLZ_CHUNK_MDDF *)ADTChunk.GetFirstChunk(CHUNK_ID_ADT_MDDF);
+
+	BLZ_CHUNK_MODF * pMODF=(BLZ_CHUNK_MODF *)ADTChunk.GetFirstChunk(CHUNK_ID_ADT_MODF);
+
+	UINT Count=pMDDF->ChunkSize/sizeof(ADT_M2_OBJECT_INFO);
+	m_M2ObjectList.Resize(Count);
+	for(UINT i=0;i<Count;i++)
+	{
+		m_M2ObjectList[i].ID=pMDDF->M2Objects[i].ID;
+		m_M2ObjectList[i].pModelResource=NULL;
+		CEasyString ObjectFileName=pMMDX->M2FileNames+pMMID->M2FileNameIndices[pMDDF->M2Objects[i].Index];
+		int Pos=ObjectFileName.ReverseFind('.');
+		if(Pos>=0)
+		{
+			ObjectFileName=ObjectFileName.Left(Pos);
+			ObjectFileName+=".m2";
+
+
+			m_M2ObjectList[i].pModelResource=NULL;
+			m_M2ObjectList[i].ModelFilePath=ObjectFileName;
+			m_M2ObjectList[i].Position.x=pMDDF->M2Objects[i].Position.x;
+			m_M2ObjectList[i].Position.y=pMDDF->M2Objects[i].Position.y;
+			m_M2ObjectList[i].Position.z=-pMDDF->M2Objects[i].Position.z;					
+			m_M2ObjectList[i].Orientation=CD3DQuaternion::FromRotationYawPitchRoll(
+				-pMDDF->M2Objects[i].Orientation.y*PI/180.0f,
+				-pMDDF->M2Objects[i].Orientation.x*PI/180.0f,
+				pMDDF->M2Objects[i].Orientation.z*PI/180.0f);
+			m_M2ObjectList[i].Orientation.Normalize();
+			m_M2ObjectList[i].Scale=pMDDF->M2Objects[i].Scale/1024.0f;
+			m_M2ObjectList[i].Flag=pMDDF->M2Objects[i].Flags;
+
+			if(BeLoadObject)
+			{
+				CD3DWOWM2ModelResource* pResource=
+					dynamic_cast<CD3DWOWM2ModelResource*>(m_pManager->GetResource(ObjectFileName));
+				if(!pResource)
+				{
+					pResource=new CD3DWOWM2ModelResource(m_pManager);
+					if(pResource->LoadFromFile(ObjectFileName))
+					{
+						//PrintSystemLog(0,"加载了[%s]",(LPCTSTR)ObjectFileName);
+						if(!m_pManager->AddResource(pResource,ObjectFileName))
+						{
+							pResource->Release();
+							pResource=NULL;
+						}
+					}
+					else
+					{
+						PrintD3DLog(0,"加载M2文件%s失败",(LPCTSTR)ObjectFileName);
+						pResource->Release();
+						pResource=NULL;
+					}						
+				}
+				else
+				{
+					pResource->AddUseRef();
+				}	
+				m_M2ObjectList[i].pModelResource=pResource;
+			}
+
+		}			
+
+
+	}
+
+
+	Count=pMODF->ChunkSize/sizeof(ADT_WMO_OBJECT_INFO);
+	m_WMOObjectList.Resize(Count);
+	for(UINT i=0;i<Count;i++)
+	{
+		m_WMOObjectList[i].ID=pMODF->WMOObjects[i].ID;
+		CEasyString FileName=pMWMO->WMOFileNames+pMWID->WMOFileNameIndices[pMODF->WMOObjects[i].Index];
+		//FileName.MakeUpper();
+		//FileName.Replace(".MDX",".M2");
+
+		m_WMOObjectList[i].pModelResource=NULL;
+
+		m_WMOObjectList[i].ModelFilePath=FileName;
+		m_WMOObjectList[i].Position.x=pMODF->WMOObjects[i].Position.x;
+		m_WMOObjectList[i].Position.y=pMODF->WMOObjects[i].Position.y;
+		m_WMOObjectList[i].Position.z=-pMODF->WMOObjects[i].Position.z;		
+
+		m_WMOObjectList[i].Orientation=CD3DQuaternion::FromRotationYawPitchRoll(
+			-pMODF->WMOObjects[i].Orientation.y*PI/180.0f,
+			-pMODF->WMOObjects[i].Orientation.x*PI/180.0f,
+			pMODF->WMOObjects[i].Orientation.z*PI/180.0f);
+		m_WMOObjectList[i].Orientation.Normalize();
+		m_WMOObjectList[i].DoodadSet=pMODF->WMOObjects[i].DoodadSet;
+		m_WMOObjectList[i].Flag=pMODF->WMOObjects[i].Flags;
+
+		if(BeLoadObject)
+		{
+			CD3DWOWWMOModelResource* pResource=
+				dynamic_cast<CD3DWOWWMOModelResource*>(m_pManager->GetResource(FileName));
+			if(!pResource)
+			{
+				pResource=new CD3DWOWWMOModelResource(m_pManager);
+				if(pResource->LoadFromFile(FileName))
+				{
+					//PrintSystemLog(0,"加载了[%s]",(LPCTSTR)FileName);
+					if(!m_pManager->AddResource(pResource,FileName))
+					{
+						pResource->Release();
+						pResource=NULL;
+					}
+				}
+				else
+				{
+					PrintD3DLog(0,"加载WMO文件%s失败",(LPCTSTR)FileName);
+					pResource->Release();
+					pResource=NULL;
+				}						
+			}
+			else
+			{
+				pResource->AddUseRef();
+			}
+
+			m_WMOObjectList[i].pModelResource=pResource;
+		}
+
+	}
+
+
+	return true;
+}
+
+bool CD3DWOWADTModelResource::LoadTextureInfo(LPCTSTR ModelFileName,bool IsBigAlphaMask)
+{
+	IFileAccessor * pFile;	
+
+	pFile=CD3DWOWWMOModel::CreateFileAccessor();
+	if(pFile==NULL)
+		return false;
+	if(!pFile->Open(ModelFileName,IFileAccessor::modeRead))
+	{
+		PrintD3DLog(0,"文件%s打开失败",ModelFileName);
+		pFile->Release();
+		return false;	
+	}
+
+	SetName(ModelFileName);
+
+	CBLZChunkFile ADTChunk;
+
+	if(!ADTChunk.Load(pFile))
+	{
+		pFile->Release();
+		return false;
+	}
+	pFile->Release();	
+
+	BLZ_CHUNK_VERSION * pVersion=(BLZ_CHUNK_VERSION *)ADTChunk.GetFirstChunk(CHUNK_ID_VERSION);
+
+	BLZ_CHUNK_MTEX * pMTEX=(BLZ_CHUNK_MTEX *)ADTChunk.GetFirstChunk(CHUNK_ID_ADT_MTEX);
+	
+	CEasyArray<CSmartPtr<CD3DTexture> >		TextureList;
+	CEasyArray<TEXTURE_LAYER_INFO>			TextureLayerInfos;
+
+
+	UINT Ptr=0;
+	UINT TextureCount=0;
+	while(Ptr<pMTEX->ChunkSize)
+	{
+		TextureCount++;
+		Ptr+=strlen(pMTEX->TextureFileNames+Ptr)+1;
+	}
+	TextureList.Resize(TextureCount);
+	Ptr=0;
+	TextureCount=0;
+	while(Ptr<pMTEX->ChunkSize)
+	{
+		CEasyString TextureFileName=pMTEX->TextureFileNames+Ptr;
+		TextureFileName.MakeUpper();
+		TextureFileName.Replace(".BLP","_S.BLP");
+		TextureList[TextureCount]=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(TextureFileName);
+		TextureCount++;
+		Ptr+=strlen(pMTEX->TextureFileNames+Ptr)+1;
+	}
+
+	CBLZChunkFile::CChunkList * pChunkList=ADTChunk.GetChunks(CHUNK_ID_ADT_MCNK);
+
+	TextureLayerInfos.Resize(pChunkList->GetCount());
+
+	for(UINT i=0;i<pChunkList->GetCount();i++)
+	{
+		CBLZChunkFile MCNKChunk;
+
+		MCNKChunk.Load((BYTE *)((*pChunkList)[i])+sizeof(BLZ_CHUNK_HEADER),((*pChunkList)[i])->ChunkSize);
+		
+		BLZ_CHUNK_MCNK * pMCNK=(BLZ_CHUNK_MCNK *)MCNKChunk.GetFirstChunk(CHUNK_ID_ADT_MCNK);		
+		
+	
+		BLZ_CHUNK_MCLY * pMCLY=(BLZ_CHUNK_MCLY *)MCNKChunk.GetFirstChunk(CHUNK_ID_ADT_MCLY);
+		BLZ_CHUNK_MCAL * pMCAL=(BLZ_CHUNK_MCAL *)MCNKChunk.GetFirstChunk(CHUNK_ID_ADT_MCAL);
+		BLZ_CHUNK_MCSH * pMCSH=(BLZ_CHUNK_MCSH *)MCNKChunk.GetFirstChunk(CHUNK_ID_ADT_MCSH);
+	
+		
+
+		if(pMCLY)
+		{
+			UINT LayerCount=pMCLY->ChunkSize/sizeof(MCLYLayerInfo);
+
+			if(!LoadAlphaLayer(TextureLayerInfos[i],LayerCount,pMCLY,pMCAL,i,IsBigAlphaMask))
+				return false;
+		}
+
+		if(pMCSH)
+		{
+			LoadShadowMap(TextureLayerInfos[i],pMCSH,i);
+		}
+
+		CD3DSubMesh * pD3DSubMesh=m_SubMeshList[i];
+
+		CD3DFX * pFX=BuildFX(i,TextureLayerInfos[i].LayerCount,TextureLayerInfos[i].pShadowMap!=NULL,IsBigAlphaMask);
+		pD3DSubMesh->GetMaterial().SetFX(pFX);
+
+
+		for(UINT j=0;j<TextureLayerInfos[i].LayerCount;j++)
+		{			
+			CD3DTexture * pTexture=TextureList[TextureLayerInfos[i].Layers[j].TextureIndex];
+			pD3DSubMesh->GetMaterial().AddTexture(pTexture,0);
+			if(pTexture)
+				pTexture->AddUseRef();
+			if(TextureLayerInfos[i].Layers[j].Flag&MLIF_ALPHA_MAP)
+			{
+				pD3DSubMesh->GetMaterial().AddTexture(TextureLayerInfos[i].Layers[j].pAlphaMap,TP_ALPHA_MAP);
+				if(TextureLayerInfos[i].Layers[j].pAlphaMap)
+					TextureLayerInfos[i].Layers[j].pAlphaMap->AddUseRef();
+			}			
+		}
+
+		if(TextureLayerInfos[i].pShadowMap)
+		{
+			pD3DSubMesh->GetMaterial().AddTexture(TextureLayerInfos[i].pShadowMap,TP_SHADOW_MAP);
+			TextureLayerInfos[i].pShadowMap->AddUseRef();
+		}
 	}
 
 	return true;
