@@ -22,6 +22,7 @@ CMySQLConnection::CMySQLConnection(void)
 	m_MySQLHandle=NULL;
 	m_pDatabase=NULL;
 	m_MySQLStmt=NULL;
+	m_UseSTMTMode=false;
 }
 
 CMySQLConnection::~CMySQLConnection(void)
@@ -50,7 +51,7 @@ IDBRecordSet * CMySQLConnection::CreateRecordSet(int RecordSetType)
 	case DB_RS_TYPE_GENERAL_STATIC:
 		return new CDBStaticRecordSet();
 	case DB_RS_TYPE_DYNAMIC:
-		return new CMySQLRecordSet();
+		return new CMySQLDynamicRecordSet();
 	}
 	return NULL;
 }
@@ -77,6 +78,10 @@ int CMySQLConnection::Connect(LPCTSTR ConnectStr)
 	if(Password[0]==0)
 		Password=NULL;
 	const char * DB=StrAnalyzer.GetString(NULL,"DB","");
+	if(DB[0]==0)
+	{
+		DB=StrAnalyzer.GetString(NULL,"DATABASE","");
+	}
 	if(DB[0]==0)
 		DB=NULL;
 	const char * UnixSocket=StrAnalyzer.GetString(NULL,"UnixSocket","");
@@ -124,8 +129,8 @@ BOOL CMySQLConnection::IsConnected()
 
 int CMySQLConnection::ExecuteSQL(LPCSTR SQLStr,int StrLen,IDBParameterSet * pParamSet)
 {
-	if(pParamSet)
-	{	
+	if(m_UseSTMTMode)
+	{
 		return ExecuteSQLWithParam(SQLStr,StrLen,(CDBParameterSet *)pParamSet);
 	}
 	else
@@ -140,7 +145,7 @@ int CMySQLConnection::GetResults(IDBRecordSet * pDBRecordset)
 	{
 		return DBERR_INVALID_PARAM;
 	}
-	if(m_MySQLStmt)
+	if(m_UseSTMTMode)
 	{
 		if(pDBRecordset->IsKindOf(GET_CLASS_INFO(CMySQLDynamicRecordSet)))
 		{
@@ -435,6 +440,10 @@ DWORD CMySQLConnection::FetchConnectFlags(LPCTSTR FlagsStr)
 		else if(Flag.CompareNoCase("CLIENT_SSL")==0)
 		{
 			Flags|=CLIENT_SSL;
+		}
+		else if(Flag.CompareNoCase("CLIENT_STMT_MODE")==0)
+		{
+			m_UseSTMTMode=true;
 		}
 
 	}

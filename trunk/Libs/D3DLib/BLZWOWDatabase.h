@@ -251,14 +251,9 @@ public:
 		CEasyString	HordeDesc;		
 		UINT		LoadingScreen;							
 		FLOAT		BattlefieldMapIconScale;				
-		CEasyString	Requirement;		
-		CEasyString	Heroic;			
 		UINT		ParentArea;								
 		FLOAT		XCoord;									
-		FLOAT		YCoord;									
-		UINT		ResetTimeRaid;							
-		UINT		ResetTimeHeroicRaid;							
-		UINT		TimeOfDayOverride;						
+		FLOAT		YCoord;			
 		UINT		ExpansionID;							
 
 	};
@@ -271,7 +266,6 @@ public:
 		UINT		Type;
 		UINT		SoundEntriesID;
 		UINT		SpellID;
-		UINT		LiquidMaterialID;
 		CEasyString	TextureList[8];
 	};
 
@@ -300,6 +294,7 @@ public:
 		float							WaterDeepAlpha;
 		float							OceanShallowAlpha;
 		float							OceanDeepAlpha;
+		UINT							LightParamFlag;
 
 		CEasyArray<LIGHT_COLOR_VALUE>	Colors[DBC_LICI_MAX];
 
@@ -348,7 +343,7 @@ protected:
 
 	CEasyArray<BLZ_DB_LIQUID_TYPE>								m_LiquidTypeInfo;
 
-	CEasyMap<CEasyString,CEasyString>							m_MiniMapFileInfos;
+	//CEasyMap<CEasyString,CEasyString>							m_MiniMapFileInfos;
 
 
 	CEasyArray<BLZ_DB_LIGHT_INFO>								m_LightInfoList;
@@ -447,9 +442,9 @@ public:
 	bool LoadLiquidTypeInfo(LPCTSTR FileName);
 	BLZ_DB_LIQUID_TYPE * GetLiquidTypeInfo(UINT TypeID);
 
-	bool LoadMiniMapInfo(LPCTSTR FileName);
+	//bool LoadMiniMapInfo(LPCTSTR FileName);
 
-	LPCTSTR GetMiniMapRealFileName(LPCTSTR FileName);
+	//LPCTSTR GetMiniMapRealFileName(LPCTSTR FileName);
 
 	bool LoadMapLightInfos(LPCTSTR FileName);
 	bool LoadLightParams(LPCTSTR FileName);

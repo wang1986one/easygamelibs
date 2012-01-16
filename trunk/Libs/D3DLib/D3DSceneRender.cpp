@@ -92,22 +92,16 @@ void CD3DSceneRender::Destory()
 		Lock.Lock(m_RenderLock);
 	}
 
-	SAFE_RELEASE(m_pSharedParamFX);
-	SAFE_RELEASE(m_pGlobalLight);
-	SAFE_RELEASE(m_pCamera);
-	SAFE_RELEASE(m_pBackGroundCamera);
+	RemoveAllObject();
+
+	SAFE_RELEASE(m_pSharedParamFX);	
 	SAFE_RELEASE(m_pDepthTexture);	
 	if(m_pSceneRoot)
 	{
 		DeleteSceneNode(m_pSceneRoot);
 		m_pSceneRoot=NULL;
-	}
-	for(UINT i=0;i<m_SceneRenderUnitList.GetCount();i++)
-	{
-		SAFE_DELETE(m_SceneRenderUnitList[i]);
-	}
-	m_ObjectList.Clear();	
-	m_RootObjectList.Clear();
+	}	
+	
 	CD3DBaseRender::Destory();
 }
 
@@ -606,7 +600,70 @@ bool CD3DSceneRender::DeleteLight(LPCTSTR LightName)
 	return false;
 }
 
+void CD3DSceneRender::RemoveAllObject()
+{
+	CAutoLockEx Lock;
+	if(CD3DDevice::IsUseMultiThreadRender())
+	{
+		Lock.Lock(m_RenderLock);
+	}
 
+	CD3DBaseRender::RemoveAllObject();
+
+	for(UINT i=0;i<m_ObjectList.GetCount();i++)
+	{
+		m_ObjectList[i]->SetRender(NULL);		
+	}
+	m_ObjectList.Clear();
+
+	for(UINT i=0;i<m_BackGroundObjectList.GetCount();i++)
+	{
+		m_BackGroundObjectList[i]->SetRender(NULL);		
+	}
+	m_BackGroundObjectList.Clear();
+
+	for(UINT i=0;i<m_SceneObjectList.GetCount();i++)
+	{
+		m_SceneObjectList[i]->SetRender(NULL);		
+	}
+	m_SceneObjectList.Clear();
+
+
+	if(m_pSceneRoot)
+	{
+		if(m_pSceneRoot->ChildCount)
+		{
+			for(UINT i=0;i<m_TreeMode;i++)
+			{
+				DeleteSceneNode(m_pSceneRoot->Childs[i]);
+				m_pSceneRoot->Childs[i]=NULL;
+			}
+			m_pSceneRoot->ChildCount=0;
+		}
+		m_pSceneRoot->ObjectList.Clear();
+	}
+
+
+	for(UINT i=0;i<m_SceneRenderUnitList.GetCount();i++)
+	{
+		SAFE_DELETE(m_SceneRenderUnitList[i]);
+	}
+	m_SceneRenderUnitList.Clear();
+
+	for(UINT i=0;i<m_LightList.GetCount();i++)
+	{
+		SAFE_RELEASE(m_LightList[i]);
+	}
+
+	m_WMOObjectList.Clear();
+
+	SAFE_RELEASE(m_pGlobalLight);
+	SAFE_RELEASE(m_pCamera);
+	SAFE_RELEASE(m_pBackGroundCamera);
+
+	m_MaxTreeDepth=0;
+
+}
 
 //void CD3DSceneRender::UpdateSceneTree()
 //{
@@ -721,6 +778,7 @@ void CD3DSceneRender::Render()
 	m_FaceCount=0;
 	m_VertexCount=0;
 
+	m_MergeRenderSubMeshCount=0;
 	m_TreeCheckCount=0;
 	m_ObjectCheckCount=0;
 	m_DirectRenderCount=0;
@@ -1056,7 +1114,7 @@ bool CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,CD3DObject * pObject,boo
 
 		if(pSubMesh&&pMaterial)
 		{
-			pSubMesh->CheckValid();
+			//pSubMesh->CheckValid();
 			if(pMaterial->GetFX())
 			{
 				RENDER_OBJECT_INFO * pObjectInfo=new RENDER_OBJECT_INFO;
@@ -1076,6 +1134,7 @@ bool CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,CD3DObject * pObject,boo
 				pObjectInfo->pMaterial=pMaterial;
 				pObjectInfo->IsPreRenderd=false;
 				pObjectInfo->IsRenderd=false;
+				pObjectInfo->MergeRender=pObject->CheckFlag(CD3DObject::OBJECT_FLAG_CAN_MERGE_RENDER);
 				m_SceneRenderUnitList.Add(pObjectInfo);
 				if(BeWalkTree)
 				{
@@ -1404,10 +1463,10 @@ bool CD3DSceneRender::AddObject(CD3DObject * pObj,bool IsRecursive)
 				{
 					CD3DSubMesh * pSubMesh=pObj->GetSubMesh(i);
 				
-					if(pSubMesh)
-					{
-						pSubMesh->CheckValid();
-					}
+					//if(pSubMesh)
+					//{
+					//	pSubMesh->CheckValid();
+					//}
 				}
 			}
 		}
@@ -1470,10 +1529,10 @@ bool CD3DSceneRender::AddBackGroundObject(CD3DObject * pObj,bool IsRecursive)
 				{
 					CD3DSubMesh * pSubMesh=pObj->GetSubMesh(i);
 
-					if(pSubMesh)
-					{
-						pSubMesh->CheckValid();
-					}
+					//if(pSubMesh)
+					//{
+					//	pSubMesh->CheckValid();
+					//}
 				}
 			}
 		}
@@ -1628,6 +1687,10 @@ void CD3DSceneRender::RenderObject(CD3DObject * pObject,const CD3DFrustum& Frust
 					}
 					
 					pSubMesh->SetCulled(false);
+					if(pObject->CheckFlag(CD3DObject::OBJECT_FLAG_CAN_MERGE_RENDER))
+					{
+						m_MergeRenderSubMeshCount++;
+					}
 					if(pSubMesh->IsTransparent())
 					{
 						RENDER_SUBMESH_INFO BatchInfo;
@@ -1700,6 +1763,10 @@ void CD3DSceneRender::RenderSubMesh(RENDER_OBJECT_INFO * pObjectInfo,const CD3DF
 		}
 		
 		pObjectInfo->IsRenderd=true;
+		if(pObjectInfo->MergeRender)
+		{
+			m_MergeRenderSubMeshCount++;
+		}
 		RENDER_SUBMESH_INFO BatchInfo;
 		BatchInfo.pObj=pObjectInfo->pObject;
 		BatchInfo.pSubMesh=pObjectInfo->pSubMesh;
@@ -2612,12 +2679,13 @@ int CD3DSceneRender::SubMeshCompare(const void * s1,const void * s2)
 void CD3DSceneRender::RenderSubMeshEx(CD3DSubMesh * pSubMesh)
 {	
 	m_SubMeshCount++;
-	m_FaceCount+=pSubMesh->GetPrimitiveCount();
-	m_VertexCount+=pSubMesh->GetVertexCount();
+	m_FaceCount+=pSubMesh->GetPrimitiveCountR();
+	m_VertexCount+=pSubMesh->GetVertexCountR();
 
-	if(pSubMesh->GetPrimitiveCount()<=0)
+	if(pSubMesh->GetPrimitiveCountR()<=0)
 		return;
 
+	//pSubMesh->CheckValidR();
 
 	//设置顶点结构定义
 	if(pSubMesh->GetVertexFormat().pVertexDeclaration)
@@ -2638,29 +2706,33 @@ void CD3DSceneRender::RenderSubMeshEx(CD3DSubMesh * pSubMesh)
 	if(pSubMesh->GetRenderBufferUsed()==CD3DSubMesh::BUFFER_USE_DX)
 	{
 		m_pDevice->GetD3DDevice()->SetStreamSource( 0, pSubMesh->GetDXVertexBuffer(), 0, pSubMesh->GetVertexFormat().VertexSize );
-		if(pSubMesh->GetIndexCount())
+		if(pSubMesh->GetIndexCountR())
 			m_pDevice->GetD3DDevice()->SetIndices(pSubMesh->GetDXIndexBuffer());
 	}
 
 
 	HRESULT hr;
 	//提交渲染	
+
 	
-	if(pSubMesh->GetIndexCount())
+	
+	if(pSubMesh->GetIndexCountR())
 	{
 		if(pSubMesh->GetRenderBufferUsed()==CD3DSubMesh::BUFFER_USE_DX)
 		{
 			hr=m_pDevice->GetD3DDevice()->DrawIndexedPrimitive((D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(),
-				pSubMesh->GetVertexStart(),pSubMesh->GetVertexStart(),pSubMesh->GetVertexCount(),
-				pSubMesh->GetIndexStart(),pSubMesh->GetPrimitiveCount());
+				pSubMesh->GetVertexStartR(),pSubMesh->GetVertexStartR(),pSubMesh->GetVertexCountR(),
+				pSubMesh->GetIndexStartR(),pSubMesh->GetPrimitiveCountR());
 		}
 		else
 		{
+			//PrintSystemLog(0,"%d",pSubMesh->GetIndexStartR());
+
 			hr=m_pDevice->GetD3DDevice()->DrawIndexedPrimitiveUP((D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(),
-				pSubMesh->GetVertexStart(),
-				pSubMesh->GetVertexCount()+pSubMesh->GetVertexStart(),
-				pSubMesh->GetPrimitiveCount(),
-				pSubMesh->GetIndexBufferR()+pSubMesh->GetVertexFormat().IndexSize*pSubMesh->GetIndexStart(),
+				pSubMesh->GetVertexStartR(),
+				pSubMesh->GetVertexCountR()+pSubMesh->GetVertexStartR(),
+				pSubMesh->GetPrimitiveCountR(),
+				pSubMesh->GetIndexBufferR()+pSubMesh->GetVertexFormat().IndexSize*pSubMesh->GetIndexStartR(),
 				IndexFormat,
 				pSubMesh->GetVertexBufferR(),
 				pSubMesh->GetVertexFormat().VertexSize);
@@ -2671,13 +2743,13 @@ void CD3DSceneRender::RenderSubMeshEx(CD3DSubMesh * pSubMesh)
 		if(pSubMesh->GetRenderBufferUsed()==CD3DSubMesh::BUFFER_USE_DX)
 		{
 			hr=m_pDevice->GetD3DDevice()->DrawPrimitive( (D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(), 
-				pSubMesh->GetVertexStart(), pSubMesh->GetPrimitiveCount() );
+				pSubMesh->GetVertexStartR(), pSubMesh->GetPrimitiveCountR() );
 		}
 		else
 		{
 			hr=m_pDevice->GetD3DDevice()->DrawPrimitiveUP( (D3DPRIMITIVETYPE)pSubMesh->GetPrimitiveType(), 
-				pSubMesh->GetPrimitiveCount(), 
-				pSubMesh->GetVertexBufferR()+pSubMesh->GetVertexFormat().VertexSize*pSubMesh->GetVertexStart(),
+				pSubMesh->GetPrimitiveCountR(), 
+				pSubMesh->GetVertexBufferR()+pSubMesh->GetVertexFormat().VertexSize*pSubMesh->GetVertexStartR(),
 				pSubMesh->GetVertexFormat().VertexSize );
 		}
 	}

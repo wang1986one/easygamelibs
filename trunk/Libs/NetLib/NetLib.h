@@ -35,7 +35,7 @@ typedef int	socklen_t;
 
 
 #define INVALID_SOCKET						(-1)
-#define INVALID_HANDLE_VALUE				(UINT)(-1)
+//#define INVALID_HANDLE_VALUE				(UINT)(-1)
 #define SOCKET_ERROR						(-1)
 #define DEFAULT_EPOLL_EVENT_WAIT_NUM		(32)
 
@@ -141,6 +141,9 @@ inline BOOL PrintNetDebugLog(DWORD Color,LPCTSTR Format,...)
 #include "NetPUDPServiceIOCP.h"
 #include "IOCPFileAccessor.h"
 
+#include "EasyFileServerConnection.h"
+#include "EasyFileService.h"
+
 #else
 
 #include "EpollEventObject.h"
@@ -158,5 +161,3 @@ inline BOOL PrintNetDebugLog(DWORD Color,LPCTSTR Format,...)
 #include "EasyNetLinkService.h"
 #include "EasyNetLinkManager.h"
 
-#include "EasyFileServerConnection.h"
-#include "EasyFileService.h"

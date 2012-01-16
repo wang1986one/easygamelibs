@@ -50,7 +50,7 @@ inline BOOL PrintDBDebugLog(DWORD Color,LPCTSTR Format,...)
 #include <WinSock2.h>
 #include <MSWSock.h>
 
-#include "MySQL\include\mysql.h"
+
 
 
 #include "ODBCRecordSet.h"
@@ -59,9 +59,12 @@ inline BOOL PrintDBDebugLog(DWORD Color,LPCTSTR Format,...)
 
 #else
 
-#include <mysql/mysql.h>
+
 
 #endif
+
+
+#include "MySQL/include/mysql.h"
 
 
 #include "MySQLDynamicRecordSet.h"

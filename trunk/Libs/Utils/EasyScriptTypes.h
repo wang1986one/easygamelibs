@@ -16,7 +16,7 @@
 //#define MAX_STRING_LENGTH		4096
 //#define MAX_STACK				16
 
-enum BOLAN_TYPE:WORD
+enum BOLAN_TYPE
 {
 	BOLAN_TYPE_VALUE,
 	BOLAN_TYPE_OPERATOR,
@@ -26,7 +26,7 @@ enum BOLAN_TYPE:WORD
 	BOLAN_TYPE_IDENTIFIER,
 };
 
-enum OPERATOR_TYPE:WORD
+enum OPERATOR_TYPE
 {
 	OPERATOR_ADD,
 	OPERATOR_SUB,
@@ -58,7 +58,7 @@ enum OPERATOR_TYPE:WORD
 	OPERATOR_MAX,
 };
 
-enum VALUE_TYPE:WORD
+enum VALUE_TYPE
 {
 	VALUE_TYPE_INT,
 	VALUE_TYPE_INT64,
@@ -67,7 +67,7 @@ enum VALUE_TYPE:WORD
 	VALUE_TYPE_STRING,
 };
 
-enum SCRIPT_KEYWORDS:WORD
+enum SCRIPT_KEYWORDS
 {		
 	KW_EXIT=0,
 	KW_IF,
@@ -627,7 +627,7 @@ inline void StrToNumber(LPCTSTR szNumberStr,ES_BOLAN& Value)
 		}
 		else
 		{
-			if(ValueMax>=(-(int)2147483648)&&ValueMax<=(2147483647))
+			if(ValueMax>=(-((INT64)2147483648LL))&&ValueMax<=((INT64)2147483647LL))
 			{
 				Value.ValueType=VALUE_TYPE_INT;
 				Value.ValueInt=(int)ValueMax;
@@ -716,4 +716,4 @@ inline CEasyString BolanToString(const ES_BOLAN& bolan)
 	return temp;
 }
 
-extern char * ESGetErrorMsg(int ErrCode);
+extern const char * ESGetErrorMsg(int ErrCode);

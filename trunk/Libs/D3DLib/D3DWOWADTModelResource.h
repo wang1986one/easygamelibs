@@ -203,6 +203,10 @@ public:
 	bool GetHeightByXZ(FLOAT x,FLOAT z,FLOAT& Height,FLOAT& WaterHeight);
 public:	
 
+	bool LoadTerrain(LPCTSTR ModelFileName);
+	bool LoadObjectsInfo(LPCTSTR ModelFileName,bool BeLoadObject);
+	bool LoadTextureInfo(LPCTSTR ModelFileName,bool IsBigAlphaMask);
+
 	virtual void PickResource(CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual bool ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);
 	virtual bool FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param=0);

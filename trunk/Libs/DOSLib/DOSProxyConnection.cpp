@@ -13,6 +13,12 @@
 
 IMPLEMENT_CLASS_INFO(CDOSProxyConnection,CNetConnection);
 
+
+CEasyBuffer	CDOSProxyConnection::m_CompressBuffer;
+
+char g_LZOCompressWorkMemory[LZO1X_1_MEM_COMPRESS];
+
+
 CDOSProxyConnection::CDOSProxyConnection(void):CNetConnection()
 {
 	FUNCTION_BEGIN;
@@ -46,6 +52,20 @@ BOOL CDOSProxyConnection::Init(CDOSObjectProxyService * pService,UINT ID)
 			return FALSE;
 		}
 	}
+
+	if(((CDOSServer *)GetServer())->GetConfig().ProxyMsgMinCompressSize)
+	{
+		if(m_CompressBuffer.GetBufferSize()<((CDOSServer *)GetServer())->GetConfig().MaxProxyMsgSize)
+		{
+			if(!m_CompressBuffer.Create(((CDOSServer *)GetServer())->GetConfig().MaxProxyMsgSize))
+			{
+				PrintDOSLog(0xff0000,"创建%u大小的压缩缓冲失败！",
+					((CDOSServer *)GetServer())->GetConfig().MaxProxyMsgSize);
+				return FALSE;
+			}
+		}
+	}
+
 
 	if(m_MsgQueue.GetBufferSize()<((CDOSServer *)GetServer())->GetConfig().MaxProxyConnectionMsgQueue)
 	{
@@ -249,6 +269,41 @@ inline BOOL CDOSProxyConnection::SendOutSideMsg(CDOSMessagePacket * pPacket)
 	default:
 		{
 			CDOSSimpleMessage * pSimpleMessage=pPacket->GetMessage().MakeSimpleMessage();
+
+			if(((CDOSServer *)GetServer())->GetConfig().ProxyMsgMinCompressSize&&
+				pSimpleMessage->GetDataLength()>=((CDOSServer *)GetServer())->GetConfig().ProxyMsgMinCompressSize)
+			{
+				if(m_CompressBuffer.GetBufferSize()<pSimpleMessage->GetMsgLength())
+				{
+					if(!m_CompressBuffer.Create(pSimpleMessage->GetMsgLength()))
+					{
+						PrintDOSLog(0xff0000,"创建%u大小的压缩缓冲失败，关闭连接！",
+							pSimpleMessage->GetMsgLength());
+						Disconnect();
+						return FALSE;
+					}
+				}
+				CDOSSimpleMessage * pNewMsg=(CDOSSimpleMessage *)m_CompressBuffer.GetBuffer();
+				pNewMsg->GetMsgHeader()=pSimpleMessage->GetMsgHeader();
+				pNewMsg->GetMsgHeader().MsgFlag|=DOS_MESSAGE_FLAG_COMPRESSED;
+
+				lzo_uint OutLen=m_CompressBuffer.GetBufferSize()-sizeof(CDOSSimpleMessage::DOS_SIMPLE_MESSAGE_HEAD);
+				int Result=lzo1x_1_compress((BYTE *)pSimpleMessage->GetDataBuffer(),pSimpleMessage->GetDataLength(),
+					(BYTE *)pNewMsg->GetDataBuffer(),&OutLen,
+					g_LZOCompressWorkMemory);
+
+				if(Result==LZO_E_OK)
+				{
+					pNewMsg->SetDataLength(OutLen);
+					pSimpleMessage=pNewMsg;
+				}
+				else
+				{
+					PrintDOSLog(0xff0000,"压缩消息失败(%d)，将直接发送",
+						Result);
+				}
+			}			
+
 			return Send(pSimpleMessage,pSimpleMessage->GetMsgLength());
 		}
 	}	

@@ -11,32 +11,34 @@
 /****************************************************************************/
 #pragma once
 
-inline __int64 QueryPerformanceCounterFast()
-{
-	__asm{RDTSC}
-}
+//inline __int64 QueryPerformanceCounterFast()
+//{
+//	__asm{RDTSC}
+//}
 
 class CAutoPerformanceCounter
 {
 protected:	
 	CPerformanceStatistician *	m_pPS;
 	int							m_Index;
-	LARGE_INTEGER				m_PerformanceStart;
-	LARGE_INTEGER				m_PerformanceEnd;
+	UINT64						m_PerformanceStart;
+	UINT64						m_PerformanceEnd;
 public:
 	inline CAutoPerformanceCounter(CPerformanceStatistician * pPS,int Index)
 	{		
 		m_pPS=pPS;
 		m_Index=Index;
 		//m_PerformanceStart.QuadPart=QueryPerformanceCounterFast();
-		QueryPerformanceCounter(&m_PerformanceStart);		
+		//QueryPerformanceCounter(&m_PerformanceStart);		
+		m_PerformanceStart=CEasyTimerEx::GetTime();
 		m_pPS->StartPerformanceCount(m_Index);
 	}
 	inline ~CAutoPerformanceCounter(void)
 	{
 		//m_PerformanceEnd.QuadPart=QueryPerformanceCounterFast();
-		QueryPerformanceCounter(&m_PerformanceEnd);
-		m_pPS->AddPerformanceCount(m_Index,(UINT)((m_PerformanceEnd.QuadPart-m_PerformanceStart.QuadPart)/PERFORMANCE_UNIT));
+		//QueryPerformanceCounter(&m_PerformanceEnd);
+		m_PerformanceEnd=CEasyTimerEx::GetTime();
+		m_pPS->AddPerformanceCount(m_Index,(UINT)((m_PerformanceEnd-m_PerformanceStart)/PERFORMANCE_UNIT));
 	}
 };
 

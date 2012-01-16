@@ -64,7 +64,7 @@ void CEasyThread::Terminate()
 {
 	m_WantTerminate=TRUE;
 	if(m_Status!=THREAD_STATUS_TERMINATED)
-		m_Status=THREAD_STATUS_ENDING
+		m_Status=THREAD_STATUS_ENDING;
 }
 
 
@@ -171,7 +171,7 @@ LPVOID CEasyThread::ThreadProc(LPVOID pParam)
 		
 		if(pThread->OnStart())
 		{
-			pThread->m_Status=THREAD_STATUS_WORKING=);
+			pThread->m_Status=THREAD_STATUS_WORKING;
 			pThread->Execute();
 		}
 		pThread->m_Status=THREAD_STATUS_ENDING;

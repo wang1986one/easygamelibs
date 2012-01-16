@@ -77,6 +77,7 @@ public:
 		CD3DSubMeshMaterial *	pMaterial;
 		bool					IsPreRenderd;
 		bool					IsRenderd;
+		bool					MergeRender;
 		CEasyArray<TREE_NODE *>	TreeNodes;
 
 	};
@@ -195,6 +196,7 @@ protected:
 	CEasyArray<RENDER_SUBMESH_INFO>			m_TransparentSubMeshList;
 	CD3DTexture *							m_pDepthTexture;
 	
+	UINT									m_MergeRenderSubMeshCount;
 	UINT									m_TreeCheckCount;
 	UINT									m_ObjectCheckCount;
 	UINT									m_DirectRenderCount;
@@ -250,6 +252,7 @@ public:
 	bool DeleteLight(CD3DLight * pLight);
 	bool DeleteLight(LPCTSTR LightName);
 	
+	virtual void RemoveAllObject();
 
 	//void UpdateSceneTree();
 
@@ -289,6 +292,7 @@ public:
 
 	void SetSizeCullSize(float MiniSize);
 
+	UINT GetMergeSubMeshRenderCount();
 	UINT GetTreeCheckCount();
 	UINT GetObjectCheckCount();
 	UINT GetDirectRenderCount();
@@ -446,6 +450,11 @@ inline CD3DTexture * CD3DSceneRender::GetDepthTexture()
 inline void CD3DSceneRender::SetSizeCullSize(float MiniSize)
 {
 	m_SizeCullSize=MiniSize;
+}
+
+inline UINT CD3DSceneRender::GetMergeSubMeshRenderCount()
+{
+	return m_MergeRenderSubMeshCount;
 }
 
 inline UINT CD3DSceneRender::GetTreeCheckCount()

@@ -13,6 +13,7 @@
 
 
 
+
 inline CEasyString GetModulePath(HMODULE hModule)
 {
 	CEasyString ModulePath;
@@ -31,6 +32,23 @@ inline CEasyString GetModulePath(HMODULE hModule)
 		{
 			ModulePath.Resize(Pos+1);
 		}
+	}
+	return ModulePath;
+}
+
+inline CEasyString GetModuleFilePath(HMODULE hModule)
+{
+	CEasyString ModulePath;
+
+	char   exePath[NAME_MAX+1];
+	char   fullPath[MAX_PATH+1];
+	sprintf(exePath,"/proc/%d/exe",getpid());
+	int Len=readlink(exePath,fullPath,MAX_PATH);
+	if(Len>0)
+	{
+		fullPath[Len]=0;
+		ModulePath=fullPath;
+		ModulePath.TrimBuffer();		
 	}
 	return ModulePath;
 }
@@ -107,10 +125,11 @@ inline bool CreateDirEx(LPCTSTR szDirName)
 		if(DirName[i]=='/')
 		{
 			DirName[i]=0;
-			if(access(DirName,R_OK)!=0)
+			if(access(DirName,F_OK)!=0)
 			{
-				if(mkdir(DirName,0755)==-1)
+				if(mkdir(DirName,S_IRWXU)==-1)
 				{
+					PrintImportantLog(0,"mkdir failed:%d",errno);
 					return false;
 				}
 				else
@@ -121,10 +140,11 @@ inline bool CreateDirEx(LPCTSTR szDirName)
 			DirName[i]='/';
 		}
 	}
-	if(access(DirName,R_OK)!=0)
+	if(access(DirName,F_OK)!=0)
 	{
-		if(mkdir(DirName,0755)==-1)
+		if(mkdir(DirName,S_IRWXU)==-1)
 		{
+			PrintImportantLog(0,"mkdir failed:%d",errno);
 			return false;
 		}
 		else
@@ -132,5 +152,5 @@ inline bool CreateDirEx(LPCTSTR szDirName)
 			return true;
 		}
 	}
-	return false;
+	return true;
 }

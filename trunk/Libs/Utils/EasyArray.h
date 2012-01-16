@@ -42,6 +42,7 @@ public:
 	}
 	CEasyArray(UINT Size,UINT GrowSize=1)
 	{
+		m_pBuffer=NULL;
 		m_BufferSize=Size;
 		m_ArrayLength=0;
 		m_GrowSize=GrowSize;

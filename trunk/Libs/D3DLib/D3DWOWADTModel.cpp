@@ -246,14 +246,14 @@ void CD3DWOWADTModel::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * p
 				pFX->SetTexture(szTexName,pMaterial->GetTexture(i));
 			}					
 		}
-		if(pSubMesh->IsSelected())
-		{
-			pFX->SetColor("GlobalColor",0xFFFF0000);
-		}
-		else
-		{
-			pFX->SetColor("GlobalColor",0xFFFFFFFF);
-		}
+	}
+	if(pSubMesh->IsSelected())
+	{
+		pFX->SetColor("GlobalColor",0xFFFF0000);
+	}
+	else
+	{
+		pFX->SetColor("GlobalColor",0xFFFFFFFF);
 	}
 }
 

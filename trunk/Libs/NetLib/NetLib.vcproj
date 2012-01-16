@@ -51,6 +51,7 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
+				EnablePREfast="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -202,22 +203,6 @@
 				RelativePath=".\NetSocket.h"
 				>
 			</File>
-			<Filter
-				Name="工具"
-				>
-				<File
-					RelativePath=".\ClassifiedID.h"
-					>
-				</File>
-				<File
-					RelativePath=".\IPAddress.h"
-					>
-				</File>
-				<File
-					RelativePath=".\IPPattern.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="服务器组件"
@@ -726,6 +711,22 @@
 					</Filter>
 				</Filter>
 			</Filter>
+		</Filter>
+		<Filter
+			Name="工具"
+			>
+			<File
+				RelativePath=".\ClassifiedID.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IPAddress.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IPPattern.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\NetLib.cbp"

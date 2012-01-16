@@ -50,6 +50,7 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
+				EnablePREfast="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -306,11 +307,7 @@
 			Name="MySQLÍ·ÎÄ¼þ"
 			>
 			<File
-				RelativePath=".\MySQL\include\config-netware.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MySQL\include\config-os2.h"
+				RelativePath=".\MySQL\include\base64.h"
 				>
 			</File>
 			<File
@@ -326,7 +323,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MySQL\include\atomic\gcc_builtins.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\atomic\generic-msvc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\hash.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MySQL\include\keycache.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\lf.h"
 				>
 			</File>
 			<File
@@ -338,11 +351,43 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MySQL\include\my_aes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_alarm.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MySQL\include\my_alloc.h"
 				>
 			</File>
 			<File
+				RelativePath=".\MySQL\include\my_atomic.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MySQL\include\my_attribute.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_base.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_bit.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_bitmap.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_charsets.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_config.h"
 				>
 			</File>
 			<File
@@ -362,7 +407,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MySQL\include\my_libwrap.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MySQL\include\my_list.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_md5.h"
 				>
 			</File>
 			<File
@@ -374,7 +427,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MySQL\include\my_nosys.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MySQL\include\my_pthread.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_stacktrace.h"
 				>
 			</File>
 			<File
@@ -382,7 +443,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MySQL\include\my_time.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_tree.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_trie.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_uctype.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\my_vle.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MySQL\include\my_xml.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\myisampack.h"
 				>
 			</File>
 			<File
@@ -394,10 +479,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MySQL\include\mysql_embed.h"
-				>
-			</File>
-			<File
 				RelativePath=".\MySQL\include\mysql_time.h"
 				>
 			</File>
@@ -406,23 +487,43 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MySQL\include\mysqld_ername.h"
-				>
-			</File>
-			<File
 				RelativePath=".\MySQL\include\mysqld_error.h"
 				>
 			</File>
 			<File
-				RelativePath=".\MySQL\include\raid.h"
+				RelativePath=".\MySQL\include\mysys_err.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\atomic\nolock.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\queues.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\mysys\rijndael.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\atomic\rwlock.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\service_versions.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\sha1.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\sha2.h"
 				>
 			</File>
 			<File
 				RelativePath=".\MySQL\include\sql_common.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MySQL\include\sql_state.h"
 				>
 			</File>
 			<File
@@ -438,7 +539,35 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MySQL\include\t_ctype.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\thr_alarm.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\thr_lock.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MySQL\include\typelib.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\violite.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\waiting_threads.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\wqueue.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MySQL\include\atomic\x86-gcc.h"
 				>
 			</File>
 		</Filter>
@@ -446,18 +575,7 @@
 			Name="MySQL¿â"
 			>
 			<File
-				RelativePath=".\MySQL\lib\opt\mysqlclient.lib"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\MySQL\lib\opt\zlib.lib"
+				RelativePath=".\MySQL\lib\mysqlclient.lib"
 				>
 			</File>
 		</Filter>

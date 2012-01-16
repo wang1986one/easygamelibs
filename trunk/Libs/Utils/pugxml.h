@@ -1453,6 +1453,36 @@ public:
 #endif
 	}
 
+	operator long long()
+	{
+		if(!has_value()) return 0;
+#ifdef PUGOPT_NONSEG
+		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
+		unsigned int valulen = sizeof(temp)-1;
+		const unsigned int maxlen = valulen ? min(valulen,_attr->value_size) : _attr->value_size;
+		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
+		temp[maxlen] = 0;
+		return _tcstoi64(temp,NULL,10);
+#else
+		return _tcstoi64(_attr->value,NULL,10);
+#endif
+	}
+
+	operator unsigned long long()
+	{
+		if(!has_value()) return 0;
+#ifdef PUGOPT_NONSEG
+		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
+		unsigned int valulen = sizeof(temp)-1;
+		const unsigned int maxlen = valulen ? min(valulen,_attr->value_size) : _attr->value_size;
+		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
+		temp[maxlen] = 0;
+		return _tcstoui64(temp,NULL,10);
+#else
+		return _tcstoui64(_attr->value,NULL,10);
+#endif
+	}
+
 	//<summary>Cast attribute value as double. If not found, return 0.0.</summary>
 	//<returns>Attribute value as double, or 0.0.</returns>
 	//<remarks>Note: Modifying this will not change the value, e.g. read only.</remarks>

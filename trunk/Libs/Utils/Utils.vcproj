@@ -972,6 +972,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ToolsWin32.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ToolsWin32.h"
 				>
 			</File>
@@ -1533,6 +1537,10 @@
 			</File>
 			<File
 				RelativePath=".\LZO\minilzo.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LZO\README.LZO"
 				>
 			</File>
 		</Filter>

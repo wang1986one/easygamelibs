@@ -398,7 +398,7 @@ void CDOSBaseObject::OnAliveTest(OBJECT_ID SenderID,BYTE IsEcho)
 	}
 	else
 	{
-		BYTE IsEcho=1;
+		IsEcho=1;
 		SendMessage(SenderID,DSM_OBJECT_ALIVE_TEST,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE,&IsEcho,sizeof(IsEcho));
 	}
 	FUNCTION_END;

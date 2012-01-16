@@ -31,83 +31,83 @@ public:
 	bool Create(UINT Size,UINT GrowSize=0,UINT GrowLimit=0)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::Create(Size,GrowSize,GrowLimit);
+		return CStaticMap<KEY,T,StorageMode>::Create(Size,GrowSize,GrowLimit);
 	}
 	void Destory()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		CStaticMap::Destory();
+		CStaticMap<KEY,T,StorageMode>::Destory();
 	}
 	void Clear()
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		CStaticMap::Clear();
+		CStaticMap<KEY,T,StorageMode>::Clear();
 	}
 	
 	UINT New(const KEY& Key,T** ppValue)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::New(Key,ppValue);
+		return CStaticMap<KEY,T,StorageMode>::New(Key,ppValue);
 	}
 	UINT Insert(const KEY& Key,const T& Value)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::Insert(Key,Value);
+		return CStaticMap<KEY,T,StorageMode>::Insert(Key,Value);
 	}
 	BOOL DeleteByID(UINT ID)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::DeleteByID(ID);
+		return CStaticMap<KEY,T,StorageMode>::DeleteByID(ID);
 	}
 	BOOL Delete(const KEY& Key)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::Delete(Key);
+		return CStaticMap<KEY,T,StorageMode>::Delete(Key);
 	}
 	T * Find(const KEY& Key)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::Find(Key);
+		return CStaticMap<KEY,T,StorageMode>::Find(Key);
 	}
 	T* GetObject(LPVOID Pos)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::GetObject(Pos);
+		return CStaticMap<KEY,T,StorageMode>::GetObject(Pos);
 	}
 	T* GetObject(UINT ID)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::GetObject(ID);
+		return CStaticMap<KEY,T,StorageMode>::GetObject(ID);
 	}
 	
 	LPVOID GetObjectPosByID(UINT ID)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::GetObjectPosByID(ID);
+		return CStaticMap<KEY,T,StorageMode>::GetObjectPosByID(ID);
 	}
 
 	T * GetNextObject(LPVOID& Pos,KEY& Key)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::GetNextObject(Pos,Key);
+		return CStaticMap<KEY,T,StorageMode>::GetNextObject(Pos,Key);
 	}
 
 	T * GetPrevObject(LPVOID& Pos,KEY& Key)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::GetPrevObject(Pos,Key);
+		return CStaticMap<KEY,T,StorageMode>::GetPrevObject(Pos,Key);
 	}
 	
 	T * GetSortedNextObject(LPVOID& Pos,KEY& Key)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::GetSortedNextObject(Pos,Key);
+		return CStaticMap<KEY,T,StorageMode>::GetSortedNextObject(Pos,Key);
 	}
 
 	T * GetSortedPrevObject(LPVOID& Pos,KEY& Key)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
-		return CStaticMap::GetSortedPrevObject(Pos,Key);
+		return CStaticMap<KEY,T,StorageMode>::GetSortedPrevObject(Pos,Key);
 	}
 	
 };

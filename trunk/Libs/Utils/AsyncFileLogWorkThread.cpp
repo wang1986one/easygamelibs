@@ -139,6 +139,9 @@ BOOL CAsyncFileLogWorkThread::PushLog(LPCTSTR LogData)
 void CAsyncFileLogWorkThread::CreateDir(LPCTSTR FilePath)
 {
 	CEasyString FileDir=GetPathDirectory(FilePath);
-	CreateDirEx(FileDir);
+	if(!CreateDirEx(FileDir))
+	{
+		PrintImportantLog(0,"´´½¨Ä¿Â¼%sÊ§°Ü",(LPCTSTR)FileDir);
+	}
 }
 

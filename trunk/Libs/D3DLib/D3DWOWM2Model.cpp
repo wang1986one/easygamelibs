@@ -46,8 +46,12 @@ CD3DWOWM2Model::~CD3DWOWM2Model(void)
 
 void CD3DWOWM2Model::Destory()
 {
+	DestoryModel();
 	CD3DBaseDynamicModel::Destory();
+}
 
+void CD3DWOWM2Model::DestoryModel()
+{
 	for(UINT i=0;i<m_SubMeshListForSoftSkinMesh.GetCount();i++)
 	{
 		SAFE_RELEASE(m_SubMeshListForSoftSkinMesh[i]);
@@ -77,8 +81,6 @@ void CD3DWOWM2Model::Destory()
 	m_PlayStartTime=-1;
 	m_CurPlayTime=0;
 	m_PlaySpeedRate=1.0f;
-
-	
 }
 
 bool CD3DWOWM2Model::Reset()
@@ -242,7 +244,7 @@ bool CD3DWOWM2Model::LoadFromResource(CD3DWOWM2ModelResource * pModelResource)
 	if(pModelResource==NULL)
 		return false;
 
-	Destory();
+	DestoryModel();
 
 	m_pModelResource=pModelResource;	
 	m_pModelResource->AddUseRef();
@@ -263,6 +265,11 @@ bool CD3DWOWM2Model::LoadFromResource(CD3DWOWM2ModelResource * pModelResource)
 	else
 	{
 		m_UseSoftSkinMesh=false;
+	}
+
+	if(m_pModelResource->HasBoneAni()||m_pModelResource->HasMaterialAni())
+	{
+		AddFlag(CD3DObject::OBJECT_FLAG_CAN_MERGE_RENDER);
 	}
 
 	for(UINT i=0;i<m_pModelResource->GetParticleEmitterCount();i++)
@@ -784,7 +791,6 @@ bool CD3DWOWM2Model::CanDoSubMeshViewCull()
 	return true;
 }
 
-
 void CD3DWOWM2Model::Update(FLOAT Time)
 {
 
@@ -1104,6 +1110,8 @@ void CD3DWOWM2Model::PrepareSoftSkinMesh()
 			CD3DSubMesh * pNewSubMesh=new CD3DSubMesh(GetDevice());
 			
 			pNewSubMesh->CloneFrom(pSubMesh,SUBMESH_CLONE_USE_SYSTEM_MEM|SUBMESH_CLONE_NOT_CLONE_MATERIAL);
+			pNewSubMesh->SetID(pSubMesh->GetID());
+			pNewSubMesh->SetName(pSubMesh->GetName());
 			
 			pNewSubMesh->SetVertices((BYTE *)m_Vertices.GetBuffer());
 			pNewSubMesh->SetVertexBufferR((BYTE *)m_VerticesR.GetBuffer());

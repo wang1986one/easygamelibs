@@ -59,7 +59,7 @@ protected:
 		bool IsFree;				
 		void InitObject()
 		{
-			Object=NULL;
+			pObject=NULL;
 		}
 		OBJECT_TYPE& GetObjectRef()
 		{
@@ -96,7 +96,7 @@ protected:
 		bool IsFree;				
 		void InitObject()
 		{
-			Object=NULL;
+			pObject=NULL;
 		}
 		OBJECT_TYPE& GetObjectRef()
 		{
@@ -360,6 +360,16 @@ public:
 	BOOL DeleteObject(UINT ID)
 	{
 		StorageNode * pNode=(StorageNode *)GetObjectPos(ID);
+		if(pNode)
+		{
+			DeleteNode(pNode);
+			return true;
+		}
+		return false;;
+	}	
+	BOOL DeleteObjectByPos(LPVOID Pos)
+	{
+		StorageNode * pNode=(StorageNode *)Pos;
 		if(pNode)
 		{
 			DeleteNode(pNode);

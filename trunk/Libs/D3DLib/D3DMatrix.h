@@ -125,6 +125,7 @@ public:
 	//建立透视投影矩阵
 	static CD3DMatrix FromPerspectiveFovLH(FLOAT Fov,FLOAT Aspect,FLOAT Near,FLOAT Far);
 	static CD3DMatrix FromPerspectiveFovRH(FLOAT Fov,FLOAT Aspect,FLOAT Near,FLOAT Far);
+	static CD3DMatrix FromPerspectiveFovXLH(FLOAT Fov,FLOAT Aspect,FLOAT Near,FLOAT Far);
 
 	static CD3DMatrix FromPerspectiveOffCenterLH(FLOAT Left,FLOAT Right,FLOAT Top,FLOAT Bottom,FLOAT Near,FLOAT Far);
 	static CD3DMatrix FromPerspectiveOffCenterRH(FLOAT Left,FLOAT Right,FLOAT Top,FLOAT Bottom,FLOAT Near,FLOAT Far);
@@ -480,6 +481,19 @@ inline CD3DMatrix CD3DMatrix::FromPerspectiveFovLH(FLOAT Fov,FLOAT Aspect,FLOAT 
 {
 	CD3DMatrix Mat;	
 	D3DXMatrixPerspectiveFovLH(&Mat,Fov,Aspect,Near,Far);
+	return Mat;
+}
+
+inline CD3DMatrix CD3DMatrix::FromPerspectiveFovXLH(FLOAT Fov,FLOAT Aspect,FLOAT Near,FLOAT Far)
+{
+	CD3DMatrix Mat;
+	Mat.SetIdentity();
+	Mat._11=1.0f/tan(Fov/2);
+	Mat._22=Mat._11/Aspect;
+	Mat._33=Far/(Far-Near);
+	Mat._34=1.0f;
+	Mat._43=-Near*Far/(Far-Near);
+	Mat._44=0.0f;
 	return Mat;
 }
 inline CD3DMatrix CD3DMatrix::FromPerspectiveFovRH(FLOAT Fov,FLOAT Aspect,FLOAT Near,FLOAT Far)

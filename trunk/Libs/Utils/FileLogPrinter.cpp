@@ -62,7 +62,7 @@ bool CFileLogPrinter::Create(LPCTSTR FileName,DWORD Flag)
 	m_FileOpenMode|=IFileAccessor::modeWrite|IFileAccessor::shareShareRead;
 	if(m_Flag&FILE_LOG_SAFE_WRITE)
 		m_FileOpenMode|=IFileAccessor::osWriteThrough;
-	return m_pFileAccessor->Open(LogFileName,m_FileOpenMode);
+	return m_pFileAccessor->Open(LogFileName,m_FileOpenMode)==TRUE;
 }
 
 CFileLogPrinter::~CFileLogPrinter(void)

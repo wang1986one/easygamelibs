@@ -27,7 +27,7 @@ CD3DCombo::CD3DCombo():CD3DEdit()
 {
 	m_pExpandButton=NULL;
 	m_pComboList=NULL;
-	m_ComboListOrginHeight=0;
+	m_ComboListHeight=0;
 	InitWnd(NULL);
 
 }
@@ -36,7 +36,7 @@ CD3DCombo::CD3DCombo(CD3DGUI * pGUI):CD3DEdit(pGUI)
 {
 	m_pExpandButton=NULL;
 	m_pComboList=NULL;
-	m_ComboListOrginHeight=0;
+	m_ComboListHeight=0;
 	InitWnd(pGUI);	
 }
 
@@ -68,7 +68,7 @@ void CD3DCombo::InitWnd(CD3DGUI *  pGUI)
 		//m_pComboList->EnableFocus(false);
 	}
 
-	m_ComboListOrginHeight=m_pComboList->GetWndRect().Height();
+	
 }
 
 
@@ -91,14 +91,18 @@ BOOL CD3DCombo::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lParam)
 				ScreenToClient(&Rect);
 
 				int Height=m_pComboList->GetItemCount()*m_pComboList->GetItemHeight();
+				int MiniHeight=m_pComboList->GetItemHeight()+m_pComboList->GetBorder(RECT_TOP)+m_pComboList->GetBorder(RECT_BOTTOM);
 
-				if(Height<0)
-					Height=m_pComboList->GetItemHeight();
+				if(m_ComboListHeight<MiniHeight)
+					m_ComboListHeight=MiniHeight;
 
 				Height+=m_pComboList->GetBorder(RECT_TOP)+m_pComboList->GetBorder(RECT_BOTTOM);
 
-				if(Height>m_ComboListOrginHeight)
-					Height=m_ComboListOrginHeight;
+				if(Height<MiniHeight)
+					Height=MiniHeight;
+
+				if(Height>m_ComboListHeight)
+					Height=m_ComboListHeight;
 
 				Rect.top=Rect.bottom;
 				Rect.bottom=Rect.top+Height;
@@ -393,7 +397,6 @@ bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 			SAFE_RELEASE(m_pComboList);
 			m_pComboList=pWnd;
 			m_pComboList->SetVisible(false);
-			m_ComboListOrginHeight=m_pComboList->GetWndRect().Height();
 		}
 		
 	}	
@@ -404,7 +407,23 @@ bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 	return true;
 }
 
+
+
 /////////////////////////////////////////
+
+void CD3DCombo::SaveFrameToXML(xml_node& Frame)
+{
+	CD3DWnd::SaveFrameToXML(Frame);
+
+	Frame.append_attribute("ComboListHeight",(long)GetComboListHeight());
+}
+
+void CD3DCombo::LoadFrameFromXML(xml_node& Frame)
+{
+	CD3DWnd::LoadFrameFromXML(Frame);
+	if(Frame.has_attribute("ComboListHeight"))
+		SetComboListHeight((long)Frame.attribute("ComboListHeight"));
+}
 
 
 void CD3DCombo::GetMiniSize(int& Width,int& Height)

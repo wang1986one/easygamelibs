@@ -175,7 +175,9 @@ public:
 		if(pVar)
 		{
 			pVar->ValueInt=Value;
+			return true;
 		}
+		return false;
 	}
 	bool EditVariable(LPCTSTR VarName, INT64 Value)
 	{
@@ -185,7 +187,9 @@ public:
 		if(pVar)
 		{
 			pVar->ValueInt64=Value;
+			return true;
 		}
+		return false;
 	}
 	bool EditVariable(LPCTSTR VarName, float Value)
 	{
@@ -195,7 +199,9 @@ public:
 		if(pVar)
 		{
 			pVar->ValueFloat=Value;
+			return true;
 		}
+		return false;
 	}
 	bool EditVariable(LPCTSTR VarName, double Value)
 	{
@@ -205,7 +211,9 @@ public:
 		if(pVar)
 		{
 			pVar->ValueDouble=Value;
+			return true;
 		}
+		return false;
 	}
 	bool EditVariable(LPCTSTR VarName, LPCTSTR Value)
 	{
@@ -215,7 +223,9 @@ public:
 		if(pVar)
 		{
 			pVar->StrValue=Value;
+			return true;
 		}
+		return false;
 	}
 	ES_VARIABLE * FindVariable(UINT VarID)
 	{

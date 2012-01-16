@@ -15,6 +15,18 @@
 
 TCHAR PERFORMANCE_STATISTICIAN_INSTANCE[]="PerformanceStatisticianInstance";
 
+struct PERFORMANCE_INFO
+{
+	UINT PerformanceCount;
+	LPCTSTR PerformanceFunctionName;
+	int PerformanceFunctionCall;
+
+	static bool Sort(const PERFORMANCE_INFO& p1,const PERFORMANCE_INFO& p2)
+	{
+		return p1.PerformanceCount>p2.PerformanceCount;
+	}
+};
+
 CPerformanceStatistician::CPerformanceStatistician(void)
 {
 	ZeroMemory((void *)m_PerformanceCounts,sizeof(m_PerformanceCounts));
@@ -29,17 +41,7 @@ CPerformanceStatistician::~CPerformanceStatistician(void)
 
 void CPerformanceStatistician::PrintPerformanceStat(int LogChannel)
 {
-	struct PERFORMANCE_INFO
-	{
-		UINT PerformanceCount;
-		LPCTSTR PerformanceFunctionName;
-		int PerformanceFunctionCall;
-
-		static bool Sort(const PERFORMANCE_INFO& p1,const PERFORMANCE_INFO& p2)
-		{
-			return p1.PerformanceCount>p2.PerformanceCount;
-		}
-	};
+	
 	std::vector<PERFORMANCE_INFO> PerformanceList;
 	CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"性能统计开始:");
 	for(int i=0;i<MAX_PERFORMANCE_FUNCTION_NUM;i++)
@@ -56,56 +58,28 @@ void CPerformanceStatistician::PrintPerformanceStat(int LogChannel)
 	}
 	std::sort(PerformanceList.begin(),PerformanceList.end(),PERFORMANCE_INFO::Sort);
 
-	LARGE_INTEGER PerformanceFrequency;
-	if(QueryPerformanceFrequency(&PerformanceFrequency))
+	
+	double CountUnit=(double)CEasyTimerEx::TIME_UNIT_PER_SECOND/PERFORMANCE_UNIT;
+	double Total=0;
+	for(size_t i=0;i<PerformanceList.size();i++)
 	{
-		PerformanceFrequency.QuadPart=PerformanceFrequency.QuadPart/PERFORMANCE_UNIT;
-		double Total=0;
-		for(size_t i=0;i<PerformanceList.size();i++)
-		{
-			if(PerformanceList[i].PerformanceCount==0)
-				break;
-			double Count=((double)PerformanceList[i].PerformanceCount*1000.0f)/((double)PerformanceFrequency.QuadPart);
-			Total+=Count;
-			CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %gMS:%d",
-				PerformanceList[i].PerformanceFunctionName,
-				Count,
-				PerformanceList[i].PerformanceFunctionCall);
-		}
-		CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %gMS",
-			"Total",Total);
+		if(PerformanceList[i].PerformanceCount==0)
+			break;
+		double Count=((double)PerformanceList[i].PerformanceCount*1000.0f)/CountUnit;
+		Total+=Count;
+		CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %gMS:%d",
+			PerformanceList[i].PerformanceFunctionName,
+			Count,
+			PerformanceList[i].PerformanceFunctionCall);
 	}
-	else
-	{
-		UINT64 Total=0;
-		for(size_t i=0;i<PerformanceList.size();i++)
-		{
-			if(PerformanceList[i].PerformanceCount==0)
-				break;
-			Total+=PerformanceList[i].PerformanceCount;
-			CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %u:%d",
-				PerformanceList[i].PerformanceFunctionName,
-				PerformanceList[i].PerformanceCount,
-				PerformanceList[i].PerformanceFunctionCall);
-		}
-		CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %llu",
-			"Total",Total);
-	}
+	CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %gMS",
+		"Total",Total);
+	
 	
 }
 
 void CPerformanceStatistician::PrintPerformanceStatUnit(int LogChannel)
-{
-	struct PERFORMANCE_INFO
-	{
-		UINT PerformanceCount;
-		LPCTSTR PerformanceFunctionName;		
-
-		static bool Sort(const PERFORMANCE_INFO& p1,const PERFORMANCE_INFO& p2)
-		{
-			return p1.PerformanceCount>p2.PerformanceCount;
-		}
-	};
+{	
 	std::vector<PERFORMANCE_INFO> PerformanceList;
 	CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"性能统计开始(单位):");
 	for(int i=0;i<MAX_PERFORMANCE_FUNCTION_NUM;i++)
@@ -121,30 +95,19 @@ void CPerformanceStatistician::PrintPerformanceStatUnit(int LogChannel)
 	}
 	std::sort(PerformanceList.begin(),PerformanceList.end(),PERFORMANCE_INFO::Sort);
 
-	LARGE_INTEGER PerformanceFrequency;
-	if(QueryPerformanceFrequency(&PerformanceFrequency))
+	
+	double CountUnit=(double)CEasyTimerEx::TIME_UNIT_PER_SECOND/PERFORMANCE_UNIT;
+	for(size_t i=0;i<PerformanceList.size();i++)
 	{
-		PerformanceFrequency.QuadPart=PerformanceFrequency.QuadPart/PERFORMANCE_UNIT;
-		for(size_t i=0;i<PerformanceList.size();i++)
-		{
-			if(PerformanceList[i].PerformanceCount==0)
-				break;
-			double Count=((double)PerformanceList[i].PerformanceCount*1000.0f)/((double)PerformanceFrequency.QuadPart);
+		if(PerformanceList[i].PerformanceCount==0)
+			break;
+		double Count=((double)PerformanceList[i].PerformanceCount*1000.0f)/CountUnit;
 
-			CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %gMS",
-				PerformanceList[i].PerformanceFunctionName,
-				Count);
-		}
+		CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %gMS",
+			PerformanceList[i].PerformanceFunctionName,
+			Count);
 	}
-	else
-	{
-		for(size_t i=0;i<PerformanceList.size();i++)
-		{
-			CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"    %80hs:   %u",
-				PerformanceList[i].PerformanceFunctionName,
-				PerformanceList[i].PerformanceCount);
-		}
-	}
+	
 }
 
 void CPerformanceStatistician::ResetPerformanceStat()

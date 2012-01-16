@@ -34,7 +34,7 @@ namespace D3DLib{
 #define BLZ_DBC_CHAR_SECTION_RECORD_SIZE				(40)
 #define BLZ_DBC_ANIMATION_DATA_RECORD_SIZE				(24)
 #define BLZ_DBC_CHAR_HAIR_GEOSET_RECORD_SIZE			(24)
-#define BLZ_DBC_CHAR_WHISKER_GEOSET_RECORD_SIZE			(36)
+#define BLZ_DBC_CHAR_WHISKER_GEOSET_RECORD_SIZE			(9*sizeof(UINT32))
 #define BLZ_DBC_CHAR_RACE_RECORD_SIZE					(96)
 #define BLZ_DBC_CREATURE_DISPLAY_INFO_RECORD_SIZE		(68)
 #define BLZ_DBC_CREATURE_EXTRA_DISPLAY_INFO_RECORD_SIZE	(84)
@@ -45,11 +45,11 @@ namespace D3DLib{
 #define BLZ_DBC_ITEM_DATA_RECORD_SIZE					(32)
 #define BLZ_DBC_ITEM_DISPLAY_INFO_RECORD_SIZE			(100)
 #define BLZ_DBC_HELMET_GEOSET_VISIBLE_RECORD_SIZE		(32)
-#define BLZ_DBC_MAP_RECORD_SIZE							(472)
+#define BLZ_DBC_MAP_RECORD_SIZE							(20*sizeof(UINT32))
 #define BLZ_DBC_SPELL_VISUAL_EFFECT_NAME_RECORD_SIZE	(28)
-#define BLZ_DBC_LIQUID_TYPE_RECORD_SIZE					(46*sizeof(UINT32))
+#define BLZ_DBC_LIQUID_TYPE_RECORD_SIZE					(45*sizeof(UINT32))
 #define BLZ_DBC_LIGHT_RECORD_SIZE						(15*sizeof(UINT32))
-#define BLZ_DBC_LIGHT_PARAMS_RECORD_SIZE				(9*sizeof(UINT32))
+#define BLZ_DBC_LIGHT_PARAMS_RECORD_SIZE				(10*sizeof(UINT32))
 #define BLZ_DBC_LIGHT_INT_BAND_RECORD_SIZE				(34*sizeof(UINT32))
 
 #define BLZ_DBC_STR_LOCAL_ZH_CN							0//4
@@ -90,7 +90,7 @@ namespace D3DLib{
 #define EQUIPMENT_FOOT_TEXTURE_PATH				"ITEM\\TEXTURECOMPONENTS\\FOOTTEXTURE"
 
 #define WOW_MAP_ADT_FILE_DIR					"WORLD\\MAPS"
-#define WOW_MINI_MAP_FILE_DIR					"Textures\\MiniMap"
+#define WOW_MINI_MAP_FILE_DIR					"World\\Minimaps"
 
 #define BLZ_WOW_MAP_WIDTH						64
 #define BLZ_ADT_MAP_TILE_SIZE					(100.0f/3.0f)
@@ -380,28 +380,53 @@ extern LPCTSTR ITEM_INVENTORY_SLOT_NAME[IISI_MAX];
 
 extern LPCTSTR ITEM_PATH_BY_SLOT[IISI_MAX];
 
-
+//½ÇÉ«Ä£ÐÍ²¿¼þ
 enum CHAR_SUBMESH_PART
 {
-	CSP_HAIR=0,
-	CSP_WHISKER1=1,
-	CSP_WHISKER2=2,
-	CSP_WHISKER3=3,
-	CSP_GLOVE=4,
-	CSP_FOOT=5,
-	CSP_EAR=7,
-	CSP_SLEEVE=8,
-	CSP_PAINTS=9,
-	CSP_LAP=10,
-	CSP_SKIRT=11,
-	CSP_ENSIGN=12,
-	CSP_ROBE=13,
-	CSP_BACK=15,
-	CSP_SHINE_EYE=17,
-	CSP_SASH=18,
+	CSP_HAIR=0,				//Í··¢
+	CSP_WHISKER1=1,			//ºúÐë(ÏÂ°Í)
+	CSP_WHISKER2=2,			//ºúÐë(÷Þ½Ç)
+	CSP_WHISKER3=3,			//ºúÐë(ÉÏ´½)
+	CSP_GLOVE=4,			//ÊÖÍó(ÉÏ±Û)
+	CSP_FOOT=5,				//½Å(Ð¬×Ó)
+	CSP_EAR=7,				//¶ú¶ä
+	CSP_SLEEVE=8,			//Ðä×Ó
+	CSP_PAINTS=9,			//¿ã×ÓÐ¡ÍÈ
+	CSP_LAP=10,				//ÒÂ°Ú£¿¶ÌÈ¹£¿
+	CSP_SKIRT=11,			//ÒÂ·þÏÂ°Ú
+	CSP_ENSIGN=12,			//¹¤»áÆìÖÄ
+	CSP_ROBE=13,			//¿ã×Ó´óÍÈ/³¤ÅÛÏÂ°Ú
+	CSP_BACK=15,			//Åû·ç
+	CSP_SHINE_EYE=17,		//ÑÛ²¿·¢¹âÕÚÆ¬
+	CSP_SASH=18,			//Ñü´ø
 };
 
-
+enum CHAR_RACES
+{
+	RACE_HUMAN              = 1,		//ÈËÀà
+	RACE_ORC                = 2,		//ÊÞÈË
+	RACE_DWARF              = 3,		//°«ÈË
+	RACE_NIGHTELF           = 4,		//°µÒ¹¾«Áé
+	RACE_UNDEAD             = 5,		//ÍöÁé
+	RACE_TAUREN             = 6,		//Å£Í·ÈË
+	RACE_GNOME              = 7,		//ÙªÈå
+	RACE_TROLL              = 8,		//¾ÞÄ§
+	RACE_GOBLIN             = 9,		//µØ¾«
+	RACE_BLOODELF           = 10,		//Ñª¾«Áé
+	RACE_DRAENEI            = 11,		//µÂÀ³Äá
+	RACE_FEL_ORC            = 12,		//Ð°ÊÞÈË
+	RACE_NAGA               = 13,		//ÄÉåÈ
+	RACE_BROKEN             = 14,		//ÆÆËéÕß
+	RACE_SKELETON           = 15,		//÷¼÷Ã
+	RACE_VRYKUL             = 16,		//Î¬¿âÈË
+	RACE_TUSKARR            = 17,		//º£ÏóÈË
+	RACE_FOREST_TROLL       = 18,		//É­ÁÖ¾ÞÄ§
+	RACE_TAUNKA             = 19,		//ºÄÅ£ÈË
+	RACE_NORTHREND_SKELETON = 20,		//ÅµÉ­µÂ÷¼÷Ã
+	RACE_ICE_TROLL          = 21,		//±ù¾ÞÄ§
+	RACE_WORGEN             = 22,		//ÀÇÈË
+	RACE_WORGEN_HUMAN       = 23,		//¼ª¶ûÄáË¹ÈË
+};
 
 enum PARTICLE_EMITTER_BLENDING_TYPE
 {
@@ -594,6 +619,7 @@ struct DBC_CHAR_HAIR_GEOSET_RECORD
 
 struct DBC_CHAR_WHISKER_TYPE_RECORD
 {	
+	UINT32	ID;
 	UINT32	Race;
 	UINT32	Sex;
 	UINT32	WhiskerType;	
@@ -602,7 +628,6 @@ struct DBC_CHAR_WHISKER_TYPE_RECORD
 	UINT32	SubMeshID3;
 	UINT32	SubMeshID4;
 	UINT32	SubMeshID5;
-	UINT32	Unknown1;
 };
 
 struct DBC_CHAR_RACE_RECORD
@@ -780,6 +805,8 @@ struct DBC_MAP_INFO
 {
 	UINT32	ID;
 	UINT32	InternalName;							//String reference to World\Map\ [...] \  
+	UINT32	Unknown1;
+	UINT32	Unknown2;
 	UINT32	AreaType;								// Integer 0: none, 1: party, 2: raid, 3: pvp, 4: arena, >=5: none (official from "IsInInstance()")  
 	UINT32	IsBattleground;							//  Boolean Simple flag for battleground maps  
 	UINT32	Name[BLZ_DBC_STR_LOCAL_NUM];			// Loc Name (displayed on World Map for example)  
@@ -788,18 +815,14 @@ struct DBC_MAP_INFO
 	UINT32	HordeDesc[BLZ_DBC_STR_LOCAL_NUM];		// Loc Horde  
 	UINT32	LoadingScreen;							// iRefID The LoadingScreen to Display  
 	FLOAT	BattlefieldMapIconScale;				//Float  
-	UINT32	Requirement[BLZ_DBC_STR_LOCAL_NUM];		//Loc Requirement to enter  
-	UINT32	Heroic[BLZ_DBC_STR_LOCAL_NUM];			//Loc Heroic-Requirement to enter  
-	UINT32	Unknown1[BLZ_DBC_STR_LOCAL_NUM];		//Loc Some other requirement to enter.  
 	UINT32	ParentArea;								// iRefID Points to column 1, -1 if none  
 	FLOAT	XCoord;									// Float The X-Coord of the instance entrance  
-	FLOAT	YCoord;									// Float The Y-Coord of the instance entrance  
-	UINT32	ResetTimeRaid;							//Integer Raid.  
-	UINT32	ResetTimeHeroicRaid;					// Integer Heroic raid or instance?  
-	UINT32	Unknown2;								//  Integer All the time 0.  
-	UINT32	TimeOfDayOverride;						//  Integer Set to -1 for everything but Orgrimmar and Dalaran arena. For those, the time of day will change to this.  
+	FLOAT	YCoord;									// Float The Y-Coord of the instance entrance  	
+	UINT32	Unknown3;								//  Integer All the time 0.  	
 	UINT32	ExpansionID;							//  Integer Vanilla: 0, BC: 1, WotLK: 2  
-	UINT32	Unknown3;								//  Integer  Another resettime? Is the same as the heroic one for some entries.  
+	UINT32	Unknown4;								//  Integer  Another resettime? Is the same as the heroic one for some entries.  
+	UINT32	Unknown5;
+	UINT32	Unknown6;
 
 };
 
@@ -1218,6 +1241,7 @@ struct M2_PARTICLE_EMITTER
 	UINT32							UnknownReferenceCount;  
 	UINT32							UnknownReferenceOffset;		// Vec3D array  
 	M2_MODEL_ANIMATION_BLOCK		EnabledIn;					// (boolean) Has been in the earlier documentations. Enabled Anim Block.  
+	UINT32							Unknows[4];
 };
 
 
@@ -1266,8 +1290,7 @@ struct M2_LIGHT_INFO
 
 struct M2_CAMERA_INFO
 {
-	UINT32  					Type;					//  0: potrait, 1: characterinfo; -1: else (flyby etc.); referenced backwards in the lookup table.  
-	FLOAT						FOV;					//  No radians, no degrees. Multiply by 35 to get degrees.  
+	UINT32  					Type;					//  0: potrait, 1: characterinfo; -1: else (flyby etc.); referenced backwards in the lookup table.  	
 	FLOAT						FarClipping;			//  Where it stops to be drawn.  
 	FLOAT						NearClipping;			//  Far and near. Both of them.  
 	M2_MODEL_ANIMATION_BLOCK	TranslationPos;			//  How the camera's position moves. Should be 3*3 floats. (WoW parses 36 bytes = 3*3*sizeof(float))  
@@ -1275,6 +1298,7 @@ struct M2_CAMERA_INFO
 	M2_MODEL_ANIMATION_BLOCK	TranslationTar;			//  How the target moves. Should be 3*3 floats.  
 	CD3DVector3					Target;					//			Where the camera points to.  
 	M2_MODEL_ANIMATION_BLOCK	Scaling;				//  The camera can have some roll-effect. Its 0 to 2*Pi. 3 Floats!  
+	M2_MODEL_ANIMATION_BLOCK	FOV;					//  No radians, no degrees. Multiply by 35 to get degrees.  
 
 };
 

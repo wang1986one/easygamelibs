@@ -152,19 +152,19 @@ bool CD3DFX::LoadFromMemory(const void * pData,int DataSize)
 		m_EffectData.PushConstBack(0,1);
 	}
 
+	UINT CompileFlag=0;
 	
 	LPD3DXEFFECTCOMPILER pCompiler=NULL;
 	LPD3DXBUFFER pErrors=NULL;
-
 	
 	if(D3DXCreateEffectCompiler((LPCTSTR)m_EffectData.GetBuffer(),m_EffectData.GetUsedSize(),
 		NULL,m_pManager->GetBuildInFXIncludeParser(),
-		0,
+		CompileFlag,
 		&pCompiler,
 		&pErrors)==D3D_OK)
 	{
 		LPD3DXBUFFER pCompiledData;
-		if(pCompiler->CompileEffect(0,&pCompiledData,&pErrors)==D3D_OK)
+		if(pCompiler->CompileEffect(CompileFlag,&pCompiledData,&pErrors)==D3D_OK)
 		{
 			m_CompiledEffectData.Create(pCompiledData->GetBufferSize());
 			m_CompiledEffectData.PushBack(pCompiledData->GetBufferPointer(),

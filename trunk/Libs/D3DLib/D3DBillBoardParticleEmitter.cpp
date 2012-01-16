@@ -375,6 +375,9 @@ void CD3DBillBoardParticleEmitter::Update(FLOAT Time)
 			m_SubMesh.SetIndexCount(m_ParticleCount*6);
 			m_SubMesh.SetPrimitiveCount(m_ParticleCount*2);
 			m_IsRenderDataChanged=true;
+
+			//PrintD3DDebugLog(0,"%sÁ£×ÓÊý%d",GetName(),m_ParticleCount);
+			//m_SubMesh.CheckValid();
 		}
 	}
 	

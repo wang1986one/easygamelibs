@@ -10,7 +10,6 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include "AutoLock.h"
 
 class CEasyReadWriteLock
 {

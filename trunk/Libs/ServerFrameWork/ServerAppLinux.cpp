@@ -10,7 +10,7 @@
 /*                                                                          */
 /****************************************************************************/
 #include "StdAfx.h"
-#include "ServerAppWin.h"
+
 
 CServerApp	* m_gAppInstance=NULL;
 
@@ -24,6 +24,7 @@ int main()//int argc, char *argv[])
 CServerApp::CServerApp(void)
 {
 	m_WantExist=FALSE;
+	m_pServer=NULL;
 	m_gAppInstance=this;
 }
 
@@ -43,11 +44,18 @@ void CServerApp::OnShutDown()
 
 int CServerApp::Run()
 {
+	char szCmd[2048];
+	szCmd[0]=0;
 	if(OnStartUp())
 	{
 		while(!m_WantExist)
 		{
 			DoSleep(1);
+			gets(szCmd);
+			if(_stricmp(szCmd,"quit")==0)
+			{
+				m_WantExist=true;
+			}
 		}
 		OnShutDown();
 	}

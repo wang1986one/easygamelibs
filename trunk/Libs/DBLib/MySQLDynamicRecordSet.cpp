@@ -234,7 +234,7 @@ int CMySQLDynamicRecordSet::MovePrevious()
 			Offset--;
 			mysql_stmt_row_seek(m_hStmt,Offset);
 			int Ret=FetchRow();
-			if(Ret=DBERR_IS_RECORDSET_TAIL)
+			if(Ret=DBERR_NO_RECORDS)
 			{
 				m_IsBOF=true;
 				return DBERR_IS_RECORDSET_HEAD;
@@ -262,7 +262,16 @@ int CMySQLDynamicRecordSet::MoveTo(int Index)
 		if(m_CacheAllData)
 		{
 			mysql_stmt_data_seek(m_hStmt,Index);
-			return FetchRow();
+			int Ret=FetchRow();
+			if(Ret=DBERR_NO_RECORDS)
+			{
+				m_IsEOF=true;
+				return DBERR_IS_RECORDSET_TAIL;
+			}
+			else
+			{
+				return Ret;
+			}
 		}
 		else
 		{
@@ -299,12 +308,13 @@ int CMySQLDynamicRecordSet::FetchRow()
 		{
 			if(Ret==MYSQL_DATA_TRUNCATED)
 			{
-
+				m_pDBConnection->ProcessErrorMsg(m_hStmt,"出现数据截断");
+				return DBERR_FETCH_RESULT_FAIL;
 			}
 			else if(Ret==MYSQL_NO_DATA)
 			{
 				m_IsEOF=true;
-				return DBERR_IS_RECORDSET_TAIL;					
+				return DBERR_NO_RECORDS;					
 			}
 			else
 			{

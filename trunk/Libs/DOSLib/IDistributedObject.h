@@ -56,7 +56,8 @@
 	{\
 		m_CurMsgSenderID=pMessage->GetSenderID();\
 		m_pCurHandleMsg=pMessage;\
-		return HandleMsg(pMessage->GetMsgID(),pMessage->GetDataPacket());\
+		CSmartStruct MsgPacket=pMessage->GetDataPacket();\
+		return HandleMsg(pMessage->GetMsgID(),MsgPacket);\
 	}
 
 #define INIT_DOS_MSG_MAP	InitDOSMsgMap();

@@ -161,6 +161,13 @@ BOOL CDOSObjectGroup::OnRun()
 	return FALSE;
 }
 
+void CDOSObjectGroup::OnTerminate()
+{
+	FUNCTION_BEGIN;
+	Destory();
+	FUNCTION_END;
+}
+
 BOOL CDOSObjectGroup::PushMessage(OBJECT_ID ObjectID,CDOSMessagePacket * pPacket)
 {
 	FUNCTION_BEGIN;

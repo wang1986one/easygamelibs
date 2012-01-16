@@ -6,6 +6,8 @@ float4x4		WorldViewMatrix;
 texture TexLay0 ;
 texture TexLay1 ;
 
+float4			GlobalColor=1.0f;
+
 float4 WaterColorLight={0.4f,0.8f,0.4f,1.0f};
 float4 WaterColorDark={0.1f,0.2f,0.1f,1.0f};
 
@@ -88,6 +90,8 @@ float4 PShader( PS_INPUT Input) : COLOR0
 	OutColor.a=Depth;
 	
 	OutColor.xyz=OutColor.xyz*(1.0f-FogFactor)+FogColor*FogFactor;
+	
+	OutColor=OutColor*GlobalColor;
 	
     return OutColor;
 }

@@ -84,7 +84,7 @@ BOOL CStringFile::LoadFile( const char * pszTextFile )
 		pFile->Release();
 		return false;
 	}
-	bool Ret=LoadFile(pFile);	
+	BOOL Ret=LoadFile(pFile);	
 	pFile->Release();	
 	return Ret;
 }

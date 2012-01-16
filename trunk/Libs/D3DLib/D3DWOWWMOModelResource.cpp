@@ -75,6 +75,7 @@ bool CD3DWOWWMOModelResource::LoadFromFile(LPCTSTR ModelFileName)
 		return false;
 	if(!pFile->Open(ModelFileName,IFileAccessor::modeRead))
 	{
+		PrintD3DLog(0,"文件%s打开失败",ModelFileName);
 		pFile->Release();
 		return false;	
 	}
@@ -83,6 +84,7 @@ bool CD3DWOWWMOModelResource::LoadFromFile(LPCTSTR ModelFileName)
 
 	if(!WMOChunk.Load(pFile))
 	{
+		PrintD3DLog(0,"文件%s格式错误",ModelFileName);
 		pFile->Release();
 		return false;
 	}
@@ -855,6 +857,7 @@ bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileN
 		return false;
 	if(!pFile->Open(ModelFileName,IFileAccessor::modeRead))
 	{
+		PrintD3DLog(0,"文件%s打开失败",ModelFileName);
 		pFile->Release();
 		return false;	
 	}
@@ -921,14 +924,18 @@ bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileN
 
 
 	BLZ_CHUNK_MOBN * pBSPNodes=(BLZ_CHUNK_MOBN *)SubChunk.GetFirstChunk(CHUNK_ID_WMO_MOBN);
-	if(pBSPNodes==NULL)
-		return false;
-	UINT BSPNodeCount=pBSPNodes->ChunkSize/(sizeof(BLZ_CHUNK_MOBN)-sizeof(BLZ_CHUNK_HEADER));
+	UINT BSPNodeCount=0;
+	if(pBSPNodes)
+	{
+		BSPNodeCount=pBSPNodes->ChunkSize/(sizeof(BLZ_CHUNK_MOBN)-sizeof(BLZ_CHUNK_HEADER));
+	}
 
 	BLZ_CHUNK_MOBR * pBSPFaces=(BLZ_CHUNK_MOBR *)SubChunk.GetFirstChunk(CHUNK_ID_WMO_MOBR);
-	if(pBSPFaces==NULL)
-		return false;
-	UINT BSPFaceCount=pBSPFaces->ChunkSize/sizeof(UINT16);
+	UINT BSPFaceCount=0;
+	if(pBSPFaces)
+	{
+		BSPFaceCount=pBSPFaces->ChunkSize/sizeof(UINT16);
+	}
 
 	BLZ_CHUNK_MOCV * pVertexColors=(BLZ_CHUNK_MOCV *)SubChunk.GetFirstChunk(CHUNK_ID_WMO_MOCV);
 
@@ -976,30 +983,33 @@ bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileN
 	}
 
 	//BSP树
-	GroupInfo.BSPTree.Resize(BSPNodeCount);
-	GroupInfo.BSPFaceList.Resize(BSPFaceCount);
-	for(UINT i=0;i<BSPNodeCount;i++)
+	if(pBSPNodes&&pBSPFaces)
 	{
-		GroupInfo.BSPTree[i].PlaneType=pBSPNodes->BSPNodes[i].PlaneType;
-		if(GroupInfo.BSPTree[i].PlaneType==BPT_XY)
+		GroupInfo.BSPTree.Resize(BSPNodeCount);
+		GroupInfo.BSPFaceList.Resize(BSPFaceCount);
+		for(UINT i=0;i<BSPNodeCount;i++)
 		{
-			GroupInfo.BSPTree[i].RightChildIndex=pBSPNodes->BSPNodes[i].LeftChild;
-			GroupInfo.BSPTree[i].LeftChildIndex=pBSPNodes->BSPNodes[i].RightChild;
-			GroupInfo.BSPTree[i].Distance=-pBSPNodes->BSPNodes[i].Distance;
+			GroupInfo.BSPTree[i].PlaneType=pBSPNodes->BSPNodes[i].PlaneType;
+			if(GroupInfo.BSPTree[i].PlaneType==BPT_XY)
+			{
+				GroupInfo.BSPTree[i].RightChildIndex=pBSPNodes->BSPNodes[i].LeftChild;
+				GroupInfo.BSPTree[i].LeftChildIndex=pBSPNodes->BSPNodes[i].RightChild;
+				GroupInfo.BSPTree[i].Distance=-pBSPNodes->BSPNodes[i].Distance;
+			}
+			else
+			{
+				GroupInfo.BSPTree[i].RightChildIndex=pBSPNodes->BSPNodes[i].RightChild;
+				GroupInfo.BSPTree[i].LeftChildIndex=pBSPNodes->BSPNodes[i].LeftChild;
+				GroupInfo.BSPTree[i].Distance=pBSPNodes->BSPNodes[i].Distance;
+			}		
+			GroupInfo.BSPTree[i].FaceCount=pBSPNodes->BSPNodes[i].FaceCount;
+			GroupInfo.BSPTree[i].FirstFace=pBSPNodes->BSPNodes[i].FirstFace;		
+			GroupInfo.BSPTree[i].pFaceBoard=NULL;
 		}
-		else
+		for(UINT i=0;i<BSPFaceCount;i++)
 		{
-			GroupInfo.BSPTree[i].RightChildIndex=pBSPNodes->BSPNodes[i].RightChild;
-			GroupInfo.BSPTree[i].LeftChildIndex=pBSPNodes->BSPNodes[i].LeftChild;
-			GroupInfo.BSPTree[i].Distance=pBSPNodes->BSPNodes[i].Distance;
-		}		
-		GroupInfo.BSPTree[i].FaceCount=pBSPNodes->BSPNodes[i].FaceCount;
-		GroupInfo.BSPTree[i].FirstFace=pBSPNodes->BSPNodes[i].FirstFace;		
-		GroupInfo.BSPTree[i].pFaceBoard=NULL;
-	}
-	for(UINT i=0;i<BSPFaceCount;i++)
-	{
-		GroupInfo.BSPFaceList[i]=pBSPFaces->BSPFaceIndices[i];
+			GroupInfo.BSPFaceList[i]=pBSPFaces->BSPFaceIndices[i];
+		}
 	}
 
 	for(UINT i=StartBatch;i<TotalBatchCount;i++)

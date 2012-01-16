@@ -110,7 +110,7 @@ public:
 	~CD3DWOWM2CharacterModel(void);
 
 	virtual void Destory();
-	
+	virtual void DestoryModel();
 
 	virtual bool Reset();
 	virtual bool Restore();
@@ -154,7 +154,7 @@ public:
 	virtual UINT GetSmartStructSize(UINT Param=0);
 
 protected:
-	void DestoryModel();
+	void CleanCharModel();
 	bool FetchCreatureExtraInfo(UINT ExtraInfoID);
 	bool BuildEquipmentModel(bool& HairVisible,bool& Facial1Visible,bool& Facial2Visible,bool& Facial3Visible,bool& EarsVisible);
 	bool RebuildSubMesh(bool HairVisible,bool Facial1Visible,bool Facial2Visible,bool Facial3Visible,bool EarsVisible,bool& HaveSleeve);

@@ -606,7 +606,7 @@ public:
 					SrcPos-=ReplaceSrcLen;
 					DestPos-=ReplaceDestLen;
 					if(ReplaceDestLen)
-						memcpy(m_pBuffer+DestPos,pNewStr,ReplaceDestLen*sizeof(T));
+						memmove(m_pBuffer+DestPos,pNewStr,ReplaceDestLen*sizeof(T));
 				}
 			}
 			else
@@ -617,7 +617,7 @@ public:
 				for(int i=0;i<ReplaceCount;i++)
 				{
 					if(ReplaceDestLen)
-						memcpy(m_pBuffer+DestPos,pNewStr,ReplaceDestLen*sizeof(T));
+						memmove(m_pBuffer+DestPos,pNewStr,ReplaceDestLen*sizeof(T));
 					SrcPos+=ReplaceSrcLen;
 					DestPos+=ReplaceDestLen;
 
@@ -679,7 +679,7 @@ public:
 			if(NewStrLen>=m_BufferSize)
 				Resize(NewStrLen);
 			memmove(m_pBuffer+Pos+StrLen,m_pBuffer+Pos,(m_StringLength-Pos)*sizeof(T));
-			memcpy(m_pBuffer+Pos,pStr,StrLen*sizeof(T));
+			memmove(m_pBuffer+Pos,pStr,StrLen*sizeof(T));
 			m_StringLength+=StrLen;
 			m_pBuffer[m_StringLength]=0;
 		}
@@ -709,7 +709,7 @@ inline void CEasyStringT<char>::SetString(const char * pStr,size_t Size)
 		if(Size+1>m_BufferSize)
 			Resize(Size,false);
 		if(pStr)
-			memcpy(m_pBuffer,pStr,Size);
+			memmove(m_pBuffer,pStr,Size);
 		m_pBuffer[Size]=0;
 		m_StringLength=Size;
 	}
@@ -727,7 +727,7 @@ inline void CEasyStringT<wchar_t>::SetString(const wchar_t * pStr,size_t Size)
 		if(Size+1>m_BufferSize)
 			Resize(Size,false);
 		if(pStr)
-			memcpy(m_pBuffer,pStr,sizeof(wchar_t)*Size);
+			memmove(m_pBuffer,pStr,sizeof(wchar_t)*Size);
 		m_pBuffer[Size]=0;
 		m_StringLength=Size;
 	}
@@ -784,7 +784,7 @@ inline void CEasyStringT<char>::AppendString(const char * pStr,size_t Size)
 		if(m_StringLength+Size>=m_BufferSize)
 			Resize(m_StringLength+Size);
 		if(pStr)
-			memcpy(m_pBuffer+m_StringLength,pStr,Size);
+			memmove(m_pBuffer+m_StringLength,pStr,Size);
 		m_pBuffer[m_StringLength+Size]=0;
 		m_StringLength+=Size;
 	}
@@ -798,7 +798,7 @@ inline void CEasyStringT<wchar_t>::AppendString(const wchar_t * pStr,size_t Size
 		if(m_StringLength+Size>=m_BufferSize)
 			Resize(m_StringLength+Size);
 		if(pStr)
-			memcpy(m_pBuffer+m_StringLength,pStr,sizeof(wchar_t)*Size);
+			memmove(m_pBuffer+m_StringLength,pStr,sizeof(wchar_t)*Size);
 		m_pBuffer[m_StringLength+Size]=0;
 		m_StringLength+=Size;
 	}
@@ -906,6 +906,15 @@ typedef CEasyStringT<wchar_t> CEasyStringW;
 
 typedef CEasyStringT<char> CEasyStringA;
 
+#ifdef UNICODE
+
+typedef CEasyStringT<wchar_t> CEasyString;
+
+#else
+
 typedef CEasyStringT<TCHAR> CEasyString;
+
+#endif
+
 
 

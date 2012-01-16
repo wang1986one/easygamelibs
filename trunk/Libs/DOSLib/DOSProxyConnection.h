@@ -24,6 +24,8 @@ protected:
 	CThreadSafeIDStorage<CDOSMessagePacket *>	m_MsgQueue;
 	CStaticMap<MSG_ID_TYPE,OBJECT_ID>			m_MessageMap;
 
+	static CEasyBuffer							m_CompressBuffer;
+
 	DECLARE_CLASS_INFO(CDOSProxyConnection);
 public:
 	CDOSProxyConnection(void);

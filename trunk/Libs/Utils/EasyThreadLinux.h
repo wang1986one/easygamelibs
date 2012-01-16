@@ -103,7 +103,7 @@ inline int CEasyThread::GetStatus()
 
 inline HANDLE CEasyThread::GetThreadHandle()
 {
-	return NULL;
+	return (HANDLE)m_ThreadID;
 }
 
 inline UINT CEasyThread::GetThreadID()

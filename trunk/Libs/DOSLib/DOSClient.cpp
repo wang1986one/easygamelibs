@@ -165,7 +165,31 @@ void CDOSClient::OnRecvData(const CEasyBuffer& DataBuffer)
 			Close();
 			PrintDOSLog(0xff0000,"(%d)收到非法包，连接断开！",GetID());
 		}
-		OnDOSMessage((CDOSSimpleMessage *)m_AssembleBuffer.GetBuffer());
+		CDOSSimpleMessage * pMsg=(CDOSSimpleMessage *)m_AssembleBuffer.GetBuffer();
+		if(pMsg->GetMsgFlag()&DOS_MESSAGE_FLAG_COMPRESSED)
+		{
+			CDOSSimpleMessage * pNewMsg=(CDOSSimpleMessage *)m_SendBuffer.GetBuffer();
+			pNewMsg->GetMsgHeader()=pMsg->GetMsgHeader();
+			lzo_uint OutLen=m_SendBuffer.GetBufferSize()-sizeof(CDOSSimpleMessage::DOS_SIMPLE_MESSAGE_HEAD);
+			int Result=lzo1x_decompress((BYTE *)pMsg->GetDataBuffer(),pMsg->GetDataLength(),
+				(BYTE *)pNewMsg->GetDataBuffer(),&OutLen,
+				NULL);
+			if(Result==LZO_E_OK)
+			{
+				pNewMsg->SetDataLength(OutLen);
+				OnDOSMessage(pNewMsg);
+			}
+			else
+			{
+				Close();
+				PrintDOSLog(0xff0000,"(%d消息解压缩失败，连接断开！",GetID());
+			}
+		}
+		else
+		{
+			OnDOSMessage(pMsg);
+		}
+		
 		m_AssembleBuffer.PopFront(NULL,PacketSize);
 		PeekPos=0;
 		PacketSize=0;

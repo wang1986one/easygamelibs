@@ -54,29 +54,15 @@ CD3DWOWM2CharacterModel::~CD3DWOWM2CharacterModel(void)
 
 void CD3DWOWM2CharacterModel::Destory()
 {
+	DestoryModel();
 	CD3DWOWM2Model::Destory();
-		
-	m_CharSkinColor=0;
-	m_CharHairColor=0;
-	m_CharFaceType=0;
-	m_CharHairType=0;
-	m_CharBeardType=0;
-	m_IsCharBald=false;
-	ZeroMemory(m_Equipments,sizeof(m_Equipments));
-
-	m_pHelmetModel=NULL;
-	m_pLeftShoulderModel=NULL;
-	m_pRightShoulderModel=NULL;
-	m_pLeftWeaponModel=NULL;
-	m_pRightWeaponModel=NULL;
-	m_pRightShieldModel=NULL;
-
-	m_CloseHandAnimationIndex=-1;
-
-	m_SubMeshMaterialList.Clear();
-	m_SubMeshList.Clear();
 }
 
+void CD3DWOWM2CharacterModel::DestoryModel()
+{
+	CleanCharModel();
+	CD3DWOWM2Model::DestoryModel();
+}
 
 
 bool CD3DWOWM2CharacterModel::Reset()
@@ -274,7 +260,7 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 	if(GetDevice()==NULL||m_pModelResource==NULL)
 		return false;
 
-	DestoryModel();
+	CleanCharModel();
 
 	m_CloseHandAnimationIndex=m_pModelResource->GetAnimationIndex(15,0);
 
@@ -319,7 +305,7 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 	for(UINT i=0;i<m_SubMeshList.GetCount();i++)
 	{
 
-		m_SubMeshList[i]->SetVisible(true);
+		//m_SubMeshList[i]->SetVisible(true);
 		m_SubMeshMaterialList[i].SetMaterial(m_SubMeshList[i]->GetMaterial().GetMaterial());
 
 		int Part=m_SubMeshList[i]->GetID()/100;
@@ -420,14 +406,17 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 
 int CD3DWOWM2CharacterModel::GetSubMeshCount()
 {
+	//return m_pModelResource->GetSubMeshCount();
 	return (int)m_SubMeshList.GetCount();
 }
 CD3DSubMesh * CD3DWOWM2CharacterModel::GetOriginSubMesh(UINT index)
 {
+	//return m_pModelResource->GetSubMesh(index);
 	return m_SubMeshList[index];
 }
 CD3DSubMeshMaterial * CD3DWOWM2CharacterModel::GetSubMeshMaterial(UINT index)
 {
+	//return &(m_pModelResource->GetSubMesh(index)->GetMaterial());
 	return &(m_SubMeshMaterialList[index]);
 }
 
@@ -812,7 +801,7 @@ UINT CD3DWOWM2CharacterModel::GetSmartStructSize(UINT Param)
 }
 
 
-void CD3DWOWM2CharacterModel::DestoryModel()
+void CD3DWOWM2CharacterModel::CleanCharModel()
 {
 	m_CloseHandAnimationIndex=-1;
 
@@ -1251,10 +1240,16 @@ bool CD3DWOWM2CharacterModel::RebuildSubMesh(bool HairVisible,bool Facial1Visibl
 	{
 		CD3DSubMesh * pD3DSubMesh=m_pModelResource->GetSubMesh(i);
 
-		pD3DSubMesh->SetVisible(false);
+		//pD3DSubMesh->SetVisible(false);
 
-		int Part=pD3DSubMesh->GetID()/100;
+		int Index=pD3DSubMesh->GetID()/10000;
+		int Part=(pD3DSubMesh->GetID()%10000)/100;
 		int Type=pD3DSubMesh->GetID()%100;
+
+		if(m_CharRace==RACE_WORGEN&&(Index==3||Index==4||Index==73||Index==82))
+			continue;
+		if(m_CharRace==RACE_GOBLIN&&Index==3)
+			continue;
 
 		switch(Part)
 		{
@@ -1262,6 +1257,7 @@ bool CD3DWOWM2CharacterModel::RebuildSubMesh(bool HairVisible,bool Facial1Visibl
 			if(Type==0)
 			{
 				m_SubMeshList.Add(pD3DSubMesh);
+				
 			}
 			else
 			{
