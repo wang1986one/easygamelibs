@@ -197,9 +197,9 @@ bool CD3DWOWM2CharacterModel::LoadCharacter(UINT Race,UINT Sex)
 				if(LoadFromFile(ModelFileName))
 				{
 					CEasyString Temp;
-					Temp.Format("%s_%s_%u",
+					Temp.Format(_T("%s_%s_%u"),
 						(LPCTSTR)pRaceInfo->RaceName,
-						m_CharSex==0?"ÄÐ":"Å®",
+						m_CharSex==0?_T("ÄÐ"):_T("Å®"),
 						pDisplayInfo->ID);
 					SetName(Temp);
 					m_CreatureDisplayID=pDisplayInfo->ID;
@@ -235,7 +235,7 @@ bool CD3DWOWM2CharacterModel::LoadCreature(UINT CreatureDisplayID)
 			if(LoadFromFile(ModelFileName))
 			{	
 				CEasyString Temp;
-				Temp.Format("%u_%s",CreatureDisplayID,(LPCTSTR)pDisplayInfo->Name);
+				Temp.Format(_T("%u_%s"),CreatureDisplayID,(LPCTSTR)pDisplayInfo->Name);
 				SetName(Temp);
 				m_CreatureDisplayID=CreatureDisplayID;
 				FetchCreatureExtraInfo(pDisplayInfo->ExtraDisplayInformationID);
@@ -301,6 +301,8 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 	MakeCharSkinTexture(GetDevice(),pCharSkinTexture,pCharSkinExtraTexture,pCharHairTexture,pCapeTexture,
 		pSkinTexture1,pSkinTexture2,pSkinTexture3,HaveSleeve);
 	
+	CEasyStringA TexFXName;
+	CEasyStringA MatFXName;
 
 	for(UINT i=0;i<m_SubMeshList.GetCount();i++)
 	{
@@ -316,26 +318,28 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 			UINT64 TextureProperty=m_SubMeshList[i]->GetMaterial().GetTextureProperty(j);
 			int TextureType=(TextureProperty&CD3DWOWM2ModelResource::TF_SKIN_TEXTURE_TYPE_MASK)>>
 				CD3DWOWM2ModelResource::TF_SKIN_TEXTURE_TYPE_SHIFT;
+			TexFXName.Format("TexLay%d",m_SubMeshMaterialList[i].GetTextureLayerCount());
+			MatFXName.Format("UVMatrix%d",m_SubMeshMaterialList[i].GetTextureLayerCount());
 			switch(TextureType)
 			{
 			case D3D_TEXTURE_TYPE_DIRECT:
 				{
-					CD3DTexture * pTexture=m_SubMeshList[i]->GetMaterial().GetTexture(j);
-					m_SubMeshMaterialList[i].AddTexture(pTexture,TextureProperty);
+					CD3DTexture * pTexture=m_SubMeshList[i]->GetMaterial().GetTexture(j);					
+					m_SubMeshMaterialList[i].AddTexture(pTexture,TextureProperty,TexFXName,MatFXName);
 					pTexture->AddUseRef();
 				}
 				break;			
 			case D3D_TEXTURE_TYPE_BODY:
 				if(pCharSkinTexture)
 				{				
-					m_SubMeshMaterialList[i].AddTexture(pCharSkinTexture,TextureProperty);
+					m_SubMeshMaterialList[i].AddTexture(pCharSkinTexture,TextureProperty,TexFXName,MatFXName);
 					pCharSkinTexture->AddUseRef();
 				}
 				break;
 			case D3D_TEXTURE_TYPE_CAPE:
 				if(pCapeTexture)
 				{
-					m_SubMeshMaterialList[i].AddTexture(pCapeTexture,TextureProperty);
+					m_SubMeshMaterialList[i].AddTexture(pCapeTexture,TextureProperty,TexFXName,MatFXName);
 					pCapeTexture->AddUseRef();
 				}
 				break;
@@ -343,7 +347,7 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 				if(pCharHairTexture)
 				{
 
-					m_SubMeshMaterialList[i].AddTexture(pCharHairTexture,TextureProperty);
+					m_SubMeshMaterialList[i].AddTexture(pCharHairTexture,TextureProperty,TexFXName,MatFXName);
 					pCharHairTexture->AddUseRef();
 				}
 				break;
@@ -351,33 +355,33 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 				if(pCharSkinExtraTexture)
 				{
 
-					m_SubMeshMaterialList[i].AddTexture(pCharSkinExtraTexture,TextureProperty);
+					m_SubMeshMaterialList[i].AddTexture(pCharSkinExtraTexture,TextureProperty,TexFXName,MatFXName);
 					pCharSkinExtraTexture->AddUseRef();
 				}
 				break;	
 			case D3D_TEXTURE_TYPE_CREATURE_SKIN1:
 				if(pSkinTexture1)
 				{
-					m_SubMeshMaterialList[i].AddTexture(pSkinTexture1,TextureProperty);
+					m_SubMeshMaterialList[i].AddTexture(pSkinTexture1,TextureProperty,TexFXName,MatFXName);
 					pSkinTexture1->AddUseRef();
 				}
 				break;
 			case D3D_TEXTURE_TYPE_CREATURE_SKIN2:
 				if(pSkinTexture2)
 				{
-					m_SubMeshMaterialList[i].AddTexture(pSkinTexture2,TextureProperty);
+					m_SubMeshMaterialList[i].AddTexture(pSkinTexture2,TextureProperty,TexFXName,MatFXName);
 					pSkinTexture2->AddUseRef();
 				}
 				break;
 			case D3D_TEXTURE_TYPE_CREATURE_SKIN3:
 				if(pSkinTexture3)
 				{
-					m_SubMeshMaterialList[i].AddTexture(pSkinTexture3,TextureProperty);
+					m_SubMeshMaterialList[i].AddTexture(pSkinTexture3,TextureProperty,TexFXName,MatFXName);
 					pSkinTexture3->AddUseRef();
 				}
 				break;
 			default:
-				PrintSystemLog(0,"SubMesh[%s] has no Texture",m_SubMeshList[i]->GetName());
+				PrintSystemLog(0,_T("SubMesh[%s] has no Texture"),m_SubMeshList[i]->GetName());
 				break;
 			}
 		}
@@ -386,6 +390,8 @@ bool CD3DWOWM2CharacterModel::BuildModel()
 		m_SubMeshMaterialList[i].SetFX(m_SubMeshList[i]->GetMaterial().GetFX());
 		if(m_SubMeshList[i]->GetMaterial().GetFX())
 			m_SubMeshList[i]->GetMaterial().GetFX()->AddUseRef();
+
+		m_SubMeshMaterialList[i].CaculateHashCode();
 
 	}
 	SAFE_RELEASE(pCharSkinTexture);
@@ -441,7 +447,9 @@ bool CD3DWOWM2CharacterModel::CloneFrom(CNameObject * pObject,UINT Param)
 		for(UINT j=0;j<pSrcObject->m_SubMeshMaterialList[i].GetTextureLayerCount();j++)
 		{
 			m_SubMeshMaterialList[i].AddTexture(pSrcObject->m_SubMeshMaterialList[i].GetTexture(j),
-				pSrcObject->m_SubMeshMaterialList[i].GetTextureProperty(j));
+				pSrcObject->m_SubMeshMaterialList[i].GetTextureProperty(j),
+				pSrcObject->m_SubMeshMaterialList[i].GetTextureFXParamName(j),
+				pSrcObject->m_SubMeshMaterialList[i].GetTextureMatFXParamName(j));
 			if(pSrcObject->m_SubMeshMaterialList[i].GetTexture(j))
 				pSrcObject->m_SubMeshMaterialList[i].GetTexture(j)->AddUseRef();
 		}	
@@ -535,7 +543,7 @@ bool CD3DWOWM2CharacterModel::ToSmartStruct(CSmartStruct& Packet,CUSOResourceMan
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_FACE_TYPE,m_CharFaceType));
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_HAIR_TYPE,m_CharHairType));
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_WHISKER_TYPE,m_CharBeardType));
-	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_IS_BALD,(BYTE)m_IsCharBald));
+	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_IS_BALD,(char)m_IsCharBald));
 
 	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DWMCM_CHAR_EQUIPMENTS,(char *)m_Equipments,sizeof(m_Equipments)));
 
@@ -651,7 +659,7 @@ bool CD3DWOWM2CharacterModel::FromSmartStruct(CSmartStruct& Packet,CUSOResourceM
 			m_IsCharBald=(BYTE)Value!=0;
 			break;
 		case SST_D3DWMCM_CHAR_EQUIPMENTS:
-			memcpy(m_Equipments,(LPCTSTR)Value,sizeof(m_Equipments));
+			memcpy(m_Equipments,(LPCSTR)Value,sizeof(m_Equipments));
 			break;
 		case SST_D3DWMCM_CHAR_HELMET_MODEL:
 			{
@@ -1403,7 +1411,7 @@ bool CD3DWOWM2CharacterModel::MakeCharSkinTexture(CD3DDevice * pD3DDevice,CD3DTe
 			return false;
 		pSkinTexture=new CD3DTexture(pD3DDevice->GetTextureManager());
 		CEasyString Name;
-		Name.Format("%s\\SKINTEX",m_pModelResource->GetName());
+		Name.Format(_T("%s\\SKINTEX"),m_pModelResource->GetName());
 		pSkinTexture->SetName(Name);
 		if(!pSkinTexture->LoadTexture(pSkinSection->Texture1))
 		{			

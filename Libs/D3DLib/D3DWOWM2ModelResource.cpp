@@ -21,7 +21,7 @@ IMPLEMENT_CLASS_INFO(CD3DWOWM2ModelResource,CD3DObjectResource);
 
 
 
-typedef std::map<int,int> CIntMap;
+typedef CEasyMap<int,int> CIntMap;
 
 class CSubMeshTrimer
 {
@@ -281,7 +281,7 @@ bool CD3DWOWM2ModelResource::LoadFromFile(LPCTSTR szModelFileName)
 		return false;
 	if(!pFile->Open(szModelFileName,IFileAccessor::modeRead))
 	{
-		PrintD3DLog(0,"文件%s打开失败",szModelFileName);
+		PrintD3DLog(0,_T("文件%s打开失败"),szModelFileName);
 		pFile->Release();
 		return false;	
 	}
@@ -497,10 +497,17 @@ bool CD3DWOWM2ModelResource::LoadFromXFile(LPCTSTR szModelFileName)
 		pD3DSubMesh->GetMaterial().SetMaterial(pMaterials[MatID].MatD3D);
 		if(pMaterials[MatID].pTextureFilename)
 		{
-			CD3DTexture * pTexture=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(pMaterials[MatID].pTextureFilename,0);
+			CEasyString TexFileName=pMaterials[MatID].pTextureFilename;
+			CD3DTexture * pTexture=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(TexFileName,0);
 			UINT64 TextureFlag=(D3D_TEX_FLAG_WRAP_X|D3D_TEX_FLAG_WRAP_Y)<<CD3DWOWM2ModelResource::TF_TEXTURE_FLAG_SHIFT;
 			if(pTexture)
-				pD3DSubMesh->GetMaterial().AddTexture(pTexture,TextureFlag);			
+			{
+				CEasyStringA TexFXName;
+				CEasyStringA MatFXName;
+				TexFXName.Format("TexLay%d",pD3DSubMesh->GetMaterial().GetTextureLayerCount());
+				MatFXName.Format("UVMatrix%d",pD3DSubMesh->GetMaterial().GetTextureLayerCount());
+				pD3DSubMesh->GetMaterial().AddTexture(pTexture,TextureFlag,TexFXName,MatFXName);			
+			}
 		}	
 
 		if((pMesh->GetFVF()&D3DFVF_NORMAL)==0)
@@ -896,9 +903,9 @@ bool CD3DWOWM2ModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceMa
 				m_AnimationSequence[AniSeqCount].Flags=SubPacket.GetMember(SST_BAS_FLAGS);
 				m_AnimationSequence[AniSeqCount].Flags2=SubPacket.GetMember(SST_BAS_FLAGS2);
 				m_AnimationSequence[AniSeqCount].PlaybackSpeed=SubPacket.GetMember(SST_BAS_PLAYBACK_SPEED);
-				memcpy(&m_AnimationSequence[AniSeqCount].BoundingBox,(LPCTSTR)SubPacket.GetMember(SST_BAS_BOUNDING_BOX),
+				memcpy(&m_AnimationSequence[AniSeqCount].BoundingBox,(LPCSTR)SubPacket.GetMember(SST_BAS_BOUNDING_BOX),
 					sizeof(m_AnimationSequence[AniSeqCount].BoundingBox));
-				memcpy(&m_AnimationSequence[AniSeqCount].BoundingSphere,(LPCTSTR)SubPacket.GetMember(SST_BAS_BOUNDING_SPHERE),
+				memcpy(&m_AnimationSequence[AniSeqCount].BoundingSphere,(LPCSTR)SubPacket.GetMember(SST_BAS_BOUNDING_SPHERE),
 					sizeof(m_AnimationSequence[AniSeqCount].BoundingSphere));				
 			}
 			AniSeqCount++;
@@ -945,7 +952,7 @@ bool CD3DWOWM2ModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceMa
 					m_Bones[m_Bones[BoneCount].ParentBone].ChildCount++;
 				}
 				m_Bones[BoneCount].GeosetID=SubPacket.GetMember(SST_BI_GEOSET_ID);
-				memcpy(&m_Bones[BoneCount].PivotPoint,(LPCTSTR)SubPacket.GetMember(SST_BI_PIVOT_POINT),
+				memcpy(&m_Bones[BoneCount].PivotPoint,(LPCSTR)SubPacket.GetMember(SST_BI_PIVOT_POINT),
 					sizeof(m_Bones[BoneCount].PivotPoint));
 				if(!UnpackAnimationBlock<CD3DVector3>(m_Bones[BoneCount].Translations,SubPacket,SST_BI_TRANSLATIONS))
 					return false;
@@ -961,12 +968,12 @@ bool CD3DWOWM2ModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceMa
 			break;
 		case SST_D3DWMMR_KEY_BONE:
 			m_KeyBoneIndex.Resize(Value.GetLength()/sizeof(short));
-			memcpy(m_KeyBoneIndex.GetBuffer(),(LPCTSTR)Value,
+			memcpy(m_KeyBoneIndex.GetBuffer(),(LPCSTR)Value,
 				sizeof(short)*m_KeyBoneIndex.GetCount());
 			break;
 		case SST_D3DWMMR_GLOBAL_SEQUENCE:
 			m_GlobalSequences.Resize(Value.GetLength()/sizeof(UINT));
-			memcpy(m_GlobalSequences.GetBuffer(),(LPCTSTR)Value,
+			memcpy(m_GlobalSequences.GetBuffer(),(LPCSTR)Value,
 				sizeof(UINT)*m_GlobalSequences.GetCount());
 			break;
 		case SST_D3DWMMR_ATTACHMENT:
@@ -975,7 +982,7 @@ bool CD3DWOWM2ModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceMa
 				m_Attachments[AttachmentCount].ID=SubPacket.GetMember(SST_AI_ID);
 				m_Attachments[AttachmentCount].Bone=SubPacket.GetMember(SST_AI_BONE);
 				m_Attachments[AttachmentCount].Name=(LPCTSTR)SubPacket.GetMember(SST_AI_NAME);				
-				memcpy(&m_Attachments[AttachmentCount].Position,(LPCTSTR)SubPacket.GetMember(SST_AI_POSITION),
+				memcpy(&m_Attachments[AttachmentCount].Position,(LPCSTR)SubPacket.GetMember(SST_AI_POSITION),
 					sizeof(m_Attachments[AttachmentCount].Position));				
 			}
 			AttachmentCount++;
@@ -987,7 +994,7 @@ bool CD3DWOWM2ModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceMa
 				m_ParticleEmitters[PECount].pModelResource=(CD3DParticleEmitterResource *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DParticleEmitterResource));
 				if(m_ParticleEmitters[PECount].pModelResource)
 					m_ParticleEmitters[PECount].pModelResource->AddUseRef();
-				memcpy(&m_ParticleEmitters[PECount].BindPosition,(LPCTSTR)SubPacket.GetMember(SST_PEBI_POSITION),
+				memcpy(&m_ParticleEmitters[PECount].BindPosition,(LPCSTR)SubPacket.GetMember(SST_PEBI_POSITION),
 					sizeof(m_ParticleEmitters[PECount].BindPosition));
 				m_ParticleEmitters[PECount].BindBone=SubPacket.GetMember(SST_PEBI_BONE);						
 			}
@@ -1001,7 +1008,7 @@ bool CD3DWOWM2ModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceMa
 				m_RibbonEmitters[RECount].pModelResource=(CD3DRibbonEmitterResource *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DRibbonEmitterResource));
 				if(m_RibbonEmitters[RECount].pModelResource)
 					m_RibbonEmitters[RECount].pModelResource->AddUseRef();
-				memcpy(&m_RibbonEmitters[RECount].BindPosition,(LPCTSTR)SubPacket.GetMember(SST_REBI_POSITION),
+				memcpy(&m_RibbonEmitters[RECount].BindPosition,(LPCSTR)SubPacket.GetMember(SST_REBI_POSITION),
 					sizeof(m_RibbonEmitters[RECount].BindPosition));
 				m_RibbonEmitters[RECount].BindBone=SubPacket.GetMember(SST_REBI_BONE);				
 			
@@ -1178,12 +1185,12 @@ bool CD3DWOWM2ModelResource::LoadSkin(LPCTSTR SkinFileName,CEasyArray<CD3DSubMes
 		WORD Index=pTriangles[Triangle];
 		if(Index>=pSkinHeader->IndicesCount)
 		{
-			PrintSystemLog(0,"Error Triangle");
+			PrintSystemLog(0,_T("Error Triangle"));
 		}
 		m_Indices[i]=pIndices[Index];
 		if(m_Indices[i]>=pHeader->VerticesCount)
 		{
-			PrintSystemLog(0,"Error Indice");
+			PrintSystemLog(0,_T("Error Indice"));
 		}			
 	}
 
@@ -1218,12 +1225,12 @@ bool CD3DWOWM2ModelResource::LoadSkin(LPCTSTR SkinFileName,CEasyArray<CD3DSubMes
 			if(Index<StartVertex)
 			{
 				StartVertex=Index;
-				PrintD3DDebugLog(0,"Index值有异常，修正Vertex范围");
+				PrintD3DDebugLog(0,_T("Index值有异常，修正Vertex范围"));
 			}
 			if(Index>EndVertex)
 			{
 				EndVertex=Index;
-				PrintD3DDebugLog(0,"Index值有异常，修正Vertex范围");
+				PrintD3DDebugLog(0,_T("Index值有异常，修正Vertex范围"));
 			}
 			if(!HasSkinMeshAni)
 			{
@@ -1249,7 +1256,7 @@ bool CD3DWOWM2ModelResource::LoadSkin(LPCTSTR SkinFileName,CEasyArray<CD3DSubMes
 		CEasyString SubMeshName;
 		int Part=pSubMesh[i].ID/100;
 		int Type=pSubMesh[i].ID%100;
-		SubMeshName.Format("%02d-%02d(%d)",Part,Type,i);
+		SubMeshName.Format(_T("%02d-%02d(%d)"),Part,Type,i);
 		pD3DSubMesh->SetName(SubMeshName);
 
 		if(HasSkinMeshAni)
@@ -1339,8 +1346,8 @@ void CD3DWOWM2ModelResource::MakeSubmeshMaterial(BYTE * pModelData,BYTE * pSkinD
 
 			if(TextureType==D3D_TEXTURE_TYPE_DIRECT)
 			{
-				char * pTextureFileName=(char *)pModelData+pTexture->FileNameOffset;
-				pTex=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(pTextureFileName);
+				CEasyString TextureFileName=(char *)pModelData+pTexture->FileNameOffset;
+				pTex=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(TextureFileName);
 			}
 			short ColorAniIndex=pTextureUnits[i].ColorIndex;
 			short TransparencyAniIndex=-1;
@@ -1368,13 +1375,11 @@ void CD3DWOWM2ModelResource::MakeSubmeshMaterial(BYTE * pModelData,BYTE * pSkinD
 
 
 			UINT64 SubMeshProperty=0;
-			/*UINT64 SubMeshProperty=pD3DSubMesh->GetProperty()&
-				(~(SMP_RENDER_FLAG_MASK|SMP_BLEND_MODE_MASK|SMP_MESH_FLAG_MASK|SMP_COLOR_ANI_INDEX_MASK|SMP_TRANSPARENCY_ANI_INDEX_MASK));*/
 
 			UINT64 TextureProperty=0;
 
-			TextureProperty|=((UINT64)BlendingMode<<TF_BLEND_MODE_SHIFT)&TF_BLEND_MODE_MASK;
 			TextureProperty|=((UINT64)TextureFlag<<TF_TEXTURE_FLAG_SHIFT)&TF_TEXTURE_FLAG_MASK;
+			TextureProperty|=((UINT64)BlendingMode<<TF_BLEND_MODE_SHIFT)&TF_BLEND_MODE_MASK;
 			TextureProperty|=((UINT64)TextureType<<TF_SKIN_TEXTURE_TYPE_SHIFT)&TF_SKIN_TEXTURE_TYPE_MASK;
 			TextureProperty|=((UINT64)(UVAniIndex+1)<<TF_UV_ANI_INDEX_SHIFT)&TF_UV_ANI_INDEX_MASK;
 
@@ -1396,14 +1401,18 @@ void CD3DWOWM2ModelResource::MakeSubmeshMaterial(BYTE * pModelData,BYTE * pSkinD
 				pD3DSubMesh->AddProperty(SubMeshProperty);
 			}
 		
-			pD3DSubMesh->GetMaterial().AddTexture(pTex,TextureProperty);			
-			
-			
+			CEasyStringA TexFXName;
+			CEasyStringA MatFXName;
+			TexFXName.Format("TexLay%d",pD3DSubMesh->GetMaterial().GetTextureLayerCount());
+			MatFXName.Format("UVMatrix%d",pD3DSubMesh->GetMaterial().GetTextureLayerCount());
+			pD3DSubMesh->GetMaterial().AddTexture(pTex,TextureProperty,TexFXName,MatFXName);			
 			
 		}
 	}
 	
 	BuildFX(pD3DSubMesh);
+
+	pD3DSubMesh->GetMaterial().CaculateHashCode();
 	
 }
 
@@ -1544,7 +1553,7 @@ int CD3DWOWM2ModelResource::GetAnimationID(LPCTSTR AnimationName)
 {
 	for(UINT i=0;i<m_AnimationSequence.GetCount();i++)
 	{
-		if(_stricmp(m_AnimationSequence[i].AnimationName,AnimationName)==0)
+		if(_tcsicmp(m_AnimationSequence[i].AnimationName,AnimationName)==0)
 		{
 			return m_AnimationSequence[i].AnimationID;
 		}
@@ -1896,7 +1905,7 @@ UINT CD3DWOWM2ModelResource::CaculateDataSize()
 bool CD3DWOWM2ModelResource::LoadAnimationFromFile(BYTE * pData,UINT AnimationID,UINT SubAnimationID,UINT AniIndex,LPCTSTR szModelPath,M2_MODEL_BONE * pOrgBoneInfo)
 {
 	CEasyString AniFileName;
-	AniFileName.Format("%s%04d-%02d.anim",szModelPath,AnimationID,SubAnimationID);
+	AniFileName.Format(_T("%s%04d-%02d.anim"),szModelPath,AnimationID,SubAnimationID);
 
 	IFileAccessor * pFile;
 
@@ -1908,7 +1917,7 @@ bool CD3DWOWM2ModelResource::LoadAnimationFromFile(BYTE * pData,UINT AnimationID
 		return false;
 	if(!pFile->Open(AniFileName,IFileAccessor::modeRead))
 	{
-		PrintSystemLog(0,"打开外部动画文件%s失败",(LPCTSTR)AniFileName);
+		PrintSystemLog(0,_T("打开外部动画文件%s失败"),(LPCTSTR)AniFileName);
 		pFile->Release();
 		return false;	
 	}
@@ -1923,7 +1932,7 @@ bool CD3DWOWM2ModelResource::LoadAnimationFromFile(BYTE * pData,UINT AnimationID
 		LoadBoneAnimation(pData,(BYTE *)AniData.GetBuffer(),m_Bones[i],pOrgBoneInfo[i],AniIndex);
 	}
 
-	PrintSystemLog(0,"装载了外部动画文件%s",(LPCTSTR)AniFileName);
+	PrintSystemLog(0,_T("装载了外部动画文件%s"),(LPCTSTR)AniFileName);
 	return true;
 }
 
@@ -1980,7 +1989,7 @@ bool CD3DWOWM2ModelResource::LoadRibbonEmitters(BYTE * pModelData)
 	{
 		CEasyString Name;
 		m_RibbonEmitters[i].pModelResource=new CD3DRibbonEmitterResource(m_pManager);
-		Name.Format("%s_RE_%d",GetName(),i);
+		Name.Format(_T("%s_RE_%d"),GetName(),i);
 		m_RibbonEmitters[i].pModelResource->SetName(Name);
 		m_RibbonEmitters[i].pModelResource->LoadM2RibbonEmitter(i,pRibbonEmitters+i,pModelData,m_GlobalSequences);
 		m_RibbonEmitters[i].BindBone=pRibbonEmitters[i].BoneID;
@@ -2007,7 +2016,7 @@ bool CD3DWOWM2ModelResource::LoadParticleEmitters(BYTE * pModelData)
 		CEasyString Name;
 		//PrintSystemLog(0,"Particle%u,Flag=0x%X",i,pParticleEmitters[i].Flags);
 		m_ParticleEmitters[i].pModelResource=new CD3DParticleEmitterResource(m_pManager);
-		Name.Format("%s_PE_%d",GetName(),i);
+		Name.Format(_T("%s_PE_%d"),GetName(),i);
 		m_ParticleEmitters[i].pModelResource->SetName(Name);
 		m_ParticleEmitters[i].pModelResource->LoadM2ParticleEmitter(i,pParticleEmitters+i,pModelData,m_GlobalSequences);
 		m_ParticleEmitters[i].BindPosition=BLZTranslationToD3D(pParticleEmitters[i].Position);
@@ -2180,31 +2189,31 @@ bool CD3DWOWM2ModelResource::LoadCameraInfos(BYTE * pModelData)
 
 void CD3DWOWM2ModelResource::BuildFX(CD3DSubMesh * pSubMesh)
 {
-	CEasyString FXName;
-	CEasyString PSDiffuseFunction;
-	CEasyString VSDiffuseFunction;
-	CEasyString EnableZWrite;
-	CEasyString EnableFog;
-	CEasyString CullMode;
-	CEasyString EnableAlphaBlend;
-	CEasyString BlendOp;
-	CEasyString SrcBlend;
-	CEasyString DestBlend;
-	CEasyString EnableAlphaTest;
-	CEasyString VertexAlphaOperation;
-	CEasyString VShader;	
-	CEasyString TextureAddrU[4];
-	CEasyString TextureAddrV[4];
-	CEasyString TextureUVAni;
-	CEasyString OtherPSOperation;
-	CEasyString Temp;
+	CEasyString  FXName;
+	CEasyStringA PSDiffuseFunction;
+	CEasyStringA VSDiffuseFunction;
+	CEasyStringA EnableZWrite;
+	CEasyStringA EnableFog;
+	CEasyStringA CullMode;
+	CEasyStringA EnableAlphaBlend;
+	CEasyStringA BlendOp;
+	CEasyStringA SrcBlend;
+	CEasyStringA DestBlend;
+	CEasyStringA EnableAlphaTest;
+	CEasyStringA VertexAlphaOperation;
+	CEasyStringA VShader;	
+	CEasyStringA TextureAddrU[4];
+	CEasyStringA TextureAddrV[4];
+	CEasyStringA TextureUVAni;
+	CEasyStringA OtherPSOperation;
+	CEasyStringA Temp;
 
 	UINT64 SubMeshProperty=pSubMesh->GetProperty();
 	UINT64 RenderFlag=(SubMeshProperty&SMP_RENDER_FLAG_MASK)>>SMP_RENDER_FLAG_SHIFT;
 	UINT64 BlendMode=(SubMeshProperty&SMP_BLEND_MODE_MASK)>>SMP_BLEND_MODE_SHIFT;
 	UINT64 MeshFlag=(SubMeshProperty&SMP_MESH_FLAG_MASK)>>SMP_MESH_FLAG_SHIFT;
 	
-	FXName.Format("M2Model\\FX%02llX_%02llX_%02llX",RenderFlag,BlendMode,MeshFlag);
+	FXName.Format(_T("M2Model\\FX%02llX_%02llX_%02llX"),RenderFlag,BlendMode,MeshFlag);
 	
 	if(SubMeshProperty&CD3DSubMesh::SMF_IS_ANI_MESH)
 	{
@@ -2286,10 +2295,10 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMesh * pSubMesh)
 		DestBlend="One";
 		break;
 	case D3D_BLEND_MODE_MODULATE:		
-		PrintSystemLog(0,"未处理的混合模式:D3D_BLEND_MODE_MODULATE[%s]",GetName());
+		PrintSystemLog(0,_T("未处理的混合模式:D3D_BLEND_MODE_MODULATE[%s]"),GetName());
 		break;
 	case D3D_BLEND_MODE_MUL:
-		PrintSystemLog(0,"未处理的混合模式:D3D_BLEND_MODE_MUL[%s]",GetName());
+		PrintSystemLog(0,_T("未处理的混合模式:D3D_BLEND_MODE_MUL[%s]"),GetName());
 		break;
 	}
 	if(MeshFlag&D3D_MESH_FLAG_USE_VERTEX_ALPHA1)
@@ -2314,7 +2323,7 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMesh * pSubMesh)
 
 
 		Temp.Format("_TEX%02llX_%02llX",TextureBlendMode,TextureFlag);
-		FXName+=Temp;
+		FXName+=(LPCSTR)Temp;
 		if(TextureFlag&D3D_TEX_FLAG_WRAP_X)
 		{
 			TextureAddrU[i]="Wrap";
@@ -2381,7 +2390,7 @@ void CD3DWOWM2ModelResource::BuildFX(CD3DSubMesh * pSubMesh)
 		}
 	}	
 
-	CEasyString FxContent;
+	CEasyStringA FxContent;
 	
 	FxContent=M2_MODEL_FX;	
 	FxContent.Replace("<PSDiffuseFunction>",PSDiffuseFunction);
@@ -2653,7 +2662,7 @@ void CD3DWOWM2ModelResource::CheckSkins(LPCTSTR szModelPath)
 		CEasyString SkinFileName;
 		for(UINT i=0;i<MAX_M2_SKIN;i++)
 		{
-			SkinFileName.Format("%s%02d.skin",(LPCTSTR)szModelPath,i);
+			SkinFileName.Format(_T("%s%02d.skin"),(LPCTSTR)szModelPath,i);
 			if(pFile->Open(SkinFileName,IFileAccessor::modeRead))
 			{
 				m_SkinFiles.Add(SkinFileName);

@@ -43,7 +43,7 @@ BOOL CInputer::Create( CWnd* pParentWnd,CFont * pFont)
 {
 	// TODO: 在此添加专用代码和/或调用基类
 
-	if(!CWnd::Create(NULL,"", WS_CHILD, CRect(0,0,0,0), pParentWnd,3384, NULL))
+	if(!CWnd::Create(NULL,_T(""), WS_CHILD, CRect(0,0,0,0), pParentWnd,3384, NULL))
 		return false;
 
 	m_Edit.Create(WS_VISIBLE|WS_CHILD|ES_AUTOHSCROLL,CRect(0,0,0,0),this,11001);
@@ -57,7 +57,7 @@ BOOL CInputer::Create( CWnd* pParentWnd,CFont * pFont)
 	m_Spin.Create(WS_VISIBLE|WS_CHILD|UDS_ALIGNRIGHT|UDS_SETBUDDYINT|UDS_NOTHOUSANDS,CRect(0,0,20,20),this,103883);
 	m_Spin.ShowWindow(SW_HIDE);
 	
-	m_Button.Create("…",WS_VISIBLE|WS_CHILD|BS_NOTIFY|BS_PUSHBUTTON,CRect(0,0,20,20),this,ID_FUCTION_BUTTON);
+	m_Button.Create(_T("…"),WS_VISIBLE|WS_CHILD|BS_NOTIFY|BS_PUSHBUTTON,CRect(0,0,20,20),this,ID_FUCTION_BUTTON);
 	m_Button.ShowWindow(SW_HIDE);
 
 	return true;
@@ -109,8 +109,8 @@ void CInputer::StartInput(int Type,CString& Define,CString& DefaultValue,CProper
 
 			CSettingFile SettingStr;
 			SettingStr.Load(Define);
-			int Min=SettingStr.GetInteger("Define","Min",0);
-			int Max=SettingStr.GetInteger("Define","Max",99999);
+			int Min=SettingStr.GetInteger(_T("Define"),_T("Min"),0);
+			int Max=SettingStr.GetInteger(_T("Define"),_T("Max"),99999);
 			m_Spin.ShowWindow(SW_SHOW);	
 			m_Spin.SetBuddy(&m_Edit);
 			m_Spin.SetRange32(Min,Max);	
@@ -130,13 +130,13 @@ void CInputer::StartInput(int Type,CString& Define,CString& DefaultValue,CProper
 			m_ComboBox.ResetContent();
 			CSettingFile SettingStr;
 			SettingStr.Load((LPCTSTR)Define);
-			int Count=SettingStr.GetInteger("Define","ItemCount",0);
+			int Count=SettingStr.GetInteger(_T("Define"),_T("ItemCount"),0);
 			for(int i=0;i<Count;i++)
 			{
-				char key[20];
-				sprintf_s(key,20,"Item%02d",i);
+				TCHAR key[20];
+				_stprintf_s(key,20,_T("Item%02d"),i);
 
-				CString Item=SettingStr.GetString("Define",key,"");
+				CString Item=SettingStr.GetString(_T("Define"),key,_T(""));
 				m_ComboBox.InsertString(i,Item);
 				if(Item==DefaultValue)
 					m_ComboBox.SetCurSel(i);
@@ -156,9 +156,9 @@ void CInputer::StartInput(int Type,CString& Define,CString& DefaultValue,CProper
 			m_ComboBox.MoveWindow(&Rect);			
 
 			m_ComboBox.ResetContent();
-			m_ComboBox.InsertString(0,"是");
-			m_ComboBox.InsertString(1,"否");
-			if(DefaultValue=="是")
+			m_ComboBox.InsertString(0,_T("是"));
+			m_ComboBox.InsertString(1,_T("否"));
+			if(DefaultValue==_T("是"))
 				m_ComboBox.SetCurSel(0);
 			else
 				m_ComboBox.SetCurSel(1);

@@ -688,29 +688,26 @@ void CD3DWOWM2Model::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pF
 	//pFX->SetColor("MaterialEmissive",pD3DMaterial->Emissive);
 	//pFX->SetFloat("MaterialPower",pD3DMaterial->Power);
 
-	//设置纹理
-	for(UINT i=0;i<pMaterial->GetTextureLayerCount();i++)
-	{
-		char szTexName[64];
-		sprintf_s(szTexName,64,"TexLay%d",i);
-		pFX->SetTexture(szTexName,pMaterial->GetTexture(i));
-	}			
-	UINT64 TextureFlag=pMaterial->GetTextureProperty(0)>>CD3DWOWM2ModelResource::TF_TEXTURE_FLAG_SHIFT;
-	if(TextureFlag&D3D_TEX_FLAG_UV_ANI)
-	{
-		pFX->SetMatrix("UVMatrix0",pMaterial->GetTextureUVTransform(0));
-	}
+	////设置纹理
+	//for(UINT i=0;i<pMaterial->GetTextureLayerCount();i++)
+	//{
+	//	char szTexName[64];
+	//	sprintf_s(szTexName,64,"TexLay%d",i);
+	//	pFX->SetTexture(szTexName,pMaterial->GetTexture(i));
+	//}			
+	//UINT64 TextureFlag=pMaterial->GetTextureProperty(0)>>CD3DWOWM2ModelResource::TF_TEXTURE_FLAG_SHIFT;
+	//if(TextureFlag&D3D_TEX_FLAG_UV_ANI)
+	//{
+	//	pFX->SetMatrix("UVMatrix0",pMaterial->GetTextureUVTransform(0));
+	//}
 
 
 	//设置全局色
-	D3DCOLORVALUE GlobalColor=pMaterial->GetGlobalColor();
+	
 	if(pSubMesh->IsSelected())			
 	{
-		GlobalColor.b=0.0f;
-		GlobalColor.g=0.0f;
-		GlobalColor.r=1.0f;
+		pFX->SetColor("GlobalColor",0xFFFF0000);
 	}
-	pFX->SetColor("GlobalColor",GlobalColor);
 
 	CD3DMatrix WorldMat,WorldViewMat;			
 	WorldMat=GetWorldMatrixR();
@@ -1056,7 +1053,7 @@ void CD3DWOWM2Model::Update(FLOAT Time)
 							}
 						}
 					}
-					
+					pMaterial->CaculateHashCode();
 				}			
 			}
 		}

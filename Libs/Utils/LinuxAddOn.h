@@ -16,8 +16,7 @@
 #define   _LARGEFILE64_SOURCE
 #define   __USE_LARGEFILE64
 
-#include <stdlib.h>
-#include <stdio.h>
+
 #include <string.h>
 #include <stdarg.h>
 #include <limits.h>
@@ -34,9 +33,9 @@
 #include <errno.h>
 #include <unistd.h>
 #include "atomic_ops/include/atomic_ops.h"
-#include "TCharLinux.h"
 
 
+#define __forceinline inline
 
 #define CLOCKS_PER_MILLISEC		(CLOCKS_PER_SEC/1000)
 #define INVALID_HANDLE_VALUE	(-1)
@@ -50,12 +49,13 @@
 #define __int64			long long
 
 
+
 typedef signed char			INT8;
 typedef unsigned char		UINT8;
 typedef signed short		INT16;
 typedef unsigned short		UINT16;
 typedef signed int			INT32;
-typedef unsigned long		UINT32;
+typedef unsigned int		UINT32;
 
 
 typedef long long LONG64;
@@ -72,41 +72,23 @@ typedef unsigned int UINT;
 typedef long LONG;
 typedef unsigned long ULONG;
 typedef unsigned int WPARAM;
-typedef unsigned long LPARAM;
+typedef unsigned int LPARAM;
 typedef unsigned int  LRESULT;
 typedef int BOOL;
 typedef float FLOAT;
 typedef double DOUBLE;
+typedef wchar_t WCHAR;
 typedef char * LPSTR;
 typedef const char * LPCSTR;
-typedef wchar_t * LPWSTR;
-typedef const wchar_t * LPCWSTR;
+typedef WCHAR * LPWSTR;
+typedef const WCHAR * LPCWSTR;
 typedef void * LPVOID;
 typedef const void * LPCVOID;
 typedef void * HMODULE;
 typedef void * HANDLE;
 typedef int INT_PTR, *PINT_PTR;
 typedef unsigned int UINT_PTR, *PUINT_PTR;
-typedef unsigned long DWORD_PTR, *PDWORD_PTR;
-
-#define _stricmp		strcasecmp
-#define _strnicmp		strncasecmp
-#define _wcsicmp		wcscasecmp
-#define _atoi64			atoll
-#define GetLastError()	errno
-
-#ifdef _UNICODE
-
-
-#else
-
-#define _tstoi			atoi
-#define _tstoi64		atoll
-#define _tstof			atof
-#define _tcscpy_s		strcpy_s
-#define _tcprintf		printf
-
-#endif
+typedef unsigned int DWORD_PTR, *PDWORD_PTR;
 
 
 #define MAKEWORD(a, b)      ((WORD)(((BYTE)(((DWORD_PTR)(a)) & 0xff)) | ((WORD)((BYTE)(((DWORD_PTR)(b)) & 0xff))) << 8))
@@ -116,7 +98,35 @@ typedef unsigned long DWORD_PTR, *PDWORD_PTR;
 #define LOBYTE(w)           ((BYTE)(((DWORD_PTR)(w)) & 0xff))
 #define HIBYTE(w)           ((BYTE)((((DWORD_PTR)(w)) >> 8) & 0xff))
 
-#define __forceinline	inline
+//#ifndef max
+//#define max(a,b)            (((a) > (b)) ? (a) : (b))
+//#endif
+//
+//#ifndef min
+//#define min(a,b)            (((a) < (b)) ? (a) : (b))
+//#endif
+
+#ifdef UNICODE
+
+typedef WCHAR TCHAR;
+
+#else
+
+typedef char TCHAR;
+#define _T(x)			x
+
+#endif
+
+typedef TCHAR * LPTSTR;
+typedef const TCHAR * LPCTSTR;
+
+#define _stricmp		strcasecmp
+#define _strnicmp		strncasecmp
+#define _wcsicmp		wcscasecmp
+#define _wcsnicmp		wcsncasecmp
+#define _atoi64			atoll
+#define GetLastError()	errno
+
 
 inline int fopen_s(FILE ** _File, const char * _Filename, const char * _Mode)
 {
@@ -128,15 +138,14 @@ inline size_t fread_s(void * _DstBuf, size_t _DstSize, size_t _ElementSize, size
 {
 	return fread(_DstBuf,_ElementSize,_Count,_File);
 }
+
 inline int strcpy_s(char * _Dst, size_t _SizeInBytes, const char * _Src)
 {
 	strcpy(_Dst,_Src);
 	return 0;
 }
 
-
-
-inline int wcscpy_s(wchar_t * _Dst, size_t _SizeInWords, const wchar_t * _Src)
+inline int wcscpy_s(WCHAR * _Dst, size_t _SizeInWords, const WCHAR * _Src)
 {
 	wcscpy(_Dst,_Src);
 	return 0;
@@ -148,7 +157,7 @@ inline int strncpy_s(char * _Dst, size_t _SizeInBytes, const char * _Src, size_t
 	return 0;
 }
 
-inline int wcsncpy_s(wchar_t * _Dst, size_t _SizeInWords, const wchar_t * _Src, size_t _MaxCount)
+inline int wcsncpy_s(WCHAR * _Dst, size_t _SizeInWords, const WCHAR * _Src, size_t _MaxCount)
 {
 	wcsncpy(_Dst,_Src,_MaxCount);
 	return 0;
@@ -160,7 +169,7 @@ inline int strcat_s(char * _Dst, size_t _SizeInBytes, const char * _Src)
 	return 0;
 }
 
-inline int wcscat_s(wchar_t * _Dst, size_t _SizeInWords, const wchar_t * _Src)
+inline int wcscat_s(WCHAR * _Dst, size_t _SizeInWords, const WCHAR * _Src)
 {
 	wcscat(_Dst,_Src);
 	return 0;
@@ -179,11 +188,11 @@ inline int _itoa_s(int _Value, char * _DstBuf, size_t _Size, int _Radix)
 {
 	if(_Radix==16)
 	{
-		sprintf(_DstBuf,"%X",_Value);
+		sprintf(_DstBuf,_T("%X"),_Value);
 	}
 	else
 	{
-		sprintf(_DstBuf,"%d",_Value);
+		sprintf(_DstBuf,_T("%d"),_Value);
 	}
 	return 0;
 }
@@ -192,11 +201,11 @@ inline int _ltoa_s(long _Val, char * _DstBuf, size_t _Size, int _Radix)
 {
 	if(_Radix==16)
 	{
-		sprintf(_DstBuf,"%lX",_Val);
+		sprintf(_DstBuf,_T("%lX"),_Val);
 	}
 	else
 	{
-		sprintf(_DstBuf,"%ld",_Val);
+		sprintf(_DstBuf,_T("%ld"),_Val);
 	}
 	return 0;
 }
@@ -210,7 +219,7 @@ inline int vsprintf_s(char * _DstBuf, size_t _SizeInBytes, const char * _Format,
 	return vsprintf(_DstBuf,_Format,_ArgList);
 }
 
-inline int vswprintf_s(wchar_t * _DstBuf, size_t _SizeInBytes, const wchar_t * _Format, va_list _ArgList)
+inline int vswprintf_s(WCHAR * _DstBuf, size_t _SizeInBytes, const WCHAR * _Format, va_list _ArgList)
 {
 	return vswprintf(_DstBuf,_SizeInBytes,_Format,_ArgList);
 }
@@ -226,7 +235,7 @@ inline int _strupr_s(char * _Str, size_t _Size)
 	return 0;
 }
 
-inline int _wcsupr_s(wchar_t * _Str, size_t _SizeInWords)
+inline int _wcsupr_s(WCHAR * _Str, size_t _SizeInWords)
 {
 	while(_SizeInWords&&(*_Str))
 	{
@@ -248,7 +257,7 @@ inline int _strlwr_s(char * _Str, size_t _Size)
 	return 0;
 }
 
-inline int _wcslwr_s(wchar_t * _Str,  size_t _SizeInWords)
+inline int _wcslwr_s(WCHAR * _Str,  size_t _SizeInWords)
 {
 	while(_SizeInWords&&(*_Str))
 	{
@@ -263,16 +272,6 @@ inline int strncat_s(char * _Dst, size_t _SizeInBytes, const char * _Src, size_t
 {
 	strncat(_Dst,_Src,_MaxCount);
 	return 0;
-}
-
-inline int _tcsicmp(LPCTSTR _String1, LPCTSTR _String2)
-{
-#ifdef _UNICODE
-	return 0;
-#else
-	return strcasecmp(_String1,_String2);
-#endif
-
 }
 
 inline int localtime_s(struct tm * _Tm, const time_t * _Time)
@@ -360,12 +359,10 @@ inline int AtomicCompareAndSet(volatile unsigned int * pVal,unsigned int CompVal
 
 #define ZeroMemory(Destination,Length) memset((Destination),0,(Length))
 
-#include <iterator>
-#include "pugxml_linux.h"
-using namespace pug;
 
 
 
+#include "TCharLinux.h"
 
 #include "EasyCriticalSectionLinux.h"
 #include "AutoLock.h"

@@ -10,7 +10,6 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include "IFileAccessor.h"
 
 class IFileObjectCreator:public CNameObject
 {

@@ -37,7 +37,7 @@ BOOL CResizeBar::Create(CDialogItemSorter * pParent,UINT ItemID,bool IsVertical)
 	m_ItemID=ItemID;
 	if(!CWnd::Create(
 		AfxRegisterWndClass(0,m_Cursor,(HBRUSH)COLOR_BACKGROUND,NULL),
-		"",WS_CHILD|WS_VISIBLE,CRect(0,0,0,0),
+		_T(""),WS_CHILD|WS_VISIBLE,CRect(0,0,0,0),
 		m_pParent->GetParent(),676756))
 	{
 		return FALSE;

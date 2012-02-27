@@ -25,7 +25,7 @@ protected:
 		CDBValue		ParamValue;
 	};
 
-	vector<PARAM_DATA>			m_Params;
+	CEasyArray<PARAM_DATA>			m_Params;
 	CDBValue					m_EmptyValue;
 
 	DECLARE_CLASS_INFO(CDBParameterSet)

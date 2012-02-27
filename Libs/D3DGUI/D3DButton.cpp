@@ -202,27 +202,27 @@ void CD3DButton::UpdateText()
 
 void CD3DButton::SaveToXml(xml_node * pXMLNode)
 {
-	xml_node Wnd=pXMLNode->append_child(node_element,"Button");
-	Wnd.append_attribute("Name",(LPCTSTR)GetName());
-	Wnd.append_attribute("ID",(long)GetID());
-	Wnd.append_attribute("IsInternal",IsInternal());
+	xml_node Wnd=pXMLNode->append_child(node_element,_T("Button"));
+	Wnd.append_attribute(_T("Name"),(LPCTSTR)GetName());
+	Wnd.append_attribute(_T("ID"),(long)GetID());
+	Wnd.append_attribute(_T("IsInternal"),IsInternal());
 
-	xml_node Behavior=Wnd.append_child(node_element,"Behavior");
+	xml_node Behavior=Wnd.append_child(node_element,_T("Behavior"));
 	SaveBehaviorToXML(Behavior);
-	xml_node Frame=Wnd.append_child(node_element,"Frame");
+	xml_node Frame=Wnd.append_child(node_element,_T("Frame"));
 	SaveFrameToXML(Frame);
-	xml_node Borders=Wnd.append_child(node_element,"Borders");
+	xml_node Borders=Wnd.append_child(node_element,_T("Borders"));
 	SaveBorderToXML(Borders);
-	xml_node Text=Wnd.append_child(node_element,"Text");
+	xml_node Text=Wnd.append_child(node_element,_T("Text"));
 	SaveTextToXML(Text);
-	xml_node Font=Wnd.append_child(node_element,"Font");
+	xml_node Font=Wnd.append_child(node_element,_T("Font"));
 	SaveFontToXML(Font);
-	xml_node Texture=Wnd.append_child(node_element,"Texture");
+	xml_node Texture=Wnd.append_child(node_element,_T("Texture"));
 	SaveTextureToXML(Texture);
 	
 	if(m_ChildWndList.GetCount())
 	{
-		xml_node Childs=Wnd.append_child(node_element,"Childs");
+		xml_node Childs=Wnd.append_child(node_element,_T("Childs"));
 		SaveChildsToXml(Childs);
 	}
 
@@ -230,41 +230,41 @@ void CD3DButton::SaveToXml(xml_node * pXMLNode)
 
 bool CD3DButton::LoadFromXml(xml_node * pXMLNode)
 {
-	if(_strnicmp(pXMLNode->name(),"Button",7)!=0)
+	if(_tcsnicmp(pXMLNode->name(),_T("Button"),7)!=0)
 		return false;
-	if(pXMLNode->has_attribute("Name"))
-		SetName(pXMLNode->attribute("Name").getvalue().c_str());
+	if(pXMLNode->has_attribute(_T("Name")))
+		SetName(pXMLNode->attribute(_T("Name")).getvalue());
 
-	if(pXMLNode->has_attribute("ID"))
-		SetID((long)pXMLNode->attribute("ID"));
+	if(pXMLNode->has_attribute(_T("ID")))
+		SetID((long)pXMLNode->attribute(_T("ID")));
 
-	if(pXMLNode->has_attribute("IsInternal"))
-		SetInternal((bool)pXMLNode->attribute("IsInternal"));
+	if(pXMLNode->has_attribute(_T("IsInternal")))
+		SetInternal((bool)pXMLNode->attribute(_T("IsInternal")));
 
 
 	for(int i=0;i<(int)pXMLNode->children();i++)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Behavior",6)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Behavior"),6)==0)
 		{
 			LoadBehaviorFromXML(pXMLNode->child(i));
 		}		
-		else if(_strnicmp(pXMLNode->child(i).name(),"Frame",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Frame"),6)==0)
 		{
 			LoadFrameFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Borders",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Borders"),6)==0)
 		{
 			LoadBorderFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Text",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Text"),6)==0)
 		{
 			LoadTextFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Font",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Font"),6)==0)
 		{
 			LoadFontFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Texture",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Texture"),6)==0)
 		{
 			LoadTextureFromXML(pXMLNode->child(i));
 		}		
@@ -273,7 +273,7 @@ bool CD3DButton::LoadFromXml(xml_node * pXMLNode)
 	//×°ÔØ×Ó´°¿Ú
 	for(int i=(int)pXMLNode->children()-1;i>=0;i--)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Childs",7)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Childs"),7)==0)
 		{
 			LoadChildsFromXml(pXMLNode->child(i));
 			break;
@@ -345,47 +345,47 @@ void CD3DButton::SaveTextureToXML(xml_node& Texture)
 	xml_node Status;
 	if(m_pStatusInfo[BUTTON_STATUS_NORMAL].pTexture)
 	{
-		Status=Texture.append_child(node_element,"Normal");
-		Status.append_attribute("TextureFile",(LPCTSTR)m_pStatusInfo[BUTTON_STATUS_NORMAL].pTexture->GetName());
-		Status.append_attribute("RectLeft",m_pStatusInfo[BUTTON_STATUS_NORMAL].TextRect.left);
-		Status.append_attribute("RectTop",m_pStatusInfo[BUTTON_STATUS_NORMAL].TextRect.top);
-		Status.append_attribute("RectRight",m_pStatusInfo[BUTTON_STATUS_NORMAL].TextRect.right);
-		Status.append_attribute("RectBottom",m_pStatusInfo[BUTTON_STATUS_NORMAL].TextRect.bottom);
-		Status.append_attribute("TextOffsetX",(long)m_pStatusInfo[BUTTON_STATUS_NORMAL].TextOffset.x);
-		Status.append_attribute("TextOffsetY",(long)m_pStatusInfo[BUTTON_STATUS_NORMAL].TextOffset.y);
+		Status=Texture.append_child(node_element,_T("Normal"));
+		Status.append_attribute(_T("TextureFile"),(LPCTSTR)m_pStatusInfo[BUTTON_STATUS_NORMAL].pTexture->GetName());
+		Status.append_attribute(_T("RectLeft"),m_pStatusInfo[BUTTON_STATUS_NORMAL].TextRect.left);
+		Status.append_attribute(_T("RectTop"),m_pStatusInfo[BUTTON_STATUS_NORMAL].TextRect.top);
+		Status.append_attribute(_T("RectRight"),m_pStatusInfo[BUTTON_STATUS_NORMAL].TextRect.right);
+		Status.append_attribute(_T("RectBottom"),m_pStatusInfo[BUTTON_STATUS_NORMAL].TextRect.bottom);
+		Status.append_attribute(_T("TextOffsetX"),(long)m_pStatusInfo[BUTTON_STATUS_NORMAL].TextOffset.x);
+		Status.append_attribute(_T("TextOffsetY"),(long)m_pStatusInfo[BUTTON_STATUS_NORMAL].TextOffset.y);
 	}
 	if(m_pStatusInfo[BUTTON_STATUS_ACTIVE].pTexture)
 	{
-		Status=Texture.append_child(node_element,"Active");
-		Status.append_attribute("TextureFile",(LPCTSTR)m_pStatusInfo[BUTTON_STATUS_ACTIVE].pTexture->GetName());
-		Status.append_attribute("RectLeft",m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextRect.left);
-		Status.append_attribute("RectTop",m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextRect.top);
-		Status.append_attribute("RectRight",m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextRect.right);
-		Status.append_attribute("RectBottom",m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextRect.bottom);
-		Status.append_attribute("TextOffsetX",(long)m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextOffset.x);
-		Status.append_attribute("TextOffsetY",(long)m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextOffset.y);
+		Status=Texture.append_child(node_element,_T("Active"));
+		Status.append_attribute(_T("TextureFile"),(LPCTSTR)m_pStatusInfo[BUTTON_STATUS_ACTIVE].pTexture->GetName());
+		Status.append_attribute(_T("RectLeft"),m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextRect.left);
+		Status.append_attribute(_T("RectTop"),m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextRect.top);
+		Status.append_attribute(_T("RectRight"),m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextRect.right);
+		Status.append_attribute(_T("RectBottom"),m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextRect.bottom);
+		Status.append_attribute(_T("TextOffsetX"),(long)m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextOffset.x);
+		Status.append_attribute(_T("TextOffsetY"),(long)m_pStatusInfo[BUTTON_STATUS_ACTIVE].TextOffset.y);
 	}
 	if(m_pStatusInfo[BUTTON_STATUS_PRESS].pTexture)
 	{
-		Status=Texture.append_child(node_element,"Press");
-		Status.append_attribute("TextureFile",(LPCTSTR)m_pStatusInfo[BUTTON_STATUS_PRESS].pTexture->GetName());
-		Status.append_attribute("RectLeft",m_pStatusInfo[BUTTON_STATUS_PRESS].TextRect.left);
-		Status.append_attribute("RectTop",m_pStatusInfo[BUTTON_STATUS_PRESS].TextRect.top);
-		Status.append_attribute("RectRight",m_pStatusInfo[BUTTON_STATUS_PRESS].TextRect.right);
-		Status.append_attribute("RectBottom",m_pStatusInfo[BUTTON_STATUS_PRESS].TextRect.bottom);
-		Status.append_attribute("TextOffsetX",(long)m_pStatusInfo[BUTTON_STATUS_PRESS].TextOffset.x);
-		Status.append_attribute("TextOffsetY",(long)m_pStatusInfo[BUTTON_STATUS_PRESS].TextOffset.y);
+		Status=Texture.append_child(node_element,_T("Press"));
+		Status.append_attribute(_T("TextureFile"),(LPCTSTR)m_pStatusInfo[BUTTON_STATUS_PRESS].pTexture->GetName());
+		Status.append_attribute(_T("RectLeft"),m_pStatusInfo[BUTTON_STATUS_PRESS].TextRect.left);
+		Status.append_attribute(_T("RectTop"),m_pStatusInfo[BUTTON_STATUS_PRESS].TextRect.top);
+		Status.append_attribute(_T("RectRight"),m_pStatusInfo[BUTTON_STATUS_PRESS].TextRect.right);
+		Status.append_attribute(_T("RectBottom"),m_pStatusInfo[BUTTON_STATUS_PRESS].TextRect.bottom);
+		Status.append_attribute(_T("TextOffsetX"),(long)m_pStatusInfo[BUTTON_STATUS_PRESS].TextOffset.x);
+		Status.append_attribute(_T("TextOffsetY"),(long)m_pStatusInfo[BUTTON_STATUS_PRESS].TextOffset.y);
 	}
 	if(m_pStatusInfo[BUTTON_STATUS_DISBALE].pTexture)
 	{
-		Status=Texture.append_child(node_element,"Disable");
-		Status.append_attribute("TextureFile",(LPCTSTR)m_pStatusInfo[BUTTON_STATUS_DISBALE].pTexture->GetName());
-		Status.append_attribute("RectLeft",m_pStatusInfo[BUTTON_STATUS_DISBALE].TextRect.left);
-		Status.append_attribute("RectTop",m_pStatusInfo[BUTTON_STATUS_DISBALE].TextRect.top);
-		Status.append_attribute("RectRight",m_pStatusInfo[BUTTON_STATUS_DISBALE].TextRect.right);
-		Status.append_attribute("RectBottom",m_pStatusInfo[BUTTON_STATUS_DISBALE].TextRect.bottom);
-		Status.append_attribute("TextOffsetX",(long)m_pStatusInfo[BUTTON_STATUS_DISBALE].TextOffset.x);
-		Status.append_attribute("TextOffsetY",(long)m_pStatusInfo[BUTTON_STATUS_DISBALE].TextOffset.y);
+		Status=Texture.append_child(node_element,_T("Disable"));
+		Status.append_attribute(_T("TextureFile"),(LPCTSTR)m_pStatusInfo[BUTTON_STATUS_DISBALE].pTexture->GetName());
+		Status.append_attribute(_T("RectLeft"),m_pStatusInfo[BUTTON_STATUS_DISBALE].TextRect.left);
+		Status.append_attribute(_T("RectTop"),m_pStatusInfo[BUTTON_STATUS_DISBALE].TextRect.top);
+		Status.append_attribute(_T("RectRight"),m_pStatusInfo[BUTTON_STATUS_DISBALE].TextRect.right);
+		Status.append_attribute(_T("RectBottom"),m_pStatusInfo[BUTTON_STATUS_DISBALE].TextRect.bottom);
+		Status.append_attribute(_T("TextOffsetX"),(long)m_pStatusInfo[BUTTON_STATUS_DISBALE].TextOffset.x);
+		Status.append_attribute(_T("TextOffsetY"),(long)m_pStatusInfo[BUTTON_STATUS_DISBALE].TextOffset.y);
 	}
 }
 
@@ -396,26 +396,26 @@ void CD3DButton::LoadTextureFromXML(xml_node& Texture)
 		CEasyString TexFile;
 		CEasyRect Rect;
 		FLOAT_POINT TextOffset;
-		TexFile=Texture.child(i).attribute("TextureFile").getvalue().c_str();
-		Rect.left=Texture.child(i).attribute("RectLeft");
-		Rect.top=Texture.child(i).attribute("RectTop");
-		Rect.right=Texture.child(i).attribute("RectRight");
-		Rect.bottom=Texture.child(i).attribute("RectBottom");
-		TextOffset.x=(double)Texture.child(i).attribute("TextOffsetX");
-		TextOffset.y=(double)Texture.child(i).attribute("TextOffsetY");
-		if(_strnicmp(Texture.child(i).name(),"Normal",7)==0)
+		TexFile=Texture.child(i).attribute(_T("TextureFile")).getvalue();
+		Rect.left=Texture.child(i).attribute(_T("RectLeft"));
+		Rect.top=Texture.child(i).attribute(_T("RectTop"));
+		Rect.right=Texture.child(i).attribute(_T("RectRight"));
+		Rect.bottom=Texture.child(i).attribute(_T("RectBottom"));
+		TextOffset.x=(double)Texture.child(i).attribute(_T("TextOffsetX"));
+		TextOffset.y=(double)Texture.child(i).attribute(_T("TextOffsetY"));
+		if(_tcsnicmp(Texture.child(i).name(),_T("Normal"),7)==0)
 		{
 			SetTexture(BUTTON_STATUS_NORMAL,TexFile,Rect,TextOffset);
 		}
-		else if(_strnicmp(Texture.child(i).name(),"Active",7)==0)
+		else if(_tcsnicmp(Texture.child(i).name(),_T("Active"),7)==0)
 		{
 			SetTexture(BUTTON_STATUS_ACTIVE,TexFile,Rect,TextOffset);
 		}
-		else if(_strnicmp(Texture.child(i).name(),"Press",6)==0)
+		else if(_tcsnicmp(Texture.child(i).name(),_T("Press"),6)==0)
 		{
 			SetTexture(BUTTON_STATUS_PRESS,TexFile,Rect,TextOffset);
 		}
-		else if(_strnicmp(Texture.child(i).name(),"Disable",8)==0)
+		else if(_tcsnicmp(Texture.child(i).name(),_T("Disable"),8)==0)
 		{
 			SetTexture(BUTTON_STATUS_DISBALE,TexFile,Rect,TextOffset);
 		}

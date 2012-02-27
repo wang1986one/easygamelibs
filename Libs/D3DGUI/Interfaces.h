@@ -60,7 +60,7 @@ public:
 	virtual bool SetEffectMode(int Mode)=0;
 
 	virtual bool SetFX(LPCTSTR FXFileName)=0;
-	virtual bool SetFXFromMemory(LPCTSTR FXName,LPCTSTR FXContent,int Size)=0;
+	virtual bool SetFXFromMemory(LPCTSTR FXName,LPVOID FXContent,int Size)=0;
 	virtual CEasyString GetFX()=0;
 
 	virtual void Release()=0;

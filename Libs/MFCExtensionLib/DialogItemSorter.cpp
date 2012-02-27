@@ -48,7 +48,7 @@ bool CDialogItemSorter::AddDialogItem(UINT ParentID,UINT ID,int SortType,int Dia
 		pNewNode->Rect=Rect;
 
 		pNewNode->pParent=pParent;
-		pParent->ChildList.push_back(pNewNode);
+		pParent->ChildList.Add(pNewNode);
 		return true;
 	}
 	return false;
@@ -76,11 +76,11 @@ void CDialogItemSorter::GetResizeRange(UINT ItemID,RECT& Range)
 		SORT_TREE_ITEM * pParent=pItem->pParent;
 		if(pParent)
 		{
-			for(UINT i=0;i<pParent->ChildList.size();i++)
+			for(UINT i=0;i<pParent->ChildList.GetCount();i++)
 			{
 				if(pParent->ChildList[i]==pItem)
 				{
-					if(i<pParent->ChildList.size()-1)
+					if(i<pParent->ChildList.GetCount()-1)
 					{
 						pNextItem=pParent->ChildList[i+1];
 					}
@@ -116,11 +116,11 @@ void CDialogItemSorter::OnResize(UINT ItemID,CSize& Size)
 		SORT_TREE_ITEM * pParent=pItem->pParent;
 		if(pParent)
 		{
-			for(UINT i=0;i<pParent->ChildList.size();i++)
+			for(UINT i=0;i<pParent->ChildList.GetCount();i++)
 			{
 				if(pParent->ChildList[i]==pItem)
 				{
-					if(i<pParent->ChildList.size()-1)
+					if(i<pParent->ChildList.GetCount()-1)
 					{
 						pNextItem=pParent->ChildList[i+1];
 					}
@@ -185,7 +185,7 @@ CDialogItemSorter::SORT_TREE_ITEM * CDialogItemSorter::FindTreeNode(SORT_TREE_IT
 {
 	if(pRoot->ID==ID)
 		return pRoot;
-	for(size_t i=0;i<pRoot->ChildList.size();i++)
+	for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 	{
 		SORT_TREE_ITEM * pTree=FindTreeNode(pRoot->ChildList[i],ID);
 		if(pTree)
@@ -201,7 +201,7 @@ void CDialogItemSorter::ResizeItems(SORT_TREE_ITEM * pRoot)
 	{
 		int FitHeight=Rect.Height();
 		int FitItemCount=0;
-		for(size_t i=0;i<pRoot->ChildList.size();i++)
+		for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 		{
 			SORT_TREE_ITEM * pChild=pRoot->ChildList[i];			
 
@@ -222,10 +222,10 @@ void CDialogItemSorter::ResizeItems(SORT_TREE_ITEM * pRoot)
 		if(FitItemCount)
 		{		
 			if(pRoot->SortType&PARAM_ALIGN_SPACE)
-				FitHeight-=(pRoot->ChildList.size()-1)*pRoot->SortParam1;		
+				FitHeight-=(pRoot->ChildList.GetCount()-1)*pRoot->SortParam1;		
 
 			int Height=FitHeight/FitItemCount;
-			for(size_t i=0;i<pRoot->ChildList.size();i++)
+			for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 			{
 				SORT_TREE_ITEM * pChild=pRoot->ChildList[i];
 				if(pChild->SortType&RESIZE_FIT_PARENT_HEIGHT)
@@ -242,7 +242,7 @@ void CDialogItemSorter::ResizeItems(SORT_TREE_ITEM * pRoot)
 	{
 		int FitWidth=Rect.Width();
 		int FitItemCount=0;
-		for(size_t i=0;i<pRoot->ChildList.size();i++)
+		for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 		{
 			SORT_TREE_ITEM * pChild=pRoot->ChildList[i];
 			if(!(pChild->SortType&RESIZE_FIT_PARENT_WIDTH))
@@ -262,10 +262,10 @@ void CDialogItemSorter::ResizeItems(SORT_TREE_ITEM * pRoot)
 		if(FitItemCount)
 		{		
 			if(pRoot->SortType&PARAM_ALIGN_SPACE)
-				FitWidth-=(pRoot->ChildList.size()-1)*pRoot->SortParam1;		
+				FitWidth-=(pRoot->ChildList.GetCount()-1)*pRoot->SortParam1;		
 
 			int Width=FitWidth/FitItemCount;
-			for(size_t i=0;i<pRoot->ChildList.size();i++)
+			for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 			{
 				SORT_TREE_ITEM * pChild=pRoot->ChildList[i];
 				if(pChild->SortType&RESIZE_FIT_PARENT_WIDTH)
@@ -278,7 +278,7 @@ void CDialogItemSorter::ResizeItems(SORT_TREE_ITEM * pRoot)
 			}
 		}
 	}
-	for(size_t i=0;i<pRoot->ChildList.size();i++)
+	for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 	{
 		ResizeItems(pRoot->ChildList[i]);
 	}
@@ -290,8 +290,8 @@ void CDialogItemSorter::AlignItems(SORT_TREE_ITEM * pRoot)
 	if(pRoot->SortType&SORT_VERTICAL)
 	{
 		int Height=0;
-		int ItemCount=pRoot->ChildList.size();
-		for(size_t i=0;i<pRoot->ChildList.size();i++)
+		int ItemCount=pRoot->ChildList.GetCount();
+		for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 		{
 			SORT_TREE_ITEM * pChild=pRoot->ChildList[i];
 
@@ -348,7 +348,7 @@ void CDialogItemSorter::AlignItems(SORT_TREE_ITEM * pRoot)
 			}
 
 			int Top=Rect.top+Pre;
-			for(size_t i=0;i<pRoot->ChildList.size();i++)
+			for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 			{
 				SORT_TREE_ITEM * pChild=pRoot->ChildList[i];
 
@@ -356,7 +356,7 @@ void CDialogItemSorter::AlignItems(SORT_TREE_ITEM * pRoot)
 				pChild->Rect.top=Top;
 				Top+=pChild->Rect.Height();
 
-				if((pRoot->SortType&ENABLE_RESIZE_BAR)&&i<pRoot->ChildList.size()-1)
+				if((pRoot->SortType&ENABLE_RESIZE_BAR)&&i<pRoot->ChildList.GetCount()-1)
 				{
 					if(pChild->pResizeBar==NULL)
 					{
@@ -377,8 +377,8 @@ void CDialogItemSorter::AlignItems(SORT_TREE_ITEM * pRoot)
 	else
 	{
 		int Width=0;
-		int ItemCount=pRoot->ChildList.size();
-		for(size_t i=0;i<pRoot->ChildList.size();i++)
+		int ItemCount=pRoot->ChildList.GetCount();
+		for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 		{
 			SORT_TREE_ITEM * pChild=pRoot->ChildList[i];
 
@@ -438,7 +438,7 @@ void CDialogItemSorter::AlignItems(SORT_TREE_ITEM * pRoot)
 			}
 
 			int Left=Rect.left+Pre;
-			for(size_t i=0;i<pRoot->ChildList.size();i++)
+			for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 			{
 				SORT_TREE_ITEM * pChild=pRoot->ChildList[i];
 
@@ -447,7 +447,7 @@ void CDialogItemSorter::AlignItems(SORT_TREE_ITEM * pRoot)
 
 				Left+=pChild->Rect.Width();
 
-				if((pRoot->SortType&ENABLE_RESIZE_BAR)&&i<pRoot->ChildList.size()-1)
+				if((pRoot->SortType&ENABLE_RESIZE_BAR)&&i<pRoot->ChildList.GetCount()-1)
 				{
 					if(pChild->pResizeBar==NULL)
 					{
@@ -468,7 +468,7 @@ void CDialogItemSorter::AlignItems(SORT_TREE_ITEM * pRoot)
 		}
 	}
 
-	for(size_t i=0;i<pRoot->ChildList.size();i++)
+	for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 	{
 		AlignItems(pRoot->ChildList[i]);
 	}
@@ -483,7 +483,7 @@ void CDialogItemSorter::GetDialogItemSize(SORT_TREE_ITEM * pRoot,bool GetRoot)
 			pDialogItem->GetWindowRect(&(pRoot->Rect));
 	}
 
-	for(size_t i=0;i<pRoot->ChildList.size();i++)
+	for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 	{
 		GetDialogItemSize(pRoot->ChildList[i],true);
 	}
@@ -497,7 +497,7 @@ void CDialogItemSorter::SetDialogItemSize(SORT_TREE_ITEM * pRoot)
 		pDialogItem->Invalidate();
 	}
 
-	for(size_t i=0;i<pRoot->ChildList.size();i++)
+	for(size_t i=0;i<pRoot->ChildList.GetCount();i++)
 	{
 		SetDialogItemSize(pRoot->ChildList[i]);
 	}

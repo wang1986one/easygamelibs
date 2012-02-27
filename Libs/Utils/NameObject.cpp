@@ -12,18 +12,18 @@
 #include "stdafx.h"
 #include "NameObject.h"
 
-CLASS_INFO	CNameObject::m_CNameObjectClassInfo={"CNameObject",NULL,CNameObject::CreateObject};
+CLASS_INFO	CNameObject::m_CNameObjectClassInfo={_T("CNameObject"),NULL,CNameObject::CreateObject};
 
-std::map<std::string,CLASS_INFO *> * CNameObject::m_pAllClassInfo=NULL;
+CEasyMap<CEasyString,CLASS_INFO *> * CNameObject::m_pAllClassInfo=NULL;
 int CNameObject::m_AllClassCount=0;
 
-CClassInfoRegister CNameObject::m_CNameObjectClassInfoRegister("CNameObject",&m_CNameObjectClassInfo);
+CClassInfoRegister CNameObject::m_CNameObjectClassInfoRegister(_T("CNameObject"),&m_CNameObjectClassInfo);
 
 CClassInfoRegister::CClassInfoRegister(LPCTSTR ClassName,CLASS_INFO * pClassInfo)
 {
 	if(CNameObject::m_pAllClassInfo==NULL)
-		CNameObject::m_pAllClassInfo=new std::map<std::string,CLASS_INFO *>;
-	(*CNameObject::m_pAllClassInfo)[std::string(ClassName)]=pClassInfo;
+		CNameObject::m_pAllClassInfo=new CEasyMap<CEasyString,CLASS_INFO *>;
+	(*CNameObject::m_pAllClassInfo)[CEasyString(ClassName)]=pClassInfo;
 	CNameObject::m_AllClassCount++;
 }
 CClassInfoRegister::~CClassInfoRegister()
@@ -71,135 +71,7 @@ void CNameObject::RefreshStorageID()
 	m_StorageID=(UINT)this;
 }
 
-//bool CNameObject::ToUSOFile(CUSOFile * pResourceManager,UINT Param)
-//{
-//	if(pResourceManager==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pResourceManager->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//	RefreshStorageID();
-//
-//	UINT ObjectSize=GetSmartStructSize(Param);
-//
-//	CSmartStruct Packet(ObjectSize);
-//	if(!ToSmartStruct(Packet,pResourceManager,Param))
-//		return false;
-//	UINT WriteSize=(UINT)pFile->Write(Packet.GetData(),Packet.GetDataLen());
-//	if(WriteSize<Packet.GetDataLen())
-//		return false;
-//	return true;
-//
-//	//STORAGE_STRUCT * pHead=USOCreateHead(Param);
-//	//if(pHead==NULL)
-//	//	return false;
-//	//UINT64 HeadPos=pFile->GetCurPos();
-//	//int HeadSize=USOWriteHead(pHead,pResourceManager,Param);
-//	//if(HeadSize<0)
-//	//{
-//	//	delete pHead;
-//	//	return false;
-//	//}
-//	//int WriteSize=(int)pFile->Write(pHead,HeadSize);
-//	//if(WriteSize<HeadSize)
-//	//{
-//	//	delete pHead;
-//	//	return false;
-//	//}	
-//	//if(!USOWriteData(pHead,pResourceManager,Param))
-//	//{
-//	//	delete pHead;
-//	//	return false;
-//	//}
-//	//HeadPos=pFile->GetCurPos()-HeadPos;
-//	//if(HeadPos!=(UINT64)pHead->Size)
-//	//{
-//	//	delete pHead;
-//	//	return false;
-//	//}
-//	//if(!USOWriteChild(pHead,pResourceManager,Param))
-//	//{
-//	//	delete pHead;
-//	//	return false;
-//	//}
-//	//if(!USOWriteFinish(pHead,Param))
-//	//{
-//	//	delete pHead;
-//	//	return false;
-//	//}
-//	//delete pHead;
-//	return true;
-//}
-//bool CNameObject::FromUSOFile(CUSOFile * pResourceManager,UINT Param)
-//{
-//	if(pResourceManager==NULL)
-//		return false;	
-//
-//	IFileAccessor * pFile=pResourceManager->GetFile();
-//	if(pFile==NULL)
-//		return false;
-//
-//	STORAGE_STRUCT * pHead;
-//	BYTE * pBuff;
-//	UINT Size;
-//	int ReadSize;
-//
-//	pFile->Read(&Size,sizeof(UINT));
-//	if(Size==0)
-//		return false;
-//	pBuff=new BYTE[Size];
-//	pFile->Read(pBuff+sizeof(UINT),Size-sizeof(UINT));
-//	pHead=(STORAGE_STRUCT *)pBuff;
-//	pHead->Size=Size;
-//
-//// 	PrintImportantLog(0,"装载对象Type=%s,Name=%s",
-//// 		pHead->Type,pHead->Name);
-//
-//
-//	if((!GetClassInfo().IsKindOf(pHead->Type)))
-//	{	
-//		delete[] pBuff;
-//		return false;
-//	}
-//
-//	Destory();
-//
-//	ReadSize=USOReadHead(pHead,pResourceManager,Param);
-//	//PrintImportantLog(0,"大小=%u,类型=%s",ReadSize,pHead->Type);
-//
-//	if(ReadSize<0)
-//	{
-//		delete[] pBuff;
-//		return false;
-//	}
-//
-//	BYTE * pData=pBuff+ReadSize;
-//	int DataSize=Size-ReadSize;
-//
-//	ReadSize=USOReadData(pHead,pResourceManager,pData,DataSize,Param);
-//	if(ReadSize<0)
-//	{
-//		delete[] pBuff;
-//		return false;
-//	}
-//
-//	if(!USOReadChild(pHead,pResourceManager,Param))
-//	{
-//		delete[] pBuff;
-//		return false;
-//	}
-//
-//	if(!USOReadFinish(pHead,Param))
-//	{
-//		delete[] pBuff;
-//		return false;
-//	}
-//
-//	delete[] pBuff;
-//	return true;
-//}
+
 
 bool CNameObject::CloneFrom(CNameObject * pObject,UINT Param)
 {
@@ -264,7 +136,7 @@ bool CNameObject::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pRe
 
  UINT CNameObject::GetSmartStructSize(UINT Param)
 {
-	return SMART_STRUCT_STRING_MEMBER_SIZE(strlen(GetClassInfo().ClassName))+
+	return SMART_STRUCT_STRING_MEMBER_SIZE(_tcslen(GetClassInfo().ClassName))+
 		SMART_STRUCT_STRING_MEMBER_SIZE(m_Name.GetLength())+
 		SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_ID))+
 		SMART_STRUCT_FIX_MEMBER_SIZE(sizeof(m_StorageID));

@@ -501,7 +501,7 @@ bool CD3DObject::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pRes
 		switch(MemberID)
 		{
 		case SST_D3DO_LOCAL_MATIRX:
-			memcpy(&m_LocalMatrix,(LPCTSTR)Value,sizeof(m_LocalMatrix));
+			memcpy(&m_LocalMatrix,(LPCSTR)Value,sizeof(m_LocalMatrix));
 			break;
 		case SST_D3DO_IS_FLAG:
 			m_Flag=Value;

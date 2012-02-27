@@ -87,7 +87,7 @@ bool CD3DParticleEmitterResource::LoadM2ParticleEmitter(UINT ID,M2_PARTICLE_EMIT
 
 	if(pTextures[pParticleEmitter->Texture].Type==0)
 	{
-		LPCTSTR szTextureName=(char *)pModelData+pTextures[pParticleEmitter->Texture].FileNameOffset;
+		CEasyString szTextureName=(char *)pModelData+pTextures[pParticleEmitter->Texture].FileNameOffset;
 		m_ParticleEmitterInfo.pTexture=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(szTextureName);
 	}		
 	m_ParticleEmitterInfo.pFX=BuildParticleFX(m_ParticleEmitterInfo.BlendingType);
@@ -371,7 +371,7 @@ bool CD3DParticleEmitterResource::FromSmartStruct(CSmartStruct& Packet,CUSOResou
 			m_ParticleEmitterInfo.TextureCols=Value;
 			break;
 		case SST_D3DPER_SCALE:
-			memcpy(&m_ParticleEmitterInfo.Scale,(LPCTSTR)Value,
+			memcpy(&m_ParticleEmitterInfo.Scale,(LPCSTR)Value,
 				sizeof(m_ParticleEmitterInfo.Scale));
 			break;
 		case SST_D3DPER_SLOWDOWN:
@@ -381,7 +381,7 @@ bool CD3DParticleEmitterResource::FromSmartStruct(CSmartStruct& Packet,CUSOResou
 			m_ParticleEmitterInfo.Rotation=Value;
 			break;
 		case SST_D3DPER_TRANS:
-			memcpy(&m_ParticleEmitterInfo.Trans,(LPCTSTR)Value,
+			memcpy(&m_ParticleEmitterInfo.Trans,(LPCSTR)Value,
 				sizeof(m_ParticleEmitterInfo.Trans));
 			break;
 		case SST_D3DPER_FX:
@@ -453,7 +453,7 @@ bool CD3DParticleEmitterResource::FromSmartStruct(CSmartStruct& Packet,CUSOResou
 			break;
 		case SST_D3DPER_GLOBAL_SEQUENCE:
 			m_GlobalSequences.Resize(Value.GetLength()/sizeof(UINT));
-			memcpy(m_GlobalSequences.GetBuffer(),(LPCTSTR)Value,
+			memcpy(m_GlobalSequences.GetBuffer(),(LPCSTR)Value,
 				sizeof(UINT)*m_GlobalSequences.GetCount());
 			break;
 		}
@@ -504,17 +504,17 @@ UINT CD3DParticleEmitterResource::GetSmartStructSize(UINT Param)
 
 CD3DFX * CD3DParticleEmitterResource::BuildParticleFX(UINT BlendingType)
 {
-	CEasyString FXName;	
-	CEasyString EnableZWrite;	
-	CEasyString EnableAlphaBlend;
-	CEasyString BlendOp;
-	CEasyString SrcBlend;
-	CEasyString DestBlend;
-	CEasyString EnableAlphaTest;
-	CEasyString DiffuseFunction;
+	CEasyString  FXName;	
+	CEasyStringA EnableZWrite;	
+	CEasyStringA EnableAlphaBlend;
+	CEasyStringA BlendOp;
+	CEasyStringA SrcBlend;
+	CEasyStringA DestBlend;
+	CEasyStringA EnableAlphaTest;
+	CEasyStringA DiffuseFunction;
 
 
-	FXName.Format("M2Particle\\0x%X",BlendingType);
+	FXName.Format(_T("M2Particle\\0x%X"),BlendingType);
 
 	DiffuseFunction="CaculateDiffuse(Pos,float3(0,0,0))";
 
@@ -571,7 +571,7 @@ CD3DFX * CD3DParticleEmitterResource::BuildParticleFX(UINT BlendingType)
 		EnableAlphaTest="False";
 		break;
 	default:
-		PrintSystemLog(0,"CD3DWOWM2ModelResource::BuildParticleFX:未知混合模式%d",BlendingType);
+		PrintSystemLog(0,_T("CD3DWOWM2ModelResource::BuildParticleFX:未知混合模式%d"),BlendingType);
 		EnableZWrite="True";
 		EnableAlphaBlend="False";
 		BlendOp="Add";
@@ -582,7 +582,7 @@ CD3DFX * CD3DParticleEmitterResource::BuildParticleFX(UINT BlendingType)
 
 
 
-	CEasyString FxContent=M2_PARTICLE_FX;
+	CEasyStringA FxContent=M2_PARTICLE_FX;
 	
 	FxContent.Replace("<EnableZWrite>",EnableZWrite);
 	FxContent.Replace("<EnableAlphaBlend>",EnableAlphaBlend);

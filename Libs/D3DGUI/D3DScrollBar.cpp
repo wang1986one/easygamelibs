@@ -66,21 +66,21 @@ void CD3DScrollBar::InitWnd(CD3DGUI *  pGUI)
 	{
 		m_pDecButton=pGUI->CreateButton(CEasyRect(0,0,0,0));
 		m_pDecButton->SetParent(this);
-		m_pDecButton->SetName("SBDec");
+		m_pDecButton->SetName(_T("SBDec"));
 		m_pDecButton->SetID(SBB_DEC);	
 		m_pDecButton->SetInternal(true);
 		m_pDecButton->EnableFocus(false);
 
 		m_pIncButton=pGUI->CreateButton(CEasyRect(0,0,0,0));
 		m_pIncButton->SetParent(this);
-		m_pIncButton->SetName("SBInc");
+		m_pIncButton->SetName(_T("SBInc"));
 		m_pIncButton->SetID(SBB_INC);
 		m_pIncButton->SetInternal(true);
 		m_pIncButton->EnableFocus(false);
 
 		m_pTrackButton=pGUI->CreateButton(CEasyRect(0,0,0,0));
 		m_pTrackButton->SetParent(this);
-		m_pTrackButton->SetName("SBTrack");
+		m_pTrackButton->SetName(_T("SBTrack"));
 		m_pTrackButton->SetID(SBB_TRACK);
 		m_pTrackButton->SetInternal(true);
 		m_pTrackButton->EnableFocus(false);
@@ -453,29 +453,29 @@ void CD3DScrollBar::GetMiniSize(int& Width,int& Height)
 
 void CD3DScrollBar::SaveToXml(xml_node * pXMLNode)
 {
-	xml_node Wnd=pXMLNode->append_child(node_element,"ScrollBar");
-	Wnd.append_attribute("Name",(LPCTSTR)GetName());
-	Wnd.append_attribute("ID",(long)GetID());
-	Wnd.append_attribute("IsInternal",IsInternal());
+	xml_node Wnd=pXMLNode->append_child(node_element,_T("ScrollBar"));
+	Wnd.append_attribute(_T("Name"),(LPCTSTR)GetName());
+	Wnd.append_attribute(_T("ID"),(long)GetID());
+	Wnd.append_attribute(_T("IsInternal"),IsInternal());
 
-	xml_node Behavior=Wnd.append_child(node_element,"Behavior");
+	xml_node Behavior=Wnd.append_child(node_element,_T("Behavior"));
 	SaveBehaviorToXML(Behavior);
-	Behavior.append_attribute("ScrollRange",(long)m_MaxScrollPos);
-	Behavior.append_attribute("Style",(long)m_ScrollStyle);
+	Behavior.append_attribute(_T("ScrollRange"),(long)m_MaxScrollPos);
+	Behavior.append_attribute(_T("Style"),(long)m_ScrollStyle);
 
-	xml_node Frame=Wnd.append_child(node_element,"Frame");
+	xml_node Frame=Wnd.append_child(node_element,_T("Frame"));
 	SaveFrameToXML(Frame);	
-	xml_node Borders=Wnd.append_child(node_element,"Borders");
+	xml_node Borders=Wnd.append_child(node_element,_T("Borders"));
 	SaveBorderToXML(Borders);	
 	if(m_pTexture)
 	{	
-		xml_node Texture=Wnd.append_child(node_element,"Texture");
+		xml_node Texture=Wnd.append_child(node_element,_T("Texture"));
 		SaveTextureToXML(Texture);
 	}
 	
 	if(m_ChildWndList.GetCount())
 	{
-		xml_node Childs=Wnd.append_child(node_element,"Childs");
+		xml_node Childs=Wnd.append_child(node_element,_T("Childs"));
 		SaveChildsToXml(Childs);
 	}
 
@@ -483,37 +483,37 @@ void CD3DScrollBar::SaveToXml(xml_node * pXMLNode)
 
 bool CD3DScrollBar::LoadFromXml(xml_node * pXMLNode)
 {
-	if(_strnicmp(pXMLNode->name(),"ScrollBar",10)!=0)
+	if(_tcsnicmp(pXMLNode->name(),_T("ScrollBar"),10)!=0)
 		return false;
-	if(pXMLNode->has_attribute("Name"))
-		SetName(pXMLNode->attribute("Name").getvalue().c_str());
+	if(pXMLNode->has_attribute(_T("Name")))
+		SetName(pXMLNode->attribute(_T("Name")).getvalue());
 
-	if(pXMLNode->has_attribute("ID"))
-		SetID((long)pXMLNode->attribute("ID"));
+	if(pXMLNode->has_attribute(_T("ID")))
+		SetID((long)pXMLNode->attribute(_T("ID")));
 
-	if(pXMLNode->has_attribute("IsInternal"))
-		SetInternal((bool)pXMLNode->attribute("IsInternal"));
+	if(pXMLNode->has_attribute(_T("IsInternal")))
+		SetInternal((bool)pXMLNode->attribute(_T("IsInternal")));
 
 
 	for(int i=0;i<(int)pXMLNode->children();i++)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Behavior",9)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Behavior"),9)==0)
 		{
 			LoadBehaviorFromXML(pXMLNode->child(i));
-			if(pXMLNode->child(i).has_attribute("ScrollRange"))
-				SetMaxScrollPos((long)pXMLNode->child(i).attribute("ScrollRange"));
-			if(pXMLNode->child(i).has_attribute("Style"))
-				SetScrollStyle((long)pXMLNode->child(i).attribute("Style"));
+			if(pXMLNode->child(i).has_attribute(_T("ScrollRange")))
+				SetMaxScrollPos((long)pXMLNode->child(i).attribute(_T("ScrollRange")));
+			if(pXMLNode->child(i).has_attribute(_T("Style")))
+				SetScrollStyle((long)pXMLNode->child(i).attribute(_T("Style")));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Frame",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Frame"),6)==0)
 		{
 			LoadFrameFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Borders",8)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Borders"),8)==0)
 		{
 			LoadBorderFromXML(pXMLNode->child(i));
 		}		
-		else if(_strnicmp(pXMLNode->child(i).name(),"Texture",8)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Texture"),8)==0)
 		{
 			LoadTextureFromXML(pXMLNode->child(i));
 		}
@@ -523,7 +523,7 @@ bool CD3DScrollBar::LoadFromXml(xml_node * pXMLNode)
 	//×°ÔØ×Ó´°¿Ú
 	for(int i=(int)pXMLNode->children()-1;i>=0;i--)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Childs",7)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Childs"),7)==0)
 		{
 			LoadChildsFromXml(pXMLNode->child(i));
 			break;
@@ -535,7 +535,7 @@ bool CD3DScrollBar::LoadFromXml(xml_node * pXMLNode)
 	{
 		if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DButton))&&
-			(strcmp(m_ChildWndList[i]->GetName(),"SBDec")==0)&&
+			(_tcscmp(m_ChildWndList[i]->GetName(),_T("SBDec"))==0)&&
 			m_ChildWndList[i]!=m_pDecButton)
 		{
 			CD3DButton * pButton=(CD3DButton *)m_ChildWndList[i];
@@ -544,7 +544,7 @@ bool CD3DScrollBar::LoadFromXml(xml_node * pXMLNode)
 		}
 		else if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DButton))&&
-			(strcmp(m_ChildWndList[i]->GetName(),"SBInc")==0)&&
+			(_tcscmp(m_ChildWndList[i]->GetName(),_T("SBInc"))==0)&&
 			m_ChildWndList[i]!=m_pIncButton)
 		{
 			CD3DButton * pButton=(CD3DButton *)m_ChildWndList[i];
@@ -553,7 +553,7 @@ bool CD3DScrollBar::LoadFromXml(xml_node * pXMLNode)
 		}
 		else if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DButton))&&
-			(strcmp(m_ChildWndList[i]->GetName(),"SBTrack")==0)&&
+			(_tcscmp(m_ChildWndList[i]->GetName(),_T("SBTrack"))==0)&&
 			m_ChildWndList[i]!=m_pTrackButton)
 		{
 			CD3DButton * pButton=(CD3DButton *)m_ChildWndList[i];

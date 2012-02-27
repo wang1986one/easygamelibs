@@ -29,13 +29,6 @@ struct FLOAT_RECT
 		right=r;
 		bottom=b;
 	}
-	FLOAT_RECT(long l,long t,long r,long b)
-	{
-		top=(FLOAT)t;
-		left=(FLOAT)l;
-		right=(FLOAT)r;
-		bottom=(FLOAT)b;
-	}
 	FLOAT_RECT(int l,int t,int r,int b)
 	{
 		top=(FLOAT)t;

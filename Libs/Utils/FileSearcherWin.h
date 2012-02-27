@@ -18,8 +18,8 @@ protected:
 	WIN32_FIND_DATA		m_FindedFileInfo;
 	WIN32_FIND_DATA		m_FindWorkData;
 	bool				m_IsFinded;
-	char				m_SearchDir[MAX_PATH];
-	char				m_LogicalDriveNames[MAX_PATH];
+	TCHAR				m_SearchDir[MAX_PATH];
+	TCHAR				m_LogicalDriveNames[MAX_PATH];
 	UINT				m_LogicDriveCount;
 public:
 	CFileSearcher(void);

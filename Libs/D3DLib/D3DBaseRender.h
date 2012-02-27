@@ -79,7 +79,7 @@ public:
 	CEasyCriticalSection& GetRenderLock();
 
 protected:
-	void RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPCTSTR RenderTech);
+	void RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPCSTR RenderTech);
 };
 
 inline int CD3DBaseRender::GetRenderObjectCount()

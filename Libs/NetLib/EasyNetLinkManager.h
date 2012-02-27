@@ -10,8 +10,6 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include <map>
-#include <vector>
 
 
 class CEasyNetLinkManager :
@@ -20,12 +18,12 @@ class CEasyNetLinkManager :
 protected:
 	CNetServer *								m_pServer;
 
-	std::map<UINT,CEasyNetLinkConnection*>		m_ConnectionMap;
-	std::vector<CEasyNetLinkConnection*>		m_ConnectionList;	
+	CEasyMap<UINT,CEasyNetLinkConnection*>		m_ConnectionMap;
+	CEasyArray<CEasyNetLinkConnection*>			m_ConnectionList;	
 	
 
-	std::map<UINT,CEasyNetLinkService*>			m_ServiceMap;
-	std::vector<CEasyNetLinkService*>			m_ServiceList;
+	CEasyMap<UINT,CEasyNetLinkService*>			m_ServiceMap;
+	CEasyArray<CEasyNetLinkService*>			m_ServiceList;
 
 	CIDStorage<int>								m_ConnectionIDPool;
 	
@@ -54,7 +52,8 @@ public:
 
 	
 	CEasyNetLinkConnection * GetConnection(UINT ID);
-	CEasyNetLinkConnection * GetFirstConnection();
+	LPVOID GetFirstConnectionPos();
+	CEasyNetLinkConnection * GetNextConnection(LPVOID& Pos);
 	CEasyNetLinkService * GetService(UINT ID);
 
 	UINT GetConnectionCount();

@@ -155,6 +155,74 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="DebugUnicode|Win32"
+			OutputDirectory="..\Bin\$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="1"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				TreatWChar_tAsBuiltInType="true"
+				RuntimeTypeInfo="true"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="4"
+				EnablePREfast="true"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/D3DLibD.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -175,6 +243,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -384,6 +460,13 @@
 							>
 							<FileConfiguration
 								Name="Debug|Win32"
+								>
+								<Tool
+									Name="VCCustomBuildTool"
+								/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="DebugUnicode|Win32"
 								>
 								<Tool
 									Name="VCCustomBuildTool"
@@ -937,6 +1020,16 @@
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
 					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\Shaders\ADTModel20.fx"
@@ -955,6 +1048,16 @@
 						>
 						<Tool
 							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
 							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
@@ -981,6 +1084,16 @@
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
 					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\Shaders\D3DBoard.fx"
@@ -999,6 +1112,16 @@
 						>
 						<Tool
 							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
 							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
@@ -1025,6 +1148,16 @@
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
 					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\Shaders\D3DLine.fx"
@@ -1043,6 +1176,48 @@
 						>
 						<Tool
 							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\FontRender.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
 							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
@@ -1069,6 +1244,16 @@
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
 					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\Shaders\M2Particle.fx"
@@ -1091,6 +1276,16 @@
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
 					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\Shaders\M2Ribbon.fx"
@@ -1109,6 +1304,16 @@
 						>
 						<Tool
 							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
 							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
@@ -1143,6 +1348,16 @@
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
 					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\Shaders\SharedParam.fx"
@@ -1161,6 +1376,48 @@
 						>
 						<Tool
 							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Shaders\TextTexture.fx"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
 							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
@@ -1191,6 +1448,16 @@
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
 					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\Shaders\UITextRect.fx"
@@ -1209,6 +1476,16 @@
 						>
 						<Tool
 							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
 							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
@@ -1235,6 +1512,16 @@
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
 					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\Shaders\UIWinRectWithTexture.fx"
@@ -1253,6 +1540,16 @@
 						>
 						<Tool
 							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
 							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
@@ -1279,6 +1576,16 @@
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
 					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\Shaders\WDLModel.fx"
@@ -1301,6 +1608,16 @@
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>
 					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\Shaders\WMOModel.fx"
@@ -1319,6 +1636,16 @@
 						>
 						<Tool
 							Name="VCCustomBuildTool"
+							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
+							Outputs="$(InputDir)$(InputName).fxt"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="正在生成$(InputName).fxt"
 							CommandLine="$(InputDir)\TXT2String $(InputPath) $(InputDir)$(InputName).fxt&#x0D;&#x0A;"
 							Outputs="$(InputDir)$(InputName).fxt"
 						/>

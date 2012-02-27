@@ -73,7 +73,7 @@ bool CD3DBoundingFrame::CreateFromBBox(const CD3DBoundingBox& BBox,D3DCOLOR Colo
 
 	
 	m_pSubMesh->GetMaterial().SetFX(
-		GetDevice()->GetFXManager()->LoadFXFromMemory("DEFAULT_BOUND_FRAME_FX_NT",(void *)DEFAULT_BOUND_FRAME_FX_NT,(int)strlen(DEFAULT_BOUND_FRAME_FX_NT)));
+		GetDevice()->GetFXManager()->LoadFXFromMemory(_T("DEFAULT_BOUND_FRAME_FX_NT"),(void *)DEFAULT_BOUND_FRAME_FX_NT,(int)strlen(DEFAULT_BOUND_FRAME_FX_NT)));
 
 	
 	BF_VERTEX * pBuff;
@@ -175,7 +175,7 @@ bool CD3DBoundingFrame::CreateFromLight(CD3DLight * pLight,D3DCOLOR Color)
 
 
 	m_pSubMesh->GetMaterial().SetFX(
-		GetDevice()->GetFXManager()->LoadFXFromMemory("DEFAULT_BOUND_FRAME_FX_NT",(void *)DEFAULT_BOUND_FRAME_FX_NT,(int)strlen(DEFAULT_BOUND_FRAME_FX_NT)));
+		GetDevice()->GetFXManager()->LoadFXFromMemory(_T("DEFAULT_BOUND_FRAME_FX_NT"),(void *)DEFAULT_BOUND_FRAME_FX_NT,(int)+strlen(DEFAULT_BOUND_FRAME_FX_NT)));
 
 
 	BF_VERTEX * pBuff;
@@ -292,13 +292,13 @@ void CD3DBoundingFrame::BuildLine(BF_VERTEX * pBuff,CD3DVector3 p1,CD3DVector3 p
 
 bool CD3DBoundingFrame::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	PrintSystemLog(0,"CD3DBoundingFrame被保存");
+	PrintSystemLog(0,_T("CD3DBoundingFrame被保存"));
 	return CD3DObject::ToSmartStruct(Packet,pResourceManager,Param);
 }
 
 UINT CD3DBoundingFrame::GetSmartStructSize(UINT Param)
 {
-	PrintSystemLog(0,"CD3DBoundingFrame被保存");
+	PrintSystemLog(0,_T("CD3DBoundingFrame被保存"));
 	return CD3DObject::GetSmartStructSize(Param);
 }
 

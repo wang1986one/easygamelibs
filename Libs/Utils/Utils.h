@@ -34,6 +34,11 @@
 	#endif
 #endif
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <iostream>
+#include <ostream>
+
 #ifdef WIN32
 
 #include "Win32AddOn.h"
@@ -43,6 +48,8 @@
 #include "LinuxAddOn.h"
 
 #endif
+
+
 
 #define SAFE_DELETE(p)       { if(p) { delete (p);     (p)=NULL; } }
 #define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);   (p)=NULL; } }
@@ -83,19 +90,22 @@ enum EASY_DATA_STORAGE_MODE
 };
 
 
-#include "MemoryAllocatee.h"
+
 #include "MemoryLeakDetective.h"
 
 #include "SmartPtr.h"
 
 #include "EasyString.h"
-#include "StringSplitter.h"
 
 
-#include "IndexSet.h"
+
+//#include "IndexSet.h"
 #include "EasyArray.h"
 #include "EasyMap.h"
 
+#include "MemoryAllocatee.h"
+
+#include "StringSplitter.h"
 
 #include "SmartValue.h"
 #include "SmartStruct.h"
@@ -175,6 +185,23 @@ enum EASY_DATA_STORAGE_MODE
 #include "FileSearcherWin.h"
 #else
 #include "FileSearcherLinux.h"
+#endif
+
+
+#ifdef WIN32
+#pragma warning (push)
+#pragma warning (disable : 4267)	// type conversion
+#pragma warning (disable : 4311)	// pointer truncation
+#pragma warning (disable : 4244)	// type conversion
+
+#include "pugxml.h"
+using namespace pug;
+
+#pragma warning (pop)
+#else
+#include <iterator>
+#include "pugxml.h"
+using namespace pug;
 #endif
 
 #include "USOObjectCreateFilter.h"

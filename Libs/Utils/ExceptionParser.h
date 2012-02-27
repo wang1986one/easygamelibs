@@ -10,7 +10,7 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include <Dbghelp.h>
+
 
 #define MAX_SYMBOL_NAME		1024
 
@@ -40,9 +40,9 @@ public:
 	{
 		DWORD64			Address;
 		HINSTANCE		hInstance;
-		char			ModuleName[MAX_PATH];
+		TCHAR			ModuleName[MAX_PATH];
 		SYMBOL_INFO_EX	SymbolInfo;
-		char			CppFileName[MAX_PATH];
+		TCHAR			CppFileName[MAX_PATH];
 		int				LineNumber;
 		ADDRESS_INFO()
 		{

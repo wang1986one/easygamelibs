@@ -10,7 +10,7 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include "ilogprinter.h"
+
 
 class CVSOutputLogPrinter :
 	public ILogPrinter

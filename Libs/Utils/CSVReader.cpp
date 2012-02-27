@@ -43,6 +43,18 @@ bool CCSVReader::Open(IFileAccessor * pFileAccessor,bool HaveHeader)
 {
 	Destory();
 
+#ifdef UNICODE
+	UINT FileSize=(UINT)pFileAccessor->GetSize();
+	BYTE * pBuffer=new BYTE[FileSize];
+	if(pFileAccessor->Read(pBuffer,FileSize)<FileSize)
+	{
+		return false;
+	}
+	m_DataSize=AnsiToUnicode((char *)pBuffer,FileSize,NULL,0);
+	m_pData=new TCHAR[m_DataSize+1];
+	AnsiToUnicode((char *)pBuffer,FileSize,m_pData,m_DataSize);
+	delete[] pBuffer;
+#else
 	m_DataSize=(UINT)pFileAccessor->GetSize();
 	m_pData=new TCHAR[m_DataSize+1];
 	if(pFileAccessor->Read(m_pData,m_DataSize*sizeof(TCHAR))<m_DataSize*sizeof(TCHAR))
@@ -50,6 +62,7 @@ bool CCSVReader::Open(IFileAccessor * pFileAccessor,bool HaveHeader)
 		return false;
 	}
 	m_pData[m_DataSize]=0;
+#endif
 
 	UINT RowCount=GetLineCount(m_pData);
 	LPTSTR szLine=m_pData;
@@ -249,7 +262,7 @@ bool CCSVReader::Save(IFileAccessor * pFileAccessor,bool WriteHeader)
 
 bool CCSVReader::AddColumn(LPCTSTR ColName)
 {
-	int NeedSize=strlen(ColName)+1;
+	int NeedSize=_tcslen(ColName)+1;
 	ConfirmBufferFreeSize(NeedSize);
 	LPTSTR pData=m_pData+m_DataSize;
 	_tcscpy_s(pData,NeedSize,ColName);
@@ -265,7 +278,7 @@ bool CCSVReader::AddRow()
 
 bool CCSVReader::AddDataString(LPCTSTR Data)
 {
-	int NeedSize=strlen(Data)+1;
+	int NeedSize=_tcslen(Data)+1;
 	ConfirmBufferFreeSize(NeedSize);
 	LPTSTR pData=m_pData+m_DataSize;
 	_tcscpy_s(pData,NeedSize,Data);
@@ -275,52 +288,52 @@ bool CCSVReader::AddDataString(LPCTSTR Data)
 
 bool CCSVReader::AddDataInt(int Data)
 {
-	int NeedSize=_tcprintf("%d",Data);
+	int NeedSize=_tcprintf(_T("%d"),Data);
 	if(NeedSize<0)
 		return false;
 	NeedSize++;
 	ConfirmBufferFreeSize(NeedSize);
 	LPTSTR pData=m_pData+m_DataSize;
-	_stprintf_s(pData,NeedSize,"%d",Data);
+	_stprintf_s(pData,NeedSize,_T("%d"),Data);
 	m_Records[m_Records.GetCount()-1].Add(pData);
 	return true;
 }
 
 bool CCSVReader::AddDataInt64(INT64 Data)
 {
-	int NeedSize=_tcprintf("%lld",Data);
+	int NeedSize=_tcprintf(_T("%lld"),Data);
 	if(NeedSize<0)
 		return false;
 	NeedSize++;
 	ConfirmBufferFreeSize(NeedSize);
 	LPTSTR pData=m_pData+m_DataSize;
-	_stprintf_s(pData,NeedSize,"%lld",Data);
+	_stprintf_s(pData,NeedSize,_T("%lld"),Data);
 	m_Records[m_Records.GetCount()-1].Add(pData);
 	return true;
 }
 
 bool CCSVReader::AddDataDouble(double Data)
 {
-	int NeedSize=_tcprintf("%g",Data);
+	int NeedSize=_tcprintf(_T("%g"),Data);
 	if(NeedSize<0)
 		return false;
 	NeedSize++;
 	ConfirmBufferFreeSize(NeedSize);
 	LPTSTR pData=m_pData+m_DataSize;
-	_stprintf_s(pData,NeedSize,"%g",Data);
+	_stprintf_s(pData,NeedSize,_T("%g"),Data);
 	m_Records[m_Records.GetCount()-1].Add(pData);
 	return true;
 }
 
 bool CCSVReader::AddDataBool(bool Data)
 {
-	int NeedSize=_tcprintf("%d",Data?1:0);
+	int NeedSize=_tcprintf(_T("%d"),Data?1:0);
 	if(NeedSize<0)
 		return false;
 	NeedSize++;
 	ConfirmBufferFreeSize(NeedSize);
 	LPTSTR pData=m_pData+m_DataSize;
-	_stprintf_s(pData,NeedSize,"%d",Data?1:0);
+	_stprintf_s(pData,NeedSize,_T("%d"),Data?1:0);
 	m_Records[m_Records.GetCount()-1].Add(pData);
 	return true;
 }
@@ -394,7 +407,7 @@ LPTSTR CCSVReader::ParseLine(LPTSTR szLine,CEasyArray<LPTSTR>& LineRecord)
 	for(UINT i=0;i<LineRecord.GetCount();i++)
 	{
 		LPTSTR szField=LineRecord[i];
-		UINT Len=strlen(szField);
+		UINT Len=_tcslen(szField);
 		if(Len)
 		{
 			if(szField[Len-1]==_T('"'))

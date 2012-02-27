@@ -283,12 +283,12 @@ int CODBCConnection::FetchStaticResult(SQLHSTMT hStmt,CDBStaticRecordSet * pDBRe
 	if(ColNum<=0)
 		return DBERR_NO_RECORDS;
 
-	std::vector<DB_COLUMN_INFO> ColInfos;
-	std::vector<int> BindTypes;	
+	CEasyArray<DB_COLUMN_INFO> ColInfos;
+	CEasyArray<int> BindTypes;	
 	UINT RecordLineLen=0;	
 
-	ColInfos.resize(ColNum);
-	BindTypes.resize(ColNum);
+	ColInfos.Resize(ColNum);
+	BindTypes.Resize(ColNum);
 	
 
 	//获取结果集列信息
@@ -342,8 +342,8 @@ int CODBCConnection::FetchStaticResult(SQLHSTMT hStmt,CDBStaticRecordSet * pDBRe
 	//绑定结果集列
 	CEasyBuffer RecordLineBuffer;
 	RecordLineBuffer.Create(RecordLineLen);
-	std::vector<SQLINTEGER> FieldSize;
-	FieldSize.resize(ColNum);
+	CEasyArray<SQLINTEGER> FieldSize;
+	FieldSize.Resize(ColNum);
 	char * pFieldBuffer=(char *)RecordLineBuffer.GetFreeBuffer();	
 	for(UINT i=0;i<ColNum;i++)
 	{		

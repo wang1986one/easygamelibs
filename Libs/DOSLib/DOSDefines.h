@@ -10,8 +10,6 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include <vector>
-#include <map>
 
 #define LOG_DOS_CHANNEL				1301
 #define THREAD_CPU_COUNT_TIME		(5000)

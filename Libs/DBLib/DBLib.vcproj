@@ -575,6 +575,10 @@
 			Name="MySQL¿â"
 			>
 			<File
+				RelativePath=".\MySQL\lib\libmysqlclient.a"
+				>
+			</File>
+			<File
 				RelativePath=".\MySQL\lib\mysqlclient.lib"
 				>
 			</File>

@@ -16,39 +16,8 @@ namespace D3DLib{
 
 
 
-LPCTSTR FONT_FX=
-	"texture TexLay0 < string name = \"test.jpg\"; >;"
-	"texture TexLay1 < string name = \"test1.jpg\"; >;"
-	"technique tec0"
-	"{"
-	"    pass p0"
-	"    {"
-	"		MultiSampleAntialias = FALSE;"
-	"		Lighting=false;"
-	"		zenable = false;"
-	"		zwriteenable = false;"
-	"		CullMode = ccw;"
-	"		fogenable = false;"
-	"		Texture[0] = <TexLay0>;"
-	"		AlphaTestEnable = false;"
-	"		AlphaBlendEnable = true;"
-	"		SrcBlend = SrcAlpha;"
-	"		DestBlend = InvSrcAlpha;"
-	"		Texture[0] = <TexLay0>;"
-	"     	ColorOp[0] = SelectArg1;"
-	"       ColorArg1[0] = Diffuse;"      	
-	"       AlphaOp[0] = Modulate;"
-	"       AlphaArg1[0] = Texture;"	
-	"       AlphaArg2[0] = diffuse;"
-	"		ColorOp[1] = disable;"
-	"		AlphaOp[1] = disable;"
-	"		AddressU[0] = clamp;"
-	"		AddressV[0] = clamp;"      
-	"		MinFilter[0] = none;"
-	"       MagFilter[0] = none;"
-	"       MipFilter[0] = none;"
-	"    }"
-	"}";
+
+
 
 IMPLEMENT_CLASS_INFO(CD3DFontCN,CD3DBaseFont);
 
@@ -266,12 +235,12 @@ bool CD3DFontCN::Create(const LOGFONT * pLogFont,int MipLevels,int BufferSize)
 		return false;
 	}
 	m_DrawClip.SetRender(&m_Render);
-	m_DrawClip.SetFX(m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory("FontFX",(void *)FONT_FX,(int)strlen(FONT_FX)));
+	m_DrawClip.SetFX(m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory(_T("FontFX"),(void *)FONT_FX,(int)strlen(FONT_FX)));
 	
 	return true;
 }
 
-bool CD3DFontCN::DrawTextA(LPCTSTR pText,int TextLen,RECT * pRect,DWORD Align,D3DCOLOR Color)
+bool CD3DFontCN::DrawTextA(LPCSTR pText,int TextLen,RECT * pRect,DWORD Align,D3DCOLOR Color)
 {
 	CEasyStringW Text(pText,TextLen);	
 	return DrawTextW((LPCWSTR)Text,(int)Text.GetLength(),pRect,Align,Color);
@@ -316,7 +285,7 @@ bool CD3DFontCN::DrawTextW(LPCWSTR pText,int TextLen,RECT * pRect,DWORD Align,D3
 	return true;
 }
 
-bool CD3DFontCN::GetTextSizeA(LPCTSTR pText,int TextLen,LPSIZE pSize,LPINT pCharWidths)
+bool CD3DFontCN::GetTextSizeA(LPCSTR pText,int TextLen,LPSIZE pSize,LPINT pCharWidths)
 {
 	CEasyStringW Text(pText,TextLen);	
 	return GetTextSizeW((LPCWSTR)Text,(int)Text.GetLength(),pSize,pCharWidths);
@@ -378,18 +347,18 @@ bool CD3DFontCN::GetTextSizeW(LPCWSTR pText,int TextLen,LPSIZE pSize,LPINT pChar
 	return true;
 }
 
-bool CD3DFontCN::TranslateTextA(LPCTSTR pSrcText,int StrLen,LPTSTR pDestText,int& BufferSize)
+bool CD3DFontCN::TranslateTextA(LPCSTR pSrcText,int StrLen,LPTSTR pDestText,int& BufferSize)
 {
 	if(pDestText)
 	{
-		CEasyString Translator(pSrcText,StrLen);
+		CEasyStringA Translator(pSrcText,StrLen);
 		Translator.Replace("&","&amp;");
 		Translator.Replace("<","&lt;");
 		Translator.Replace(">","&gt;");
 		int OutLen=(int)Translator.GetLength();
 		if(OutLen>=BufferSize)
 			OutLen=BufferSize-1;
-		memcpy(pDestText,(LPCTSTR)Translator,OutLen);
+		memcpy(pDestText,(LPCSTR)Translator,OutLen);
 		pDestText[OutLen]=0;
 		return true;
 

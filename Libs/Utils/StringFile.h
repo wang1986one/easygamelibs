@@ -15,32 +15,32 @@
 class CStringFile
 {
 protected:
-	char *	m_pData;
-	int		m_iDataSize;
-	int		m_iLineCount;
-	char**	m_pLines;
+	TCHAR *	m_pData;
+	UINT	m_iDataSize;
+	UINT	m_iLineCount;
+	TCHAR**	m_pLines;
 	int		m_FileChannel;
-	char	m_LineDelimiter;
+	TCHAR	m_LineDelimiter;
 public:
-	CStringFile( const char * pszTextFile ,int FileChannel=0);
+	CStringFile( LPCTSTR pszTextFile ,int FileChannel=0);
 	CStringFile(int FileChannel=0);
 	~CStringFile();
 	void Destroy();
 	void MakeDeflate();
-	BOOL LoadFile( const char * pszTextFile );
+	BOOL LoadFile( LPCTSTR pszTextFile );
 	BOOL LoadFile( IFileAccessor * pFile );
-	BOOL LoadFromString(const char * pStr,int Len=-1);
-	char * operator[]( int line );
-	int	GetLineCount()
+	BOOL LoadFromString(LPCTSTR pStr,int Len=-1);
+	TCHAR * operator[]( UINT line );
+	UINT	GetLineCount()
 	{
 		return m_iLineCount;
 	}
-	void SetLineDelimiter(char Delimiter)
+	void SetLineDelimiter(TCHAR Delimiter)
 	{
 		m_LineDelimiter=Delimiter;
 	}
 protected:
 	BOOL BuildLines( );
-	int	ProcData();
+	UINT	ProcData();
 	
 };

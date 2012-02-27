@@ -37,8 +37,8 @@ int CMySQLRecordSet::Init(CMySQLConnection * pDBConnection,MYSQL_RES_HANDLE hRes
 	m_pDBConnection=pDBConnection;
 	m_hResults=hResults;
 	int ColNum=GetColumnCount();
-	m_pColumnInfos.resize(ColNum);
-	m_RowBuffer.resize(ColNum);
+	m_pColumnInfos.Resize(ColNum);
+	m_RowBuffer.Resize(ColNum);
 	MYSQL_FIELD * pFields=mysql_fetch_fields(hResults);
 	for(int i=0;i<ColNum;i++)
 	{
@@ -71,8 +71,8 @@ void CMySQLRecordSet::Destory()
 	}
 	m_pDBConnection=NULL;
 	m_CurRow=0;
-	m_pColumnInfos.clear();
-	m_RowBuffer.clear();
+	m_pColumnInfos.Clear();
+	m_RowBuffer.Clear();
 }
 
 int CMySQLRecordSet::GetRecordCount()
@@ -93,7 +93,7 @@ int CMySQLRecordSet::GetColumnCount()
 
 LPCTSTR CMySQLRecordSet::GetColumnName(int Index)
 {
-	if(Index>=0&&Index<(int)m_pColumnInfos.size())
+	if(Index>=0&&Index<(int)m_pColumnInfos.GetCount())
 	{
 		return m_pColumnInfos[Index].Name;
 	}
@@ -102,7 +102,7 @@ LPCTSTR CMySQLRecordSet::GetColumnName(int Index)
 
 int CMySQLRecordSet::GetIndexByColumnName(LPCTSTR Name)
 {
-	for(int i=0;i<(int)m_pColumnInfos.size();i++)
+	for(int i=0;i<(int)m_pColumnInfos.GetCount();i++)
 	{
 		if(_strnicmp(m_pColumnInfos[i].Name,Name,MAX_COLUMN_NAME)==0)
 			return i;
@@ -112,7 +112,7 @@ int CMySQLRecordSet::GetIndexByColumnName(LPCTSTR Name)
 
 DB_COLUMN_INFO * CMySQLRecordSet::GetColumnInfo(int Index)
 {
-	if(Index>=0&&Index<(int)m_pColumnInfos.size())
+	if(Index>=0&&Index<(int)m_pColumnInfos.GetCount())
 	{
 		return &(m_pColumnInfos[Index]);
 	}
@@ -122,7 +122,7 @@ DB_COLUMN_INFO * CMySQLRecordSet::GetColumnInfo(int Index)
 
 CDBValue& CMySQLRecordSet::GetField(int Index)
 {
-	if(Index>=0&&Index<(int)m_RowBuffer.size())
+	if(Index>=0&&Index<(int)m_RowBuffer.GetCount())
 	{
 		return m_RowBuffer[Index];
 	}

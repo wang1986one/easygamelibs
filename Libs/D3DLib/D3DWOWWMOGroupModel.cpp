@@ -88,14 +88,19 @@ void CD3DWOWWMOGroupModel::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DF
 	//pMaterial->GetFX()->SetFloat("MaterialPower",pD3DMaterial->Power);
 
 	//ÉèÖÃÎÆÀí
-	pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
-	if(pSubMesh->IsSelected())
+	//pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
+	//if(pSubMesh->IsSelected())
+	//{
+	//	pFX->SetColor("GlobalColor",0xFFFF0000);
+	//}
+	//else
+	//{
+	//	pFX->SetColor("GlobalColor",0xFFFFFFFF);
+	//}
+
+	if(pSubMesh->IsSelected())			
 	{
 		pFX->SetColor("GlobalColor",0xFFFF0000);
-	}
-	else
-	{
-		pFX->SetColor("GlobalColor",0xFFFFFFFF);
 	}
 }
 
@@ -308,7 +313,7 @@ void CD3DWOWWMOGroupModel::CreatePortalBoard()
 					0x300000FF))
 				{
 					CEasyString Name;
-					Name.Format("%s%d",
+					Name.Format(_T("%s%d"),
 						GetName(),i);
 					pBoard->SetParent(this);
 					pBoard->SetName(Name);

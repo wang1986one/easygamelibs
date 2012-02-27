@@ -184,12 +184,12 @@ bool CD3DTexture::LoadTexture(LPCTSTR TextureFileName,UINT MipLevels,bool UseFil
 		Ret=LoadTexture(pFile,MipLevels,UseFilter,IsManaged,KeyColor);
 		if(!Ret)
 		{
-			PrintSystemLog(0,"装载纹理<%s>失败\r\n",TextureFileName);	
+			PrintSystemLog(0,_T("装载纹理<%s>失败\r\n"),TextureFileName);	
 		}
 	}
 	else
 	{
-		PrintSystemLog(0,"打开纹理<%s>失败\r\n",TextureFileName);			
+		PrintSystemLog(0,_T("打开纹理<%s>失败\r\n"),TextureFileName);			
 	}
 
 	pFile->Release();
@@ -491,7 +491,7 @@ bool CD3DTexture::LoadBLPTexture(LPVOID pData,int DataSize,DWORD Usage,bool IsMa
 			DXTBlockBytes=DXT5_BLOCK_BYTES;
 			break;
 		default:
-			PrintSystemLog(0,"CD3DTexture::LoadBLPTexture:无法识别的压缩格式");
+			PrintSystemLog(0,_T("CD3DTexture::LoadBLPTexture:无法识别的压缩格式"));
 			return false;
 		}		
 		

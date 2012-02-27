@@ -16,7 +16,7 @@
 
 struct FILE_LOG_DATA_BLOCK
 {
-	char Data[ASYNC_FILE_LOG_DATA_BLOCK_SIZE];
+	TCHAR Data[ASYNC_FILE_LOG_DATA_BLOCK_SIZE];
 	int DataSize;
 	CEasyCriticalSection Lock;
 };

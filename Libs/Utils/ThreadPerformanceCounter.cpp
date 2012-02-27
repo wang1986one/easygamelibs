@@ -35,7 +35,7 @@ void CThreadPerformanceCounter::Init(HANDLE ThreadHandle,UINT CountIntervalTime)
 		&CreationTime,&ExitTime,
 		&KernelTime,&UserTime))
 	{
-		PrintSystemLog(0,"获取线程CPU时间失败%d",GetLastError());
+		PrintSystemLog(0,_T("获取线程CPU时间失败%d"),GetLastError());
 	}
 	m_StartCPUUsedTime=((UINT64)KernelTime.dwLowDateTime)|(((UINT64)KernelTime.dwHighDateTime)<<32);
 	m_StartCPUUsedTime+=((UINT64)UserTime.dwLowDateTime)|(((UINT64)UserTime.dwHighDateTime)<<32);
@@ -71,7 +71,7 @@ void CThreadPerformanceCounter::DoPerformanceCount()
 				&CreationTime,&ExitTime,
 				&KernelTime,&UserTime))
 			{
-				PrintSystemLog(0,"获取线程CPU时间失败%d",GetLastError());
+				PrintSystemLog(0,_T("获取线程CPU时间失败%d"),GetLastError());
 			}
 			CurCPUUsedTime=((UINT64)KernelTime.dwLowDateTime)|(((UINT64)KernelTime.dwHighDateTime)<<32);
 			CurCPUUsedTime+=((UINT64)UserTime.dwLowDateTime)|(((UINT64)UserTime.dwHighDateTime)<<32);

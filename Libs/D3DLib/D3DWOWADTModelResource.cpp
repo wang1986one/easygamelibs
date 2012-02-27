@@ -228,7 +228,7 @@ bool CD3DWOWADTModelResource::LoadTerrain(LPCTSTR ModelFileName)
 		return false;
 	if(!pFile->Open(ModelFileName,IFileAccessor::modeRead))
 	{
-		PrintD3DLog(0,"文件%s打开失败",ModelFileName);
+		PrintD3DLog(0,_T("文件%s打开失败"),ModelFileName);
 		pFile->Release();
 		return false;	
 	}
@@ -469,8 +469,8 @@ bool CD3DWOWADTModelResource::LoadTerrain(LPCTSTR ModelFileName)
 
 		pD3DSubMesh->SetID(i);
 		CEasyString SubMeshName;
-		//SubMeshName.Format("%s\\%d",ModelFileName,i);
-		SubMeshName.Format("%d",i);
+		
+		SubMeshName.Format(_T("%d"),i);
 		pD3DSubMesh->SetName(SubMeshName);
 
 
@@ -516,8 +516,12 @@ bool CD3DWOWADTModelResource::LoadTerrain(LPCTSTR ModelFileName)
 
 				if(pLiquidTexture)
 				{
-					pWaterSubMesh->GetMaterial().AddTexture(pLiquidTexture,0);
+					pWaterSubMesh->GetMaterial().AddTexture(pLiquidTexture,0,"TexLay0","");
 				}
+
+				pWaterSubMesh->GetMaterial().AddTexture(NULL,D3D_TEX_FLAG_DEPTH_TEX,"TexLay1","");
+
+				pWaterSubMesh->GetMaterial().CaculateHashCode();
 
 				float * pHeightMap=NULL;
 				BYTE * pAlphaMap=NULL;
@@ -624,7 +628,7 @@ bool CD3DWOWADTModelResource::LoadTerrain(LPCTSTR ModelFileName)
 
 				pWaterSubMesh->SetProperty(pWaterSubMesh->GetProperty()|SMP_IS_WATER);
 
-				SubMeshName.Format("W%d-%d",i,l);
+				SubMeshName.Format(_T("W%d-%d"),i,l);
 				pWaterSubMesh->SetName(SubMeshName);
 
 				LiquidSubMeshList.Add(pWaterSubMesh);
@@ -688,9 +692,11 @@ bool CD3DWOWADTModelResource::LoadTerrain(LPCTSTR ModelFileName)
 
 			if(pLiquidTexture)
 			{
-				pWaterSubMesh->GetMaterial().AddTexture(pLiquidTexture,0);
+				pWaterSubMesh->GetMaterial().AddTexture(pLiquidTexture,0,"TexLay0","");
 			}
-
+			pWaterSubMesh->GetMaterial().AddTexture(NULL,D3D_TEX_FLAG_DEPTH_TEX,"TexLay1","");
+			
+			pWaterSubMesh->GetMaterial().CaculateHashCode();
 
 
 			pModelIndices=NULL;
@@ -767,7 +773,7 @@ bool CD3DWOWADTModelResource::LoadTerrain(LPCTSTR ModelFileName)
 			pWaterSubMesh->SetID(1000+i);
 			pWaterSubMesh->SetProperty(pWaterSubMesh->GetProperty()|SMP_IS_WATER);
 
-			SubMeshName.Format("L%d",i);
+			SubMeshName.Format(_T("L%d"),i);
 			pWaterSubMesh->SetName(SubMeshName);
 
 			LiquidSubMeshList.Add(pWaterSubMesh);
@@ -796,7 +802,7 @@ bool CD3DWOWADTModelResource::LoadObjectsInfo(LPCTSTR ModelFileName,bool BeLoadO
 		return false;
 	if(!pFile->Open(ModelFileName,IFileAccessor::modeRead))
 	{
-		PrintD3DLog(0,"文件%s打开失败",ModelFileName);
+		PrintD3DLog(0,_T("文件%s打开失败"),ModelFileName);
 		pFile->Release();
 		return false;	
 	}
@@ -871,7 +877,7 @@ bool CD3DWOWADTModelResource::LoadObjectsInfo(LPCTSTR ModelFileName,bool BeLoadO
 					}
 					else
 					{
-						PrintD3DLog(0,"加载M2文件%s失败",(LPCTSTR)ObjectFileName);
+						PrintD3DLog(0,_T("加载M2文件%s失败"),(LPCTSTR)ObjectFileName);
 						pResource->Release();
 						pResource=NULL;
 					}						
@@ -931,7 +937,7 @@ bool CD3DWOWADTModelResource::LoadObjectsInfo(LPCTSTR ModelFileName,bool BeLoadO
 				}
 				else
 				{
-					PrintD3DLog(0,"加载WMO文件%s失败",(LPCTSTR)FileName);
+					PrintD3DLog(0,_T("加载WMO文件%s失败"),(LPCTSTR)FileName);
 					pResource->Release();
 					pResource=NULL;
 				}						
@@ -959,7 +965,7 @@ bool CD3DWOWADTModelResource::LoadTextureInfo(LPCTSTR ModelFileName,bool IsBigAl
 		return false;
 	if(!pFile->Open(ModelFileName,IFileAccessor::modeRead))
 	{
-		PrintD3DLog(0,"文件%s打开失败",ModelFileName);
+		PrintD3DLog(0,_T("文件%s打开失败"),ModelFileName);
 		pFile->Release();
 		return false;	
 	}
@@ -997,7 +1003,7 @@ bool CD3DWOWADTModelResource::LoadTextureInfo(LPCTSTR ModelFileName,bool IsBigAl
 	{
 		CEasyString TextureFileName=pMTEX->TextureFileNames+Ptr;
 		TextureFileName.MakeUpper();
-		TextureFileName.Replace(".BLP","_S.BLP");
+		TextureFileName.Replace(_T(".BLP"),_T("_S.BLP"));
 		TextureList[TextureCount]=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(TextureFileName);
 		TextureCount++;
 		Ptr+=strlen(pMTEX->TextureFileNames+Ptr)+1;
@@ -1040,16 +1046,18 @@ bool CD3DWOWADTModelResource::LoadTextureInfo(LPCTSTR ModelFileName,bool IsBigAl
 		CD3DFX * pFX=BuildFX(i,TextureLayerInfos[i].LayerCount,TextureLayerInfos[i].pShadowMap!=NULL,IsBigAlphaMask);
 		pD3DSubMesh->GetMaterial().SetFX(pFX);
 
-
+		CEasyStringA TexFXName;
 		for(UINT j=0;j<TextureLayerInfos[i].LayerCount;j++)
 		{			
 			CD3DTexture * pTexture=TextureList[TextureLayerInfos[i].Layers[j].TextureIndex];
-			pD3DSubMesh->GetMaterial().AddTexture(pTexture,0);
+			TexFXName.Format("TexLay%d",pD3DSubMesh->GetMaterial().GetTextureLayerCount());
+			pD3DSubMesh->GetMaterial().AddTexture(pTexture,0,TexFXName,"");
 			if(pTexture)
 				pTexture->AddUseRef();
 			if(TextureLayerInfos[i].Layers[j].Flag&MLIF_ALPHA_MAP)
 			{
-				pD3DSubMesh->GetMaterial().AddTexture(TextureLayerInfos[i].Layers[j].pAlphaMap,TP_ALPHA_MAP);
+				TexFXName.Format("TexLay%d",pD3DSubMesh->GetMaterial().GetTextureLayerCount());
+				pD3DSubMesh->GetMaterial().AddTexture(TextureLayerInfos[i].Layers[j].pAlphaMap,TP_ALPHA_MAP,TexFXName,"");
 				if(TextureLayerInfos[i].Layers[j].pAlphaMap)
 					TextureLayerInfos[i].Layers[j].pAlphaMap->AddUseRef();
 			}			
@@ -1057,9 +1065,11 @@ bool CD3DWOWADTModelResource::LoadTextureInfo(LPCTSTR ModelFileName,bool IsBigAl
 
 		if(TextureLayerInfos[i].pShadowMap)
 		{
-			pD3DSubMesh->GetMaterial().AddTexture(TextureLayerInfos[i].pShadowMap,TP_SHADOW_MAP);
+			pD3DSubMesh->GetMaterial().AddTexture(TextureLayerInfos[i].pShadowMap,TP_SHADOW_MAP,"TexShadow","");
 			TextureLayerInfos[i].pShadowMap->AddUseRef();
 		}
+
+		pD3DSubMesh->GetMaterial().CaculateHashCode();
 	}
 
 	return true;
@@ -1233,11 +1243,11 @@ bool CD3DWOWADTModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceM
 						m_M2ObjectList[M2ObjectCount].pModelResource=(CD3DWOWM2ModelResource *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DWOWM2ModelResource));
 						if(m_M2ObjectList[M2ObjectCount].pModelResource)
 							m_M2ObjectList[M2ObjectCount].pModelResource->AddUseRef();
-						memcpy(&(m_M2ObjectList[M2ObjectCount].Position),(LPCTSTR)M2ObjectInfo.GetMember(SST_MOI_POSITION),
+						memcpy(&(m_M2ObjectList[M2ObjectCount].Position),(LPCSTR)M2ObjectInfo.GetMember(SST_MOI_POSITION),
 							sizeof(m_M2ObjectList[M2ObjectCount].Position));
-						memcpy(&(m_M2ObjectList[M2ObjectCount].Orientation),(LPCTSTR)M2ObjectInfo.GetMember(SST_MOI_ORIENTATION),
+						memcpy(&(m_M2ObjectList[M2ObjectCount].Orientation),(LPCSTR)M2ObjectInfo.GetMember(SST_MOI_ORIENTATION),
 							sizeof(m_M2ObjectList[M2ObjectCount].Orientation));
-						memcpy(&(m_M2ObjectList[M2ObjectCount].Scale),(LPCTSTR)M2ObjectInfo.GetMember(SST_MOI_SCALE),
+						memcpy(&(m_M2ObjectList[M2ObjectCount].Scale),(LPCSTR)M2ObjectInfo.GetMember(SST_MOI_SCALE),
 							sizeof(m_M2ObjectList[M2ObjectCount].Scale));						
 						M2ObjectCount++;
 					}
@@ -1259,9 +1269,9 @@ bool CD3DWOWADTModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceM
 						m_WMOObjectList[WMOObjectCount].pModelResource=(CD3DWOWWMOModelResource *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DWOWWMOModelResource));
 						if(m_WMOObjectList[WMOObjectCount].pModelResource)
 							m_WMOObjectList[WMOObjectCount].pModelResource->AddUseRef();
-						memcpy(&(m_WMOObjectList[WMOObjectCount].Position),(LPCTSTR)WMOObjectInfo.GetMember(SST_WOI_POSITION),
+						memcpy(&(m_WMOObjectList[WMOObjectCount].Position),(LPCSTR)WMOObjectInfo.GetMember(SST_WOI_POSITION),
 							sizeof(m_WMOObjectList[WMOObjectCount].Position));
-						memcpy(&(m_WMOObjectList[WMOObjectCount].Orientation),(LPCTSTR)WMOObjectInfo.GetMember(SST_WOI_ORIENTATION),
+						memcpy(&(m_WMOObjectList[WMOObjectCount].Orientation),(LPCSTR)WMOObjectInfo.GetMember(SST_WOI_ORIENTATION),
 							sizeof(m_WMOObjectList[WMOObjectCount].Orientation));
 						m_WMOObjectList[WMOObjectCount].DoodadSet=WMOObjectInfo.GetMember(SST_WOI_DOODAD_SET);
 						WMOObjectCount++;
@@ -1281,12 +1291,12 @@ bool CD3DWOWADTModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceM
 					{
 						m_TerrainHeightInfo[HeightInfoCount].HaveWater=((BYTE)HeightInfo.GetMember(SST_HI_HAVE_WATER))!=0;
 						memcpy(m_TerrainHeightInfo[HeightInfoCount].TerrainHeight,
-							(LPCTSTR)HeightInfo.GetMember(SST_HI_TERRAIN_HEIGHT),
+							(LPCSTR)HeightInfo.GetMember(SST_HI_TERRAIN_HEIGHT),
 							sizeof(m_TerrainHeightInfo[HeightInfoCount].TerrainHeight));
 						if(m_TerrainHeightInfo[HeightInfoCount].HaveWater)
 						{
 							memcpy(m_TerrainHeightInfo[HeightInfoCount].WaterHeight,
-								(LPCTSTR)HeightInfo.GetMember(SST_HI_WATER_HEIGHT),
+								(LPCSTR)HeightInfo.GetMember(SST_HI_WATER_HEIGHT),
 								sizeof(m_TerrainHeightInfo[HeightInfoCount].WaterHeight));
 						}
 						HeightInfoCount++;
@@ -1295,7 +1305,7 @@ bool CD3DWOWADTModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceM
 			}
 			break;
 		case SST_D3DWAMR_POSITION:
-			memcpy(&(m_Position),(LPCTSTR)Value,
+			memcpy(&(m_Position),(LPCSTR)Value,
 				sizeof(m_Position));
 			break;
 		}
@@ -1351,7 +1361,7 @@ CD3DFX * CD3DWOWADTModelResource::BuildFX(UINT Index,UINT LayCount,bool HaveShad
 	CEasyString PSFunction;
 	
 
-	FXName.Format("ADTModel\\0x%X%s",
+	FXName.Format(_T("ADTModel\\0x%X%s"),
 		LayCount,HaveShadowMap?"S":"");
 
 	if(HaveShadowMap)
@@ -1400,7 +1410,7 @@ CD3DFX * CD3DWOWADTModelResource::BuildFX(UINT Index,UINT LayCount,bool HaveShad
 		FxContent=ADT_MODEL_20_FX;		
 	}
 
-	FxContent.Replace("<PSFunction>",PSFunction);
+	FxContent.Replace(_T("<PSFunction>"),PSFunction);
 	
 
 	CD3DFX * pFX=m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory(FXName,FxContent.GetBuffer(),FxContent.GetLength());	
@@ -1409,7 +1419,7 @@ CD3DFX * CD3DWOWADTModelResource::BuildFX(UINT Index,UINT LayCount,bool HaveShad
 
 CD3DFX * CD3DWOWADTModelResource::BuildLiquidFX()
 {
-	CD3DFX * pFX=m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory("ADT_LIQUID_FX",ADT_LIQUID_FX,strlen(ADT_LIQUID_FX));	
+	CD3DFX * pFX=m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory(_T("ADT_LIQUID_FX"),ADT_LIQUID_FX,strlen(ADT_LIQUID_FX));	
 	return pFX;
 }
 
@@ -1458,7 +1468,7 @@ CD3DTexture * CD3DWOWADTModelResource::CreateAlphaMap(int DataType,LPBYTE pData,
 		return NULL;
 
 	CEasyString Name;
-	Name.Format("%s\\LYA_%d_%d",GetName(),ID,Layer);
+	Name.Format(_T("%s\\LYA_%d_%d"),GetName(),ID,Layer);
 	pAlphaMap->SetName(Name);
 	
 	switch(DataType)
@@ -1583,7 +1593,7 @@ bool CD3DWOWADTModelResource::LoadShadowMap(TEXTURE_LAYER_INFO& LayInfo,BLZ_CHUN
 		return false;
 
 	CEasyString Name;
-	Name.Format("%s\\SHW_%d",GetName(),ID);
+	Name.Format(_T("%s\\SHW_%d"),GetName(),ID);
 	pAlphaMap->SetName(Name);
 
 	D3DLOCKED_RECT LockedRect;
@@ -1623,7 +1633,7 @@ CD3DTexture * CD3DWOWADTModelResource::LoadLiquidTexture(int LiquidType)
 	{
 		CEasyString Name;
 		CD3DIFLTexture * pLiquidTexture=NULL;
-		Name.Format("LiquidTexture%d",LiquidType);
+		Name.Format(_T("LiquidTexture%d"),LiquidType);
 		pLiquidTexture=(CD3DIFLTexture *)m_pManager->GetDevice()->GetTextureManager()->GetTextrue(Name);
 		if(pLiquidTexture==NULL)
 		{

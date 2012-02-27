@@ -14,7 +14,7 @@
 
 IMPLEMENT_CLASS_INFO_STATIC(CLogManager,CNameObject);
 
-TCHAR LOG_MANAGER_INSTANCE[]="LogManagerInstance";
+TCHAR LOG_MANAGER_INSTANCE[]=_T("LogManagerInstance");
 
 CLogManager::CLogManager(void):CNameObject()
 {

@@ -32,8 +32,8 @@ BOOL CPropertyGrid::Create(const RECT& Rect,CWnd * pParentWnd)
 	if(CListCtrl::Create(WS_CHILD|LVS_REPORT,Rect,pParentWnd,123324))
 	{
 		SetExtendedStyle(LVS_EX_GRIDLINES|LVS_EX_FULLROWSELECT);
-		InsertColumn(0,"属性",LVCFMT_LEFT,80);
-		InsertColumn(1,"值",LVCFMT_LEFT,100);
+		InsertColumn(0,_T("属性"),LVCFMT_LEFT,80);
+		InsertColumn(1,_T("值"),LVCFMT_LEFT,100);
 
 
 

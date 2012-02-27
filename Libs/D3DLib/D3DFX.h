@@ -53,7 +53,7 @@ public:
 	virtual bool Reset();
 	virtual bool Restore();
 
-	LPCTSTR GetFXContent();
+	LPCSTR GetFXContent();
 	
 	//virtual void Release();
 
@@ -66,10 +66,10 @@ public:
 	bool LoadFXDirect(const void * pData,int DataSize);
 
 	bool SetActiveTechnique(int Index);
-	bool SetActiveTechnique(LPCTSTR TechName);
+	bool SetActiveTechnique(LPCSTR TechName);
 
 	bool UseActiveTechnique();
-	bool UseTechnique(LPCTSTR TechName);
+	bool UseTechnique(LPCSTR TechName);
 
 	inline LPD3DXEFFECT GetEffect()
 	{
@@ -82,24 +82,24 @@ public:
 	bool BeginPass(int Pass);
 	bool EndPass(int Pass);
 
-	bool SetTexture(LPCTSTR ParamName,CD3DTexture * pTexture);
-	bool SetMatrix(LPCTSTR ParamName,const CD3DMatrix& Mat);
-	bool SetMatrixArray(LPCTSTR ParamName,const CD3DMatrix * pMats,int Count);
-	bool SetVector(LPCTSTR ParamName,const CD3DVector2& Vec);
-	bool SetVector(LPCTSTR ParamName,const CD3DVector3& Vec);
-	bool SetVector(LPCTSTR ParamName,const CD3DVector4& Vec);
-	bool SetQuaternion(LPCTSTR ParamName,const CD3DQuaternion& Quat);
-	bool SetColor(LPCTSTR ParamName,const D3DCOLORVALUE& Color);
-	bool SetColor(LPCTSTR ParamName,D3DCOLOR Color);
-	bool SetInt(LPCTSTR ParamName,int Value);
-	bool SetIntArray(LPCTSTR ParamName,const int * pValues,int Count);
-	bool SetFloat(LPCTSTR ParamName,FLOAT Value);
-	bool SetBool(LPCTSTR ParamName,BOOL Value);
-	bool SetValue(LPCTSTR ParamName,LPCVOID pData,UINT DataSize);
+	bool SetTexture(LPCSTR ParamName,CD3DTexture * pTexture);
+	bool SetMatrix(LPCSTR ParamName,const CD3DMatrix& Mat);
+	bool SetMatrixArray(LPCSTR ParamName,const CD3DMatrix * pMats,int Count);
+	bool SetVector(LPCSTR ParamName,const CD3DVector2& Vec);
+	bool SetVector(LPCSTR ParamName,const CD3DVector3& Vec);
+	bool SetVector(LPCSTR ParamName,const CD3DVector4& Vec);
+	bool SetQuaternion(LPCSTR ParamName,const CD3DQuaternion& Quat);
+	bool SetColor(LPCSTR ParamName,const D3DCOLORVALUE& Color);
+	bool SetColor(LPCSTR ParamName,D3DCOLOR Color);
+	bool SetInt(LPCSTR ParamName,int Value);
+	bool SetIntArray(LPCSTR ParamName,const int * pValues,int Count);
+	bool SetFloat(LPCSTR ParamName,FLOAT Value);
+	bool SetBool(LPCSTR ParamName,BOOL Value);
+	bool SetValue(LPCSTR ParamName,LPCVOID pData,UINT DataSize);
 
-	bool GetInt(LPCTSTR ParamName,int& Value);
-	bool GetFloat(LPCTSTR ParamName,FLOAT& Value);
-	bool GetBool(LPCTSTR ParamName,BOOL& Value);	
+	bool GetInt(LPCSTR ParamName,int& Value);
+	bool GetFloat(LPCSTR ParamName,FLOAT& Value);
+	bool GetBool(LPCSTR ParamName,BOOL& Value);	
 
 
 	bool CommitChanges();
@@ -142,9 +142,9 @@ inline CD3DFXManager * CD3DFX::GetManager()
 	return m_pManager;
 }
 
-inline LPCTSTR CD3DFX::GetFXContent()
+inline LPCSTR CD3DFX::GetFXContent()
 {
-	return (LPCTSTR)m_EffectData.GetBuffer();
+	return (LPCSTR)m_EffectData.GetBuffer();
 }
 
 

@@ -43,9 +43,9 @@ int CMySQLDynamicRecordSet::Init(CMySQLConnection * pDBConnection,MYSQL_STMT_HAN
 		return DBERR_NO_RECORDS;
 	}
 	int ColNum=mysql_num_fields(hResult);
-	m_pColumnInfos.resize(ColNum);
-	m_RowBuffer.resize(ColNum);
-	m_FetchBuffer.resize(ColNum);	
+	m_pColumnInfos.Resize(ColNum);
+	m_RowBuffer.Resize(ColNum);
+	m_FetchBuffer.Resize(ColNum);	
 	ZeroMemory(&(m_FetchBuffer[0]),sizeof(MYSQL_BIND)*ColNum);
 	MYSQL_FIELD * pFields=mysql_fetch_fields(hResult);
 	UINT FetchBufferLen=0;
@@ -103,8 +103,8 @@ void CMySQLDynamicRecordSet::Destory()
 		m_hStmt=NULL;
 	}
 	m_pDBConnection=NULL;
-	m_pColumnInfos.clear();
-	m_RowBuffer.clear();
+	m_pColumnInfos.Clear();
+	m_RowBuffer.Clear();
 	m_IsBOF=true;
 	m_IsEOF=true;	
 }
@@ -119,12 +119,12 @@ int CMySQLDynamicRecordSet::GetRecordCount()
 
 int CMySQLDynamicRecordSet::GetColumnCount()
 {
-	return (int)m_pColumnInfos.size();
+	return (int)m_pColumnInfos.GetCount();
 }
 
 LPCTSTR CMySQLDynamicRecordSet::GetColumnName(int Index)
 {
-	if(Index>=0&&Index<(int)m_pColumnInfos.size())
+	if(Index>=0&&Index<(int)m_pColumnInfos.GetCount())
 	{
 		return m_pColumnInfos[Index].Name;
 	}
@@ -133,7 +133,7 @@ LPCTSTR CMySQLDynamicRecordSet::GetColumnName(int Index)
 
 int CMySQLDynamicRecordSet::GetIndexByColumnName(LPCTSTR Name)
 {
-	for(int i=0;i<(int)m_pColumnInfos.size();i++)
+	for(int i=0;i<(int)m_pColumnInfos.GetCount();i++)
 	{
 		if(_strnicmp(m_pColumnInfos[i].Name,Name,MAX_COLUMN_NAME)==0)
 			return i;
@@ -143,7 +143,7 @@ int CMySQLDynamicRecordSet::GetIndexByColumnName(LPCTSTR Name)
 
 DB_COLUMN_INFO * CMySQLDynamicRecordSet::GetColumnInfo(int Index)
 {
-	if(Index>=0&&Index<(int)m_pColumnInfos.size())
+	if(Index>=0&&Index<(int)m_pColumnInfos.GetCount())
 	{
 		return &(m_pColumnInfos[Index]);
 	}
@@ -153,7 +153,7 @@ DB_COLUMN_INFO * CMySQLDynamicRecordSet::GetColumnInfo(int Index)
 
 CDBValue& CMySQLDynamicRecordSet::GetField(int Index)
 {
-	if(Index>=0&&Index<(int)m_RowBuffer.size())
+	if(Index>=0&&Index<(int)m_RowBuffer.GetCount())
 	{
 		return m_RowBuffer[Index];
 	}

@@ -38,10 +38,10 @@ public:
 	}
 
 
-	int PushScript(const char * ExpStr,CESVariableList* pVariableList,CESFunctionList * pFunctionList,int& LastLine);
+	int PushScript(LPCTSTR ExpStr,CESVariableList* pVariableList,CESFunctionList * pFunctionList,int& LastLine);
 	
 	
-	int FindIdentifier(int Start,const char * Name);
+	int FindIdentifier(int Start,LPCTSTR Name);
 
 	int FindKeyWord(int KeyWord,int StartPos,int StopKeyWord);
 	int FindKeyWordReverse(int KeyWord,int StartPos,int StopKeyWord);
@@ -54,7 +54,7 @@ public:
 protected:	
 	
 	//int DealFunctionDefine(CESBolanStack * pScript,CESFunctionList * pFunctionList,int& LastLine);
-	int FindKeyWord(const char * KeyWord);
+	int FindKeyWord(LPCTSTR KeyWord);
 	int GetFunctionParamCount(CESBolanStack * pScript,int StartPos,int& ParamCount);
 	void DeleteBolan(CESBolanStack * pScript,CESFunctionList * pFunctionList,UINT Index);
 	int ReverseFunctionParam(CESBolanStack * pScript,UINT StartIndex,UINT ParamCount);

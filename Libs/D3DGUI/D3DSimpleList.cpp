@@ -16,31 +16,7 @@ namespace D3DGUI{
 
 #define LINE_GROW	8
 
-static LPCTSTR SELECTED_RECT_FX=	
-	"texture TexLay0 < string name = \"test.jpg\"; >;"
-	"texture TexLay1 < string name = \"test1.jpg\"; >;"
-	"technique tec0"
-	"{"
-	"    pass p0"
-	"    {"
-	"		MultiSampleAntialias = FALSE;"
-	"		Lighting=false;"
-	"		zenable = false;"
-	"		zwriteenable = false;"
-	"		CullMode = ccw;"
-	"		fogenable = false;"	
-	"		AlphaTestEnable = false;"
-	"		AlphaBlendEnable = true;"
-	"		SrcBlend = InvDestColor;"
-	"		DestBlend = InvDestColor;"		
-	"     	ColorOp[0] = SelectArg1;"	
-	"       ColorArg1[0] = Diffuse;"      	
-	"       AlphaOp[0] = SelectArg1;"	
-	"       AlphaArg1[0] = diffuse;"
-	"		ColorOp[1] = disable;"
-	"		AlphaOp[1] = disable;"	
-	"    }"
-	"}";
+
 
 
 IMPLEMENT_CLASS_INFO(CD3DSimpleList,CD3DWnd);
@@ -82,6 +58,7 @@ void CD3DSimpleList::InitWnd(CD3DGUI *  pGUI)
 	m_ClientCurWidth=0;
 	m_ClientCurHeight=0;
 
+	m_IsLoopScroll=false;
 	m_ScrollBarWidth=16;
 
 	
@@ -104,7 +81,7 @@ void CD3DSimpleList::InitWnd(CD3DGUI *  pGUI)
 		m_pScrollBar=m_pGUI->CreateScrollBar(CEasyRect(0,0,0,0));
 		m_pScrollBar->SetParent(this);
 		m_pScrollBar->SetVisible(false);
-		m_pScrollBar->SetName("SL_ScrollBar");
+		m_pScrollBar->SetName(_T("SL_ScrollBar"));
 		m_pScrollBar->SetInternal(true);
 		m_pScrollBar->EnableFocus(false);
 	}
@@ -138,10 +115,14 @@ BOOL CD3DSimpleList::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lP
 			case VK_UP:
 				{
 					int Select=GetFirstSelectedItem();
-					if(Select>0)
+					Select--;
+					if(Select<0&&m_IsLoopScroll)
+					{
+						Select=GetItemCount()-1;
+					}
+					if(Select>=0)
 					{
 						ClearAllSelect();
-						Select--;
 						SelectItem(Select);
 						MakeItemVisible(Select);
 						HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_SELCHANGE,(WPARAM)GetID(),Select);
@@ -152,10 +133,14 @@ BOOL CD3DSimpleList::OnMessage(CD3DWnd * pWnd,UINT msg, WPARAM wParam, LPARAM lP
 			case VK_DOWN:
 				{
 					int Select=GetFirstSelectedItem();
-					if(Select<GetItemCount()-1)
+					Select++;
+					if(Select>=GetItemCount()&&m_IsLoopScroll)
+					{
+						Select=0;
+					}
+					if(Select<GetItemCount())
 					{
 						ClearAllSelect();
-						Select++;
 						SelectItem(Select);
 						MakeItemVisible(Select);
 						HandleMessage(this,WM_D3DGUI_SIMPLE_LIST_SELCHANGE,(WPARAM)GetID(),Select);
@@ -664,82 +649,85 @@ LPVOID CD3DSimpleList::GetItemData(int Index)
 
 void CD3DSimpleList::SaveToXml(xml_node * pXMLNode)
 {
-	xml_node Wnd=pXMLNode->append_child(node_element,"SimpleList");
-	Wnd.append_attribute("Name",(LPCTSTR)GetName());
-	Wnd.append_attribute("ID",(long)GetID());
-	Wnd.append_attribute("IsInternal",IsInternal());
+	xml_node Wnd=pXMLNode->append_child(node_element,_T("SimpleList"));
+	Wnd.append_attribute(_T("Name"),(LPCTSTR)GetName());
+	Wnd.append_attribute(_T("ID"),(long)GetID());
+	Wnd.append_attribute(_T("IsInternal"),IsInternal());
 
-	xml_node Behavior=Wnd.append_child(node_element,"Behavior");
+	xml_node Behavior=Wnd.append_child(node_element,_T("Behavior"));
 	SaveBehaviorToXML(Behavior);
-	Behavior.append_attribute("LineSpace",(long)m_LineSpace);
-	Behavior.append_attribute("IsMultiSelect",m_AllowMutliSelect);
-	Behavior.append_attribute("ScrollBarWidth",(long)m_ScrollBarWidth);	
+	Behavior.append_attribute(_T("LineSpace"),(long)m_LineSpace);
+	Behavior.append_attribute(_T("IsMultiSelect"),m_AllowMutliSelect);
+	Behavior.append_attribute(_T("ScrollBarWidth"),(long)m_ScrollBarWidth);	
+	Behavior.append_attribute(_T("IsLoopScroll"),m_IsLoopScroll);	
 
-	xml_node Frame=Wnd.append_child(node_element,"Frame");
+	xml_node Frame=Wnd.append_child(node_element,_T("Frame"));
 	SaveFrameToXML(Frame);
-	xml_node Borders=Wnd.append_child(node_element,"Borders");
+	xml_node Borders=Wnd.append_child(node_element,_T("Borders"));
 	SaveBorderToXML(Borders);
-	xml_node Text=Wnd.append_child(node_element,"Text");
+	xml_node Text=Wnd.append_child(node_element,_T("Text"));
 	SaveTextToXML(Text);
-	xml_node Font=Wnd.append_child(node_element,"Font");
+	xml_node Font=Wnd.append_child(node_element,_T("Font"));
 	SaveFontToXML(Font);
 	if(m_pTexture)
 	{	
-		xml_node Texture=Wnd.append_child(node_element,"Texture");
+		xml_node Texture=Wnd.append_child(node_element,_T("Texture"));
 		SaveTextureToXML(Texture);
 	}
 	
 
 	if(m_ChildWndList.GetCount())
 	{
-		xml_node Childs=Wnd.append_child(node_element,"Childs");
+		xml_node Childs=Wnd.append_child(node_element,_T("Childs"));
 		SaveChildsToXml(Childs);
 	}
 }
 
 bool CD3DSimpleList::LoadFromXml(xml_node * pXMLNode)
 {
-	if(_strnicmp(pXMLNode->name(),"SimpleList",11)!=0)
+	if(_tcsnicmp(pXMLNode->name(),_T("SimpleList"),11)!=0)
 		return false;
-	if(pXMLNode->has_attribute("Name"))
-		SetName(pXMLNode->attribute("Name").getvalue().c_str());
+	if(pXMLNode->has_attribute(_T("Name")))
+		SetName(pXMLNode->attribute(_T("Name")).getvalue());
 
-	if(pXMLNode->has_attribute("ID"))
-		SetID((long)pXMLNode->attribute("ID"));
+	if(pXMLNode->has_attribute(_T("ID")))
+		SetID((long)pXMLNode->attribute(_T("ID")));
 
-	if(pXMLNode->has_attribute("IsInternal"))
-		SetInternal((bool)pXMLNode->attribute("IsInternal"));
+	if(pXMLNode->has_attribute(_T("IsInternal")))
+		SetInternal((bool)pXMLNode->attribute(_T("IsInternal")));
 
 
 	for(int i=0;i<(int)pXMLNode->children();i++)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Behavior",9)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Behavior"),9)==0)
 		{
 			LoadBehaviorFromXML(pXMLNode->child(i));
-			if(pXMLNode->child(i).has_attribute("LineSpace"))
-				SetLineSpace((long)pXMLNode->child(i).attribute("LineSpace"));
-			if(pXMLNode->child(i).has_attribute("IsMultiSelect"))
-				SetAllowMutliSelect((bool)pXMLNode->child(i).attribute("IsMultiSelect"));
-			if(pXMLNode->child(i).has_attribute("ScrollBarWidth"))
-				SetScrollBarWidth((long)pXMLNode->child(i).attribute("ScrollBarWidth"));	
+			if(pXMLNode->child(i).has_attribute(_T("LineSpace")))
+				SetLineSpace((long)pXMLNode->child(i).attribute(_T("LineSpace")));
+			if(pXMLNode->child(i).has_attribute(_T("IsMultiSelect")))
+				SetAllowMutliSelect((bool)pXMLNode->child(i).attribute(_T("IsMultiSelect")));
+			if(pXMLNode->child(i).has_attribute(_T("ScrollBarWidth")))
+				SetScrollBarWidth((long)pXMLNode->child(i).attribute(_T("ScrollBarWidth")));	
+			if(pXMLNode->child(i).has_attribute(_T("IsLoopScroll")))
+				EnableLoopScroll(pXMLNode->child(i).attribute(_T("IsLoopScroll")));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Frame",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Frame"),6)==0)
 		{
 			LoadFrameFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Borders",8)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Borders"),8)==0)
 		{
 			LoadBorderFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Text",5)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Text"),5)==0)
 		{
 			LoadTextFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Font",5)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Font"),5)==0)
 		{
 			LoadFontFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Texture",8)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Texture"),8)==0)
 		{
 			LoadTextureFromXML(pXMLNode->child(i));
 		}
@@ -749,7 +737,7 @@ bool CD3DSimpleList::LoadFromXml(xml_node * pXMLNode)
 	//×°ÔØ×Ó´°¿Ú
 	for(int i=(int)pXMLNode->children()-1;i>=0;i--)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Childs",7)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Childs"),7)==0)
 		{
 			LoadChildsFromXml(pXMLNode->child(i));
 			break;
@@ -760,7 +748,7 @@ bool CD3DSimpleList::LoadFromXml(xml_node * pXMLNode)
 	{
 		if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DScrollBar))&&
-			(strcmp(m_ChildWndList[i]->GetName(),"SL_ScrollBar")==0)&&
+			(_tcscmp(m_ChildWndList[i]->GetName(),_T("SL_ScrollBar"))==0)&&
 			m_ChildWndList[i]!=m_pScrollBar)
 		{
 			CD3DScrollBar * pScrollBar=(CD3DScrollBar *)m_ChildWndList[i];

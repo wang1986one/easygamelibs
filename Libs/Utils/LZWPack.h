@@ -30,12 +30,13 @@ class CLZWPack;
 typedef CLZWPack	*LPCLZWPack;
 typedef int (* OUTFUN)(LPCLZWPack pack,BYTE ch,LPVOID param);
 typedef int (* INFUN)(LPCLZWPack pack,BYTE& ch,LPVOID param);
+typedef int CODE_TYPE;
 
 class CLZWPack  
 {
-	long			m_OldCode;
-	long			m_NextCode;
-	long			m_NextCodeLimit;
+	CODE_TYPE		m_OldCode;
+	CODE_TYPE		m_NextCode;
+	CODE_TYPE		m_NextCodeLimit;
 	WORD			m_CodeLength;
 	WORD			m_MaxCodeLength;
 	WORD			m_CodeBit;
@@ -47,10 +48,10 @@ class CLZWPack
 	DWORD			m_OutCharCount;
 	DWORD			m_CodeBufferSize;
 
-	long 			*m_pCTlink;
+	CODE_TYPE 		*m_pCTlink;
 	BYTE			*m_pCTfirst;
 	BYTE			*m_pCTlast;	
-	long			*m_pCTnext;
+	CODE_TYPE		*m_pCTnext;
 	IFileAccessor	*m_pFileAccessor;
 
 	BYTE			*m_pOutBuffer;
@@ -62,7 +63,7 @@ class CLZWPack
 	DWORD			m_InBufferPtr;
 
 	BYTE			*m_pOStack;
-	long			m_OStackPtr;
+	int				m_OStackPtr;
 	
 	BYTE			m_CodeChar;
 	WORD			m_Index;
@@ -127,10 +128,10 @@ protected:
 	void UnpackInit();	
 
 
-	long LookUpCT(long code,BYTE ThisChar);
-	void InsertCT(long code,long OldCode);
-	int PutCode(long code);
-	int GetCode(long& Code);
+	CODE_TYPE LookUpCT(CODE_TYPE code,BYTE ThisChar);
+	void InsertCT(CODE_TYPE code,CODE_TYPE OldCode);
+	int PutCode(CODE_TYPE code);
+	int GetCode(CODE_TYPE& Code);
 	int PutChar(BYTE ch)
 	{
 		if(m_OutFun(this,ch,m_OutFunParam)) 
@@ -146,7 +147,7 @@ protected:
 		return m_InFun(this,ch,m_InFunParam);
 	}
 	
-	int PutString(long code);
+	int PutString(CODE_TYPE code);
 	
 	static int OutCharToFile(LPCLZWPack pack,BYTE ch,LPVOID param);
 	static int InCharFromFile(LPCLZWPack pack,BYTE& ch,LPVOID param);

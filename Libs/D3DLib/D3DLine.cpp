@@ -54,7 +54,7 @@ bool CD3DLine::Create(CD3DVector3 P1,CD3DVector3 P2,D3DCOLOR Color1,D3DCOLOR Col
 
 
 	m_pSubMesh->GetMaterial().SetFX(
-		GetDevice()->GetFXManager()->LoadFXFromMemory("DEFAULT_LINE_FX_NT",(void *)DEFAULT_LINE_FX_NT,(int)strlen(DEFAULT_LINE_FX_NT)));
+		GetDevice()->GetFXManager()->LoadFXFromMemory(_T("DEFAULT_LINE_FX_NT"),(void *)DEFAULT_LINE_FX_NT,(int)strlen(DEFAULT_LINE_FX_NT)));
 
 
 	Modify(P1,P2,Color1,Color2);
@@ -95,12 +95,12 @@ CD3DBoundingBox * CD3DLine::GetBoundingBox()
 
 bool CD3DLine::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	PrintSystemLog(0,"CD3DLine被保存");
+	PrintSystemLog(0,_T("CD3DLine被保存"));
 	return CD3DObject::ToSmartStruct(Packet,pResourceManager,Param);
 }
 UINT CD3DLine::GetSmartStructSize(UINT Param)
 {
-	PrintSystemLog(0,"CD3DLine被保存");
+	PrintSystemLog(0,_T("CD3DLine被保存"));
 	return CD3DObject::GetSmartStructSize(Param);
 }
 

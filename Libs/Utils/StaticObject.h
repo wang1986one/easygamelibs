@@ -41,17 +41,17 @@ public:
 			CAutoLock Lock(m_InstanceCriticalSection);
 			if( m_pInstance == NULL )
 			{
-				char ThisEnvVarName[260];
-				sprintf_s(ThisEnvVarName,260,"%s_%u",
+				TCHAR ThisEnvVarName[260];
+				_stprintf_s(ThisEnvVarName,260,_T("%s_%u"),
 					EnvVarName,GetCurProcessID());
-				char InstanceAddrStr[32];
+				TCHAR InstanceAddrStr[32];
 				InstanceAddrStr[0]=0;			
 				GetEnvVar(ThisEnvVarName,InstanceAddrStr,32);
-				m_pInstance=(T *)_atoi64(InstanceAddrStr);
+				m_pInstance=(T *)_tstoi64(InstanceAddrStr);
 				if(m_pInstance==NULL)
 				{
 					m_pInstance = new T;
-					sprintf_s(InstanceAddrStr,32,"%llu",(LONGLONG)m_pInstance);
+					_stprintf_s(InstanceAddrStr,32,_T("%llu"),(LONGLONG)m_pInstance);
 					InstanceAddrStr[31]=0;
 					SetEnvVar(ThisEnvVarName,InstanceAddrStr);
 					//atexit(ReleaseInstance);
@@ -63,17 +63,17 @@ public:
 	static void ReleaseInstance()
 	{
 		CAutoLock Lock(m_InstanceCriticalSection);
-		char ThisEnvVarName[260];
-		sprintf_s(ThisEnvVarName,260,"%s_%u",
+		TCHAR ThisEnvVarName[260];
+		_stprintf_s(ThisEnvVarName,260,_T("%s_%u"),
 			EnvVarName,GetCurProcessID());
-		char InstanceAddrStr[32];
+		TCHAR InstanceAddrStr[32];
 		InstanceAddrStr[0]=0;
 		GetEnvVar(ThisEnvVarName,InstanceAddrStr,32);
-		m_pInstance=(T *)_atoi64(InstanceAddrStr);
+		m_pInstance=(T *)_tstoi64(InstanceAddrStr);
 		if(m_pInstance)
 		{
 			SAFE_DELETE(m_pInstance)			
-			SetEnvVar(ThisEnvVarName,"0");			
+			SetEnvVar(ThisEnvVarName,_T("0"));			
 		}
 		m_pInstance=NULL;		
 	}

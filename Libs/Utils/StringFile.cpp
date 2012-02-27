@@ -11,7 +11,7 @@
 /****************************************************************************/
 #include "StdAfx.h"
 
-CStringFile::CStringFile( const char * pszTextFile ,int FileChannel)
+CStringFile::CStringFile( LPCTSTR pszTextFile ,int FileChannel)
 {
 	m_FileChannel=FileChannel;
 	m_pData = NULL;
@@ -51,9 +51,9 @@ void CStringFile::Destroy()
 }
 void CStringFile::MakeDeflate()
 {
-	int i = 0;
-	char * p;
-	char * p1;
+	UINT i = 0;
+	TCHAR * p;
+	TCHAR * p1;
 	BOOL	bInString = FALSE;
 	for( i = 0;i < GetLineCount();i ++ )
 	{
@@ -72,7 +72,7 @@ void CStringFile::MakeDeflate()
 		*p1 = 0;
 	}
 }
-BOOL CStringFile::LoadFile( const char * pszTextFile )
+BOOL CStringFile::LoadFile( LPCTSTR pszTextFile )
 {
 	IFileAccessor * pFile;
 
@@ -91,44 +91,78 @@ BOOL CStringFile::LoadFile( const char * pszTextFile )
 
 BOOL CStringFile::LoadFile( IFileAccessor * pFile )
 {
-	m_iDataSize=(int)pFile->GetSize();
-	m_pData=new char[m_iDataSize+2];
-	pFile->Read(m_pData,m_iDataSize);	
+	UINT FileSize=(UINT)pFile->GetSize();
+	BYTE * pBuffer=new BYTE[FileSize];
+	bool IsUnicode=false;
+	pFile->Read(pBuffer,FileSize);
+	if(FileSize>=2)
+	{
+		if(pBuffer[0]==0xFF&&pBuffer[1]==0xFE)
+			IsUnicode=true;
+	}
+#ifdef UNICODE
+	if(IsUnicode)
+	{
+		m_iDataSize=FileSize/sizeof(WCHAR);
+		m_pData=new WCHAR[m_iDataSize+2];
+		memcpy(m_pData,pBuffer,FileSize);
+	}
+	else
+	{
+		m_iDataSize=AnsiToUnicode((char *)pBuffer,FileSize,NULL,0);
+		m_pData=new WCHAR[m_iDataSize+2];
+		AnsiToUnicode((char *)pBuffer,FileSize,m_pData,m_iDataSize);
+	}
+#else
+	if(IsUnicode)
+	{
+		m_iDataSize=UnicodeToAnsi((WCHAR *)pBuffer,FileSize/sizeof(WCHAR),NULL,0);
+		m_pData=new char[m_iDataSize+2];
+		UnicodeToAnsi((WCHAR *)pBuffer,FileSize/sizeof(WCHAR),m_pData,m_iDataSize);
+	}
+	else
+	{
+		m_iDataSize=FileSize/sizeof(char);
+		m_pData=new char[m_iDataSize+2];
+		memcpy(m_pData,pBuffer,FileSize);
+	}
+#endif
+	SAFE_DELETE_ARRAY(pBuffer);
 	m_pData[m_iDataSize] = 0;
 	m_pData[m_iDataSize+1] = 0;
 	m_iLineCount = ProcData();
 	return BuildLines();
 }
 
-BOOL CStringFile::LoadFromString(const char * pStr,int Len)
+BOOL CStringFile::LoadFromString(LPCTSTR pStr,int Len)
 {
 	if(Len<0)
-		Len=(int)strlen(pStr);
+		Len=(UINT)_tcslen(pStr);
 	m_iDataSize=Len;
-	m_pData=new char[m_iDataSize+2];
-	strncpy_s(m_pData,m_iDataSize+2,pStr,Len);
+	m_pData=new TCHAR[m_iDataSize+2];
+	_tcsncpy_s(m_pData,m_iDataSize+2,pStr,Len);
 	m_pData[m_iDataSize] = 0;
 	m_pData[m_iDataSize+1] = 0;
 	m_iLineCount = ProcData();
 	return BuildLines();
 }
 
-char * CStringFile::operator[]( int line )
+TCHAR * CStringFile::operator[]( UINT line )
 {
-	if( line < 0 || line >= m_iLineCount )return NULL;
+	if( line >= m_iLineCount )return NULL;
 	return m_pLines[line];
 }
 
 BOOL CStringFile::BuildLines( )
 {
 	if( m_iLineCount == 0 )return FALSE;
-	char * p = m_pData;
-	m_pLines = new char*[m_iLineCount];
-	int len = 0;
-	int ptr = 0;
-	for( int i = 0;i < m_iLineCount;i ++ )
+	TCHAR * p = m_pData;
+	m_pLines = new TCHAR*[m_iLineCount];
+	UINT len = 0;
+	UINT ptr = 0;
+	for( UINT i = 0;i < m_iLineCount;i ++ )
 	{
-		len = (int)strlen( p );
+		len = (UINT)_tcslen( p );
 		if( len > 0 )
 			m_pLines[ptr++] = p;
 		else
@@ -137,16 +171,16 @@ BOOL CStringFile::BuildLines( )
 	}
 	return TRUE;
 }
-int	CStringFile::ProcData()
+UINT	CStringFile::ProcData()
 {
-	int i = 0;
-	char * p = NULL;
-	int linecount = 0;
-	//int charscount = 0;
-	int rptr = 0;
+	UINT i = 0;
+	TCHAR * p = NULL;
+	UINT linecount = 0;
+
+	UINT rptr = 0;
 	bool	binstring = false;
 	bool	newlinestart = false;
-	//char * pstart = NULL;
+
 	for( i = 0;i < m_iDataSize;i ++ )
 	{
 		p = m_pData + i;

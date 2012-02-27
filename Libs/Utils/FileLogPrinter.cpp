@@ -44,7 +44,7 @@ bool CFileLogPrinter::Create(LPCTSTR FileName,DWORD Flag)
 	if(m_Flag&FILE_LOG_SPLIT_BY_DAY)
 	{
 		m_RecentLogTime.FetchLocalTime();
-		LogFileName.Format("%s.%u-%02u-%02u.log",
+		LogFileName.Format(_T("%s.%u-%02u-%02u.log"),
 			(LPCTSTR)m_LogFileName,
 			m_RecentLogTime.Year(),
 			m_RecentLogTime.Month(),
@@ -52,7 +52,7 @@ bool CFileLogPrinter::Create(LPCTSTR FileName,DWORD Flag)
 	}
 	else
 	{
-		LogFileName.Format("%s.log",
+		LogFileName.Format(_T("%s.log"),
 			(LPCTSTR)m_LogFileName);
 	}
 	if(m_Flag&FILE_LOG_APPEND)
@@ -90,7 +90,7 @@ void CFileLogPrinter::PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_list vl
 
 			m_pFileAccessor->Close();
 			m_RecentLogTime=CurTime;
-			LogFileName.Format("%s.%u-%02u-%02u.log",
+			LogFileName.Format(_T("%s.%u-%02u-%02u.log"),
 				(LPCTSTR)m_LogFileName,
 				m_RecentLogTime.Year(),
 				m_RecentLogTime.Month(),
@@ -100,13 +100,11 @@ void CFileLogPrinter::PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_list vl
 				m_pFileAccessor->Seek(0,IFileAccessor::seekEnd);
 		}
 	}
-	CurTime.Format(m_MsgBuff,40960,"[%m-%d %H:%M:%S]:");
-	//sprintf_s(m_MsgBuff,40960,"[%02d-%02d %02d:%02d:%02d]:",
-	//	SystemTime.wMonth,SystemTime.wDay,
-	//	SystemTime.wHour,SystemTime.wMinute,SystemTime.wSecond);
-	m_pFileAccessor->Write(m_MsgBuff,strlen(m_MsgBuff));
-	vsprintf_s( m_MsgBuff,40960, Format, vl );
-	m_pFileAccessor->Write(m_MsgBuff,strlen(m_MsgBuff));
-	m_pFileAccessor->Write("\r\n",2);
+	CurTime.Format(m_MsgBuff,40960,_T("[%m-%d %H:%M:%S]:"));
+	
+	m_pFileAccessor->Write(m_MsgBuff,_tcslen(m_MsgBuff));
+	_vstprintf_s( m_MsgBuff,40960, Format, vl );
+	m_pFileAccessor->Write(m_MsgBuff,_tcslen(m_MsgBuff));
+	m_pFileAccessor->Write(_T("\r\n"),2);
 
 }

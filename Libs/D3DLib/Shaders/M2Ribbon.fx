@@ -4,6 +4,7 @@
 texture TexLay0 ;
 texture TexLay1 ;
 
+float4			GlobalColor=1.0f;
 
 sampler Sampler0 =
 sampler_state
@@ -52,6 +53,7 @@ float4 PShaderWithNormal( float4 Diffuse : COLOR0,
 {	
 	float4 Color=tex2D( Sampler0, Tex0.xy )*Diffuse;
     Color.xyz=Color.xyz*(1.0f-Tex0.z)+FogColor*Tex0.z;
+    Color=Color*GlobalColor;
 	return Color;
 }
 

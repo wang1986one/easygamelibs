@@ -144,7 +144,7 @@ bool CUSOResourceManager::ExportToDir(LPCTSTR Dir)
 {
 	CEasyString ExportDir=MakeFullPath(Dir);
 
-	if(!CreateDirEx(ExportDir+"\\Resource"))
+	if(!CreateDirEx(ExportDir+_T("\\Resource")))
 		return false;	
 
 	IFileAccessor * pFile;
@@ -176,14 +176,14 @@ bool CUSOResourceManager::ExportToDir(LPCTSTR Dir)
 	{
 		CEasyString ObjectName=ResourceList[i]->GetName();
 		ObjectName.Replace(':','_');
-		ObjectName="Resource\\"+ObjectName+".USO";
+		ObjectName=_T("Resource\\")+ObjectName+_T(".USO");
 		
 		
 		ResourceList[i]->SetName(ObjectName);
 
 		AddResource(ResourceList[i]);
 
-		ObjectName=ExportDir+"\\"+ObjectName;
+		ObjectName=ExportDir+_T("\\")+ObjectName;
 
 		CEasyString PathDir=GetPathDirectory(ObjectName);
 		CreateDirEx(PathDir);
@@ -210,11 +210,11 @@ bool CUSOResourceManager::ExportToDir(LPCTSTR Dir)
 		pFile->Close();
 	}
 
-	for(int i=0;i<(int)m_Objects.size();i++)
+	for(int i=0;i<(int)m_Objects.GetCount();i++)
 	{
 		CEasyString ObjectName=m_Objects[i]->GetName();
 		ObjectName.Replace(':','_');		
-		ObjectName=ExportDir+"\\"+ObjectName+".USO";
+		ObjectName=ExportDir+_T("\\")+ObjectName+_T(".USO");
 		CEasyString PathDir=GetPathDirectory(ObjectName);
 		CreateDirEx(PathDir);
 		
@@ -290,7 +290,7 @@ bool CUSOResourceManager::AddResource(CNameObject * pResource)
 	{
 		if((*ppOldResource)!=pResource)
 		{
-			PrintSystemLog(0,"资源[%s]已经存在且对象不同，旧对象将被替代",(*ppOldResource)->GetName());
+			PrintSystemLog(0,_T("资源[%s]已经存在且对象不同，旧对象将被替代"),(*ppOldResource)->GetName());
 		}
 		SAFE_RELEASE(*ppOldResource);
 	}
@@ -347,7 +347,7 @@ void CUSOResourceManager::AddObject(CNameObject * pObject)
 	if(pObject==NULL)
 		return;
 	pObject->AddUseRef();
-	m_Objects.push_back(pObject);
+	m_Objects.Add(pObject);
 	PickResource(pObject);
 
 }
@@ -359,9 +359,9 @@ void CUSOResourceManager::PickResource(CNameObject * pObject)
 
 CNameObject * CUSOResourceManager::GetObject(LPCTSTR ObjectName)
 {
-	for(int i=0;i<(int)m_Objects.size();i++)
+	for(int i=0;i<(int)m_Objects.GetCount();i++)
 	{
-		if(_stricmp(m_Objects[i]->GetName(),ObjectName)==0)
+		if(_tcsicmp(m_Objects[i]->GetName(),ObjectName)==0)
 			return m_Objects[i];
 	}
 	return NULL;
@@ -372,7 +372,7 @@ CNameObject * CUSOResourceManager::GetObjectRecursive(LPCTSTR ObjectName)
 	CNameObject * pObject=GetObject(ObjectName);
 	if(pObject)
 		return pObject;
-	for(int i=0;i<(int)m_Objects.size();i++)
+	for(int i=0;i<(int)m_Objects.GetCount();i++)
 	{
 		if(m_Objects[i]->IsKindOf(GET_CLASS_INFO(CTreeObject)))
 		{
@@ -384,26 +384,26 @@ CNameObject * CUSOResourceManager::GetObjectRecursive(LPCTSTR ObjectName)
 	return NULL;
 }
 
-int CUSOResourceManager::GetObjectCount()
+UINT CUSOResourceManager::GetObjectCount()
 {
-	return (int)m_Objects.size();
+	return m_Objects.GetCount();
 }
 
-CNameObject * CUSOResourceManager::GetObjectByIndex(int Index)
+CNameObject * CUSOResourceManager::GetObjectByIndex(UINT Index)
 {
-	if(Index>=0&&Index<(int)m_Objects.size())
+	if(Index<m_Objects.GetCount())
 		return m_Objects[Index];
 	return NULL;
 }
 
 bool CUSOResourceManager::DeleteObject(CNameObject * pObject)
 {
-	for(int i=0;i<(int)m_Objects.size();i++)
+	for(UINT i=0;i<m_Objects.GetCount();i++)
 	{
 		if(m_Objects[i]==pObject)
 		{
 			SAFE_RELEASE(m_Objects[i]);
-			m_Objects.erase(m_Objects.begin()+i);
+			m_Objects.Delete(i);
 			return true;
 		}
 	}
@@ -412,11 +412,11 @@ bool CUSOResourceManager::DeleteObject(CNameObject * pObject)
 
 void CUSOResourceManager::ClearAllObject()
 {
-	for(int i=0;i<(int)m_Objects.size();i++)
+	for(UINT i=0;i<m_Objects.GetCount();i++)
 	{
 		SAFE_RELEASE(m_Objects[i]);
 	}
-	m_Objects.clear();
+	m_Objects.Clear();
 }
 
 bool CUSOResourceManager::ReadResourceBlock(IFileAccessor * pFile,USO_BLOCK_HEAD& BlockHead)
@@ -464,11 +464,11 @@ bool CUSOResourceManager::ReadResourceBlock(IFileAccessor * pFile,USO_BLOCK_HEAD
 			{
 				AddResource(pObject);				
 			}			
-			if(pObject->IsKindOf("CD3DFX"))
+			if(pObject->IsKindOf(_T("CD3DFX")))
 			{
 				FXLoadTime+=ObjectTimer.GetPastTime();
 			}
-			if(pObject->IsKindOf("CD3DTexture"))
+			if(pObject->IsKindOf(_T("CD3DTexture")))
 			{
 				TextureLoadTime+=ObjectTimer.GetPastTime();
 			}
@@ -476,7 +476,7 @@ bool CUSOResourceManager::ReadResourceBlock(IFileAccessor * pFile,USO_BLOCK_HEAD
 		}		
 		ReadSize+=ObjectPacket.GetDataLen();
 	}	
-	PrintSystemLog(0,"读取%u个资源对象,花费%u毫秒,其中读取FX花费%u毫秒,读取纹理花费%u毫秒",
+	PrintSystemLog(0,_T("读取%u个资源对象,花费%u毫秒,其中读取FX花费%u毫秒,读取纹理花费%u毫秒"),
 		m_Resources.GetObjectCount(),Timer.GetPastTime(),FXLoadTime,TextureLoadTime);
 	if(ReadSize>=BlockHead.Size)
 		return true;
@@ -521,11 +521,11 @@ bool CUSOResourceManager::ReadObjectBlock(IFileAccessor * pFile,USO_BLOCK_HEAD& 
 		{
 			if(pObject->FromSmartStruct(ObjectPacket,this,0))
 			{
-				m_Objects.push_back(pObject);
+				m_Objects.Add(pObject);
 			}
 			else
 			{
-				PrintSystemLog(0,"CUSOFile::ReadObjectBlock:装载对象%s:%s失败",szType,szName);
+				PrintSystemLog(0,_T("CUSOFile::ReadObjectBlock:装载对象%s:%s失败"),szType,szName);
 				
 			}
 
@@ -534,8 +534,8 @@ bool CUSOResourceManager::ReadObjectBlock(IFileAccessor * pFile,USO_BLOCK_HEAD& 
 
 		ReadSize+=ObjectPacket.GetDataLen();
 	}
-	PrintSystemLog(0,"读取%u个对象,花费%u毫秒",
-		m_Objects.size(),Timer.GetPastTime());
+	PrintSystemLog(0,_T("读取%u个对象,花费%u毫秒"),
+		m_Objects.GetCount(),Timer.GetPastTime());
 	if(ReadSize>=BlockHead.Size)
 		return true;
 	return false;
@@ -618,7 +618,7 @@ bool CUSOResourceManager::WriteObjectBlock(IFileAccessor * pFile,CNameObject * p
 	}
 	else
 	{
-		for(int i=0;i<(int)m_Objects.size();i++)
+		for(UINT i=0;i<m_Objects.GetCount();i++)
 		{
 			UINT ObjectSize=m_Objects[i]->GetSmartStructSize(0);
 
@@ -649,17 +649,17 @@ CNameObject * CUSOResourceManager::CreateObject(LPCTSTR TypeName,LPCTSTR ObjectN
 	CNameObject * pObject=NULL;
 
 	CLASS_INFO * pClassInfo=NULL;
-	std::map<std::string,CLASS_INFO *>::iterator itr=m_ObjectCreateInfoByName.find(ObjectName);
-	if(itr!=m_ObjectCreateInfoByName.end())
+	CLASS_INFO ** ppClassInfo=m_ObjectCreateInfoByName.Find(ObjectName);
+	if(ppClassInfo)
 	{
-		pClassInfo=itr->second;
+		pClassInfo=*ppClassInfo;
 	}
 	if(pClassInfo==NULL)
 	{
-		itr=m_ObjectCreateInfoByType.find(TypeName);
-		if(itr!=m_ObjectCreateInfoByType.end())
+		ppClassInfo=m_ObjectCreateInfoByType.Find(TypeName);
+		if(ppClassInfo)
 		{
-			pClassInfo=itr->second;
+			pClassInfo=*ppClassInfo;
 		}
 	}
 	if(pClassInfo==NULL)
@@ -671,7 +671,7 @@ CNameObject * CUSOResourceManager::CreateObject(LPCTSTR TypeName,LPCTSTR ObjectN
 
 	if(ReferenceWhenExist)
 	{
-		for(int i=0;i<(int)m_ObjectCreateFilterList.size();i++)
+		for(int i=0;i<(int)m_ObjectCreateFilterList.GetCount();i++)
 		{
 			pObject=m_ObjectCreateFilterList[i]->FindObject(pClassInfo,ObjectName);
 			if(pObject)
@@ -691,7 +691,7 @@ CNameObject * CUSOResourceManager::CreateObject(LPCTSTR TypeName,LPCTSTR ObjectN
 	if(pObject==NULL)
 		return NULL;
 
-	for(int i=0;i<(int)m_ObjectCreateFilterList.size();i++)
+	for(int i=0;i<(int)m_ObjectCreateFilterList.GetCount();i++)
 	{
 		if(!m_ObjectCreateFilterList[i]->OnObjectCreate(pObject))
 		{
@@ -708,20 +708,20 @@ CNameObject * CUSOResourceManager::CreateObject(LPCTSTR TypeName,LPCTSTR ObjectN
 
 void CUSOResourceManager::AddObjectCreateInfoByName(LPCTSTR ObjectName,CLASS_INFO * pClassInfo)
 {
-	m_ObjectCreateInfoByName[std::string(ObjectName)]=pClassInfo;
+	m_ObjectCreateInfoByName[ObjectName]=pClassInfo;
 }
 
 void CUSOResourceManager::ClearObjectCreateInfoByName()
 {
-	m_ObjectCreateInfoByName.clear();
+	m_ObjectCreateInfoByName.Clear();
 }
 
 void CUSOResourceManager::AddObjectCreateInfoByType(LPCTSTR ObjectType,CLASS_INFO * pClassInfo)
 {
-	m_ObjectCreateInfoByType[std::string(ObjectType)]=pClassInfo;
+	m_ObjectCreateInfoByType[ObjectType]=pClassInfo;
 }
 
 void CUSOResourceManager::ClearObjectCreateInfoByType()
 {
-	m_ObjectCreateInfoByType.clear();
+	m_ObjectCreateInfoByType.Clear();
 }

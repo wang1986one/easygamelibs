@@ -20,7 +20,7 @@ inline CEasyString GetModulePath(HMODULE hModule)
 
 	char   exePath[NAME_MAX+1];
 	char   fullPath[MAX_PATH+1];
-	sprintf(exePath,"/proc/%d/exe",getpid());
+	sprintf(exePath,_T("/proc/%d/exe"),getpid());
 	int Len=readlink(exePath,fullPath,MAX_PATH);
 	if(Len>0)
 	{
@@ -42,7 +42,7 @@ inline CEasyString GetModuleFilePath(HMODULE hModule)
 
 	char   exePath[NAME_MAX+1];
 	char   fullPath[MAX_PATH+1];
-	sprintf(exePath,"/proc/%d/exe",getpid());
+	sprintf(exePath,_T("/proc/%d/exe"),getpid());
 	int Len=readlink(exePath,fullPath,MAX_PATH);
 	if(Len>0)
 	{
@@ -98,13 +98,13 @@ inline int GetSystemCPUCount()
 	FILE * pFile=NULL;
 	int CPUCount=0;
 
-	pFile=fopen("/proc/cpuinfo","r");
+	pFile=fopen(_T("/proc/cpuinfo"),_T("r"));
 	if(pFile)
 	{
 		char LineBuffer[1024];
 		while(fgets(LineBuffer,1023,pFile))
 		{
-			if(_strnicmp(LineBuffer,"processor",9)==0)
+			if(_strnicmp(LineBuffer,_T("processor"),9)==0)
 			{
 				CPUCount++;
 			}
@@ -129,7 +129,7 @@ inline bool CreateDirEx(LPCTSTR szDirName)
 			{
 				if(mkdir(DirName,S_IRWXU)==-1)
 				{
-					PrintImportantLog(0,"mkdir failed:%d",errno);
+					PrintImportantLog(0,_T("mkdir failed:%d"),errno);
 					return false;
 				}
 				else
@@ -144,7 +144,7 @@ inline bool CreateDirEx(LPCTSTR szDirName)
 	{
 		if(mkdir(DirName,S_IRWXU)==-1)
 		{
-			PrintImportantLog(0,"mkdir failed:%d",errno);
+			PrintImportantLog(0,_T("mkdir failed:%d"),errno);
 			return false;
 		}
 		else

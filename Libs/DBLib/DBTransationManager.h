@@ -29,7 +29,7 @@ public:
 		DBTM_FLAG_LOG_PERFORMANCE=1,
 	};
 protected:
-	std::vector<CDBTransationWorkThread *>	m_WorkThreads;
+	CEasyArray<CDBTransationWorkThread *>	m_WorkThreads;
 	IDatabase *								m_pDatabase;
 	UINT									m_Flag;
 

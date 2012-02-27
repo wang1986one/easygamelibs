@@ -22,6 +22,8 @@ CD3DSubMeshMaterial::CD3DSubMeshMaterial(void)
 	m_GlobalColor.g=1.0f;
 	m_GlobalColor.b=1.0f;	
 	m_pFX=NULL;
+	m_GlobalColorFXParamName="GlobalColor";
+	ZeroMemory(m_HashCode,sizeof(m_HashCode));
 }
 
 CD3DSubMeshMaterial::~CD3DSubMeshMaterial(void)
@@ -95,6 +97,26 @@ void CD3DSubMeshMaterial::ClearAllTexture()
 	m_TextureList.Clear();
 }
 
+void CD3DSubMeshMaterial::CaculateHashCode()
+{
+	CHashMD5 Hasher;
+	Hasher.AddData((BYTE *)&m_GlobalColor,sizeof(m_GlobalColor));
+	for(UINT i=0;i<m_TextureList.GetCount();i++)
+	{
+		Hasher.AddData((BYTE *)&(m_TextureList[i].pTexture),sizeof(m_TextureList[i].pTexture));
+		UINT64 Flag=m_TextureList[i].Property&(D3D_TEX_FLAG_UV_ANI|D3D_TEX_FLAG_DEPTH_TEX);
+		Hasher.AddData((BYTE *)&(Flag),sizeof(Flag));
+		if(Flag&D3D_TEX_FLAG_UV_ANI)
+			Hasher.AddData((BYTE *)&(m_TextureList[i].UVTransform),sizeof(m_TextureList[i].UVTransform));
+	}
+	Hasher.AddData((BYTE *)&(m_pFX),sizeof(m_pFX));
+
+	
+	Hasher.MD5Final();
+	Hasher.GetHashCode((BYTE *)m_HashCode);
+}
+
+
 bool CD3DSubMeshMaterial::CloneFrom(CNameObject * pObject,UINT Param)
 {
 	if(!pObject->IsKindOf(GET_CLASS_INFO(CD3DSubMeshMaterial)))
@@ -147,6 +169,8 @@ bool CD3DSubMeshMaterial::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager
 		if(m_TextureList[i].pTexture)
 			CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_TEX_TEXTURE,m_TextureList[i].pTexture->GetName()));
 		CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_TEX_PROPERTY,m_TextureList[i].Property));
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_TEX_TEX_FX_PARAM_NAME,(LPCSTR)m_TextureList[i].TexFXParamName));
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(SubPacket.AddMember(SST_TEX_MAT_FX_PARAM_NAME,(LPCSTR)m_TextureList[i].MatFXParamName));
 		if(!Packet.FinishMember(SST_D3DSMM_TEXTURE,SubPacket.GetDataLen()))
 			return false;
 	}
@@ -154,6 +178,8 @@ bool CD3DSubMeshMaterial::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager
 	{
 		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DSMM_FX,m_pFX->GetName()));		
 	}
+	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DSMM_GLOBAL_COLOR,(char *)&m_GlobalColor,sizeof(m_GlobalColor)));
+	CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DSMM_GLOBAL_COLOR_FX_PARAM_NAME,(LPCSTR)m_GlobalColorFXParamName));
 	return true;
 }
 bool CD3DSubMeshMaterial::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
@@ -169,19 +195,21 @@ bool CD3DSubMeshMaterial::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManag
 		switch(MemberID)
 		{
 		case SST_D3DSMM_MATERIAL:
-			memcpy(&m_Material,(LPCTSTR)Value,sizeof(m_Material));
+			memcpy(&m_Material,(LPCSTR)Value,sizeof(m_Material));
 			break;
 		case SST_D3DSMM_TEXTURE:
 			{
 				CSmartStruct SubPacket=Value;
 				LPCTSTR szResourceName=SubPacket.GetMember(SST_TEX_TEXTURE);				
 				UINT64 TextureProperty=SubPacket.GetMember(SST_TEX_PROPERTY);
+				LPCSTR szTexFXName=SubPacket.GetMember(SST_TEX_TEX_FX_PARAM_NAME);
+				LPCSTR szMatFXName=SubPacket.GetMember(SST_TEX_MAT_FX_PARAM_NAME);
 				CD3DTexture * pTexture=(CD3DTexture *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DTexture));
 				if(pTexture)
 				{
 					pTexture->AddUseRef();					
 				}
-				AddTexture(pTexture,TextureProperty);
+				AddTexture(pTexture,TextureProperty,szTexFXName,szMatFXName);
 			}
 			break;
 		case SST_D3DSMM_FX:			
@@ -193,6 +221,12 @@ bool CD3DSubMeshMaterial::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManag
 					m_pFX->AddUseRef();
 				}				
 			}
+			break;
+		case SST_D3DSMM_GLOBAL_COLOR:
+			memcpy(&m_GlobalColor,(LPCSTR)Value,sizeof(m_GlobalColor));
+			break;
+		case SST_D3DSMM_GLOBAL_COLOR_FX_PARAM_NAME:
+			m_GlobalColorFXParamName=(LPCSTR)Value;
 			break;
 		}
 	}

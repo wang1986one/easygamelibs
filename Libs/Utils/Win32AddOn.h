@@ -82,6 +82,7 @@
 #include "tchar.h"
 #include <time.h>
 #include <conio.h>
+#include <Dbghelp.h>
 
 
 #pragma warning (push)
@@ -89,15 +90,7 @@
 #include "atomic_ops\include\atomic_ops.h"
 #pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable : 4267)	// type conversion
-#pragma warning (disable : 4311)	// pointer truncation
-#pragma warning (disable : 4244)	// type conversion
 
-#include "PugXML.h"
-using namespace pug;
-
-#pragma warning (pop)
 
 typedef double DOUBLE;
 

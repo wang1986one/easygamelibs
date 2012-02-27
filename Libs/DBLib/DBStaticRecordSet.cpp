@@ -41,7 +41,7 @@ int CDBStaticRecordSet::Init(LPCVOID pData,int DataSize)
 	RecordBuffer.Peek(PeekPtr,&ColNum,sizeof(int));
 	if(ColNum<=0)
 		return DBERR_NO_RECORDS;
-	m_pColumnInfos.resize(ColNum);
+	m_pColumnInfos.Resize(ColNum);
 	for(int i=0;i<ColNum;i++)
 	{
 		RecordBuffer.Peek(PeekPtr,&(m_pColumnInfos[i]),sizeof(DB_COLUMN_INFO));
@@ -50,10 +50,10 @@ int CDBStaticRecordSet::Init(LPCVOID pData,int DataSize)
 	RecordBuffer.Peek(PeekPtr,&RecordNum,sizeof(int));
 	if(RecordNum<=0)
 		return DBERR_NO_RECORDS;
-	m_Records.resize(RecordNum);
+	m_Records.Resize(RecordNum);
 	for(int i=0;i<RecordNum;i++)
 	{
-		m_Records[i].resize(ColNum);		
+		m_Records[i].Resize(ColNum);		
 		for(int j=0;j<ColNum;j++)
 		{
 			int ValueSize=0;
@@ -81,25 +81,25 @@ int CDBStaticRecordSet::Init(LPCVOID pData,int DataSize)
 
 void CDBStaticRecordSet::Destory()
 {
-	m_pColumnInfos.clear();
-	m_Records.clear();
+	m_pColumnInfos.Clear();
+	m_Records.Clear();
 	m_CurRow=0;
 }
 
 
 int CDBStaticRecordSet::GetRecordCount()
 {
-	return (int)m_Records.size();
+	return (int)m_Records.GetCount();
 }
 
 int CDBStaticRecordSet::GetColumnCount()
 {
-	return (int)m_pColumnInfos.size();
+	return (int)m_pColumnInfos.GetCount();
 }
 
 LPCTSTR CDBStaticRecordSet::GetColumnName(int Index)
 {
-	if(Index>=0&&Index<(int)m_pColumnInfos.size())
+	if(Index>=0&&Index<(int)m_pColumnInfos.GetCount())
 	{
 		return m_pColumnInfos[Index].Name;
 	}
@@ -108,7 +108,7 @@ LPCTSTR CDBStaticRecordSet::GetColumnName(int Index)
 
 int CDBStaticRecordSet::GetIndexByColumnName(LPCTSTR Name)
 {
-	for(int i=0;i<(int)m_pColumnInfos.size();i++)
+	for(int i=0;i<(int)m_pColumnInfos.GetCount();i++)
 	{
 		if(_strnicmp(m_pColumnInfos[i].Name,Name,MAX_COLUMN_NAME)==0)
 			return i;
@@ -118,7 +118,7 @@ int CDBStaticRecordSet::GetIndexByColumnName(LPCTSTR Name)
 
 DB_COLUMN_INFO * CDBStaticRecordSet::GetColumnInfo(int Index)
 {
-	if(Index>=0&&Index<(int)m_pColumnInfos.size())
+	if(Index>=0&&Index<(int)m_pColumnInfos.GetCount())
 	{
 		return &(m_pColumnInfos[Index]);
 	}
@@ -128,10 +128,10 @@ DB_COLUMN_INFO * CDBStaticRecordSet::GetColumnInfo(int Index)
 
 CDBValue& CDBStaticRecordSet::GetField(int Index)
 {
-	if(m_CurRow>=0&&m_CurRow<(int)m_Records.size())
+	if(m_CurRow>=0&&m_CurRow<(int)m_Records.GetCount())
 	{	
 		CDBValueRow& Record=m_Records[m_CurRow];
-		if(Index>=0&&Index<(int)Record.size())
+		if(Index>=0&&Index<(int)Record.GetCount())
 		{
 			return Record[Index];
 		}
@@ -141,7 +141,7 @@ CDBValue& CDBStaticRecordSet::GetField(int Index)
 
 CDBValue& CDBStaticRecordSet::GetField(LPCTSTR Name)
 {
-	if(m_CurRow>=0&&m_CurRow<(int)m_Records.size())
+	if(m_CurRow>=0&&m_CurRow<(int)m_Records.GetCount())
 	{	
 		CDBValueRow& Record=m_Records[m_CurRow];
 		int Index=GetIndexByColumnName(Name);
@@ -155,7 +155,7 @@ CDBValue& CDBStaticRecordSet::GetField(LPCTSTR Name)
 
 int CDBStaticRecordSet::MoveFirst()
 {
-	if((int)m_Records.size()<=0)
+	if((int)m_Records.GetCount()<=0)
 		return DBERR_NO_RECORDS;
 	m_CurRow=0;
 	return DBERR_SUCCEED;
@@ -163,9 +163,9 @@ int CDBStaticRecordSet::MoveFirst()
 
 int CDBStaticRecordSet::MoveLast()
 {
-	if((int)m_Records.size()<=0)
+	if((int)m_Records.GetCount()<=0)
 		return DBERR_NO_RECORDS;
-	m_CurRow=(int)m_Records.size();
+	m_CurRow=(int)m_Records.GetCount();
 	return DBERR_SUCCEED;
 }
 
@@ -173,9 +173,9 @@ int CDBStaticRecordSet::MoveNext()
 {
 	m_CurRow++;
 
-	if((int)m_Records.size()<=0)
+	if((int)m_Records.GetCount()<=0)
 		return DBERR_NO_RECORDS;
-	if(m_CurRow>=(int)m_Records.size())
+	if(m_CurRow>=(int)m_Records.GetCount())
 		return DBERR_IS_RECORDSET_TAIL;	
 
 	return DBERR_SUCCEED;
@@ -185,7 +185,7 @@ int CDBStaticRecordSet::MovePrevious()
 {
 	m_CurRow--;
 
-	if((int)m_Records.size()<=0)
+	if((int)m_Records.GetCount()<=0)
 		return DBERR_NO_RECORDS;
 	if(m_CurRow<0)
 		return DBERR_IS_RECORDSET_HEAD;
@@ -195,9 +195,9 @@ int CDBStaticRecordSet::MovePrevious()
 
 int CDBStaticRecordSet::MoveTo(int Index)
 {
-	if((int)m_Records.size()<=0)
+	if((int)m_Records.GetCount()<=0)
 		return DBERR_NO_RECORDS;
-	if(Index<0||Index>=(int)m_Records.size())
+	if(Index<0||Index>=(int)m_Records.GetCount())
 		return DBERR_INVALID_RECORD_POSITION;
 	m_CurRow=Index;
 	return DBERR_SUCCEED;

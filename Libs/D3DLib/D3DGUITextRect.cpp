@@ -78,12 +78,12 @@ void CD3DGUITextRect::SetRender(CD3DBaseRender * pRender)
 		m_pTexture=new CD3DTextTexture(GetDevice()->GetTextureManager());//->CreateTextTexture("[TextTexture]",NULL,(int)m_Rect.Width(),(int)m_Rect.Height(),1,0xffffffff);
 		if(!m_pTexture->Create(NULL,(int)m_Rect.Width(),(int)m_Rect.Height(),1,0xffffffff))
 		{
-			PrintD3DLog(0,"CD3DGUITextRect::SetRender:创建文字纹理失败");
+			PrintD3DLog(0,_T("CD3DGUITextRect::SetRender:创建文字纹理失败"));
 		}
 		if(!m_SubMesh.GetMaterial().SetTexture(0,m_pTexture))
-			m_SubMesh.GetMaterial().AddTexture(m_pTexture,0);
+			m_SubMesh.GetMaterial().AddTexture(m_pTexture,0,"","");
 		if(m_SubMesh.GetMaterial().GetFX()==NULL)
-			SetFXFromMemory("TEXT_RECT_FX",TEXT_RECT_FX,(int)strlen(TEXT_RECT_FX));
+			SetFXFromMemory(_T("TEXT_RECT_FX"),(LPVOID)TEXT_RECT_FX,(int)strlen(TEXT_RECT_FX));
 		CreateVertex();
 	}
 }
@@ -298,7 +298,7 @@ bool CD3DGUITextRect::SetFX(LPCTSTR FXFileName)
 	return false;
 }
 
-bool CD3DGUITextRect::SetFXFromMemory(LPCTSTR FXName,LPCTSTR FXContent,int Size)
+bool CD3DGUITextRect::SetFXFromMemory(LPCTSTR FXName,LPVOID FXContent,int Size)
 {
 	D3DLOCK_FOR_OBJECT_MODIFY
 	CD3DFX * pFX=GetDevice()->GetFXManager()->LoadFXFromMemory(FXName,(void *)FXContent,Size);

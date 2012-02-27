@@ -36,18 +36,18 @@ BOOL CFileSearcher::FindFirst(LPCTSTR FindPattern)
 		return FALSE;
 	}
 	m_IsFinded=true;
-	char FullPath[MAX_PATH];
+	TCHAR FullPath[MAX_PATH];
 	if(_tfullpath(FullPath,FindPattern,MAX_PATH)==NULL)
 	{
 		Close();
 		return FALSE;
 	}
-	char Dir[MAX_PATH];
-	_splitpath_s(FullPath,m_SearchDir,MAX_PATH,Dir,MAX_PATH,NULL,0,NULL,0);
-	strcat_s(m_SearchDir,MAX_PATH,Dir);
-	int len=(int)strlen(m_SearchDir);
+	TCHAR Dir[MAX_PATH];
+	_tsplitpath_s(FullPath,m_SearchDir,MAX_PATH,Dir,MAX_PATH,NULL,0,NULL,0);
+	_tcscat_s(m_SearchDir,MAX_PATH,Dir);
+	int len=(int)_tcslen(m_SearchDir);
 	if(m_SearchDir[len-1]!='\\'&&m_SearchDir[len-1]!='/')
-		strcat_s(m_SearchDir,MAX_PATH,"\\");
+		_tcscat_s(m_SearchDir,MAX_PATH,_T("\\"));
 	return TRUE;
 }
 
@@ -94,7 +94,7 @@ CEasyString CFileSearcher::GetFileDirect()
 
 CEasyString CFileSearcher::GetFileTitle()
 {
-	char Title[MAX_PATH];
+	TCHAR Title[MAX_PATH];
 
 	_tsplitpath_s(m_FindedFileInfo.cFileName,NULL,0,NULL,0,Title,MAX_PATH,NULL,0);
 	return Title;
@@ -102,7 +102,7 @@ CEasyString CFileSearcher::GetFileTitle()
 
 CEasyString CFileSearcher::GetFileExt()
 {
-	char Ext[MAX_PATH];
+	TCHAR Ext[MAX_PATH];
 
 	_tsplitpath_s(m_FindedFileInfo.cFileName,NULL,0,NULL,0,NULL,0,Ext,MAX_PATH);
 	return Ext;
@@ -110,7 +110,7 @@ CEasyString CFileSearcher::GetFileExt()
 
 CEasyString CFileSearcher::GetFileURL()
 {
-	return "file://"+GetFilePath();
+	return _T("file://")+GetFilePath();
 }
 
 ULONG64 CFileSearcher::GetFileSize()
@@ -186,5 +186,5 @@ CEasyString CFileSearcher::GetLogicDriveName(UINT Index)
 	if(Index<m_LogicDriveCount)
 		return m_LogicalDriveNames+Index*4;
 	else
-		return "";
+		return _T("");
 }

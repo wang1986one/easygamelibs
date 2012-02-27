@@ -75,7 +75,7 @@ bool CD3DWOWWMOModelResource::LoadFromFile(LPCTSTR ModelFileName)
 		return false;
 	if(!pFile->Open(ModelFileName,IFileAccessor::modeRead))
 	{
-		PrintD3DLog(0,"文件%s打开失败",ModelFileName);
+		PrintD3DLog(0,_T("文件%s打开失败"),ModelFileName);
 		pFile->Release();
 		return false;	
 	}
@@ -84,7 +84,7 @@ bool CD3DWOWWMOModelResource::LoadFromFile(LPCTSTR ModelFileName)
 
 	if(!WMOChunk.Load(pFile))
 	{
-		PrintD3DLog(0,"文件%s格式错误",ModelFileName);
+		PrintD3DLog(0,_T("文件%s格式错误"),ModelFileName);
 		pFile->Release();
 		return false;
 	}
@@ -167,7 +167,7 @@ bool CD3DWOWWMOModelResource::LoadFromFile(LPCTSTR ModelFileName)
 	UINT PortalCount=pPortalInfos->ChunkSize/sizeof(WMOPortalInfo);
 	if(pHeader->PortalCount!=PortalCount)
 	{
-		PrintD3DLog(0,"Portal数量有异常");
+		PrintD3DLog(0,_T("Portal数量有异常"));
 	}
 
 	for(UINT i=0;i<GroupPortalCount;i++)
@@ -196,12 +196,12 @@ bool CD3DWOWWMOModelResource::LoadFromFile(LPCTSTR ModelFileName)
 			}
 			else
 			{
-				PrintD3DLog(0,"Portal(%d)找不到对应Group(%d)",i,PortalInfo.GroupIndex);
+				PrintD3DLog(0,_T("Portal(%d)找不到对应Group(%d)"),i,PortalInfo.GroupIndex);
 			}
 		}
 		else
 		{
-			PrintD3DLog(0,"Portal(%d)找不到",Index);
+			PrintD3DLog(0,_T("Portal(%d)找不到"),Index);
 		}
 	}
 
@@ -563,11 +563,11 @@ bool CD3DWOWWMOModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceM
 						m_DoodadInfos[DoodadInfoCount].pDoodadModel=(CD3DWOWM2ModelResource *)pResourceManager->FindResource(szResourceName,GET_CLASS_INFO(CD3DWOWM2ModelResource));
 						if(m_DoodadInfos[DoodadInfoCount].pDoodadModel)
 							m_DoodadInfos[DoodadInfoCount].pDoodadModel->AddUseRef();
-						memcpy(&(m_DoodadInfos[DoodadInfoCount].Translation),(LPCTSTR)DoodadInfo.GetMember(SST_DI_TRANSLATION),
+						memcpy(&(m_DoodadInfos[DoodadInfoCount].Translation),(LPCSTR)DoodadInfo.GetMember(SST_DI_TRANSLATION),
 							sizeof(m_DoodadInfos[DoodadInfoCount].Translation));
-						memcpy(&(m_DoodadInfos[DoodadInfoCount].Rotation),(LPCTSTR)DoodadInfo.GetMember(SST_DI_ROTATION),
+						memcpy(&(m_DoodadInfos[DoodadInfoCount].Rotation),(LPCSTR)DoodadInfo.GetMember(SST_DI_ROTATION),
 							sizeof(m_DoodadInfos[DoodadInfoCount].Rotation));
-						memcpy(&(m_DoodadInfos[DoodadInfoCount].Scaling),(LPCTSTR)DoodadInfo.GetMember(SST_DI_SCALING),
+						memcpy(&(m_DoodadInfos[DoodadInfoCount].Scaling),(LPCSTR)DoodadInfo.GetMember(SST_DI_SCALING),
 							sizeof(m_DoodadInfos[DoodadInfoCount].Scaling));
 						m_DoodadInfos[DoodadInfoCount].Color=DoodadInfo.GetMember(SST_DI_COLOR);
 						m_DoodadInfos[DoodadInfoCount].GroupIndex=DoodadInfo.GetMember(SST_DI_GROUP_INDEX);
@@ -622,7 +622,7 @@ bool CD3DWOWWMOModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceM
 								m_Groups[GroupCount].Flags=Value;
 								break;
 							case SST_GI_BOUNDING_BOX:
-								memcpy(&(m_Groups[GroupCount].BoundingBox),(LPCTSTR)Value,sizeof(m_Groups[GroupCount].BoundingBox));
+								memcpy(&(m_Groups[GroupCount].BoundingBox),(LPCSTR)Value,sizeof(m_Groups[GroupCount].BoundingBox));
 								break;
 							case SST_GI_PORTAL_LIST:
 								{
@@ -677,14 +677,14 @@ bool CD3DWOWWMOModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceM
 								{
 									UINT IndexCount=Value.GetLength()/sizeof(WORD);
 									m_Groups[GroupCount].IndexList.Resize(IndexCount);
-									memcpy(m_Groups[GroupCount].IndexList.GetBuffer(),(LPCTSTR)Value,sizeof(WORD)*IndexCount);
+									memcpy(m_Groups[GroupCount].IndexList.GetBuffer(),(LPCSTR)Value,sizeof(WORD)*IndexCount);
 								}
 								break;
 							case SST_GI_FACE_VERTEX_LIST:
 								{
 									UINT VertexCount=Value.GetLength()/sizeof(MODEL_VERTEXT);
 									m_Groups[GroupCount].VertexList.Resize(VertexCount);
-									memcpy(m_Groups[GroupCount].VertexList.GetBuffer(),(LPCTSTR)Value,sizeof(MODEL_VERTEXT)*VertexCount);
+									memcpy(m_Groups[GroupCount].VertexList.GetBuffer(),(LPCSTR)Value,sizeof(MODEL_VERTEXT)*VertexCount);
 								}
 								break;
 							case SST_GI_BSP_TREE:
@@ -713,7 +713,7 @@ bool CD3DWOWWMOModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceM
 								{
 									UINT FaceCount=Value.GetLength()/sizeof(WORD);
 									m_Groups[GroupCount].BSPFaceList.Resize(FaceCount);
-									memcpy(m_Groups[GroupCount].BSPFaceList.GetBuffer(),(LPCTSTR)Value,sizeof(WORD)*FaceCount);
+									memcpy(m_Groups[GroupCount].BSPFaceList.GetBuffer(),(LPCSTR)Value,sizeof(WORD)*FaceCount);
 								}
 								break;
 							case SST_GI_RENER_BATCH_LIST:
@@ -751,7 +751,7 @@ bool CD3DWOWWMOModelResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceM
 								{
 									UINT FaceCount=Value.GetLength()/sizeof(BYTE);
 									m_Groups[GroupCount].FaceFlags.Resize(FaceCount);
-									memcpy(m_Groups[GroupCount].FaceFlags.GetBuffer(),(LPCTSTR)Value,sizeof(BYTE)*FaceCount);
+									memcpy(m_Groups[GroupCount].FaceFlags.GetBuffer(),(LPCSTR)Value,sizeof(BYTE)*FaceCount);
 								}
 								break;
 							}
@@ -857,7 +857,7 @@ bool CD3DWOWWMOModelResource::LoadGroup(GROUP_INFO& GroupInfo,LPCTSTR ModelFileN
 		return false;
 	if(!pFile->Open(ModelFileName,IFileAccessor::modeRead))
 	{
-		PrintD3DLog(0,"文件%s打开失败",ModelFileName);
+		PrintD3DLog(0,_T("文件%s打开失败"),ModelFileName);
 		pFile->Release();
 		return false;	
 	}
@@ -1137,7 +1137,7 @@ bool CD3DWOWWMOModelResource::LoadGroups(LPCTSTR ModelFileName,UINT GroupCount,B
 			m_Groups[i].BoundingBox.m_Max=BLZTranslationToD3D(pGroups->Group[i].BoundingBox[1]);
 			m_Groups[i].BoundingBox.Rebuild();
 			CEasyString FileName;
-			FileName.Format("%s_%03d%s",
+			FileName.Format(_T("%s_%03d%s"),
 				(LPCTSTR)GroupFileName,i,(LPCTSTR)GroupFileExt);
 			if(!LoadGroup(m_Groups[i],FileName,pMaterials,MaterialCount,pTextureNames,pGroupNames))
 				return false;
@@ -1153,8 +1153,8 @@ bool CD3DWOWWMOModelResource::LoadGroups(LPCTSTR ModelFileName,UINT GroupCount,B
 bool CD3DWOWWMOModelResource::MakeMaterial(RENDER_BATCH_INFO& BatchInfo,WMOMaterial& MaterialInfo,BLZ_CHUNK_MOTX * pTextureNames)
 {
 	
-	LPCTSTR TextureFileName1=pTextureNames->TextureFileNames+MaterialInfo.Texture1;
-	LPCTSTR TextureFileName2=pTextureNames->TextureFileNames+MaterialInfo.Texture2;
+	CEasyString TextureFileName1=pTextureNames->TextureFileNames+MaterialInfo.Texture1;
+	CEasyString TextureFileName2=pTextureNames->TextureFileNames+MaterialInfo.Texture2;
 
 	BatchInfo.pTexture1=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(TextureFileName1);
 	if(TextureFileName2[0])
@@ -1173,18 +1173,18 @@ bool CD3DWOWWMOModelResource::MakeMaterial(RENDER_BATCH_INFO& BatchInfo,WMOMater
 
 CD3DFX * CD3DWOWWMOModelResource::BuildFX(UINT BlendMode,UINT TextureFlag)
 {
-	CEasyString FXName;
-	CEasyString EnableZWrite;
-	CEasyString EnableFog;
-	CEasyString CullMode;
-	CEasyString EnableAlphaBlend;
-	CEasyString BlendOp;
-	CEasyString SrcBlend;
-	CEasyString DestBlend;
-	CEasyString EnableAlphaTest;
-	CEasyString DiffuseOperation;
+	CEasyString	 FXName;
+	CEasyStringA EnableZWrite;
+	CEasyStringA EnableFog;
+	CEasyStringA CullMode;
+	CEasyStringA EnableAlphaBlend;
+	CEasyStringA BlendOp;
+	CEasyStringA SrcBlend;
+	CEasyStringA DestBlend;
+	CEasyStringA EnableAlphaTest;
+	CEasyStringA DiffuseOperation;
 	
-	FXName.Format("WMOModel\\0x%X_0x%X",
+	FXName.Format(_T("WMOModel\\0x%X_0x%X"),
 		BlendMode,
 		TextureFlag);
 	
@@ -1228,7 +1228,7 @@ CD3DFX * CD3DWOWWMOModelResource::BuildFX(UINT BlendMode,UINT TextureFlag)
 
 	
 
-	CEasyString FxContent;
+	CEasyStringA FxContent;
 
 	
 	FxContent=WMO_MODEL_FX;
@@ -1283,12 +1283,12 @@ void CD3DWOWWMOModelResource::BuildSubMeshs()
 			
 			if(m_Groups[i].RenderBatchs[j].pTexture1)
 			{
-				pD3DSubMesh->GetMaterial().AddTexture(m_Groups[i].RenderBatchs[j].pTexture1,0);
+				pD3DSubMesh->GetMaterial().AddTexture(m_Groups[i].RenderBatchs[j].pTexture1,0,"TexLay0","");
 				m_Groups[i].RenderBatchs[j].pTexture1->AddUseRef();
 			}
 			if(m_Groups[i].RenderBatchs[j].pTexture2)
 			{
-				pD3DSubMesh->GetMaterial().AddTexture(m_Groups[i].RenderBatchs[j].pTexture2,0);
+				pD3DSubMesh->GetMaterial().AddTexture(m_Groups[i].RenderBatchs[j].pTexture2,0,"TexLay1","");
 				m_Groups[i].RenderBatchs[j].pTexture2->AddUseRef();
 			}
 			if(m_Groups[i].RenderBatchs[j].pFX)
@@ -1306,6 +1306,8 @@ void CD3DWOWWMOModelResource::BuildSubMeshs()
 			pD3DSubMesh->GetMaterial().GetMaterial().Specular=WhiteColor;
 			pD3DSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
 			pD3DSubMesh->GetMaterial().GetMaterial().Power=40.0f;
+
+			pD3DSubMesh->GetMaterial().CaculateHashCode();
 						
 
 			UINT64 SubMeshProperty=pD3DSubMesh->GetProperty();
@@ -1322,7 +1324,7 @@ void CD3DWOWWMOModelResource::BuildSubMeshs()
 
 			pD3DSubMesh->SetID(m_Groups[i].Index*1000+j);
 			CEasyString SubMeshName;
-			SubMeshName.Format("%s-%03d-%03d",
+			SubMeshName.Format(_T("%s-%03d-%03d"),
 				(LPCTSTR)m_Groups[i].Name,m_Groups[i].Index,j);
 			pD3DSubMesh->SetName(SubMeshName);
 

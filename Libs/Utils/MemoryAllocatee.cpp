@@ -23,24 +23,25 @@ CMemoryAllocatee::~CMemoryAllocatee(void)
 	m_IsWorking=false;
 
 
-	if(m_AllocInfos.size())
+	if(m_AllocInfos.GetObjectCount())
 	{
-
-		std::map<void *,ALLOC_INFO>::iterator itr;
-		for(itr=m_AllocInfos.begin();itr!=m_AllocInfos.end();itr++)
+		void * Pos=m_AllocInfos.GetFirstObjectPos();
+		while(Pos)
 		{
-			if(itr->second.FileName)
+			void * Key;
+			ALLOC_INFO * pInfo=m_AllocInfos.GetNextObject(Pos,Key);
+
+			if(pInfo->FileName)
 			{
-				PrintImportantLog(0,"Memory Leak Size=%u,Position=%s:%d",
-					itr->second.AllocSize,itr->second.FileName,itr->second.Line);
+				PrintImportantLog(0,_T("Memory Leak Size=%u,Position=%s:%d"),
+					pInfo->AllocSize,pInfo->FileName,pInfo->Line);
 			}
 			else
 			{
-				PrintImportantLog(0,"Memory Leak Size=%u",
-					itr->second.AllocSize);
+				PrintImportantLog(0,_T("Memory Leak Size=%u"),
+					pInfo->AllocSize);
 			}
-
-		}
+		}		
 	}
 }
 
@@ -61,7 +62,7 @@ void * CMemoryAllocatee::Realloc(void * pBlock,int Size,LPCTSTR FileName,int Lin
 {
 	if(m_IsWorking)
 	{
-		m_AllocInfos.erase(pBlock);
+		m_AllocInfos.Delete(pBlock);
 	}
 	void * pMemBlock=::realloc(pBlock,Size);
 	if(m_IsWorking)
@@ -78,7 +79,7 @@ void CMemoryAllocatee::Free(void * pBlock)
 {
 	if(m_IsWorking)
 	{
-		m_AllocInfos.erase(pBlock);
+		m_AllocInfos.Delete(pBlock);
 	}
 	free(pBlock);
 }

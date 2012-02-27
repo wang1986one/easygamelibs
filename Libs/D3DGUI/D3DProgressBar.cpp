@@ -51,7 +51,7 @@ void CD3DProgressBar::InitWnd(CD3DGUI *  pGUI)
 		CEasyRect ClientRect=GetClientRect();
 		m_pBarWnd=pGUI->CreateWnd(ClientRect);	
 		m_pBarWnd->SetParent(this);
-		m_pBarWnd->SetName("PBBarWnd");
+		m_pBarWnd->SetName(_T("PBBarWnd"));
 		m_pBarWnd->SetID(PB_BAR_WIN);
 		m_pBarWnd->SetInternal(true);
 		m_pBarWnd->EnableFocus(false);
@@ -155,31 +155,31 @@ void CD3DProgressBar::UpdateRects()
 
 void CD3DProgressBar::SaveToXml(xml_node * pXMLNode)
 {
-	xml_node Wnd=pXMLNode->append_child(node_element,"ProgressBar");
-	Wnd.append_attribute("Name",(LPCTSTR)GetName());
-	Wnd.append_attribute("ID",(long)GetID());
-	Wnd.append_attribute("IsInternal",IsInternal());
+	xml_node Wnd=pXMLNode->append_child(node_element,_T("ProgressBar"));
+	Wnd.append_attribute(_T("Name"),(LPCTSTR)GetName());
+	Wnd.append_attribute(_T("ID"),(long)GetID());
+	Wnd.append_attribute(_T("IsInternal"),IsInternal());
 
-	xml_node Behavior=Wnd.append_child(node_element,"Behavior");
+	xml_node Behavior=Wnd.append_child(node_element,_T("Behavior"));
 	SaveBehaviorToXML(Behavior);	
-	Behavior.append_attribute("Style",(long)m_Style);
-	Behavior.append_attribute("WorkMode",(long)m_WorkMode);
-	Behavior.append_attribute("CurPos",(long)m_CurPos);
-	Behavior.append_attribute("MaxPos",(long)m_MaxPos);
+	Behavior.append_attribute(_T("Style"),(long)m_Style);
+	Behavior.append_attribute(_T("WorkMode"),(long)m_WorkMode);
+	Behavior.append_attribute(_T("CurPos"),(long)m_CurPos);
+	Behavior.append_attribute(_T("MaxPos"),(long)m_MaxPos);
 
-	xml_node Frame=Wnd.append_child(node_element,"Frame");
+	xml_node Frame=Wnd.append_child(node_element,_T("Frame"));
 	SaveFrameToXML(Frame);	
-	xml_node Borders=Wnd.append_child(node_element,"Borders");
+	xml_node Borders=Wnd.append_child(node_element,_T("Borders"));
 	SaveBorderToXML(Borders);	
 	if(m_pTexture)
 	{	
-		xml_node Texture=Wnd.append_child(node_element,"Texture");
+		xml_node Texture=Wnd.append_child(node_element,_T("Texture"));
 		SaveTextureToXML(Texture);
 	}
 
 	if((int)m_ChildWndList.GetCount())
 	{
-		xml_node Childs=Wnd.append_child(node_element,"Childs");
+		xml_node Childs=Wnd.append_child(node_element,_T("Childs"));
 		SaveChildsToXml(Childs);
 	}
 
@@ -187,42 +187,42 @@ void CD3DProgressBar::SaveToXml(xml_node * pXMLNode)
 
 bool CD3DProgressBar::LoadFromXml(xml_node * pXMLNode)
 {
-	if(_strnicmp(pXMLNode->name(),"ProgressBar",10)!=0)
+	if(_tcsnicmp(pXMLNode->name(),_T("ProgressBar"),10)!=0)
 		return false;
-	if(pXMLNode->has_attribute("Name"))
-		SetName(pXMLNode->attribute("Name").getvalue().c_str());
+	if(pXMLNode->has_attribute(_T("Name")))
+		SetName(pXMLNode->attribute(_T("Name")).getvalue());
 
-	if(pXMLNode->has_attribute("ID"))
-		SetID((long)pXMLNode->attribute("ID"));
+	if(pXMLNode->has_attribute(_T("ID")))
+		SetID((long)pXMLNode->attribute(_T("ID")));
 
-	if(pXMLNode->has_attribute("IsInternal"))
-		SetInternal((bool)pXMLNode->attribute("IsInternal"));
+	if(pXMLNode->has_attribute(_T("IsInternal")))
+		SetInternal((bool)pXMLNode->attribute(_T("IsInternal")));
 
 
 	for(int i=0;i<(int)pXMLNode->children();i++)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Behavior",9)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Behavior"),9)==0)
 		{
 			LoadBehaviorFromXML(pXMLNode->child(i));
-			if(pXMLNode->child(i).has_attribute("Style"))
-				SetProgressStyle((long)pXMLNode->child(i).attribute("Style"));
-			if(pXMLNode->child(i).has_attribute("WorkMode"))
-				SetWorkMode((long)pXMLNode->child(i).attribute("WorkMode"));
-			if(pXMLNode->child(i).has_attribute("MaxPos"))
-				SetMaxPos((long)pXMLNode->child(i).attribute("MaxPos"));
-			if(pXMLNode->child(i).has_attribute("CurPos"))
-				SetPos((long)pXMLNode->child(i).attribute("CurPos"));
+			if(pXMLNode->child(i).has_attribute(_T("Style")))
+				SetProgressStyle((long)pXMLNode->child(i).attribute(_T("Style")));
+			if(pXMLNode->child(i).has_attribute(_T("WorkMode")))
+				SetWorkMode((long)pXMLNode->child(i).attribute(_T("WorkMode")));
+			if(pXMLNode->child(i).has_attribute(_T("MaxPos")))
+				SetMaxPos((long)pXMLNode->child(i).attribute(_T("MaxPos")));
+			if(pXMLNode->child(i).has_attribute(_T("CurPos")))
+				SetPos((long)pXMLNode->child(i).attribute(_T("CurPos")));
 			
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Frame",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Frame"),6)==0)
 		{
 			LoadFrameFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Borders",8)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Borders"),8)==0)
 		{
 			LoadBorderFromXML(pXMLNode->child(i));
 		}		
-		else if(_strnicmp(pXMLNode->child(i).name(),"Texture",8)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Texture"),8)==0)
 		{
 			LoadTextureFromXML(pXMLNode->child(i));
 		}
@@ -232,7 +232,7 @@ bool CD3DProgressBar::LoadFromXml(xml_node * pXMLNode)
 	//×°ÔØ×Ó´°¿Ú
 	for(int i=(int)pXMLNode->children()-1;i>=0;i--)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Childs",7)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Childs"),7)==0)
 		{
 			LoadChildsFromXml(pXMLNode->child(i));
 			break;
@@ -243,7 +243,7 @@ bool CD3DProgressBar::LoadFromXml(xml_node * pXMLNode)
 	{
 		if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DWnd))&&
-			(strcmp(m_ChildWndList[i]->GetName(),"PBBarWnd")==0)&&
+			(_tcscmp(m_ChildWndList[i]->GetName(),_T("PBBarWnd"))==0)&&
 			m_ChildWndList[i]!=m_pBarWnd)
 		{
 			CD3DWnd * pWnd=(CD3DWnd *)m_ChildWndList[i];

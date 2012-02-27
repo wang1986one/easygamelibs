@@ -78,7 +78,7 @@ public:
 	virtual bool SetEffectMode(int Mode);
 
 	virtual bool SetFX(LPCTSTR FXFileName);
-	virtual bool SetFXFromMemory(LPCTSTR FXName,LPCTSTR FXContent,int Size);
+	virtual bool SetFXFromMemory(LPCTSTR FXName,LPVOID FXContent,int Size);
 	virtual CEasyString GetFX();
 
 	virtual void TopTo(IUIBaseRect* pBeforeRect);

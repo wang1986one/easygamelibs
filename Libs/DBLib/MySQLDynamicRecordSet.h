@@ -22,9 +22,9 @@ class CMySQLDynamicRecordSet :
 protected:
 	CMySQLConnection *				m_pDBConnection;
 	MYSQL_STMT_HANDLE				m_hStmt;
-	std::vector<DB_COLUMN_INFO>		m_pColumnInfos;
-	std::vector<CDBValue>			m_RowBuffer;
-	std::vector<MYSQL_BIND>			m_FetchBuffer;
+	CEasyArray<DB_COLUMN_INFO>		m_pColumnInfos;
+	CEasyArray<CDBValue>			m_RowBuffer;
+	CEasyArray<MYSQL_BIND>			m_FetchBuffer;
 	CEasyBuffer						m_FetchDataBuffer;
 	CDBValue						m_EmptyValue;
 	bool							m_IsBOF;

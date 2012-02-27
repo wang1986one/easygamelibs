@@ -39,6 +39,7 @@ protected:
 	int								m_CurMouseX;
 	int								m_CurMouseY;
 
+	DECLARE_FILE_CHANNEL_MANAGER
 	DECLARE_CLASS_INFO_STATIC(CD3DGUI)
 
 public:	

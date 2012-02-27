@@ -45,9 +45,9 @@ void CESBolanStack::Grow()
 
 
 
-int  CESBolanStack::PushScript(const char * ExpStr,CESVariableList* pVariableList,CESFunctionList * pFunctionList,int& LastLine)
+int  CESBolanStack::PushScript(LPCTSTR ExpStr,CESVariableList* pVariableList,CESFunctionList * pFunctionList,int& LastLine)
 {
-	char TempID[MAX_IDENTIFIER_LENGTH];
+	TCHAR TempID[MAX_IDENTIFIER_LENGTH];
 
 	CESBolanStack TempStack;
 	CESBolanStack OrginScript;
@@ -56,11 +56,11 @@ int  CESBolanStack::PushScript(const char * ExpStr,CESVariableList* pVariableLis
 	bool IsInStr;
 	LastLine=1;
 
-	CEasyBuffer Buffer((int)strlen(ExpStr)+1);
-	CEasyBuffer TempBuffer((int)strlen(ExpStr)+1);
+	CEasyBuffer Buffer(((UINT)_tcslen(ExpStr)+1)*sizeof(TCHAR));
+	CEasyBuffer TempBuffer(((UINT)_tcslen(ExpStr)+1)*sizeof(TCHAR));
 
-	char * ExpBuff=(char *)Buffer.GetBuffer();
-	char * TempBuff=(char *)TempBuffer.GetBuffer();
+	TCHAR * ExpBuff=(TCHAR *)Buffer.GetBuffer();
+	TCHAR * TempBuff=(TCHAR *)TempBuffer.GetBuffer();
 
 
 	UINT Len=0;
@@ -175,21 +175,21 @@ int  CESBolanStack::PushScript(const char * ExpStr,CESVariableList* pVariableLis
 				TempBuff[i++]=*ExpStr++;
 			}
 			TempBuff[i]=0;	
-			if(_stricmp(TempBuff,"AND")==0)
+			if(_tcsicmp(TempBuff,_T("AND"))==0)
 			{				
 				Bolan.Type=BOLAN_TYPE_OPERATOR;
 				Bolan.Level=15;
 				Bolan.Index=OPERATOR_AND;
 				OrginScript.Push(&Bolan);			
 			}
-			else if(_stricmp(TempBuff,"OR")==0)
+			else if(_tcsicmp(TempBuff,_T("OR"))==0)
 			{				
 				Bolan.Type=BOLAN_TYPE_OPERATOR;
 				Bolan.Level=15;
 				Bolan.Index=OPERATOR_OR;
 				OrginScript.Push(&Bolan);			
 			}
-			else if(_stricmp(TempBuff,"NOT")==0)
+			else if(_tcsicmp(TempBuff,_T("NOT"))==0)
 			{				
 				Bolan.Type=BOLAN_TYPE_OPERATOR;
 				Bolan.Level=16;
@@ -653,370 +653,10 @@ int  CESBolanStack::PushScript(const char * ExpStr,CESVariableList* pVariableLis
 		return RetCode;
 
 	return 0;
-	//进行逆布兰式转换
-
 	
-
-	//while(*ExpStr)
-	//{
-	//	Bolan.Clear();
-	//	Bolan.Line=LastLine;
-	//	if(*ExpStr==' '||*ExpStr=='\r'||*ExpStr=='\n'||*ExpStr=='	')
-	//	{
-	//		//空格、空行忽略
-	//		if(*ExpStr=='\n')
-	//			LastLine++;
-	//		ExpStr++;
-	//	}
-	//	else if(*ExpStr=='/'&&*(ExpStr+1)=='/')
-	//	{
-	//		while((*ExpStr!='\r')&&(*ExpStr!='\n')&&(*ExpStr))
-	//		{
-	//			if(*ExpStr=='\n')
-	//				LastLine++;
-	//			ExpStr++;
-	//		}
-	//	}
-	//	else if(*ExpStr=='"')//字符串
-	//	{
-	//		i=0;
-	//		ExpStr++;
-	//		while(*ExpStr!='"')
-	//		{
-	//			//if(i>MAX_STRING_LENGTH)
-	//			//	return 1001;
-	//			if(*ExpStr==0)
-	//				return 1002;
-	//			TempBuff[i++]=*ExpStr++;
-	//		}
-	//		TempBuff[i]=0;
-	//		ExpStr++;
-
-	//		Bolan.Type=BOLAN_TYPE_VALUE;
-	//		Bolan.ValueType=VALUE_TYPE_STRING;
-	//		Bolan.StrValue=TempBuff;
-	//		Bolan.Level=0;
-	//		Push(&Bolan);
-	//	}
-	//	else if((*ExpStr>='0'&&*ExpStr<='9')||*ExpStr=='.')	//数字
-	//	{
-	//		i=0;
-	//		while((*ExpStr>='0'&&*ExpStr<='9')||*ExpStr=='.'||*ExpStr=='F'||*ExpStr=='D'||*ExpStr=='I'||*ExpStr=='L'||*ExpStr=='E')
-	//		{
-	//			TempBuff[i++]=*ExpStr++;
-	//		}
-	//		TempBuff[i]=0;
-	//		Bolan.Type=BOLAN_TYPE_VALUE;			
-	//		Bolan.Level=0;
-	//		StrToNumber(TempBuff,Bolan);
-	//		Push(&Bolan);
-	//	}
-	//	else if(*ExpStr==':')		//跳转标识
-	//	{
-	//		i=0;
-	//		ExpStr++;
-	//		while(CanMakeIdentifier(*ExpStr))
-	//		{
-	//			if(i>MAX_IDENTIFIER_LENGTH)
-	//				return 1003;
-	//			TempID[i++]=*ExpStr++;
-	//		}
-	//		TempID[i]=0;			
-	//		Bolan.Type=BOLAN_TYPE_IDENTIFIER;
-	//		Bolan.Index=IDENTIFIER_TYPE_JUMP;
-	//		Bolan.Level=0;				
-	//		Bolan.StrValue=TempID;
-	//		Push(&Bolan);			
-	//	}
-	//	else if(*ExpStr==';'||*ExpStr=='\r'||*ExpStr=='\n')//行结束符
-	//	{
-	//		//弹出所有操作符
-	//		while(TempStack.GetTop()!=NULL)
-	//		{				
-	//			Push(TempStack.Pop());
-	//		}
-	//		Bolan.Type=BOLAN_TYPE_KEYWORD;
-	//		Bolan.Level=0;
-	//		Bolan.Index=KW_LINEEND;
-	//		Push(&Bolan);
-	//		//除去多余的行结束符
-	//		while(*ExpStr==' '||*ExpStr==';'||*ExpStr=='\r'||*ExpStr=='\n')
-	//		{
-	//			if(*ExpStr=='\n')
-	//				LastLine++;
-	//			ExpStr++;
-	//		}
-	//	}
-	//	else if(*ExpStr>='A'&&*ExpStr<='Z')//标识符
-	//	{
-	//		i=0;
-	//		while(CanMakeIdentifier(*ExpStr))
-	//		{
-	//			if(i>MAX_IDENTIFIER_LENGTH)
-	//				return 1003;
-	//			TempBuff[i++]=*ExpStr++;
-	//		}
-	//		TempBuff[i]=0;	
-	//		if(_stricmp(TempBuff,"AND")==0)
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>15)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Level=15;
-	//			Bolan.Index=OPERATOR_AND;
-	//			TempStack.Push(&Bolan);			
-	//		}
-	//		else if(_stricmp(TempBuff,"OR")==0)
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>15)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Level=15;
-	//			Bolan.Index=OPERATOR_OR;
-	//			TempStack.Push(&Bolan);			
-	//		}
-	//		else if(_stricmp(TempBuff,"NOT")==0)
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>16)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Level=16;
-	//			Bolan.Index=OPERATOR_NOT;
-	//			TempStack.Push(&Bolan);			
-	//		}
-	//		else
-	//		{
-	//			int KeyWord=FindKeyWord(TempBuff);
-	//			if(KeyWord>=0)//关键字
-	//			{
-	//				//弹出所有操作符
-	//				while(TempStack.GetTop()!=NULL)
-	//				{				
-	//					Push(TempStack.Pop());
-	//				}
-
-	//				Bolan.Type=BOLAN_TYPE_KEYWORD;
-	//				Bolan.Level=0;
-	//				Bolan.Index=KeyWord;
-	//				Push(&Bolan);
-
-	//			}
-	//			else
-	//			{					
-	//				//函数
-	//				ES_FUNCTION * pFaction=pFunctionList->FindFunction(TempBuff);
-	//				if(pFaction)
-	//				{		
-	//					while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>60)
-	//					{				
-	//						Push(TempStack.Pop());
-	//					}
-	//					Bolan.Type=BOLAN_TYPE_FUNCTION;
-	//					Bolan.Level=60;
-	//					Bolan.Index=pFaction->ID;
-	//					TempStack.Push(&Bolan);					
-	//				}
-	//				else
-	//				{	
-	//					//Bolan.Type=BOLAN_TYPE_IDENTIFIER;
-	//					//Bolan.Index=IDENTIFIER_TYPE_UNKNOW;
-	//					//Bolan.Level=0;				
-	//					//Bolan.StrValue=TempID;
-	//					//Push(&Bolan);
-	//					//其他的标识符作为变量					
-	//					Bolan.Type=BOLAN_TYPE_VARIABLE;
-	//					Bolan.Level=0;							
-	//					Bolan.StrValue=TempBuff;
-	//					ES_VARIABLE * pVar=pVariableList->FindVariable(Bolan.StrValue);
-	//					if(pVar)
-	//						Bolan.Index=pVar->ID;
-	//					else
-	//						Bolan.Index=0;
-	//					Push(&Bolan);
-	//				}
-	//			}
-	//		}
-	//	}
-	//	else if(*ExpStr=='(')
-	//	{			
-	//		Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//		Bolan.Level=0;
-	//		Bolan.Index=OPERATOR_LP;
-	//		TempStack.Push(&Bolan);
-	//		ExpStr++;			
-	//	}
-	//	else if(*ExpStr==')')
-	//	{
-	//		while(TempStack.GetTop()!=NULL&&(TempStack.GetTop()->Type!=BOLAN_TYPE_OPERATOR||TempStack.GetTop()->Index!=OPERATOR_LP))
-	//		{				
-	//			Push(TempStack.Pop());
-	//		}			
-	//		TempStack.Pop();
-	//		ExpStr++;
-	//	}
-	//	else if(*ExpStr=='=')
-	//	{	
-	//		if(*(ExpStr+1)=='=')
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>20)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}		
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Level=20;
-	//			Bolan.Index=OPERATOR_EQU;	
-	//			TempStack.Push(&Bolan);
-	//			ExpStr+=2;
-	//		}
-	//		else
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>10)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}		
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Level=10;
-	//			Bolan.Index=OPERATOR_EVA;	
-	//			TempStack.Push(&Bolan);
-	//			ExpStr++;
-	//		}
-	//	}
-	//	else if(*ExpStr=='>')
-	//	{			
-	//		if(*(ExpStr+1)=='=')
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>20)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}	
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Level=20;
-	//			Bolan.Index=OPERATOR_MORE_EQU;	
-	//			TempStack.Push(&Bolan);
-	//			ExpStr+=2;	
-	//		}
-	//		else
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>20)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}	
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Level=20;
-	//			Bolan.Index=OPERATOR_MORE;	
-	//			TempStack.Push(&Bolan);
-	//			ExpStr++;				
-	//		}
-	//	}
-	//	else if(*ExpStr=='<')
-	//	{			
-	//		if(*(ExpStr+1)=='=')
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>20)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}	
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Level=20;
-	//			Bolan.Index=OPERATOR_LESS_EQU;		
-	//			TempStack.Push(&Bolan);
-	//			ExpStr+=2;	
-	//		}
-	//		else if(*(ExpStr+1)=='>')
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>20)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}	
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Level=20;
-	//			Bolan.Index=OPERATOR_DIFF;		
-	//			TempStack.Push(&Bolan);
-	//			ExpStr+=2;	
-	//		}
-	//		else
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>20)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}	
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Level=20;
-	//			Bolan.Index=OPERATOR_LESS;			
-	//			TempStack.Push(&Bolan);
-	//			ExpStr++;				
-	//		}			
-
-	//	}
-	//	else if(*ExpStr=='+'||*ExpStr=='-')
-	//	{
-	//		if(*ExpStr=='-'&&(ExpStr==ExpBuff||*(ExpStr-1)=='('))
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>50)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Index=OPERATOR_NEG;
-	//			Bolan.Level=50;
-	//			TempStack.Push(&Bolan);
-	//			ExpStr++;
-	//		}
-	//		else
-	//		{
-	//			while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>30)
-	//			{				
-	//				Push(TempStack.Pop());
-	//			}		
-	//			Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//			Bolan.Level=30;
-	//			if(*ExpStr=='+') Bolan.Index=OPERATOR_ADD;
-	//			else Bolan.Index=OPERATOR_SUB;	
-	//			TempStack.Push(&Bolan);
-	//			ExpStr++;				
-	//		}
-	//	}
-	//	else if(*ExpStr=='*'||*ExpStr=='/')
-	//	{
-	//		while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>40)
-	//		{				
-	//			Push(TempStack.Pop());
-	//		}				
-	//		Bolan.Type=BOLAN_TYPE_OPERATOR;
-	//		Bolan.Level=40;
-	//		if(*ExpStr=='*') Bolan.Index=OPERATOR_MUL;
-	//		else Bolan.Index=OPERATOR_DIV;	
-	//		TempStack.Push(&Bolan);
-	//		ExpStr++;
-	//	}
-	//	else if(*ExpStr==',')
-	//	{
-	//		while(TempStack.GetTop()!=NULL&&TempStack.GetTop()->Level>0)
-	//		{				
-	//			Push(TempStack.Pop());
-	//		}	
-	//		ExpStr++;
-	//	}		
-	//	else
-	//	{
-	//		return 1005;				//非法字符
-	//	}		
-	//}
-	//while(TempStack.GetTop()!=NULL)
-	//{				
-	//	Push(TempStack.Pop());
-	//}
-	//
-	//return 0;
 }
 
-int CESBolanStack::FindIdentifier(int Start,const char * Name)
+int CESBolanStack::FindIdentifier(int Start,LPCTSTR Name)
 {
 	for(int i=Start;i<(int)GetSize();i++)
 	{
@@ -1320,12 +960,12 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 					pBolan->Index=OPERATOR_ADD_VAR;
 					pBolan->Level=5;
 					pBolan->ValueType=VALUE_TYPE_STRING;
-					pESThread->GetLocalVariableList()->AddVariable(pBolan->StrValue,"");
+					pESThread->GetLocalVariableList()->AddVariable(pBolan->StrValue,_T(""));
 				}
 				else
 				{
 					pBolan->Index=IDENTIFIER_TYPE_VARIABLE_DEFINE;
-					pESThread->GetVariableList()->AddVariable(pBolan->StrValue,"");
+					pESThread->GetVariableList()->AddVariable(pBolan->StrValue,_T(""));
 				}
 				StartPos++;
 				break;		
@@ -1427,11 +1067,11 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 //	return 0;
 //}
 
-int CESBolanStack::FindKeyWord(const char * KeyWord)
+int CESBolanStack::FindKeyWord(LPCTSTR KeyWord)
 {
 	for(int i=0;i<KW_MAX;i++)
 	{
-		if(_stricmp(KeyWord,KEYWORD_STRINGS[i])==0)
+		if(_tcsicmp(KeyWord,KEYWORD_STRINGS[i])==0)
 			return i;
 	}
 	return -1;

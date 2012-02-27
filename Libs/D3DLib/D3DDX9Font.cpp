@@ -71,7 +71,7 @@ bool CD3DDX9Font::Create(const LOGFONT * pLogFont,int MipLevels)
 	return true;
 }
 
-bool CD3DDX9Font::DrawTextA(LPCTSTR pText,int TextLen,RECT * pRect,DWORD Align,D3DCOLOR Color)
+bool CD3DDX9Font::DrawTextA(LPCSTR pText,int TextLen,RECT * pRect,DWORD Align,D3DCOLOR Color)
 {
 	return SUCCEEDED(m_pD3DFont->DrawTextA(NULL,pText,TextLen,pRect,Align,Color));
 }
@@ -81,7 +81,7 @@ bool CD3DDX9Font::DrawTextW(LPCWSTR pText,int TextLen,RECT * pRect,DWORD Align,D
 	return SUCCEEDED(m_pD3DFont->DrawTextW(NULL,pText,TextLen,pRect,Align,Color));
 }
 
-bool CD3DDX9Font::GetTextSizeA(LPCTSTR pText,int TextLen,LPSIZE pSize,LPINT pCharWidths)
+bool CD3DDX9Font::GetTextSizeA(LPCSTR pText,int TextLen,LPSIZE pSize,LPINT pCharWidths)
 {
 	HDC hdc=GetDC();
 	if(hdc)
@@ -103,7 +103,7 @@ bool CD3DDX9Font::GetTextSizeW(LPCWSTR pText,int TextLen,LPSIZE pSize,LPINT pCha
 	return false;
 }
 
-bool CD3DDX9Font::TranslateTextA(LPCTSTR pSrcText,int StrLen,LPTSTR pDestText,int& BufferSize)
+bool CD3DDX9Font::TranslateTextA(LPCSTR pSrcText,int StrLen,LPTSTR pDestText,int& BufferSize)
 {
 	if(pDestText)
 	{

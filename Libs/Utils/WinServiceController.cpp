@@ -172,7 +172,7 @@ bool CWinServiceController::GetServiceImageFilePath(LPTSTR pBuffer,int BufferSiz
 			DWORD dwError = GetLastError();
 			if( ERROR_INSUFFICIENT_BUFFER == dwError )
 			{
-				char * pInfoBuffer=new char[InfoSize];
+				BYTE * pInfoBuffer=new BYTE[InfoSize];
 				QUERY_SERVICE_CONFIG * pConfigInfo=(QUERY_SERVICE_CONFIG *)pInfoBuffer;
 				if(QueryServiceConfig(m_hService,pConfigInfo,InfoSize,&InfoSize))
 				{

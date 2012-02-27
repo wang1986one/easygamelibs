@@ -76,7 +76,7 @@ BOOL CLinuxFileAccessor::Open(LPCTSTR FileName,int OpenMode)
 
 	if(m_FileDescriptor==INVALID_HANDLE_VALUE)
 	{
-		printf("File Create Failed:%d\r\n",errno);
+		printf(_T("File Create Failed:%d\r\n"),errno);
 		return false;
 	}
 	else

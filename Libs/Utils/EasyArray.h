@@ -246,9 +246,7 @@ public:
 	}
 	T& operator[](UINT Index)
 	{
-#ifdef _DEBUG
 		assert(Index<m_ArrayLength);
-#endif
 		return m_pBuffer[Index];
 	}
 	

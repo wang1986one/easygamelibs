@@ -13,17 +13,17 @@
 
 
 
-inline size_t strnlen(const char * pStr,size_t BufferLen)
-{
-	size_t Len=0;
-	while(*pStr&&BufferLen)
-	{
-		pStr++;
-		Len++;
-		BufferLen--;
-	}
-	return Len;
-}
+//inline size_t strnlen(const char * pStr,size_t BufferLen)
+//{
+//	size_t Len=0;
+//	while(*pStr&&BufferLen)
+//	{
+//		pStr++;
+//		Len++;
+//		BufferLen--;
+//	}
+//	return Len;
+//}
 
 inline void Swap(FLOAT& v1,FLOAT& v2)
 {
@@ -66,7 +66,7 @@ inline CEasyString FormatSplitNumber(ULONG64 Number)
 {
 	CEasyString Str;
 
-	Str.Format("%I64u",Number);
+	Str.Format(_T("%I64u"),Number);
 	int i=(int)Str.GetLength()-3;
 	while(i>0)
 	{
@@ -81,24 +81,24 @@ inline CEasyString FormatNumberWords(ULONG64 Number,bool IsTiny=false)
 	CEasyString temp;
 	
 
-	if(Number==0) return "0";
+	if(Number==0) return _T("0");
 	if(Number<=1024)
 	{
-		temp.Format("%llu",Number);
+		temp.Format(_T("%llu"),Number);
 	}else if(Number<=1048576)
 	{
 		float size=Number/1024.0f;
-		temp.Format("%.2fK",size);
+		temp.Format(_T("%.2fK"),size);
 	}else
 	{
 		float size=Number/1048576.0f;
-		temp.Format("%.2fM",size);
+		temp.Format(_T("%.2fM"),size);
 	}
 	
 	if(IsTiny)
 		return temp;
 	else
-		return temp+" Byte";
+		return temp+_T(" Byte");
 }
 
 inline CEasyString FormatNumberWordsFloat(float Number,bool IsTiny=false)
@@ -108,22 +108,22 @@ inline CEasyString FormatNumberWordsFloat(float Number,bool IsTiny=false)
 
 	if(Number==0.0f)
 	{
-		temp="0";
+		temp=_T("0");
 	}
 	else if(Number<=1024.0f)
 	{
-		temp.Format("%.2f",Number);
+		temp.Format(_T("%.2f"),Number);
 	}else if(Number<=1048576.0f)
 	{
 		float size=Number/1024.0f;
-		temp.Format("%.2fK",size);
+		temp.Format(_T("%.2fK"),size);
 	}else
 	{
 		float size=Number/1048576.0f;
-		temp.Format("%.2fM",size);
+		temp.Format(_T("%.2fM"),size);
 	}
 	if(IsTiny)
 		return temp;
 	else
-		return temp+" Byte";
+		return temp+_T(" Byte");
 }

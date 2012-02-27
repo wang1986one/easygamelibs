@@ -24,8 +24,8 @@ class CMySQLRecordSet :
 protected:
 	CMySQLConnection *				m_pDBConnection;
 	MYSQL_RES_HANDLE				m_hResults;
-	std::vector<DB_COLUMN_INFO>		m_pColumnInfos;
-	std::vector<CDBValue>			m_RowBuffer;
+	CEasyArray<DB_COLUMN_INFO>		m_pColumnInfos;
+	CEasyArray<CDBValue>			m_RowBuffer;
 	int								m_CurRow;
 	CDBValue						m_EmptyValue;
 

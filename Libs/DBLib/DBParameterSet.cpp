@@ -28,18 +28,18 @@ CDBParameterSet::~CDBParameterSet(void)
 
 void CDBParameterSet::Destory()
 {
-	m_Params.clear();
+	m_Params.Clear();
 }
 
 int CDBParameterSet::GetCount()
 {
-	return (int)m_Params.size();
+	return (int)m_Params.GetCount();
 }
 
 
 DB_PARAM_INFO * CDBParameterSet::GetParamInfo(int Index)
 {
-	if((UINT)Index<m_Params.size())
+	if((UINT)Index<m_Params.GetCount())
 	{
 		return &(m_Params[Index].ParamInfo);
 	}
@@ -48,7 +48,7 @@ DB_PARAM_INFO * CDBParameterSet::GetParamInfo(int Index)
 
 CDBValue& CDBParameterSet::GetParam(int Index)
 {
-	if((UINT)Index<m_Params.size())
+	if((UINT)Index<m_Params.GetCount())
 	{
 		return m_Params[Index].ParamValue;
 	}
@@ -57,23 +57,23 @@ CDBValue& CDBParameterSet::GetParam(int Index)
 
 bool CDBParameterSet::AddParam(DB_PARAM_INFO& ParamInfo,const CDBValue& Value)
 {
-	m_Params.resize(m_Params.size()+1);
-	m_Params.back().ParamInfo=ParamInfo;
-	m_Params.back().ParamValue=Value;
+	m_Params.Resize(m_Params.GetCount()+1);
+	m_Params[m_Params.GetCount()-1].ParamInfo=ParamInfo;
+	m_Params[m_Params.GetCount()-1].ParamValue=Value;
 	return true;
 }
 
 bool CDBParameterSet::AddParam(DB_PARAM_INFO& ParamInfo)
 {
-	m_Params.resize(m_Params.size()+1);
-	m_Params.back().ParamInfo=ParamInfo;
-	m_Params.back().ParamValue.SetNULLValue(ParamInfo.Type);
+	m_Params.Resize(m_Params.GetCount()+1);
+	m_Params[m_Params.GetCount()-1].ParamInfo=ParamInfo;
+	m_Params[m_Params.GetCount()-1].ParamValue.SetNULLValue(ParamInfo.Type);
 	return true;
 }
 
 bool CDBParameterSet::SetParam(int Index,DB_PARAM_INFO& ParamInfo,const CDBValue& Value)
 {
-	if((UINT)Index<m_Params.size())
+	if((UINT)Index<m_Params.GetCount())
 	{
 		m_Params[Index].ParamInfo=ParamInfo;
 		m_Params[Index].ParamValue=Value;
@@ -84,10 +84,10 @@ bool CDBParameterSet::SetParam(int Index,DB_PARAM_INFO& ParamInfo,const CDBValue
 
 bool CDBParameterSet::SetParam(int Index,DB_PARAM_INFO& ParamInfo)
 {
-	if((UINT)Index<m_Params.size())
+	if((UINT)Index<m_Params.GetCount())
 	{
 		m_Params[Index].ParamInfo=ParamInfo;
-		m_Params.back().ParamValue.SetNULLValue(ParamInfo.Type);
+		m_Params[Index].ParamValue.SetNULLValue(ParamInfo.Type);
 		return true;
 	}
 	return false;
