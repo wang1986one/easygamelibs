@@ -22,12 +22,12 @@ CESFunctionLib::~CESFunctionLib(void)
 
 void CESFunctionLib::AddFunction(CESFunctionList * pFunctionList)
 {
-	ADD_SCRIPT_CFUNCTION(CESFunctionLib,SinFN,"Sin",1,pFunctionList,this);
-	ADD_SCRIPT_CFUNCTION(CESFunctionLib,CosFN,"Cos",1,pFunctionList,this);
-	ADD_SCRIPT_CFUNCTION(CESFunctionLib,RoundFN,"Round",1,pFunctionList,this);
-	ADD_SCRIPT_CFUNCTION(CESFunctionLib,StrCmpFN,"StrCmp",1,pFunctionList,this);
-	ADD_SCRIPT_CFUNCTION(CESFunctionLib,NumToStrFN,"NumToStr",1,pFunctionList,this);
-	ADD_SCRIPT_CFUNCTION(CESFunctionLib,RandomFN,"Random",1,pFunctionList,this);	
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,SinFN,_T("Sin"),1,pFunctionList,this);
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,CosFN,_T("Cos"),1,pFunctionList,this);
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,RoundFN,_T("Round"),1,pFunctionList,this);
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,StrCmpFN,_T("StrCmp"),1,pFunctionList,this);
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,NumToStrFN,_T("NumToStr"),1,pFunctionList,this);
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,RandomFN,_T("Random"),1,pFunctionList,this);	
 }
 
 int CESFunctionLib::SinFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
@@ -55,7 +55,7 @@ int CESFunctionLib::RoundFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pP
 
 int CESFunctionLib::StrCmpFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
-	*pResult=strcmp(pParams[0].StrValue,pParams[1].StrValue);
+	*pResult=_tcscmp(pParams[0].StrValue,pParams[1].StrValue);
 	return 0;
 }
 
@@ -65,16 +65,16 @@ int CESFunctionLib::NumToStrFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN*
 	switch(pParams[0].ValueType)
 	{
 	case VALUE_TYPE_INT:
-		pResult->StrValue.Format("%d",pParams[0].ValueInt);
+		pResult->StrValue.Format(_T("%d"),pParams[0].ValueInt);
 		break;
 	case VALUE_TYPE_INT64:
-		pResult->StrValue.Format("%lld",pParams[0].ValueInt64);
+		pResult->StrValue.Format(_T("%lld"),pParams[0].ValueInt64);
 		break;
 	case VALUE_TYPE_FLOAT:
-		pResult->StrValue.Format("%g",pParams[0].ValueFloat);
+		pResult->StrValue.Format(_T("%g"),pParams[0].ValueFloat);
 		break;
 	case VALUE_TYPE_DOUBLE:
-		pResult->StrValue.Format("%g",pParams[0].ValueDouble);
+		pResult->StrValue.Format(_T("%g"),pParams[0].ValueDouble);
 		break;
 	}
 	

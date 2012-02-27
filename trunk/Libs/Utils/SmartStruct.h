@@ -23,8 +23,8 @@ template < typename LENGTH_TYPE,typename ID_TYPE >
 class CSmartStructBase 
 {
 protected:
-	char *			m_pData;
-	LENGTH_TYPE			m_DataLen;
+	BYTE *			m_pData;
+	LENGTH_TYPE		m_DataLen;
 	bool			m_IsSelfData;
 	bool			m_AllowChange;
 
@@ -78,7 +78,7 @@ public:
 	{
 		Destory();
 		m_DataLen=sizeof(BYTE)+sizeof(LENGTH_TYPE)+BufferLen;
-		m_pData=new char[m_DataLen];
+		m_pData=new BYTE[m_DataLen];
 		ZeroMemory(m_pData,m_DataLen);
 		*m_pData=CSmartValue::VT_STRUCT;
 		*((LENGTH_TYPE *)(m_pData+1))=0;		
@@ -98,7 +98,7 @@ public:
 		m_IsSelfData=true;
 		m_AllowChange=false;
 		m_DataLen=Value.m_DataLen;
-		m_pData=new char[m_DataLen];
+		m_pData=new BYTE[m_DataLen];
 		memcpy(m_pData,Value.GetData(),Value.GetDataLen());
 		return true;
 	}
@@ -386,7 +386,7 @@ public:
 		{
 			return false;
 		}
-		char * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(LENGTH_TYPE)+GetLength();
+		BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(LENGTH_TYPE)+GetLength();
 		*((ID_TYPE *)pFreeBuffer)=ID;
 		pFreeBuffer+=sizeof(ID_TYPE);
 		memcpy(pFreeBuffer,Value.GetData(),Value.GetDataLen());
@@ -405,7 +405,7 @@ public:
 			return NULL;
 		}
 		nUsableSize=GetFreeLen()-sizeof(ID_TYPE);
-		char * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(LENGTH_TYPE)+GetLength()+sizeof(ID_TYPE);
+		BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(LENGTH_TYPE)+GetLength()+sizeof(ID_TYPE);
 		return pFreeBuffer;
 	}
 	bool FinishMember(ID_TYPE ID,LENGTH_TYPE MemberSize)
@@ -419,7 +419,7 @@ public:
 		{
 			return false;
 		}
-		char * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(LENGTH_TYPE)+GetLength();
+		BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(LENGTH_TYPE)+GetLength();
 		*((ID_TYPE *)pFreeBuffer)=ID;
 		*((LENGTH_TYPE *)(m_pData+1))+=NeedSize;
 		return true;
@@ -438,7 +438,7 @@ public:
 		{
 			return false;
 		}
-		char * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(LENGTH_TYPE)+GetLength();
+		BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(LENGTH_TYPE)+GetLength();
 
 		memcpy(pFreeBuffer,Struct.m_pData+sizeof(BYTE)+sizeof(LENGTH_TYPE),NeedSize);
 		*((LENGTH_TYPE *)(m_pData+1))+=NeedSize;
@@ -448,8 +448,8 @@ public:
 	{
 		if(m_pData==NULL)
 			return 0;
-		char * pHead=m_pData;
-		char * pTail=m_pData+GetDataLen();
+		BYTE * pHead=m_pData;
+		BYTE * pTail=m_pData+GetDataLen();
 		int MemberCount=0;
 		pHead+=sizeof(BYTE)+sizeof(LENGTH_TYPE);
 		while(pHead+sizeof(ID_TYPE)<pTail)
@@ -470,8 +470,8 @@ public:
 		if(m_pData==NULL)
 			return Value;
 
-		char * pHead=m_pData;
-		char * pTail=m_pData+GetDataLen();
+		BYTE * pHead=m_pData;
+		BYTE * pTail=m_pData+GetDataLen();
 
 		pHead+=sizeof(BYTE)+sizeof(LENGTH_TYPE);
 		while(pHead+sizeof(ID_TYPE)<pTail)
@@ -495,8 +495,8 @@ public:
 		if(m_pData==NULL)
 			return Value;
 
-		char * pHead=m_pData;
-		char * pTail=m_pData+GetDataLen();
+		BYTE * pHead=m_pData;
+		BYTE * pTail=m_pData+GetDataLen();
 
 		pHead+=sizeof(BYTE)+sizeof(LENGTH_TYPE);
 		while(pHead+sizeof(ID_TYPE)<pTail)
@@ -527,8 +527,8 @@ public:
 		if(m_pData==NULL)
 			return INVALID_MEMBER_ID;
 
-		char * pHead=m_pData;
-		char * pTail=m_pData+GetDataLen();
+		BYTE * pHead=m_pData;
+		BYTE * pTail=m_pData+GetDataLen();
 
 		LENGTH_TYPE Index=0;
 
@@ -553,8 +553,8 @@ public:
 		if(m_pData==NULL)
 			return 0;
 
-		char * pHead=m_pData;
-		char * pTail=m_pData+GetDataLen();
+		BYTE * pHead=m_pData;
+		BYTE * pTail=m_pData+GetDataLen();
 		ID_TYPE MemberID=0;
 
 		pHead+=sizeof(BYTE)+sizeof(LENGTH_TYPE);
@@ -577,8 +577,8 @@ public:
 			return NULL;
 
 
-		char * pHead=m_pData;
-		char * pTail=m_pData+GetDataLen();
+		BYTE * pHead=m_pData;
+		BYTE * pTail=m_pData+GetDataLen();
 		pHead+=sizeof(BYTE)+sizeof(LENGTH_TYPE);
 
 		if(pHead<pTail)
@@ -599,8 +599,8 @@ public:
 
 		if(Pos)
 		{
-			char * pHead=(char *)Pos;
-			char * pTail=m_pData+GetDataLen();
+			BYTE * pHead=(BYTE *)Pos;
+			BYTE * pTail=m_pData+GetDataLen();
 			MemberID=*((ID_TYPE *)pHead);
 
 			pHead+=sizeof(ID_TYPE);
@@ -671,7 +671,7 @@ inline bool CSmartStructBase<UINT,WORD>::Attach(LPVOID pData,UINT DataLen,bool I
 	Destory();
 	m_IsSelfData=false;
 	m_AllowChange=false;
-	m_pData=(char *)pData;
+	m_pData=(BYTE *)pData;
 	if(IsEmpty)
 	{
 		m_pData[0]=CSmartValue::VT_STRUCT;
@@ -697,7 +697,7 @@ inline bool CSmartStructBase<WORD,BYTE>::Attach(LPVOID pData,WORD DataLen,bool I
 	Destory();
 	m_IsSelfData=false;
 	m_AllowChange=false;
-	m_pData=(char *)pData;
+	m_pData=(BYTE *)pData;
 	if(IsEmpty)
 	{
 		m_pData[0]=CSmartValue::VT_STRUCT_TINY;
@@ -728,7 +728,7 @@ inline bool CSmartStructBase<UINT,WORD>::AddMember(WORD ID,const char * pszStr,U
 	{
 		return false;
 	}
-	char * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(UINT)+GetLength();
+	BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(UINT)+GetLength();
 	*((WORD *)pFreeBuffer)=ID;
 	pFreeBuffer+=sizeof(WORD);
 	*((BYTE *)pFreeBuffer)=CSmartValue::VT_STRING;
@@ -755,7 +755,7 @@ inline bool CSmartStructBase<WORD,BYTE>::AddMember(BYTE ID,const char * pszStr,W
 	{
 		return false;
 	}
-	char * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(WORD)+GetLength();
+	BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(WORD)+GetLength();
 	*((BYTE *)pFreeBuffer)=ID;
 	pFreeBuffer+=sizeof(BYTE);
 	*((BYTE *)pFreeBuffer)=CSmartValue::VT_STRING_TINY;
@@ -782,7 +782,7 @@ inline bool CSmartStructBase<UINT,WORD>::AddMember(WORD ID,const wchar_t * pszSt
 	{
 		return false;
 	}
-	char * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(UINT)+GetLength();
+	BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(UINT)+GetLength();
 	*((WORD *)pFreeBuffer)=ID;
 	pFreeBuffer+=sizeof(WORD);
 	*((BYTE *)pFreeBuffer)=CSmartValue::VT_USTRING;
@@ -809,7 +809,7 @@ inline bool CSmartStructBase<WORD,BYTE>::AddMember(BYTE ID,const wchar_t * pszSt
 	{
 		return false;
 	}
-	char * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(WORD)+GetLength();
+	BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(WORD)+GetLength();
 	*((BYTE *)pFreeBuffer)=ID;
 	pFreeBuffer+=sizeof(BYTE);
 	*((BYTE *)pFreeBuffer)=CSmartValue::VT_USTRING_TINY;

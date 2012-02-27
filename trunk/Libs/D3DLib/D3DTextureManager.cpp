@@ -35,7 +35,7 @@ CD3DTextureManager::~CD3DTextureManager(void)
 		CEasyString Key;
 		TESTURE_INFO * pTextureInfo=m_TextureStorage.GetNextObject(Pos,Key);
 		if(m_DelayReleaseTime==0)
-			PrintSystemLog(0,"纹理<%s>未释放！",(LPCTSTR)pTextureInfo->pTexture->GetName());
+			PrintSystemLog(0,_T("纹理<%s>未释放！"),(LPCTSTR)pTextureInfo->pTexture->GetName());
 		SAFE_RELEASE(pTextureInfo->pTexture);
 	}
 	m_TextureStorage.Destory();
@@ -118,7 +118,7 @@ bool CD3DTextureManager::AddTexture(CD3DTexture * pTexture,LPCTSTR TextureName)
 	}
 	else
 	{
-		PrintD3DLog(0,"把纹理添加到纹理管理器失败(%u,%u)",
+		PrintD3DLog(0,_T("把纹理添加到纹理管理器失败(%u,%u)"),
 			m_TextureStorage.GetObjectCount(),m_TextureStorage.GetBufferSize());
 		return false;
 	}
@@ -137,7 +137,7 @@ bool CD3DTextureManager::DeleteTexture(UINT ID)
 	}
 	else
 	{
-		PrintD3DLog(0,"CD3DTextureManager::DeleteTexture:纹理[%u]未找到",
+		PrintD3DLog(0,_T("CD3DTextureManager::DeleteTexture:纹理[%u]未找到"),
 			ID);
 		return false;
 	}
@@ -158,7 +158,7 @@ bool CD3DTextureManager::DeleteTexture(LPCTSTR TextureName)
 	}
 	else
 	{
-		PrintD3DLog(0,"CD3DTextureManager::DeleteTexture:纹理[%s]未找到",
+		PrintD3DLog(0,_T("CD3DTextureManager::DeleteTexture:纹理[%s]未找到"),
 			TextureName);
 		return false;
 	}	

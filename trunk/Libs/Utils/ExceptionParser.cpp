@@ -19,7 +19,15 @@
 
 #endif
 
-
+#ifdef UNICODE
+#define SymInitializeT			SymInitializeW
+#define SymGetLineFromAddr64T	SymGetLineFromAddrW64
+#define IMAGEHLP_LINE64T		IMAGEHLP_LINEW64
+#else
+#define SymInitializeT			SymInitialize
+#define SymGetLineFromAddr64T	SymGetLineFromAddr64
+#define IMAGEHLP_LINE64T		IMAGEHLP_LINE64
+#endif
 
 void DisableSetUnhandledExceptionFilter()
 
@@ -57,7 +65,7 @@ void DisableSetUnhandledExceptionFilter()
 		{
 			if(WriteProcessMemory(GetCurrentProcess(), addr, code, size, NULL))
 			{
-				PrintImportantLog(0xff,"屏蔽SetUnhandledExceptionFilter成功");
+				PrintImportantLog(0xff,_T("屏蔽SetUnhandledExceptionFilter成功"));
 			}
 			VirtualProtect(addr, size, dwOldFlag, &dwTempFlag);
 		}
@@ -123,7 +131,7 @@ void CExceptionParser::ParseException(LPEXCEPTION_POINTERS pException)
 
 	if(m_ExceptionCount>0)
 	{
-		PrintImportantLog(0xff,"发生多次异常捕捉%d",m_ExceptionCount);
+		PrintImportantLog(0xff,_T("发生多次异常捕捉%d"),m_ExceptionCount);
 		return;
 	}
 	m_ExceptionCount++;
@@ -140,45 +148,45 @@ void CExceptionParser::ParseException(LPEXCEPTION_POINTERS pException)
 
 	CurTime.FetchLocalTime();
 
-	ExceptionLogFileName.Format("%s.Exception%d-%02d-%02d %02d-%02d-%02d",
+	ExceptionLogFileName.Format(_T("%s.Exception%d-%02d-%02d %02d-%02d-%02d"),
 		(LPCTSTR)ModulePath,
 		CurTime.Year(),CurTime.Month(),CurTime.Day(),
 		CurTime.Hour(),CurTime.Minute(),CurTime.Second());
 
-	PrintImportantLog(0,"开始输出异常Log文件:%s.Log",
+	PrintImportantLog(0,_T("开始输出异常Log文件:%s.Log"),
 		(LPCTSTR)ExceptionLogFileName);
 
 	if(!m_ExceptionLog.Create(ExceptionLogFileName,0))
 	{
-		PrintImportantLog(0,"无法创建异常Log文件:%s.Log",
+		PrintImportantLog(0,_T("无法创建异常Log文件:%s.Log"),
 			(LPCTSTR)ExceptionLogFileName);
 	}
 	
 	
-	LogException("-----------------------------------------------------------------");
+	LogException(_T("-----------------------------------------------------------------"));
 
-	LogException("程序发生异常:类型: 0x%x  地址: 0x%x", 
+	LogException(_T("程序发生异常:类型: 0x%x  地址: 0x%x"), 
 		pException->ExceptionRecord->ExceptionCode ,pException->ExceptionRecord->ExceptionAddress);
 
 	if(pException->ExceptionRecord->ExceptionCode==EXCEPTION_ACCESS_VIOLATION)
 	{
-		LogException("地址:0x%x%s",
+		LogException(_T("地址:0x%x%s"),
 			pException->ExceptionRecord->ExceptionInformation[1],
-			pException->ExceptionRecord->ExceptionInformation[0]?"不可写":"不可读");
+			pException->ExceptionRecord->ExceptionInformation[0]?_T("不可写"):_T("不可读"));
 	}
 	
 
 	static ADDRESS_INFO AddressInfo;
 
 	GetAddressInfo((DWORD64)pException->ExceptionRecord->ExceptionAddress,&AddressInfo);
-	LogException("地址描述:函数(%s),文件(%s)(%d)",AddressInfo.SymbolInfo.Name,AddressInfo.CppFileName,AddressInfo.LineNumber);
+	LogException(_T("地址描述:函数(%s),文件(%s)(%d)"),AddressInfo.SymbolInfo.Name,AddressInfo.CppFileName,AddressInfo.LineNumber);
 
-	LogException("调用堆栈:");
+	LogException(_T("调用堆栈:"));
 
 	
 	ParseCallStack(pException->ContextRecord);
 
-	LogException("-----------------------------------------------------------------");
+	LogException(_T("-----------------------------------------------------------------"));
 
 	
 	
@@ -214,11 +222,11 @@ void CExceptionParser::ParseCallStack(PCONTEXT pContextRecord,UINT MaxLoopCount)
 		if(LastInstance!=AddressInfo.hInstance)
 		{	
 			LastInstance=AddressInfo.hInstance;
-			LogException("调用模块:%s",AddressInfo.ModuleName);
+			LogException(_T("调用模块:%s"),AddressInfo.ModuleName);
 		}
-		LogException("调用地址:0x%X",(DWORD)StackFrame.AddrPC.Offset);
+		LogException(_T("调用地址:0x%X"),(DWORD)StackFrame.AddrPC.Offset);
 		if(Ret)
-			LogException("地址描述:函数(%s),文件(%s)(%d)",AddressInfo.SymbolInfo.Name,AddressInfo.CppFileName,AddressInfo.LineNumber);
+			LogException(_T("地址描述:函数(%s),文件(%s)(%d)"),AddressInfo.SymbolInfo.Name,AddressInfo.CppFileName,AddressInfo.LineNumber);
 		
 		
 		MaxLoopCount--;
@@ -252,13 +260,13 @@ BOOL CExceptionParser::GetAddressInfo(DWORD64 Address,ADDRESS_INFO * pAddressInf
 
 	if(SymFromAddr(m_hProcess,Address,&Displacement,&(pAddressInfo->SymbolInfo)))
 	{
-		IMAGEHLP_LINE64 LineInfo;
+		IMAGEHLP_LINE64T LineInfo;
 		ZeroMemory(&LineInfo,sizeof(LineInfo));
 		LineInfo.SizeOfStruct=sizeof(LineInfo);
 
 		DWORD LineDisplacement=0;
 
-		SymGetLineFromAddr64(m_hProcess,Address,&LineDisplacement,&LineInfo);
+		SymGetLineFromAddr64T(m_hProcess,Address,&LineDisplacement,&LineInfo);
 		if(LineInfo.FileName)
 		{
 			strncpy_0(pAddressInfo->CppFileName,MAX_PATH,LineInfo.FileName,MAX_PATH);
@@ -279,12 +287,12 @@ BOOL CExceptionParser::WriteDump(LPEXCEPTION_POINTERS pException)
 
 	CurTime.FetchLocalTime();
 
-	DumpFileName.Format("%s.Dump%d-%02d-%02d %02d-%02d-%02d.dmp",
+	DumpFileName.Format(_T("%s.Dump%d-%02d-%02d %02d-%02d-%02d.dmp"),
 		(LPCTSTR)ModulePath,
 		CurTime.Year(),CurTime.Month(),CurTime.Day(),
 		CurTime.Hour(),CurTime.Minute(),CurTime.Second());
 
-	PrintImportantLog(0xff,"开始写入Dump文件%s",(LPCTSTR)DumpFileName);
+	PrintImportantLog(0xff,_T("开始写入Dump文件%s"),(LPCTSTR)DumpFileName);
 
 	if(DumpFile.Open(DumpFileName,IFileAccessor::modeCreateAlways|IFileAccessor::modeWrite))
 	{		
@@ -308,20 +316,20 @@ BOOL CExceptionParser::WriteDump(LPEXCEPTION_POINTERS pException)
 			m_Flag&EXCEPTION_MAKE_FULL_DUMP?MiniDumpWithFullMemory:MiniDumpNormal,
 			pExceptionInfo,NULL,NULL))
 		{
-			PrintImportantLog(0xff,"写入Dump文件成功%s",(LPCTSTR)DumpFileName);
+			PrintImportantLog(0xff,_T("写入Dump文件成功%s"),(LPCTSTR)DumpFileName);
 			DumpFile.Close();
 			return TRUE;
 		}
 		else
 		{
-			PrintImportantLog(0xff,"写入Dump文件失败%s",(LPCTSTR)DumpFileName);
+			PrintImportantLog(0xff,_T("写入Dump文件失败%s"),(LPCTSTR)DumpFileName);
 		}
 		DumpFile.Close();
 		
 	}
 	else
 	{
-		PrintImportantLog(0xff,"打开Dump文件失败%s",(LPCTSTR)DumpFileName);
+		PrintImportantLog(0xff,_T("打开Dump文件失败%s"),(LPCTSTR)DumpFileName);
 	}
 
 	return FALSE;
@@ -331,12 +339,12 @@ BOOL CExceptionParser::SymInit()
 {
 	m_hProcess=GetCurrentProcess();
 	CEasyString ModulePath=GetModulePath(NULL);
-	if(!SymInitialize(m_hProcess,ModulePath,TRUE))
+	if(!SymInitializeT(m_hProcess,ModulePath,TRUE))
 	{
-		PrintImportantLog(0xff,"无法在当前模块路径找到PDB文件，尝试进行目录搜索");
+		PrintImportantLog(0xff,_T("无法在当前模块路径找到PDB文件，尝试进行目录搜索"));
 		if(!SymInitialize(m_hProcess,NULL,TRUE))
 		{
-			PrintImportantLog(0xff,"无法到PDB文件");
+			PrintImportantLog(0xff,_T("无法到PDB文件"));
 			return FALSE;
 		}
 	}
@@ -395,7 +403,7 @@ void CExceptionParser::InvalidParameterHandler(const wchar_t * expression,const 
 	CEasyString StrFunction=function;
 	CEasyString StrFile=file;
 
-	PrintImportantLog(0xff,"非法的调用参数[%s][%s][%s][%d]",
+	PrintImportantLog(0xff,_T("非法的调用参数[%s][%s][%s][%d]"),
 		(LPCTSTR)StrExpression,
 		(LPCTSTR)StrFunction,
 		(LPCTSTR)StrFile,
@@ -404,5 +412,5 @@ void CExceptionParser::InvalidParameterHandler(const wchar_t * expression,const 
 
 void CExceptionParser::SignalHandler(int signal)
 {
-	PrintImportantLog(0xff,"系统提示%d",signal);
+	PrintImportantLog(0xff,_T("系统提示%d"),signal);
 }

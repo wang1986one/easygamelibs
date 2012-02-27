@@ -123,7 +123,7 @@ public:
 	virtual void GetText(CEasyString& Text)
 	{
 		Text=m_WndText;	
-		Text.Replace("\n","\r\n");
+		Text.Replace(_T("\n"),_T("\r\n"));
 	}
 
 	virtual void UpdateRects();

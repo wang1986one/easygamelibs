@@ -50,27 +50,27 @@ public:
 	}
 	CPropertyValue(int val)
 	{
-		m_Value.Format("%d",val);
+		m_Value.Format(_T("%d"),val);
 	}
 	CPropertyValue(UINT val)
 	{
-		m_Value.Format("%d",val);
+		m_Value.Format(_T("%d"),val);
 	}
 	CPropertyValue(long val)
 	{
-		m_Value.Format("%d",val);
+		m_Value.Format(_T("%d"),val);
 	}
 	CPropertyValue(double val)
 	{
-		m_Value.Format("%g",val);
+		m_Value.Format(_T("%g"),val);
 	}
 	CPropertyValue(float val)
 	{
-		m_Value.Format("%g",val);
+		m_Value.Format(_T("%g"),val);
 	}
 	CPropertyValue(bool val)
 	{
-		val?m_Value="是":m_Value="否";
+		val?m_Value=_T("是"):m_Value=_T("否");
 	}
 
 	CString& GetString()
@@ -87,35 +87,35 @@ public:
 	}
 	operator int()
 	{
-		return atoi((LPCTSTR)m_Value);
+		return _tstoi((LPCTSTR)m_Value);
 	}
 	operator UINT()
 	{
-		return atoi((LPCTSTR)m_Value);
+		return _tstoi((LPCTSTR)m_Value);
 	}
 	operator long()
 	{
-		return atoi((LPCTSTR)m_Value);
+		return _tstoi((LPCTSTR)m_Value);
 	}
 	operator __int64()
 	{
-		return _atoi64((LPCTSTR)m_Value);		
+		return _tstoi64((LPCTSTR)m_Value);		
 	}
 	operator unsigned __int64()
 	{
-		return _atoi64((LPCTSTR)m_Value);		
+		return _tstoi64((LPCTSTR)m_Value);		
 	}
 	operator double()
 	{
-		return atof((LPCTSTR)m_Value);
+		return _tstof((LPCTSTR)m_Value);
 	}
 	operator float()
 	{
-		return (float)atof((LPCTSTR)m_Value);
+		return (float)_tstof((LPCTSTR)m_Value);
 	}
 	operator bool()
 	{
-		return m_Value=="是";
+		return m_Value==_T("是");
 	}
 	CPropertyValue& operator=(const CString& val)
 	{
@@ -129,43 +129,43 @@ public:
 	}
 	CPropertyValue& operator=(const int val)
 	{
-		m_Value.Format("%d",val);
+		m_Value.Format(_T("%d"),val);
 		return *this;
 	}
 	CPropertyValue& operator=(const UINT val)
 	{
-		m_Value.Format("%d",val);
+		m_Value.Format(_T("%d"),val);
 		return *this;
 	}
 	CPropertyValue& operator=(const long val)
 	{
-		m_Value.Format("%d",val);
+		m_Value.Format(_T("%d"),val);
 		return *this;
 	}
 	CPropertyValue& operator=(const __int64 val)
 	{
-		m_Value.Format("%I64d",val);
+		m_Value.Format(_T("%I64d"),val);
 		return *this;
 	}
 	CPropertyValue& operator=(const unsigned __int64 val)
 	{
-		m_Value.Format("%I64u",val);
+		m_Value.Format(_T("%I64u"),val);
 		return *this;
 	}
 	CPropertyValue& operator=(const double val)
 	{
-		m_Value.Format("%g",val);
+		m_Value.Format(_T("%g"),val);
 		return *this;
 	}
 
 	CPropertyValue& operator=(const float val)
 	{
-		m_Value.Format("%g",val);
+		m_Value.Format(_T("%g"),val);
 		return *this;
 	}
 	CPropertyValue& operator=(const bool val)
 	{
-		val?m_Value="是":m_Value="否";
+		val?m_Value=_T("是"):m_Value=_T("否");
 		return *this;
 	}
 

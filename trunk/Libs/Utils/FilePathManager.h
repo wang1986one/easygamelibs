@@ -29,6 +29,7 @@ typedef CEasyMap<CEasyString,CEasyString> CFilePathList;
 			  static int			m_FileChannel;\
 	public:\
 		   static void SetFileChannel(int Channel);\
+		   static int GetFileChannel();\
 		   static IFileAccessor * CreateFileAccessor();
 
 
@@ -58,7 +59,7 @@ typedef CEasyMap<CEasyString,CEasyString> CFilePathList;
 		{\
 			CEasyString Key;\
 			m_FilePathList.GetNextObject(Pos,Key);\
-			if(FileFind.FindFirst(Key+"/"+FileName))\
+			if(FileFind.FindFirst(Key+_T("/")+FileName))\
 			{\
 				FileFind.FindNext();	\
 				return FileFind.GetFilePath();\
@@ -95,6 +96,10 @@ typedef CEasyMap<CEasyString,CEasyString> CFilePathList;
 	void ClassName::SetFileChannel(int Channel)\
 	{\
 		m_FileChannel=Channel;\
+	}\
+	int ClassName::GetFileChannel()\
+	{\
+		return m_FileChannel;\
 	}\
 	IFileAccessor * ClassName::CreateFileAccessor()\
 	{\

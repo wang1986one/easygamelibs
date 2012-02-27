@@ -10,7 +10,7 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include "ilogprinter.h"
+
 
 enum FILE_LOG_MODE
 {
@@ -25,7 +25,7 @@ class CFileLogPrinter :
 	public ILogPrinter
 {
 protected:
-	char			m_MsgBuff[40960];
+	TCHAR			m_MsgBuff[40960];
 	DWORD			m_Flag;
 	IFileAccessor *	m_pFileAccessor;
 	CEasyTime		m_RecentLogTime;

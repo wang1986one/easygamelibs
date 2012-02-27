@@ -22,10 +22,10 @@ class CDBStaticRecordSet :
 	public IDBRecordSet
 {
 protected:
-	typedef std::vector<CDBValue> CDBValueRow;	
-	std::vector<DB_COLUMN_INFO>		m_pColumnInfos;
-	std::vector<CDBValueRow>		m_Records;
-	std::vector<CDBValue>			m_Params;
+	typedef CEasyArray<CDBValue> CDBValueRow;	
+	CEasyArray<DB_COLUMN_INFO>		m_pColumnInfos;
+	CEasyArray<CDBValueRow>			m_Records;
+	CEasyArray<CDBValue>			m_Params;
 	int								m_CurRow;
 	CDBValue						m_EmptyValue;
 

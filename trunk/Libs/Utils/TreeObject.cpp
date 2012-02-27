@@ -70,12 +70,12 @@ CTreeObject * CTreeObject::GetChild(LPCTSTR ObjName,bool NoCase)
 	{
 		if(NoCase)
 		{
-			if(_stricmp(m_ChildList[i]->GetName(),ObjName)==0)
+			if(_tcsicmp(m_ChildList[i]->GetName(),ObjName)==0)
 				return m_ChildList[i];
 		}
 		else
 		{
-			if(strcmp(m_ChildList[i]->GetName(),ObjName)==0)
+			if(_tcscmp(m_ChildList[i]->GetName(),ObjName)==0)
 				return m_ChildList[i];
 		}
 	}

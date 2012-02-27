@@ -295,7 +295,7 @@ BOOL CNetSocket::Listen(const CIPAddress& Address)
 #ifdef WIN32
 BOOL CNetSocket::EnableBlocking(BOOL Enable)
 {
-	unsigned long mode;
+	u_long mode;
 	if(Enable)
 		mode=0;
 	else

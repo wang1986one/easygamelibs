@@ -21,7 +21,7 @@ protected:
 	UINT						m_ReportID;
 	BOOL						m_NeedReallocConnectionID;
 	UINT						m_MaxPacketSize;	
-	std::vector<CIPPattern>		m_IPList;
+	CEasyArray<CIPPattern>		m_IPList;
 
 	DECLARE_CLASS_INFO_STATIC(CEasyNetLinkService);
 public:
@@ -42,7 +42,7 @@ public:
 	void EnableReallocConnectionID(BOOL Enable);
 	BOOL NeedReallocConnectionID();
 
-	void SetIPList(std::vector<CIPPattern>& IPList);
+	void SetIPList(CEasyArray<CIPPattern>& IPList);
 
 	void PrintInfo(UINT LogChannel);
 
@@ -83,7 +83,7 @@ inline BOOL CEasyNetLinkService::NeedReallocConnectionID()
 	return m_NeedReallocConnectionID;
 }
 
-inline void CEasyNetLinkService::SetIPList(std::vector<CIPPattern>& IPList)
+inline void CEasyNetLinkService::SetIPList(CEasyArray<CIPPattern>& IPList)
 {
 	m_IPList=IPList;
 }

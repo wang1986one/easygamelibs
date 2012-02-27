@@ -11,7 +11,6 @@
 /****************************************************************************/
 #pragma once
 
-//#include "math.h"
 
 template < class KEY,class T ,int StorageMode=EDSM_STATIC>
 class CStaticMap

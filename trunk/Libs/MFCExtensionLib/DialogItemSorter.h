@@ -38,15 +38,15 @@ public:
 protected:
 	struct SORT_TREE_ITEM
 	{
-		UINT						ID;
-		int							SortType;		
-		float						SortParam1;
-		float						SortParam2;
-		SORT_TREE_ITEM *			pParent;
-		vector<SORT_TREE_ITEM *>	ChildList;
-		CRect						Rect; 
-		int							DialogItemID;
-		CResizeBar *				pResizeBar;
+		UINT										ID;
+		int											SortType;		
+		float										SortParam1;
+		float										SortParam2;
+		SORT_TREE_ITEM *							pParent;
+		CArray<SORT_TREE_ITEM *,SORT_TREE_ITEM *>	ChildList;
+		CRect										Rect; 
+		int											DialogItemID;
+		CResizeBar *								pResizeBar;
 
 		SORT_TREE_ITEM()
 		{
@@ -60,11 +60,11 @@ protected:
 		}
 		~SORT_TREE_ITEM()
 		{
-			for(size_t i=0;i<ChildList.size();i++)
+			for(size_t i=0;i<ChildList.GetCount();i++)
 			{
 				SAFE_DELETE(ChildList[i]);
 			}
-			ChildList.clear();
+			ChildList.RemoveAll();
 			SAFE_DELETE(pResizeBar);
 		}
 	};

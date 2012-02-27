@@ -65,7 +65,7 @@ bool CD3DSceneRender::Create(CD3DDevice * pDevice,UINT TreeMode,CD3DBoundingBox 
 	m_RenderBatchList.Create(1024,1024);
 	m_TransparentSubMeshList.Create(1024,1024);
 
-	m_pSharedParamFX=m_pDevice->GetFXManager()->LoadFXFromMemory("SHARED_PARAM_FX",SHARED_PARAM_FX,strlen(SHARED_PARAM_FX));
+	m_pSharedParamFX=m_pDevice->GetFXManager()->LoadFXFromMemory(_T("SHARED_PARAM_FX"),SHARED_PARAM_FX,strlen(SHARED_PARAM_FX));
 
 	m_pSharedParamFX->SetBool("IsGlobalLightEnable",true);
 
@@ -157,7 +157,7 @@ bool CD3DSceneRender::DelObject(CD3DObject * pObj,bool IsRecursive)
 			{
 				if(!DeleteSceneObject(pObj))				
 				{
-					PrintD3DLog(0,"从场景树中删除对象[%s,%s]失败",
+					PrintD3DLog(0,_T("从场景树中删除对象[%s,%s]失败"),
 						pObj->GetName(),pObj->GetClassInfo().ClassName);
 				}
 			}
@@ -204,7 +204,7 @@ bool CD3DSceneRender::AddSceneObject(CD3DObject * pObject,bool IsRecursive)
 		int Relation=m_pSceneRoot->NodeBox.CheckRelation(BBox);
 		if((!BBox.IsValid())||Relation==CD3DBoundingBox::RELATION_TYPE_OUT||Relation==CD3DBoundingBox::RELATION_TYPE_BE_INCLUDE)
 		{
-			PrintD3DLog(0,"对象[%s]因为超出场景范围，无法加入场景树",pObject->GetName());
+			PrintD3DLog(0,_T("对象[%s]因为超出场景范围，无法加入场景树"),pObject->GetName());
 			if(!AddObject(pObject,false))
 				return false;
 		}
@@ -237,7 +237,7 @@ bool CD3DSceneRender::AddSceneObject(CD3DObject * pObject,bool IsRecursive)
 		}
 		else
 		{
-			PrintD3DLog(0,"对象[%s]不是可渲染对象，不加入场景树");
+			PrintD3DLog(0,_T("对象[%s]不是可渲染对象，不加入场景树"));
 			return AddObject(pObject,IsRecursive);
 		}
 	}
@@ -312,7 +312,7 @@ void CD3DSceneRender::ShowNodeFrame(TREE_NODE * pTree,bool IsShow)
 			pTree->pBoundingFrame=new CD3DBoundingFrame();
 			pTree->pBoundingFrame->SetDevice(m_pDevice);
 			pTree->pBoundingFrame->CreateFromBBox(pTree->NodeBox,0xFF0000FF);
-			pTree->pBoundingFrame->SetName("NodeBox");
+			pTree->pBoundingFrame->SetName(_T("NodeBox"));
 			AddObject(pTree->pBoundingFrame);			
 		}
 	}	
@@ -488,7 +488,7 @@ bool CD3DSceneRender::AddWMOObject(CD3DWOWWMOModel * pWMOObject)
 	{
 		if(m_WMOObjectList[i]==pWMOObject)
 		{
-			PrintD3DLog(0,"CD3DSceneRender::AddWMOObject:WMO对象[%s]已经存在了",
+			PrintD3DLog(0,_T("CD3DSceneRender::AddWMOObject:WMO对象[%s]已经存在了"),
 				pWMOObject->GetName());
 			return false;
 		}
@@ -506,7 +506,7 @@ bool CD3DSceneRender::DelWMOObject(CD3DWOWWMOModel * pWMOObject)
 			return true;
 		}
 	}
-	PrintD3DLog(0,"CD3DSceneRender::DelWMOObject:WMO对象[%s]不存在",
+	PrintD3DLog(0,_T("CD3DSceneRender::DelWMOObject:WMO对象[%s]不存在"),
 		pWMOObject->GetName());
 	return false;
 }
@@ -592,7 +592,7 @@ bool CD3DSceneRender::DeleteLight(LPCTSTR LightName)
 
 	for(UINT i=0;i<m_LightList.GetCount();i++)
 	{
-		if(strcmp(m_LightList[i]->GetName(),LightName)==0)
+		if(_tcscmp(m_LightList[i]->GetName(),LightName)==0)
 		{
 			return DeleteLight(i);
 		}
@@ -779,6 +779,8 @@ void CD3DSceneRender::Render()
 	m_VertexCount=0;
 
 	m_MergeRenderSubMeshCount=0;
+	m_FXApplyCount=0;
+	m_MaterialSetCount=0;
 	m_TreeCheckCount=0;
 	m_ObjectCheckCount=0;
 	m_DirectRenderCount=0;
@@ -978,7 +980,7 @@ bool CD3DSceneRender::DeleteSceneObject(CD3DObject * pObject)
 			}
 			if(m_SceneRenderUnitList[i]->TreeNodes.GetCount())
 			{
-				PrintD3DLog(0,"未能从所有树节点中清除此对象");
+				PrintD3DLog(0,_T("未能从所有树节点中清除此对象"));
 			}
 			//DeleteObjectFromTree(m_pSceneRoot,m_SceneRenderUnitList[i]);
 			SAFE_DELETE(m_SceneRenderUnitList[i]);
@@ -1096,7 +1098,7 @@ bool CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,CD3DObject * pObject,boo
 	{
 		if(m_SceneObjectList[i]==pObject)
 		{
-			PrintD3DLog(0,"对象[%s]已经存在于场景中",
+			PrintD3DLog(0,_T("对象[%s]已经存在于场景中"),
 				pObject->GetName());
 			return false;
 		}
@@ -1147,7 +1149,7 @@ bool CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,CD3DObject * pObject,boo
 			}
 			else
 			{
-				PrintD3DLog(0,"对象[%s]的SubMesh[%u]没有FX,无法加入渲染",
+				PrintD3DLog(0,_T("对象[%s]的SubMesh[%u]没有FX,无法加入渲染"),
 					pObject->GetName(),i);
 			}
 		}
@@ -1157,7 +1159,7 @@ bool CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,CD3DObject * pObject,boo
 	if(CostTime>MaxCost)
 	{
 		MaxCost=CostTime;
-		PrintD3DDebugLog(0,"CD3DSceneRender::AddSceneObject:最大耗时:%g[%u,%u,%u,%u,%u,%u]",
+		PrintD3DDebugLog(0,_T("CD3DSceneRender::AddSceneObject:最大耗时:%g[%u,%u,%u,%u,%u,%u]"),
 			(double)MaxCost/CEasyTimerEx::TIME_UNIT_PER_SECOND,
 			m_AddObjectSubMeshCount,m_AddObjectTreeWalkCount,m_AddObjectTreeAddCount,
 			m_AddObjectTreeCutCount,m_AddObjectTreeUpdateCount,m_AddObjectObjectTestCount);
@@ -1203,7 +1205,7 @@ void CD3DSceneRender::AddObjectToTree(TREE_NODE * pTree,RENDER_OBJECT_INFO * pOb
 		}
 		else
 		{
-			PrintD3DLog(0,"CD3DSceneRender::AddObjectToTree:异常，加入节点的对象和节点的任何一个子结点都不相交");
+			PrintD3DLog(0,_T("CD3DSceneRender::AddObjectToTree:异常，加入节点的对象和节点的任何一个子结点都不相交"));
 		}
 	}	
 	//未能加入子树，就加入当前节点
@@ -1219,7 +1221,7 @@ void CD3DSceneRender::UpdateTree(TREE_NODE * pNode)
 	{
 		m_MaxTreeDepth=pNode->Depth;
 		CD3DVector3 Size=pNode->NodeBox.GetSize();
-		PrintSystemLog(0,"Depth=%u,XSize=%g,ZSize=%g",m_MaxTreeDepth,Size.x,Size.z);
+		PrintSystemLog(0,_T("Depth=%u,XSize=%g,ZSize=%g"),m_MaxTreeDepth,Size.x,Size.z);
 	}
 
 	m_AddObjectTreeUpdateCount++;
@@ -1853,12 +1855,22 @@ void CD3DSceneRender::DoBatchRender()
 	CD3DObject * pObject=NULL;
 
 	CD3DFX * pFX=NULL;
+
+	UINT64 HashCode1,HashCode2;
+	UINT64 OldHashCode1,OldHashCode2;
 	
+
+	OldHashCode1=0;
+	OldHashCode2=0;
 
 	for(UINT i=0;i<m_RenderBatchList.GetCount();i++)
 	{
 		RENDER_SUBMESH_INFO& BatchInfo=m_RenderBatchList[i];
 		bool NeedSetObjectFXParam=false;
+
+		BatchInfo.pMaterial->GetHashCode(HashCode1,HashCode2);
+
+		
 
 		if(pFX!=BatchInfo.pMaterial->GetFX())
 		{
@@ -1871,6 +1883,15 @@ void CD3DSceneRender::DoBatchRender()
 			pFX->Begin();
 			pFX->BeginPass(0);
 			NeedSetObjectFXParam=true;
+			m_FXApplyCount++;
+		}
+
+		if(HashCode1!=OldHashCode1||HashCode2!=OldHashCode2)
+		{
+			OldHashCode1=HashCode1;
+			OldHashCode2=HashCode2;
+
+			SetSubMeshMaterialFXParams(BatchInfo.pMaterial);
 		}
 
 		if(pObject!=BatchInfo.pObj)
@@ -1892,7 +1913,9 @@ void CD3DSceneRender::DoBatchRender()
 			m_ObjectCount++;
 		}
 		if(NeedSetObjectFXParam)
+		{
 			pObject->OnPrepareRender(this,pFX,m_LightList,m_pCamera);
+		}
 
 		BatchInfo.pObj->OnPrepareRenderSubMesh(this,pFX,BatchInfo.pSubMesh,BatchInfo.pMaterial,m_LightList,m_pCamera);
 		pFX->CommitChanges();
@@ -1953,11 +1976,15 @@ void CD3DSceneRender::DoBatchRender()
 
 	//再绘制透明的	
 
+	OldHashCode1=0;
+	OldHashCode2=0;
 
 	for(UINT i=0;i<m_TransparentSubMeshList.GetCount();i++)
 	{
 		RENDER_SUBMESH_INFO& BatchInfo=m_TransparentSubMeshList[i];
 		bool NeedSetObjectFXParam=false;
+
+		BatchInfo.pMaterial->GetHashCode(HashCode1,HashCode2);
 
 		assert(BatchInfo.pObj);
 		assert(BatchInfo.pMaterial);
@@ -1974,6 +2001,15 @@ void CD3DSceneRender::DoBatchRender()
 			pFX->Begin();
 			pFX->BeginPass(0);
 			NeedSetObjectFXParam=true;
+			m_FXApplyCount++;
+		}
+
+		if(HashCode1!=OldHashCode1||HashCode2!=OldHashCode2)
+		{
+			OldHashCode1=HashCode1;
+			OldHashCode2=HashCode2;
+
+			SetSubMeshMaterialFXParams(BatchInfo.pMaterial);
 		}
 
 		if(pObject!=BatchInfo.pObj)
@@ -1995,7 +2031,9 @@ void CD3DSceneRender::DoBatchRender()
 			m_ObjectCount++;
 		}
 		if(NeedSetObjectFXParam)
+		{
 			pObject->OnPrepareRender(this,pFX,m_LightList,m_pCamera);
+		}
 		BatchInfo.pObj->OnPrepareRenderSubMesh(this,pFX,BatchInfo.pSubMesh,BatchInfo.pMaterial,m_LightList,m_pCamera);
 		pFX->CommitChanges();
 		RenderSubMeshEx(BatchInfo.pSubMesh);
@@ -2657,14 +2695,26 @@ int CD3DSceneRender::SubMeshCompare(const void * s1,const void * s2)
 	RENDER_SUBMESH_INFO * pBatchInfo1=(RENDER_SUBMESH_INFO *)s1;
 	RENDER_SUBMESH_INFO * pBatchInfo2=(RENDER_SUBMESH_INFO *)s2;
 
+	UINT64 HashCode11,HashCode12;
+	UINT64 HashCode21,HashCode22;
 	
 	if(pBatchInfo1->pMaterial->GetFX()==pBatchInfo2->pMaterial->GetFX())
 	{
-		if(pBatchInfo1->pObj==pBatchInfo2->pObj)
+		pBatchInfo1->pMaterial->GetHashCode(HashCode11,HashCode12);
+		pBatchInfo2->pMaterial->GetHashCode(HashCode21,HashCode22);
+		
+		if(HashCode11==HashCode21&&HashCode12==HashCode22)
 		{
-			return 0;
+			if(pBatchInfo1->pObj==pBatchInfo2->pObj)
+			{
+				return 0;
+			}
+			else if(pBatchInfo1->pObj>pBatchInfo2->pObj)
+				return 1;
+			else
+				return -1;
 		}
-		else if(pBatchInfo1->pObj>pBatchInfo2->pObj)
+		else if(HashCode11>HashCode21||(HashCode11==HashCode21&&HashCode12>HashCode22))
 			return 1;
 		else
 			return -1;
@@ -2759,6 +2809,31 @@ void CD3DSceneRender::RenderSubMeshEx(CD3DSubMesh * pSubMesh)
 bool CD3DSceneRender::CanTestCollide(UINT64 SubMeshProperty,UINT TestMode)
 {
 	return (SubMeshProperty&CD3DSubMesh::SMF_HAVE_COLLIDE)||(TestMode&RITM_INCLUDE_NO_COLLIDE_FACE);
+}
+
+void CD3DSceneRender::SetSubMeshMaterialFXParams(CD3DSubMeshMaterial * pMaterial)
+{
+	if(pMaterial->GetFX())
+	{
+		pMaterial->GetFX()->SetColor(pMaterial->GetGlobalColorFXParamName(),pMaterial->GetGlobalColor());
+
+		for(UINT i=0;i<pMaterial->GetTextureLayerCount();i++)
+		{
+			if(pMaterial->GetTextureProperty(i)&D3D_TEX_FLAG_DEPTH_TEX)
+			{
+				pMaterial->GetFX()->SetTexture(pMaterial->GetTextureFXParamName(i),m_pDepthTexture);
+			}
+			else
+			{
+				pMaterial->GetFX()->SetTexture(pMaterial->GetTextureFXParamName(i),pMaterial->GetTexture(i));
+			}
+			if(pMaterial->GetTextureProperty(i)&D3D_TEX_FLAG_UV_ANI)
+			{
+				pMaterial->GetFX()->SetMatrix(pMaterial->GetTextureMatFXParamName(i),pMaterial->GetTextureUVTransform(i));
+			}
+		}
+		m_MaterialSetCount++;
+	}
 }
 
 }

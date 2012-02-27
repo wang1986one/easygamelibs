@@ -70,9 +70,9 @@ int CLZWPack::PackAlloc()
 	BufferFree();
 	size=1<<m_MaxCodeLength;
 	m_CodeBufferSize=size;
-	m_pCTlink=(long *)malloc(size*sizeof(long));
+	m_pCTlink=(CODE_TYPE *)malloc(size*sizeof(CODE_TYPE));
 	m_pCTfirst=(BYTE *)malloc(size);
-	m_pCTnext=(long *)malloc(size*sizeof(long));
+	m_pCTnext=(CODE_TYPE *)malloc(size*sizeof(CODE_TYPE));
 	if(m_pCTlink==NULL||m_pCTfirst==NULL||m_pCTnext==NULL)
 		return 1;
 	return 0;
@@ -84,13 +84,13 @@ int CLZWPack::UnpackAlloc()
 	BufferFree();
 	size=1<<m_MaxCodeLength;
 	m_CodeBufferSize=size;
-	m_pCTlink=(long *)malloc(size*sizeof(long));	
+	m_pCTlink=(CODE_TYPE *)malloc(size*sizeof(CODE_TYPE));	
 	m_pCTfirst=(BYTE *)malloc(size);
 	m_pCTlast=(BYTE *)malloc(size);
 	m_pOStack=(BYTE *)malloc(size);
 	if(m_pCTlink==NULL||m_pCTfirst==NULL||m_pCTlast==NULL||m_pOStack==NULL)
 		return 1;
-	ZeroMemory(m_pCTlink,size*sizeof(long));
+	ZeroMemory(m_pCTlink,size*sizeof(CODE_TYPE));
 	ZeroMemory(m_pCTfirst,size);
 	ZeroMemory(m_pCTlast,size);
 	ZeroMemory(m_pOStack,size);
@@ -290,7 +290,7 @@ int CLZWPack::StartUnpack(void * pData,DWORD DataSize)
 int CLZWPack::Pack(void *data,DWORD DataSize)
 {
 	BYTE	ThisChar;
-	long		code;
+	CODE_TYPE		code;
 
 	m_pInBuffer=(BYTE *)data;
 	m_InBufferSize=DataSize;
@@ -302,7 +302,7 @@ int CLZWPack::Pack(void *data,DWORD DataSize)
 		else
 		{
 			PutCode(m_OldCode);
-			m_OldCode=(long)ThisChar;
+			m_OldCode=(CODE_TYPE)ThisChar;
 		}
 		if(m_NextCode>m_NextCodeLimit)
 		{
@@ -326,7 +326,7 @@ int CLZWPack::Pack(void *data,DWORD DataSize)
 
 int CLZWPack::Unpack(void *data,DWORD DataSize)
 {
-	long		code;
+	CODE_TYPE		code;
 
 	m_pOutBuffer=(BYTE *)data;
 	m_OutBufferSize=DataSize;
@@ -388,9 +388,9 @@ int CLZWPack::EndUnpack()
 	return 0;
 }
 
-long CLZWPack::LookUpCT(long code,BYTE ThisChar)
+CODE_TYPE CLZWPack::LookUpCT(CODE_TYPE code,BYTE ThisChar)
 {
-	if(code==-1) return (long)ThisChar;
+	if(code==-1) return (CODE_TYPE)ThisChar;
 	if(m_pCTlink[code]==-2)
 		m_pCTlink[code]=m_NextCode;
 	else
@@ -405,7 +405,7 @@ long CLZWPack::LookUpCT(long code,BYTE ThisChar)
 	return -1;
 }
 
-void CLZWPack::InsertCT(long code,long OldCode)
+void CLZWPack::InsertCT(CODE_TYPE code,CODE_TYPE OldCode)
 {
 	m_pCTlink[m_NextCode]=m_OldCode;
 	m_pCTlast[m_NextCode]=m_pCTfirst[code];
@@ -420,7 +420,7 @@ void CLZWPack::InsertCT(long code,long OldCode)
 	}
 }
 
-int CLZWPack::PutCode(long code)
+int CLZWPack::PutCode(CODE_TYPE code)
 {
 	BYTE	bits,mask;
 	int		BitsCount,BitsLeft,BitsLength;
@@ -461,7 +461,7 @@ int CLZWPack::PutCode(long code)
 	return 0;
 }
 
-int CLZWPack::GetCode(long& Code)
+int CLZWPack::GetCode(CODE_TYPE& Code)
 {
 	DWORD	bits,mask;
 	int		BitsCount,BitsLeft,BitsLength;
@@ -503,7 +503,7 @@ int CLZWPack::GetCode(long& Code)
 	return 0;
 }
 
-int CLZWPack::PutString(long code)
+int CLZWPack::PutString(CODE_TYPE code)
 {
 	
 	if(code>=0) m_OStackPtr=0;

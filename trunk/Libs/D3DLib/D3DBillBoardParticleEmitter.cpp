@@ -305,7 +305,12 @@ void CD3DBillBoardParticleEmitter::OnPrepareRenderSubMesh(CD3DBaseRender * pRend
 	//pFX->SetFloat("MaterialPower",pD3DMaterial->Power);
 
 	//ÉèÖÃÎÆÀí
-	pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
+	//pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
+
+	if(pSubMesh->IsSelected())			
+	{
+		pFX->SetColor("GlobalColor",0xFFFF0000);
+	}
 
 }
 
@@ -498,7 +503,7 @@ bool CD3DBillBoardParticleEmitter::LoadFromResource(CD3DParticleEmitterResource 
 	m_SubMesh.GetMaterial().GetMaterial().Power=40.0f;
 
 
-	m_SubMesh.GetMaterial().AddTexture(pEmitterInfo->pTexture,0);
+	m_SubMesh.GetMaterial().AddTexture(pEmitterInfo->pTexture,0,"TexLay0","");
 	if(pEmitterInfo->pTexture)
 		pEmitterInfo->pTexture->AddUseRef();
 	m_SubMesh.GetMaterial().SetFX(pEmitterInfo->pFX);
@@ -509,6 +514,8 @@ bool CD3DBillBoardParticleEmitter::LoadFromResource(CD3DParticleEmitterResource 
 	{
 		m_SubMesh.SetTransparent(true);
 	}
+
+	m_SubMesh.GetMaterial().CaculateHashCode();
 
 	if(pEmitterInfo->Flags&CD3DParticleEmitterResource::PEF_GRAVITY_TRANSFORM)
 	{

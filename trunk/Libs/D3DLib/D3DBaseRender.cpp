@@ -131,7 +131,7 @@ void CD3DBaseRender::RemoveAllObject()
 	m_RootObjectList.Clear();
 }
 
-void CD3DBaseRender::RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPCTSTR RenderTech)
+void CD3DBaseRender::RenderSubMesh(CD3DSubMesh * pSubMesh,CD3DFX * pRenderFX,LPCSTR RenderTech)
 {	
 	m_SubMeshCount++;
 	m_FaceCount+=pSubMesh->GetPrimitiveCountR();

@@ -44,7 +44,7 @@ bool CSystemConfig::LoadConfig(LPCTSTR ConfigFileName)
 			if(MainThread.moveto_child("MainThread"))
 			{
 				if(MainThread.has_attribute("ProcessLimit"))
-					m_MainThreadProcessLimit=(long)MainThread.attribute("ProcessLimit");
+					m_MainThreadProcessLimit=MainThread.attribute("ProcessLimit");
 
 			}
 			
@@ -52,10 +52,10 @@ bool CSystemConfig::LoadConfig(LPCTSTR ConfigFileName)
 			if(UDPControlAddress.moveto_child("UDPControlAddress"))
 			{
 				if(UDPControlAddress.has_attribute("IP"))
-					m_UDPControlAddress.SetIP(UDPControlAddress.attribute("IP").getvalue().c_str());
+					m_UDPControlAddress.SetIP(UDPControlAddress.attribute("IP").getvalue());
 
 				if(UDPControlAddress.has_attribute("Port"))
-					m_UDPControlAddress.SetPort((WORD)((long)UDPControlAddress.attribute("Port")));
+					m_UDPControlAddress.SetPort(UDPControlAddress.attribute("Port"));
 
 			}
 
@@ -66,17 +66,17 @@ bool CSystemConfig::LoadConfig(LPCTSTR ConfigFileName)
 					m_LogServerObjectUse=(bool)LogConfig.attribute("LogServerObjectUse");
 
 				if(LogConfig.has_attribute("LogLevel"))
-					m_LogLevel=(long)LogConfig.attribute("LogLevel");
+					m_LogLevel=LogConfig.attribute("LogLevel");
 			}
 
 			xml_node GuardThread=Config;
 			if(GuardThread.moveto_child("GuardThread"))
 			{
 				if(GuardThread.has_attribute("KeepAliveTime"))
-					m_GuardThreadKeepAliveTime=(long)GuardThread.attribute("KeepAliveTime");
+					m_GuardThreadKeepAliveTime=GuardThread.attribute("KeepAliveTime");
 
 				if(GuardThread.has_attribute("KeepAliveCount"))
-					m_GuardThreadKeepAliveCount=(long)GuardThread.attribute("KeepAliveCount");
+					m_GuardThreadKeepAliveCount=GuardThread.attribute("KeepAliveCount");
 			}
 
 

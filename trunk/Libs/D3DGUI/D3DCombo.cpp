@@ -54,14 +54,14 @@ void CD3DCombo::InitWnd(CD3DGUI *  pGUI)
 	{
 		m_pExpandButton=pGUI->CreateButton(CEasyRect(0,0,0,0));
 		m_pExpandButton->SetParent(this);
-		m_pExpandButton->SetName("ComboEB");
+		m_pExpandButton->SetName(_T("ComboEB"));
 		m_pExpandButton->SetID(CIC_EB);
 		m_pExpandButton->SetInternal(true);
 		//m_pExpandButton->EnableFocus(false);
 
 		m_pComboList=pGUI->CreateSimpleList(CEasyRect(0,0,0,0));	
 		m_pComboList->SetParent(this);
-		m_pComboList->SetName("ComboList");
+		m_pComboList->SetName(_T("ComboList"));
 		m_pComboList->SetID(CIC_LIST);
 		m_pComboList->SetVisible(false);
 		m_pComboList->SetInternal(true);
@@ -261,95 +261,95 @@ int CD3DCombo::GetNextSelectedItem(int Index)
 
 void CD3DCombo::SaveToXml(xml_node * pXMLNode)
 {
-	xml_node Wnd=pXMLNode->append_child(node_element,"Combo");
-	Wnd.append_attribute("Name",(LPCTSTR)GetName());
-	Wnd.append_attribute("ID",(long)GetID());
-	Wnd.append_attribute("IsInternal",IsInternal());
+	xml_node Wnd=pXMLNode->append_child(node_element,_T("Combo"));
+	Wnd.append_attribute(_T("Name"),(LPCTSTR)GetName());
+	Wnd.append_attribute(_T("ID"),(long)GetID());
+	Wnd.append_attribute(_T("IsInternal"),IsInternal());
 
-	xml_node Behavior=Wnd.append_child(node_element,"Behavior");
+	xml_node Behavior=Wnd.append_child(node_element,_T("Behavior"));
 	SaveBehaviorToXML(Behavior);
-	Behavior.append_attribute("IsMultiLine",m_IsMultiLine);
-	Behavior.append_attribute("ShowCaret",m_IsShowCaret);
-	Behavior.append_attribute("CaretColor",(long)m_CaretColor);
-	Behavior.append_attribute("AutoWrap",m_AutoWrap);
-	Behavior.append_attribute("ReadOnly",m_IsReadyOnly);
-	Behavior.append_attribute("Encryption",m_IsEncryption);
-	Behavior.append_attribute("EnableScrollBar",m_IsEnabledScrollBar);
-	Behavior.append_attribute("ScrollBarWidth",(long)m_ScrollBarWidth);
+	Behavior.append_attribute(_T("IsMultiLine"),m_IsMultiLine);
+	Behavior.append_attribute(_T("ShowCaret"),m_IsShowCaret);
+	Behavior.append_attribute(_T("CaretColor"),(long)m_CaretColor);
+	Behavior.append_attribute(_T("AutoWrap"),m_AutoWrap);
+	Behavior.append_attribute(_T("ReadOnly"),m_IsReadyOnly);
+	Behavior.append_attribute(_T("Encryption"),m_IsEncryption);
+	Behavior.append_attribute(_T("EnableScrollBar"),m_IsEnabledScrollBar);
+	Behavior.append_attribute(_T("ScrollBarWidth"),(long)m_ScrollBarWidth);
 
-	xml_node Frame=Wnd.append_child(node_element,"Frame");
+	xml_node Frame=Wnd.append_child(node_element,_T("Frame"));
 	SaveFrameToXML(Frame);
-	xml_node Borders=Wnd.append_child(node_element,"Borders");
+	xml_node Borders=Wnd.append_child(node_element,_T("Borders"));
 	SaveBorderToXML(Borders);
-	xml_node Text=Wnd.append_child(node_element,"Text");
+	xml_node Text=Wnd.append_child(node_element,_T("Text"));
 	SaveTextToXML(Text);
-	xml_node Font=Wnd.append_child(node_element,"Font");
+	xml_node Font=Wnd.append_child(node_element,_T("Font"));
 	SaveFontToXML(Font);
 	if(m_pTexture)
 	{	
-		xml_node Texture=Wnd.append_child(node_element,"Texture");
+		xml_node Texture=Wnd.append_child(node_element,_T("Texture"));
 		SaveTextureToXML(Texture);
 	}
 
 	if(m_ChildWndList.GetCount())
 	{
-		xml_node Childs=Wnd.append_child(node_element,"Childs");
+		xml_node Childs=Wnd.append_child(node_element,_T("Childs"));
 		SaveChildsToXml(Childs);
 	}
 }
 
 bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 {
-	if(_strnicmp(pXMLNode->name(),"Combo",7)!=0)
+	if(_tcsnicmp(pXMLNode->name(),_T("Combo"),7)!=0)
 		return false;
-	if(pXMLNode->has_attribute("Name"))
-		SetName(pXMLNode->attribute("Name").getvalue().c_str());
+	if(pXMLNode->has_attribute(_T("Name")))
+		SetName(pXMLNode->attribute(_T("Name")).getvalue());
 
-	if(pXMLNode->has_attribute("ID"))
-		SetID((long)pXMLNode->attribute("ID"));
+	if(pXMLNode->has_attribute(_T("ID")))
+		SetID((long)pXMLNode->attribute(_T("ID")));
 
-	if(pXMLNode->has_attribute("IsInternal"))
-		SetInternal((bool)pXMLNode->attribute("IsInternal"));
+	if(pXMLNode->has_attribute(_T("IsInternal")))
+		SetInternal((bool)pXMLNode->attribute(_T("IsInternal")));
 
 	for(int i=0;i<(int)pXMLNode->children();i++)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Behavior",9)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Behavior"),9)==0)
 		{
 			LoadBehaviorFromXML(pXMLNode->child(i));
-			if(pXMLNode->child(i).has_attribute("IsMultiLine"))
-				SetMultiLine((bool)pXMLNode->child(i).attribute("IsMultiLine"));
-			if(pXMLNode->child(i).has_attribute("ShowCaret"))
-				EnableCaret((bool)pXMLNode->child(i).attribute("ShowCaret"));
-			if(pXMLNode->child(i).has_attribute("CaretColor"))
-				SetCaretColor((long)pXMLNode->child(i).attribute("CaretColor"));
-			if(pXMLNode->child(i).has_attribute("AutoWrap"))
-				EnableAutoWrap((bool)pXMLNode->child(i).attribute("AutoWrap"));
-			if(pXMLNode->child(i).has_attribute("ReadOnly"))
-				SetReadOnly((bool)pXMLNode->child(i).attribute("ReadOnly"));
-			if(pXMLNode->child(i).has_attribute("Encryption"))
-				SetEncryption((bool)pXMLNode->child(i).attribute("Encryption"));
-			if(pXMLNode->child(i).has_attribute("EnableScrollBar"))
-				EnableScrollBar((bool)pXMLNode->child(i).attribute("EnableScrollBar"));
-			if(pXMLNode->child(i).has_attribute("ScrollBarWidth"))
-				SetScrollBarWidth((long)pXMLNode->child(i).attribute("ScrollBarWidth"));
+			if(pXMLNode->child(i).has_attribute(_T("IsMultiLine")))
+				SetMultiLine((bool)pXMLNode->child(i).attribute(_T("IsMultiLine")));
+			if(pXMLNode->child(i).has_attribute(_T("ShowCaret")))
+				EnableCaret((bool)pXMLNode->child(i).attribute(_T("ShowCaret")));
+			if(pXMLNode->child(i).has_attribute(_T("CaretColor")))
+				SetCaretColor((long)pXMLNode->child(i).attribute(_T("CaretColor")));
+			if(pXMLNode->child(i).has_attribute(_T("AutoWrap")))
+				EnableAutoWrap((bool)pXMLNode->child(i).attribute(_T("AutoWrap")));
+			if(pXMLNode->child(i).has_attribute(_T("ReadOnly")))
+				SetReadOnly((bool)pXMLNode->child(i).attribute(_T("ReadOnly")));
+			if(pXMLNode->child(i).has_attribute(_T("Encryption")))
+				SetEncryption((bool)pXMLNode->child(i).attribute(_T("Encryption")));
+			if(pXMLNode->child(i).has_attribute(_T("EnableScrollBar")))
+				EnableScrollBar((bool)pXMLNode->child(i).attribute(_T("EnableScrollBar")));
+			if(pXMLNode->child(i).has_attribute(_T("ScrollBarWidth")))
+				SetScrollBarWidth((long)pXMLNode->child(i).attribute(_T("ScrollBarWidth")));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Frame",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Frame"),6)==0)
 		{
 			LoadFrameFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Borders",8)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Borders"),8)==0)
 		{
 			LoadBorderFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Text",5)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Text"),5)==0)
 		{
 			LoadTextFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Font",5)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Font"),5)==0)
 		{
 			LoadFontFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Texture",8)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Texture"),8)==0)
 		{
 			LoadTextureFromXML(pXMLNode->child(i));
 		}
@@ -361,7 +361,7 @@ bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 	//×°ÔØ×Ó´°¿Ú
 	for(int i=(int)pXMLNode->children()-1;i>=0;i--)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Childs",7)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Childs"),7)==0)
 		{
 			LoadChildsFromXml(pXMLNode->child(i));
 			break;
@@ -372,7 +372,7 @@ bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 	{
 		if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DScrollBar))&&
-			(strcmp(m_ChildWndList[i]->GetName(),"ED_ScrollBar")==0)&&
+			(_tcscmp(m_ChildWndList[i]->GetName(),_T("ED_ScrollBar"))==0)&&
 			m_ChildWndList[i]!=m_pScrollBar)
 		{
 			CD3DScrollBar * pScrollBar=(CD3DScrollBar *)m_ChildWndList[i];
@@ -381,7 +381,7 @@ bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 		}
 		else if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DButton))&&
-			(strcmp(m_ChildWndList[i]->GetName(),"ComboEB")==0)&&
+			(_tcscmp(m_ChildWndList[i]->GetName(),_T("ComboEB"))==0)&&
 			m_ChildWndList[i]!=m_pExpandButton)
 		{
 			CD3DButton * pButton=(CD3DButton *)m_ChildWndList[i];
@@ -390,7 +390,7 @@ bool CD3DCombo::LoadFromXml(xml_node * pXMLNode)
 		}
 		else if(m_ChildWndList[i]->IsInternal()&&
 			m_ChildWndList[i]->IsKindOf(GET_CLASS_INFO(CD3DSimpleList))&&
-			(strcmp(m_ChildWndList[i]->GetName(),"ComboList")==0)&&
+			(_tcscmp(m_ChildWndList[i]->GetName(),_T("ComboList"))==0)&&
 			m_ChildWndList[i]!=m_pComboList)
 		{
 			CD3DSimpleList * pWnd=(CD3DSimpleList *)m_ChildWndList[i];
@@ -415,14 +415,14 @@ void CD3DCombo::SaveFrameToXML(xml_node& Frame)
 {
 	CD3DWnd::SaveFrameToXML(Frame);
 
-	Frame.append_attribute("ComboListHeight",(long)GetComboListHeight());
+	Frame.append_attribute(_T("ComboListHeight"),(long)GetComboListHeight());
 }
 
 void CD3DCombo::LoadFrameFromXML(xml_node& Frame)
 {
 	CD3DWnd::LoadFrameFromXML(Frame);
-	if(Frame.has_attribute("ComboListHeight"))
-		SetComboListHeight((long)Frame.attribute("ComboListHeight"));
+	if(Frame.has_attribute(_T("ComboListHeight")))
+		SetComboListHeight((long)Frame.attribute(_T("ComboListHeight")));
 }
 
 

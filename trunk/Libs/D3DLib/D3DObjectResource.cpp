@@ -134,10 +134,10 @@ bool CD3DObjectResource::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManage
 		switch(MemberID)
 		{
 		case SST_D3DOR_BOUDING_BOX:
-			memcpy(&m_BoundingBox,(LPCTSTR)Value,sizeof(m_BoundingBox));
+			memcpy(&m_BoundingBox,(LPCSTR)Value,sizeof(m_BoundingBox));
 			break;
 		case SST_D3DOR_BOUDING_SPHERE:
-			memcpy(&m_BoundingSphere,(LPCTSTR)Value,sizeof(m_BoundingSphere));
+			memcpy(&m_BoundingSphere,(LPCSTR)Value,sizeof(m_BoundingSphere));
 			break;
 		case SST_D3DOR_SUB_MESH:
 			{

@@ -10,13 +10,13 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include "ILogPrinter.h"
+
 
 
 #define LOG_SYSTEM_CHANNEL		1010100
 #define LOG_IMPORTANT_CHANNEL	1010101
 
-#define IMPORTANT_LOG_FILE_NAME	"ImportantError"
+#define IMPORTANT_LOG_FILE_NAME	_T("ImportantError")
 
 extern TCHAR LOG_MANAGER_INSTANCE[];
 

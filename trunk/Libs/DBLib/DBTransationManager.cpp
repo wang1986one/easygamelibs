@@ -32,13 +32,13 @@ CDBTransationManager::~CDBTransationManager(void)
 
 void CDBTransationManager::Destory()
 {
-	for(int i=0;i<(int)m_WorkThreads.size();i++)
+	for(int i=0;i<(int)m_WorkThreads.GetCount();i++)
 	{
 		if(m_WorkThreads[i])
 			m_WorkThreads[i]->SafeTerminate(DEFAULT_THREAD_TERMINATE_TIME);
 		SAFE_RELEASE(m_WorkThreads[i]);
 	}
-	m_WorkThreads.clear();
+	m_WorkThreads.Clear();
 }
 
 bool CDBTransationManager::Init(IDatabase * pDatabase,LPCTSTR szConnectStr,int ThreadCount,int QueueSize,UINT Flag)
@@ -62,7 +62,7 @@ bool CDBTransationManager::Init(IDatabase * pDatabase,LPCTSTR szConnectStr,int T
 			SAFE_RELEASE(pThread);
 			return false;
 		}
-		m_WorkThreads.push_back(pThread);
+		m_WorkThreads.Add(pThread);
 
 	}
 
@@ -78,7 +78,7 @@ CDBTransationWorkThread * CDBTransationManager::AllocWorkThread()
 {
 	CDBTransationWorkThread * pThread=NULL;
 	UINT Len=0xffffffff;
-	for(int i=0;i<(int)m_WorkThreads.size();i++)
+	for(int i=0;i<(int)m_WorkThreads.GetCount();i++)
 	{
 		if(m_WorkThreads[i]->GetQueueLen()<Len)
 		{
@@ -108,7 +108,7 @@ int CDBTransationManager::Update(int ProcessLimit)
 	while(ProcessCount<ProcessLimit)
 	{
 		int Count=0;
-		for(int i=0;i<(int)m_WorkThreads.size();i++)
+		for(int i=0;i<(int)m_WorkThreads.GetCount();i++)
 		{
 			CDBTransaction * pDBTansaction=m_WorkThreads[i]->PopFinishTransaction();
 			if(pDBTansaction)
@@ -145,7 +145,7 @@ int CDBTransationManager::Update(int ProcessLimit)
 bool CDBTransationManager::IsIdle()
 {
 	int Len=0;
-	for(int i=0;i<(int)m_WorkThreads.size();i++)
+	for(int i=0;i<(int)m_WorkThreads.GetCount();i++)
 	{
 		Len+=m_WorkThreads[i]->GetQueueLen()+m_WorkThreads[i]->GetFinishQueueLen();
 	}

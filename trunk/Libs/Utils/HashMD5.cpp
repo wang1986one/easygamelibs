@@ -249,8 +249,13 @@ CEasyString CHashMD5::GetHashCodeString(void)
 
 	for (i = 0; i < 16; i++)
 	{
-		temp.Format("%02x", m_mdContext.digest[i]);
+		temp.Format(_T("%02x"), m_mdContext.digest[i]);
 		HashCode+=temp;
 	}
 	return HashCode;
+}
+
+void CHashMD5::GetHashCode(BYTE * pBuff)
+{
+	memcpy(pBuff,m_mdContext.digest,16);
 }

@@ -492,6 +492,9 @@
 		<Unit filename="atomic_ops/include/atomic_ops_stack.h">
 			<Option virtualFolder="atomic_ops/" />
 		</Unit>
+		<Unit filename="pugxml.cpp">
+			<Option virtualFolder="XML/" />
+		</Unit>
 		<Unit filename="pugxml_linux.h">
 			<Option virtualFolder="XML/" />
 		</Unit>

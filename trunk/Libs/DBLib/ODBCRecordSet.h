@@ -22,19 +22,19 @@ class CODBCRecordSet :
 protected:
 	CODBCConnection *			m_pDBConnection;
 	SQLHSTMT					m_hStmt;
-	std::vector<DB_COLUMN_INFO> m_ColInfos;	
-	std::vector<int>			m_BindTypes;
-	std::vector<SQLINTEGER>		m_FieldSize;
+	CEasyArray<DB_COLUMN_INFO>	m_ColInfos;	
+	CEasyArray<int>				m_BindTypes;
+	CEasyArray<SQLINTEGER>		m_FieldSize;
 	CEasyBuffer					m_RecordLineBuffer;
-	std::vector<CDBValue>		m_RowBuffer;
+	CEasyArray<CDBValue>		m_RowBuffer;
 	int							m_CurRow;
 	int							m_RecordCount;
 	CDBValue					m_EmptyValue;
 	bool						m_IsBOF;
 	bool						m_IsEOF;
 	bool						m_IsForwardOnly;
-	std::vector<DB_COLUMN_INFO> m_ParamInfos;
-	std::vector<CDBValue>		m_ParamBuffer;
+	CEasyArray<DB_COLUMN_INFO>	m_ParamInfos;
+	CEasyArray<CDBValue>		m_ParamBuffer;
 
 	DECLARE_CLASS_INFO(CODBCRecordSet)
 public:

@@ -71,9 +71,9 @@ int CODBCRecordSet::Init(CODBCConnection * pDBConnection,SQLHSTMT hStmt)
 	if(ColNum<=0)
 		return DBERR_NO_RECORDS;	
 
-	m_ColInfos.resize(ColNum);
-	m_BindTypes.resize(ColNum);
-	m_RowBuffer.resize(ColNum);
+	m_ColInfos.Resize(ColNum);
+	m_BindTypes.Resize(ColNum);
+	m_RowBuffer.Resize(ColNum);
 
 	UINT RecordLineLen=0;
 
@@ -107,7 +107,7 @@ int CODBCRecordSet::Init(CODBCConnection * pDBConnection,SQLHSTMT hStmt)
 
 	m_RecordLineBuffer.Create(RecordLineLen);
 	
-	m_FieldSize.resize(ColNum);
+	m_FieldSize.Resize(ColNum);
 	char * pFieldBuffer=(char *)m_RecordLineBuffer.GetFreeBuffer();	
 	for(UINT i=0;i<ColNum;i++)
 	{		
@@ -134,12 +134,12 @@ void CODBCRecordSet::Destory()
 		SQLFreeHandle( SQL_HANDLE_STMT, m_hStmt );
 		m_hStmt = NULL;			
 	}
-	m_ColInfos.clear();
-	m_BindTypes.clear();
+	m_ColInfos.Clear();
+	m_BindTypes.Clear();
 	m_RecordLineBuffer.Destory();
 	m_CurRow=-1;
 	m_RecordCount=0;
-	m_RowBuffer.clear();
+	m_RowBuffer.Clear();
 }
 
 SQLHSTMT CODBCRecordSet::GetHSTMT()
@@ -179,8 +179,8 @@ int CODBCRecordSet::FetchRow(int Orientation,int Offset)
 	
 	if(Ret==DBERR_SUCCEED)
 	{	
-		int ColNum=(int)m_ColInfos.size();
-		m_RowBuffer.resize(ColNum);		
+		int ColNum=(int)m_ColInfos.GetCount();
+		m_RowBuffer.Resize(ColNum);		
 		char * pFieldBuffer=(char *)m_RecordLineBuffer.GetFreeBuffer();	
 		for(int i=0;i<ColNum;i++)
 		{
@@ -286,12 +286,12 @@ int CODBCRecordSet::GetRecordCount()
 
 int CODBCRecordSet::GetColumnCount()
 {
-	return (int)m_ColInfos.size();
+	return (int)m_ColInfos.GetCount();
 }
 
 LPCTSTR CODBCRecordSet::GetColumnName(int Index)
 {
-	if(Index>=0&&Index<(int)m_ColInfos.size())
+	if(Index>=0&&Index<(int)m_ColInfos.GetCount())
 	{
 		return m_ColInfos[Index].Name;
 	}
@@ -300,7 +300,7 @@ LPCTSTR CODBCRecordSet::GetColumnName(int Index)
 
 int CODBCRecordSet::GetIndexByColumnName(LPCTSTR Name)
 {
-	for(int i=0;i<(int)m_ColInfos.size();i++)
+	for(int i=0;i<(int)m_ColInfos.GetCount();i++)
 	{
 		if(_strnicmp(m_ColInfos[i].Name,Name,MAX_COLUMN_NAME)==0)
 			return i;
@@ -310,7 +310,7 @@ int CODBCRecordSet::GetIndexByColumnName(LPCTSTR Name)
 
 DB_COLUMN_INFO * CODBCRecordSet::GetColumnInfo(int Index)
 {
-	if(Index>=0&&Index<(int)m_ColInfos.size())
+	if(Index>=0&&Index<(int)m_ColInfos.GetCount())
 	{
 		return &(m_ColInfos[Index]);
 	}
@@ -320,7 +320,7 @@ DB_COLUMN_INFO * CODBCRecordSet::GetColumnInfo(int Index)
 
 CDBValue& CODBCRecordSet::GetField(int Index)
 {
-	if(Index>=0&&Index<(int)m_RowBuffer.size())
+	if(Index>=0&&Index<(int)m_RowBuffer.GetCount())
 	{
 		return m_RowBuffer[Index];
 	}

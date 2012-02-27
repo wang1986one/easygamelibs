@@ -10,8 +10,6 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include <string>
-#include <map>
 
 #define OBJECT_TYPE_ID_SEC	0xffff0000
 #define OBJECT_TYPE_ID_ID	0x0000ffff
@@ -25,7 +23,7 @@ class CNameObject;
 typedef CNameObject * (*OBJECT_CREATE_FN)();
 
 
-typedef CIndexSet<CNameObject *> CNameObjectSet;
+//typedef CIndexSet<CNameObject *> CNameObjectSet;
 
 enum OBJECT_CLONE_PARAM
 {
@@ -45,19 +43,19 @@ struct CLASS_INFO
 	OBJECT_CREATE_FN	pObjectCreateFn;
 	bool operator==(const CLASS_INFO& ClassInfo)
 	{
-		return strcmp(ClassName,ClassInfo.ClassName)==0;
+		return _tcscmp(ClassName,ClassInfo.ClassName)==0;
 	}
 	bool operator!=(const CLASS_INFO& ClassInfo)
 	{
-		return strcmp(ClassName,ClassInfo.ClassName)!=0;
+		return _tcscmp(ClassName,ClassInfo.ClassName)!=0;
 	}
 	bool operator==(LPCTSTR Name)
 	{
-		return strcmp(ClassName,Name)==0;
+		return _tcscmp(ClassName,Name)==0;
 	}
 	bool operator!=(LPCTSTR Name)
 	{
-		return strcmp(ClassName,Name)!=0;
+		return _tcscmp(ClassName,Name)!=0;
 	}
 	bool IsKindOf(const CLASS_INFO& ClassInfo)
 	{
@@ -117,8 +115,8 @@ public:\
 #define GET_CLASS_INFO_BY_NAME(ClassName) (*ClassName::GetClassInfo(ClassName))
 
 #define IMPLEMENT_CLASS_INFO(ClassName,ParentClassName) \
-	CLASS_INFO	ClassName::m_##ClassName##ClassInfo={#ClassName,&GET_CLASS_INFO(ParentClassName),ClassName::CreateObject};\
-	CClassInfoRegister	ClassName::m_##ClassName##ClassInfoRegister(#ClassName,&m_##ClassName##ClassInfo);\
+	CLASS_INFO	ClassName::m_##ClassName##ClassInfo={_T(#ClassName),&GET_CLASS_INFO(ParentClassName),ClassName::CreateObject};\
+	CClassInfoRegister	ClassName::m_##ClassName##ClassInfoRegister(_T(#ClassName),&m_##ClassName##ClassInfo);\
 	CNameObject * ClassName::CreateObject()\
 	{\
 		return (ParentClassName *) new ClassName();\
@@ -140,7 +138,7 @@ public:\
 
 
 #define IMPLEMENT_CLASS_INFO_STATIC(ClassName,ParentClassName) \
-	CLASS_INFO	ClassName::m_##ClassName##ClassInfo={#ClassName,&GET_CLASS_INFO(ParentClassName),NULL};\
+	CLASS_INFO	ClassName::m_##ClassName##ClassInfo={_T(#ClassName),&GET_CLASS_INFO(ParentClassName),NULL};\
 	CLASS_INFO& ClassName::GetThisClassInfo()\
 	{\
 		return m_##ClassName##ClassInfo;\
@@ -154,17 +152,7 @@ class CUSOResourceManager;
 
 class CNameObject //: public CObject
 {
-protected:
-	//struct STORAGE_STRUCT
-	//{
-	//	UINT	Size;		
-	//	char	Type[MAX_TYPE_LEN];	
-	//	char	Name[MAX_OBJECT_NAME];
-	//	UINT	StorageID;
-	//	UINT	ID;
-	//};	
-
-	//UINT			m_UpBoundGarder;
+protected:	
 	UINT			m_ID;
 	UINT			m_StorageID;
 	volatile UINT	m_UseRef;
@@ -172,7 +160,7 @@ protected:
 	CEasyString		m_Name;
 
 	static CLASS_INFO	m_CNameObjectClassInfo;
-	static std::map<std::string,CLASS_INFO *> * m_pAllClassInfo;
+	static CEasyMap<CEasyString,CLASS_INFO *> * m_pAllClassInfo;
 	static int m_AllClassCount;
 	static CClassInfoRegister m_CNameObjectClassInfoRegister;
 

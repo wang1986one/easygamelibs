@@ -10,7 +10,7 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include <map>
+
 
 
 
@@ -27,7 +27,7 @@ protected:
 	static bool				m_IsWorking;
 	static CMemoryAllocatee m_MemoryAllocatee;
 
-	std::map<void *,ALLOC_INFO>	m_AllocInfos;
+	CEasyMap<void *,ALLOC_INFO>	m_AllocInfos;
 public:
 	CMemoryAllocatee(void);
 	~CMemoryAllocatee(void);

@@ -78,7 +78,7 @@ bool CD3DFX::LoadFromFile(LPCTSTR FileName)
 	if(pFile==NULL)
 		return false;
 
-	PrintD3DDebugLog(0,"装载FX<%s>.....",(LPCTSTR)FxFileName);
+	PrintD3DDebugLog(0,_T("装载FX<%s>....."),(LPCTSTR)FxFileName);
 	if(pFile->Open(FxFileName,IFileAccessor::modeRead))
 	{
 		UINT Size=(UINT)pFile->GetSize();
@@ -93,13 +93,13 @@ bool CD3DFX::LoadFromFile(LPCTSTR FileName)
 		
 		if(LoadFromMemory(NULL,0))
 		{
-			PrintD3DDebugLog(0,"装载FX<%s>成功",(LPCTSTR)FxFileName);
+			PrintD3DDebugLog(0,_T("装载FX<%s>成功"),(LPCTSTR)FxFileName);
 			return true;
 		}
 	}
 	else
 		pFile->Release();
-	PrintD3DLog(0,"装载FX<%s>失败%d",(LPCTSTR)FxFileName,GetLastError());
+	PrintD3DLog(0,_T("装载FX<%s>失败%d"),(LPCTSTR)FxFileName,GetLastError());
 	return false;
 }
 
@@ -128,9 +128,9 @@ bool CD3DFX::LoadFromFileDirect(LPCTSTR FileName)
 	{
 		CEasyString ErrorMsg;
 		if(pErrors)
-			ErrorMsg.Format("无法加载FX,Err=(%s)",(char*)(pErrors->GetBufferPointer()));
+			ErrorMsg.Format(_T("无法加载FX,Err=(%s)"),(char*)(pErrors->GetBufferPointer()));
 		else
-			ErrorMsg.Format("无法加载FX");
+			ErrorMsg.Format(_T("无法加载FX"));
 		MessageBox(GetForegroundWindow(),ErrorMsg,"无法加载FX",MB_OK);
 		SAFE_RELEASE(pErrors);
 		return false;
@@ -157,7 +157,7 @@ bool CD3DFX::LoadFromMemory(const void * pData,int DataSize)
 	LPD3DXEFFECTCOMPILER pCompiler=NULL;
 	LPD3DXBUFFER pErrors=NULL;
 	
-	if(D3DXCreateEffectCompiler((LPCTSTR)m_EffectData.GetBuffer(),m_EffectData.GetUsedSize(),
+	if(D3DXCreateEffectCompiler((LPCSTR)m_EffectData.GetBuffer(),m_EffectData.GetUsedSize(),
 		NULL,m_pManager->GetBuildInFXIncludeParser(),
 		CompileFlag,
 		&pCompiler,
@@ -172,16 +172,16 @@ bool CD3DFX::LoadFromMemory(const void * pData,int DataSize)
 			SAFE_RELEASE(pCompiledData);
 
 			if(pErrors)
-				PrintD3DLog(0,"%s",(char*)(pErrors->GetBufferPointer()));
+				PrintD3DLog(0,_T("%s"),(LPCTSTR)(pErrors->GetBufferPointer()));
 
 			return LoadFXDirect(m_CompiledEffectData.GetBuffer(),m_CompiledEffectData.GetUsedSize());
 		}
 		else
 		{
 			if(pErrors)
-				PrintD3DLog(0,"无法编译FX,Err=(%s)",(char*)(pErrors->GetBufferPointer()));
+				PrintD3DLog(0,_T("无法编译FX,Err=(%s)"),(LPCTSTR)(pErrors->GetBufferPointer()));
 			else
-				PrintD3DLog(0,"无法编译FX");
+				PrintD3DLog(0,_T("无法编译FX"));
 			SAFE_RELEASE(pErrors);
 		}
 		SAFE_RELEASE(pCompiler);
@@ -190,9 +190,9 @@ bool CD3DFX::LoadFromMemory(const void * pData,int DataSize)
 	else
 	{
 		if(pErrors)
-			PrintD3DLog(0,"无法创建FX编译器,Err=(%s)",(char*)(pErrors->GetBufferPointer()));
+			PrintD3DLog(0,_T("无法创建FX编译器,Err=(%s)"),(LPCTSTR)(pErrors->GetBufferPointer()));
 		else
-			PrintD3DLog(0,"无法创建FX编译");
+			PrintD3DLog(0,_T("无法创建FX编译"));
 		SAFE_RELEASE(pErrors);
 		return false;
 	}
@@ -233,7 +233,7 @@ bool CD3DFX::SetActiveTechnique(int Index)
 	return true;
 }
 
-bool CD3DFX::SetActiveTechnique(LPCTSTR TechName)
+bool CD3DFX::SetActiveTechnique(LPCSTR TechName)
 {
 	if(m_pEffect)
 	{
@@ -260,7 +260,7 @@ bool CD3DFX::UseActiveTechnique()
 	return false;
 }
 
-bool CD3DFX::UseTechnique(LPCTSTR TechName)
+bool CD3DFX::UseTechnique(LPCSTR TechName)
 {
 	if(m_pEffect)
 	{
@@ -313,7 +313,7 @@ bool CD3DFX::EndPass(int Pass)
 }
 
 
-bool CD3DFX::SetTexture(LPCTSTR ParamName,CD3DTexture * pTexture)
+bool CD3DFX::SetTexture(LPCSTR ParamName,CD3DTexture * pTexture)
 {	
 	HRESULT	hr;
 
@@ -333,7 +333,7 @@ bool CD3DFX::SetTexture(LPCTSTR ParamName,CD3DTexture * pTexture)
 	return false;
 }
 
-bool CD3DFX::SetMatrix(LPCTSTR ParamName,const CD3DMatrix& Mat)
+bool CD3DFX::SetMatrix(LPCSTR ParamName,const CD3DMatrix& Mat)
 {	
 	HRESULT	hr;
 	
@@ -346,7 +346,7 @@ bool CD3DFX::SetMatrix(LPCTSTR ParamName,const CD3DMatrix& Mat)
 	return false;
 }
 
-bool CD3DFX::SetMatrixArray(LPCTSTR ParamName,const CD3DMatrix * pMats,int Count)
+bool CD3DFX::SetMatrixArray(LPCSTR ParamName,const CD3DMatrix * pMats,int Count)
 {	
 	HRESULT	hr;
 
@@ -363,7 +363,7 @@ bool CD3DFX::SetMatrixArray(LPCTSTR ParamName,const CD3DMatrix * pMats,int Count
 	return false;
 }
 
-bool CD3DFX::SetVector(LPCTSTR ParamName,const CD3DVector2& Vec)
+bool CD3DFX::SetVector(LPCSTR ParamName,const CD3DVector2& Vec)
 {
 	HRESULT	hr;
 	hr=m_pEffect->SetFloatArray(ParamName,(CONST FLOAT *)Vec,2);
@@ -374,7 +374,7 @@ bool CD3DFX::SetVector(LPCTSTR ParamName,const CD3DVector2& Vec)
 	return false;
 }
 
-bool CD3DFX::SetVector(LPCTSTR ParamName,const CD3DVector3& Vec)
+bool CD3DFX::SetVector(LPCSTR ParamName,const CD3DVector3& Vec)
 {
 	HRESULT	hr;
 	hr=m_pEffect->SetFloatArray(ParamName,(CONST FLOAT *)Vec,3);
@@ -385,7 +385,7 @@ bool CD3DFX::SetVector(LPCTSTR ParamName,const CD3DVector3& Vec)
 	return false;
 }
 
-bool CD3DFX::SetVector(LPCTSTR ParamName,const CD3DVector4& Vec)
+bool CD3DFX::SetVector(LPCSTR ParamName,const CD3DVector4& Vec)
 {
 	HRESULT	hr;
 	hr=m_pEffect->SetVector(ParamName,&Vec);
@@ -396,7 +396,7 @@ bool CD3DFX::SetVector(LPCTSTR ParamName,const CD3DVector4& Vec)
 	return false;
 }
 
-bool CD3DFX::SetQuaternion(LPCTSTR ParamName,const CD3DQuaternion& Quat)
+bool CD3DFX::SetQuaternion(LPCSTR ParamName,const CD3DQuaternion& Quat)
 {
 	HRESULT	hr;
 	hr=m_pEffect->SetFloatArray(ParamName,(CONST FLOAT *)Quat,4);
@@ -407,7 +407,7 @@ bool CD3DFX::SetQuaternion(LPCTSTR ParamName,const CD3DQuaternion& Quat)
 	return false;
 }
 
-bool CD3DFX::SetColor(LPCTSTR ParamName,const D3DCOLORVALUE& Color)
+bool CD3DFX::SetColor(LPCSTR ParamName,const D3DCOLORVALUE& Color)
 {
 	HRESULT	hr;
 	hr=m_pEffect->SetFloatArray(ParamName,(CONST FLOAT *)&Color,4);
@@ -418,7 +418,7 @@ bool CD3DFX::SetColor(LPCTSTR ParamName,const D3DCOLORVALUE& Color)
 	return false;
 }
 
-bool CD3DFX::SetColor(LPCTSTR ParamName,D3DCOLOR Color)
+bool CD3DFX::SetColor(LPCSTR ParamName,D3DCOLOR Color)
 {
 	D3DCOLORVALUE ColorValue;
 	ColorValue.a=((FLOAT)((Color>>24)&0xFF))/255.0f;
@@ -428,7 +428,7 @@ bool CD3DFX::SetColor(LPCTSTR ParamName,D3DCOLOR Color)
 	return SetColor(ParamName,ColorValue);
 }
 
-bool CD3DFX::SetInt(LPCTSTR ParamName,int Value)
+bool CD3DFX::SetInt(LPCSTR ParamName,int Value)
 {
 	HRESULT	hr;
 	hr=m_pEffect->SetInt(ParamName,Value);
@@ -439,7 +439,7 @@ bool CD3DFX::SetInt(LPCTSTR ParamName,int Value)
 	return false;
 }
 
-bool CD3DFX::SetIntArray(LPCTSTR ParamName,const int * pValues,int Count)
+bool CD3DFX::SetIntArray(LPCSTR ParamName,const int * pValues,int Count)
 {
 	HRESULT	hr;
 	hr=m_pEffect->SetIntArray(ParamName,pValues,Count);
@@ -450,7 +450,7 @@ bool CD3DFX::SetIntArray(LPCTSTR ParamName,const int * pValues,int Count)
 	return false;
 }
 
-bool CD3DFX::SetFloat(LPCTSTR ParamName,FLOAT Value)
+bool CD3DFX::SetFloat(LPCSTR ParamName,FLOAT Value)
 {
 	HRESULT	hr;
 	hr=m_pEffect->SetFloat(ParamName,Value);
@@ -461,7 +461,7 @@ bool CD3DFX::SetFloat(LPCTSTR ParamName,FLOAT Value)
 	return false;
 }
 
-bool CD3DFX::SetBool(LPCTSTR ParamName,BOOL Value)
+bool CD3DFX::SetBool(LPCSTR ParamName,BOOL Value)
 {
 	HRESULT	hr;
 	hr=m_pEffect->SetBool(ParamName,Value);
@@ -472,7 +472,7 @@ bool CD3DFX::SetBool(LPCTSTR ParamName,BOOL Value)
 	return false;
 }
 
-bool CD3DFX::SetValue(LPCTSTR ParamName,LPCVOID pData,UINT DataSize)
+bool CD3DFX::SetValue(LPCSTR ParamName,LPCVOID pData,UINT DataSize)
 {
 	HRESULT	hr;
 	hr=m_pEffect->SetValue(ParamName,pData,DataSize);
@@ -483,7 +483,7 @@ bool CD3DFX::SetValue(LPCTSTR ParamName,LPCVOID pData,UINT DataSize)
 	return false;
 }
 
-bool CD3DFX::GetInt(LPCTSTR ParamName,int& Value)
+bool CD3DFX::GetInt(LPCSTR ParamName,int& Value)
 {
 	HRESULT	hr;
 	hr=m_pEffect->GetInt(ParamName,&Value);
@@ -494,7 +494,7 @@ bool CD3DFX::GetInt(LPCTSTR ParamName,int& Value)
 	return false;
 }
 
-bool CD3DFX::GetFloat(LPCTSTR ParamName,FLOAT& Value)
+bool CD3DFX::GetFloat(LPCSTR ParamName,FLOAT& Value)
 {
 	HRESULT	hr;
 	hr=m_pEffect->GetFloat(ParamName,&Value);
@@ -505,7 +505,7 @@ bool CD3DFX::GetFloat(LPCTSTR ParamName,FLOAT& Value)
 	return false;
 }
 
-bool CD3DFX::GetBool(LPCTSTR ParamName,BOOL& Value)
+bool CD3DFX::GetBool(LPCSTR ParamName,BOOL& Value)
 {
 	HRESULT	hr;
 	hr=m_pEffect->GetBool(ParamName,&Value);
@@ -555,9 +555,9 @@ bool CD3DFX::LoadFXDirect(const void * pData,int DataSize)
 	if(m_pEffect==NULL)
 	{
 		if(pErrors)
-			PrintD3DLog(0,"无法加载FX,Err=(%s)",(char*)(pErrors->GetBufferPointer()));
+			PrintD3DLog(0,_T("无法加载FX,Err=(%s)"),(LPCTSTR)(pErrors->GetBufferPointer()));
 		else
-			PrintD3DLog(0,"无法加载FX");
+			PrintD3DLog(0,_T("无法加载FX"));
 		SAFE_RELEASE(pErrors);
 		return false;
 	}
@@ -575,12 +575,12 @@ bool CD3DFX::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceM
 		return false;	
 	if(m_EffectData.GetUsedSize())
 	{
-		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DFX_EFFECT_DATA,(LPCTSTR)m_EffectData.GetBuffer(),m_EffectData.GetUsedSize()));
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DFX_EFFECT_DATA,(LPCSTR)m_EffectData.GetBuffer(),m_EffectData.GetUsedSize()));
 	}
 
 	if(m_CompiledEffectData.GetUsedSize())
 	{
-		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DFX_COMPILED_EFFECT_DATA,(LPCTSTR)m_CompiledEffectData.GetBuffer(),m_CompiledEffectData.GetUsedSize()));
+		CHECK_SMART_STRUCT_ADD_AND_RETURN(Packet.AddMember(SST_D3DFX_COMPILED_EFFECT_DATA,(LPCSTR)m_CompiledEffectData.GetBuffer(),m_CompiledEffectData.GetUsedSize()));
 	}
 	
 	return true;
@@ -595,13 +595,13 @@ bool CD3DFX::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourc
 
 	if(CompiledEffectData.GetLength())
 	{
-		if(!LoadCompiledFromMemory((LPCTSTR)CompiledEffectData,CompiledEffectData.GetLength(),
-			(LPCTSTR)EffectData,EffectData.GetLength()))
+		if(!LoadCompiledFromMemory((LPCSTR)CompiledEffectData,CompiledEffectData.GetLength(),
+			(LPCSTR)EffectData,EffectData.GetLength()))
 			return false;
 	}
 	else
 	{
-		if(!LoadFromMemory((LPCTSTR)EffectData,EffectData.GetLength()))
+		if(!LoadFromMemory((LPCSTR)EffectData,EffectData.GetLength()))
 			return false;
 	}
 

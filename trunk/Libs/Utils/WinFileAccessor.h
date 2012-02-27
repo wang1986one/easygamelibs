@@ -10,7 +10,6 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include "ifileaccessor.h"
 
 class CWinFileAccessor :
 	public IFileAccessor

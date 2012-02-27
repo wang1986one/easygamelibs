@@ -10,9 +10,7 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include <vector>
-#include <map>
-#include <string>
+
 
 
 
@@ -44,16 +42,16 @@ class CUSOResourceManager :
 {
 protected:
 	
-	vector<CUSOObjectCreateFilter*>		m_ObjectCreateFilterList;
+	CEasyArray<CUSOObjectCreateFilter*>		m_ObjectCreateFilterList;
 
 
 	CEasyMap<CEasyString,CNameObject *>	m_Resources;
 
 
-	std::vector<CNameObject *>			m_Objects;		
+	CEasyArray<CNameObject *>			m_Objects;		
 	
-	std::map<std::string,CLASS_INFO *>	m_ObjectCreateInfoByName;
-	std::map<std::string,CLASS_INFO *>	m_ObjectCreateInfoByType;
+	CEasyMap<CEasyString,CLASS_INFO *>	m_ObjectCreateInfoByName;
+	CEasyMap<CEasyString,CLASS_INFO *>	m_ObjectCreateInfoByType;
 
 	DECLARE_FILE_PATH_MANAGER;
 	DECLARE_FILE_CHANNEL_MANAGER;
@@ -91,8 +89,8 @@ public:
 	void AddObject(CNameObject * pObject);
 	CNameObject * GetObject(LPCTSTR ObjectName);
 	CNameObject * GetObjectRecursive(LPCTSTR ObjectName);
-	int GetObjectCount();
-	CNameObject * GetObjectByIndex(int Index);
+	UINT GetObjectCount();
+	CNameObject * GetObjectByIndex(UINT Index);
 	bool DeleteObject(CNameObject * pObject);
 	void ClearAllObject();
 
@@ -120,5 +118,5 @@ protected:
 
 inline void CUSOResourceManager::AddObjectCreateFilter(CUSOObjectCreateFilter* pObjectCreateFilter)
 {
-	m_ObjectCreateFilterList.push_back(pObjectCreateFilter);
+	m_ObjectCreateFilterList.Add(pObjectCreateFilter);
 }

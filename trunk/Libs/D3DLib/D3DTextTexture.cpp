@@ -14,42 +14,8 @@
 namespace D3DLib{
 
 
-LPCTSTR TEXT_TEXTURE_FX_NT=
-	"texture TexLay0 < string name = \"test.jpg\"; >;"
-	"texture TexLay1 < string name = \"test1.jpg\"; >;"
-	"technique tec0"
-	"{"
-	"    pass p0"
-	"    {"
-	"		MultiSampleAntialias = FALSE;"
-	"		Lighting=false;"
-	"		zenable = false;"
-	"		zwriteenable = false;"
-	"		CullMode = ccw;"
-	"		fogenable = false;"
-	"		Texture[0] = <TexLay0>;"
-	"		AlphaTestEnable = false;"
-	"		AlphaBlendEnable = true;"
-	"		SrcBlend = SrcAlpha;"
-	"		DestBlend = InvSrcAlpha;"
-	"		Texture[0] = <TexLay0>;"
-	"     	ColorOp[0] = SelectArg2;"
-	"       ColorArg1[0] = Texture;"
-	"       ColorArg2[0] = Diffuse;"      	
-	"       AlphaOp[0] = SelectArg2;"
-	"       AlphaArg1[0] = Texture;"
-	"       AlphaArg2[0] = diffuse;"
-	"		ColorOp[1] = disable;"
-	"		AlphaOp[1] = disable;"
-	"		AddressU[0] = clamp;"
-	"		AddressV[0] = clamp;"      
-	"		MinFilter[0] = none;"
-	"       MagFilter[0] = none;"
-	"       MipFilter[0] = none;"
-	"		VertexShader = NULL;							\r\n"
-	"		PixelShader  = NULL;							\r\n"
-	"    }"
-	"}";
+
+	
 	
 IMPLEMENT_CLASS_INFO(CD3DTextTexture,CD3DTexture);
 
@@ -143,7 +109,7 @@ bool CD3DTextTexture::Create(LOGFONT * pLogFont,int Width,int Height,int MipLeve
 		return false;	
 
 	if(m_pFX==NULL)
-		m_pFX=m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory("TEXT_TEXTURE_FX_NT",(VOID *)TEXT_TEXTURE_FX_NT,(int)strlen(TEXT_TEXTURE_FX_NT));
+		m_pFX=m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory(_T("TEXT_TEXTURE_FX_NT"),(VOID *)TEXT_TEXTURE_FX_NT,(int)strlen(TEXT_TEXTURE_FX_NT));
 
 	m_Width=Width;
 	m_Height=Height;
@@ -376,7 +342,7 @@ bool CD3DTextTexture::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager *
 		switch(MemberID)
 		{
 		case SST_D3DTTEX_LOG_FONT:
-			memcpy(&m_LogFont,(LPCTSTR)Value,sizeof(m_LogFont));
+			memcpy(&m_LogFont,(LPCSTR)Value,sizeof(m_LogFont));
 			break;
 		case SST_D3DTTEX_COLOR:
 			m_Color=Value;

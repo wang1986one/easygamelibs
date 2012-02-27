@@ -567,7 +567,7 @@ struct ES_BOLAN
 };
 
 
-inline BOOL CanMakeIdentifier(char c)
+inline BOOL CanMakeIdentifier(TCHAR c)
 {
 	if(c!='+'&&c!='-'&&c!='*'&&c!='/'&&
 		c!=','&&c!='('&&c!=')'&&c!=' '&&
@@ -580,14 +580,14 @@ inline BOOL CanMakeIdentifier(char c)
 
 inline void StrToNumber(LPCTSTR szNumberStr,ES_BOLAN& Value)
 {
-	bool IsReal=strchr(szNumberStr,'.')!=NULL||strchr(szNumberStr,'E')!=NULL;
-	bool IsFloat=strchr(szNumberStr,'F')!=NULL;
-	bool IsDouble=strchr(szNumberStr,'D')!=NULL;
-	bool IsInt=strchr(szNumberStr,'I')!=NULL;
-	bool IsInt64=strchr(szNumberStr,'L')!=NULL;	
+	bool IsReal=_tcschr(szNumberStr,'.')!=NULL||_tcschr(szNumberStr,'E')!=NULL;
+	bool IsFloat=_tcschr(szNumberStr,'F')!=NULL;
+	bool IsDouble=_tcschr(szNumberStr,'D')!=NULL;
+	bool IsInt=_tcschr(szNumberStr,'I')!=NULL;
+	bool IsInt64=_tcschr(szNumberStr,'L')!=NULL;	
 	if(IsReal||IsFloat||IsDouble)
 	{
-		double ValueMax=atof(szNumberStr);
+		double ValueMax=_tstof(szNumberStr);
 		if(IsDouble)
 		{
 			Value.ValueType=VALUE_TYPE_DOUBLE;
@@ -614,7 +614,7 @@ inline void StrToNumber(LPCTSTR szNumberStr,ES_BOLAN& Value)
 	}
 	else
 	{		
-		INT64 ValueMax=_atoi64(szNumberStr);
+		INT64 ValueMax=_tstoi64(szNumberStr);
 		if(IsInt)
 		{
 			Value.ValueType=VALUE_TYPE_INT;
@@ -653,19 +653,19 @@ inline CEasyString BolanToString(const ES_BOLAN& bolan)
 		switch(bolan.ValueType)
 		{
 		case VALUE_TYPE_INT:
-			temp.Format("值Int=%d",bolan.ValueInt);
+			temp.Format(_T("值Int=%d"),bolan.ValueInt);
 			break;
 		case VALUE_TYPE_INT64:
-			temp.Format("值Int64=%lld",bolan.ValueInt64);
+			temp.Format(_T("值Int64=%lld"),bolan.ValueInt64);
 			break;
 		case VALUE_TYPE_FLOAT:
-			temp.Format("值Float=%g",bolan.ValueFloat);
+			temp.Format(_T("值Float=%g"),bolan.ValueFloat);
 			break;
 		case VALUE_TYPE_DOUBLE:
-			temp.Format("值Double=%g",bolan.ValueDouble);
+			temp.Format(_T("值Double=%g"),bolan.ValueDouble);
 			break;
 		case VALUE_TYPE_STRING:
-			temp.Format("值Str=\"%s\"",(LPCTSTR)bolan.StrValue);
+			temp.Format(_T("值Str=\"%s\""),(LPCTSTR)bolan.StrValue);
 			break;
 		}
 		break;	
@@ -674,46 +674,46 @@ inline CEasyString BolanToString(const ES_BOLAN& bolan)
 		{
 		case OPERATOR_JMP:
 		case OPERATOR_JZ:
-			temp.Format("操作符<%s>%d",
+			temp.Format(_T("操作符<%s>%d"),
 				OPERATOR_STRINGS[bolan.Index],bolan.Level);
 			break;
 		case OPERATOR_CALL:
 		case OPERATOR_ADD_VAR:
 		case OPERATOR_ADD_CALL_PARAM:
-			temp.Format("操作符<%s>%s",
+			temp.Format(_T("操作符<%s>%s"),
 				OPERATOR_STRINGS[bolan.Index],(LPCTSTR)bolan.StrValue);
 			break;
 		default:
 			if(bolan.Index<OPERATOR_MAX)
 			{
-				temp.Format("操作符<%s>",
+				temp.Format(_T("操作符<%s>"),
 					OPERATOR_STRINGS[bolan.Index]);
 			}
 			else
 			{
-				temp.Format("未知操作符<%d>",
+				temp.Format(_T("未知操作符<%d>"),
 					bolan.Index);
 			}
 		}
 		
 		break;
 	case BOLAN_TYPE_FUNCTION:
-		temp.Format("函数(%s)",(LPCTSTR)bolan.StrValue);
+		temp.Format(_T("函数(%s)"),(LPCTSTR)bolan.StrValue);
 		break;
 	case BOLAN_TYPE_VARIABLE:	
-		temp.Format("变量(%s)",(LPCTSTR)bolan.StrValue);
+		temp.Format(_T("变量(%s)"),(LPCTSTR)bolan.StrValue);
 		break;
 	case BOLAN_TYPE_KEYWORD:
-		temp.Format("关键字<%s>(%d)",
+		temp.Format(_T("关键字<%s>(%d)"),
 			KEYWORD_STRINGS[bolan.Index],bolan.Level);
 		break;
 	case BOLAN_TYPE_IDENTIFIER:
-		temp.Format("标识符(%s)",(LPCTSTR)bolan.StrValue);
+		temp.Format(_T("标识符(%s)"),(LPCTSTR)bolan.StrValue);
 		break;
 	default:
-		temp="不可解释的符号";
+		temp=_T("不可解释的符号");
 	}
 	return temp;
 }
 
-extern const char * ESGetErrorMsg(int ErrCode);
+extern LPCTSTR ESGetErrorMsg(int ErrCode);

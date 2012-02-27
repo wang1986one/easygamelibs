@@ -103,7 +103,7 @@ void CFastMemoryPool::Destory()
 	for(UINT i=0;i<m_BlockLevelCount;i++)
 	{
 		if(m_pBlockLevels[i].UsedCount)
-			PrintImportantLog(0xff0000,"还有%d个内存块未释放！",m_pBlockLevels[i].UsedCount);
+			PrintImportantLog(0xff0000,_T("还有%d个内存块未释放！"),m_pBlockLevels[i].UsedCount);
 	}
 #endif
 	SAFE_DELETE_ARRAY(m_pBlockLevels);
@@ -162,13 +162,13 @@ void CFastMemoryPool::Verfy()
 			{
 				if(*((UINT *)(((BYTE *)pNode)+sizeof(BlockNode)+pNode->AllocSize))!=BF_TAIL)
 				{
-					PrintImportantLog(0,"CFastMemoryPool::FreeBlock:内存块%p尾部已被破坏");			
+					PrintImportantLog(0,_T("CFastMemoryPool::FreeBlock:内存块%p尾部已被破坏"));			
 					assert(false);
 				}
 			}
 			else if(pNode->Flag!=BF_FREE)
 			{
-				PrintImportantLog(0,"CFastMemoryPool::FreeBlock:内存块%p头部已被破坏");			
+				PrintImportantLog(0,_T("CFastMemoryPool::FreeBlock:内存块%p头部已被破坏"));			
 				assert(false);
 
 			}			
@@ -271,7 +271,7 @@ BOOL CFastMemoryPool::FreeBlock(BlockNode * pNode)
 	{
 		if(pNode->Flag!=BF_USED)
 		{
-			PrintImportantLog(0,"CFastMemoryPool::FreeBlock:内存块%p头部已被破坏");			
+			PrintImportantLog(0,_T("CFastMemoryPool::FreeBlock:内存块%p头部已被破坏"));			
 #ifdef LOG_MEM_CALL_STACK
 			PrintCallStackLog(pNode);
 #endif
@@ -280,7 +280,7 @@ BOOL CFastMemoryPool::FreeBlock(BlockNode * pNode)
 		}
 		if(*((UINT *)(((BYTE *)pNode)+sizeof(BlockNode)+pNode->AllocSize))!=BF_TAIL)
 		{
-			PrintImportantLog(0,"CFastMemoryPool::FreeBlock:内存块%p尾部已被破坏");			
+			PrintImportantLog(0,_T("CFastMemoryPool::FreeBlock:内存块%p尾部已被破坏"));			
 #ifdef LOG_MEM_CALL_STACK
 			PrintCallStackLog(pNode);
 #endif
@@ -305,16 +305,16 @@ BOOL CFastMemoryPool::FreeBlock(BlockNode * pNode)
 #ifdef LOG_MEM_CALL_STACK
 void CFastMemoryPool::PrintCallStackLog(BlockNode * pNode)
 {
-	PrintImportantLog(0,"当前记录号:%u",pNode->RecentCallInfo);
+	PrintImportantLog(0,_T("当前记录号:%u"),pNode->RecentCallInfo);
 	CExceptionParser::ADDRESS_INFO AddressInfo;
 	CExceptionParser::GetInstance()->SymInit();
 	for(UINT j=0;j<MAX_CALL_INFO;j++)
 	{
-		PrintImportantLog(0,"记录号",j);
+		PrintImportantLog(0,_T("记录号"),j);
 		for(UINT i=0;i<pNode->CallInfo[j].StackDepth;i++)
 		{
 			CExceptionParser::GetInstance()->GetAddressInfo(pNode->CallInfo[j].CallStack[i],&AddressInfo);
-			PrintImportantLog(0,"%ll08X,%s:%d",AddressInfo.Address,AddressInfo.CppFileName,AddressInfo.LineNumber);
+			PrintImportantLog(0,_T("%ll08X,%s:%d"),AddressInfo.Address,AddressInfo.CppFileName,AddressInfo.LineNumber);
 		}
 	}
 }

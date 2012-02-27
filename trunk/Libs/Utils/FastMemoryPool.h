@@ -10,7 +10,6 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include "nameobject.h"
 
 class CFastMemoryPool :
 	public CNameObject

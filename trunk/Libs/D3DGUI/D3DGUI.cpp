@@ -12,19 +12,11 @@
 #include "StdAfx.h"
 #include "D3DGUI.h"
 
-#if defined(USE_CRT_DETAIL_NEW) && defined(_DEBUG)
-#undef new
-#endif
 
-#include <fstream>
-#include <strstream>
-
-#if defined(USE_CRT_DETAIL_NEW) && defined(_DEBUG)
-#define new new( __FILE__, __LINE__ )
-#endif
 
 namespace D3DGUI{
 
+IMPLEMENT_FILE_CHANNEL_MANAGER(CD3DGUI)
 IMPLEMENT_CLASS_INFO_STATIC(CD3DGUI,CNameObject);
 
 
@@ -398,7 +390,7 @@ CD3DWnd * CD3DGUI::GetWndByName(LPCTSTR Name)
 	while(pos)
 	{
 		CD3DWnd * pWnd=*m_D3DWndList.GetNext(pos);
-		if(strcmp(pWnd->GetName(),Name)==0)
+		if(_tcscmp(pWnd->GetName(),Name)==0)
 			return pWnd;
 	}
 	return NULL;
@@ -419,6 +411,7 @@ CD3DWnd * CD3DGUI::GetWndByID(UINT ID)
 
 bool CD3DGUI::SaveToFile(LPCTSTR FileName)
 {
+	
 	pug::xml_parser Xml;
 
 	Xml.create();
@@ -427,23 +420,17 @@ bool CD3DGUI::SaveToFile(LPCTSTR FileName)
 	xml_node pi = Doc.append_child(node_pi);
 	pi.name(_T("xml"));
 	pi.attribute(_T("version")) = _T("1.0");
+#ifdef UNICODE
+	pi.attribute(_T("encoding")) = _T("ucs-2");
+#else
 	pi.attribute(_T("encoding")) = _T("gb2312");
-	xml_node GUI=Doc.append_child(node_element,"D3DGUI");
+#endif
+	xml_node GUI=Doc.append_child(node_element,_T("D3DGUI"));
 
 	SaveToXML(&GUI);
 
-	std::ofstream os;	
-	os.open(FileName, std::ios::trunc);	
-	if (os.is_open())
-	{
-		os << Xml.document();
-		os.close();
-		return true;
-	}
-	else
-	{		
-		return false;
-	}
+
+	return Xml.document().SaveToFile(GetFileChannel(),FileName);
 }
 
 void CD3DGUI::SaveToXML(xml_node * pXMLNode)
@@ -483,13 +470,16 @@ bool CD3DGUI::SaveToUSOFile(LPCTSTR FileName)
 
 bool CD3DGUI::LoadFromFile(LPCTSTR FileName)
 {
+	
 	pug::xml_parser Xml;
 
-	Xml.parse_file(FileName,pug::parse_trim_attribute);
+	Xml.parse_file(GetFileChannel(),FileName,pug::parse_trim_attribute);
 	xml_node GUI=Xml.document();
-	if(!GUI.moveto_child("D3DGUI"))
-		return false;
-	return LoadFromXML(&(GUI));
+	if(GUI.moveto_child(_T("D3DGUI")))
+	{
+		return LoadFromXML(&(GUI));
+	}
+	return false;
 }
 
 bool CD3DGUI::LoadFromXML(xml_node * pXMLNode,CD3DWnd * pParent)
@@ -498,43 +488,43 @@ bool CD3DGUI::LoadFromXML(xml_node * pXMLNode,CD3DWnd * pParent)
 	for(int i=0;i<(int)pXMLNode->children();i++)
 	{
 		pWnd=NULL;
-		if(_strnicmp(pXMLNode->child(i).name(),"Window",6)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Window"),6)==0)
 		{
 			pWnd=CreateWnd(CEasyRect(0,0,0,0));
 			pWnd->SetParent(pParent);
 			pWnd->LoadFromXml(&(pXMLNode->child(i)));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Button",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Button"),6)==0)
 		{
 			pWnd=CreateButton(CEasyRect(0,0,0,0));
 			pWnd->SetParent(pParent);
 			pWnd->LoadFromXml(&(pXMLNode->child(i)));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Edit",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Edit"),6)==0)
 		{
 			pWnd=CreateEdit(CEasyRect(0,0,0,0));
 			pWnd->SetParent(pParent);
 			pWnd->LoadFromXml(&(pXMLNode->child(i)));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"ScrollBar",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("ScrollBar"),6)==0)
 		{
 			pWnd=CreateScrollBar(CEasyRect(0,0,0,0));
 			pWnd->SetParent(pParent);
 			pWnd->LoadFromXml(&(pXMLNode->child(i)));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"SimpleList",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("SimpleList"),6)==0)
 		{
 			pWnd=CreateSimpleList(CEasyRect(0,0,0,0));
 			pWnd->SetParent(pParent);
 			pWnd->LoadFromXml(&(pXMLNode->child(i)));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Combo",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Combo"),6)==0)
 		{
 			pWnd=CreateCombo(CEasyRect(0,0,0,0));
 			pWnd->SetParent(pParent);
 			pWnd->LoadFromXml(&(pXMLNode->child(i)));
 		}	
-		else if(_strnicmp(pXMLNode->child(i).name(),"ProgressBar",12)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("ProgressBar"),12)==0)
 		{
 			pWnd=CreateProgressBar(CEasyRect(0,0,0,0));
 			pWnd->SetParent(pParent);

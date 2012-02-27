@@ -28,12 +28,12 @@ CEasyNetLinkService::~CEasyNetLinkService(void)
 
 CBaseTCPConnection * CEasyNetLinkService::CreateConnection(CIPAddress& RemoteAddress)
 {
-	if(m_IPList.size())
+	if(m_IPList.GetCount())
 	{
 		bool IsMatch=false;
-		for(size_t i=0;i<m_IPList.size();i++)
+		for(size_t i=0;i<m_IPList.GetCount();i++)
 		{
-			if(m_IPList.at(i).IsMatch(RemoteAddress))
+			if(m_IPList[i].IsMatch(RemoteAddress))
 			{
 				IsMatch=true;
 				break;

@@ -225,36 +225,40 @@ void CD3DWOWADTModel::OnPrepareRender(CD3DBaseRender * pRender,CD3DFX * pFX,CEas
 }
 void CD3DWOWADTModel::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX * pFX,CD3DSubMesh * pSubMesh,CD3DSubMeshMaterial * pMaterial,CEasyArray<CD3DLight *>& LightList,CD3DCamera * pCamera)
 {
-
-	if(pSubMesh->GetProperty()&CD3DWOWADTModelResource::SMP_IS_WATER)
-	{
-		pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
-		pFX->SetTexture("TexLay1",((CD3DSceneRender *)pRender)->GetDepthTexture());
-	}
-	else
-	{
-		for(UINT i=0;i<pMaterial->GetTextureLayerCount();i++)
-		{
-			char szTexName[64];
-			sprintf_s(szTexName,64,"TexLay%d",i);
-			if(pMaterial->GetTextureProperty(i)&CD3DWOWADTModelResource::TP_SHADOW_MAP)
-			{
-				pFX->SetTexture("TexShadow",pMaterial->GetTexture(i));
-			}
-			else
-			{
-				pFX->SetTexture(szTexName,pMaterial->GetTexture(i));
-			}					
-		}
-	}
-	if(pSubMesh->IsSelected())
+	if(pSubMesh->IsSelected())			
 	{
 		pFX->SetColor("GlobalColor",0xFFFF0000);
 	}
-	else
-	{
-		pFX->SetColor("GlobalColor",0xFFFFFFFF);
-	}
+
+	//if(pSubMesh->GetProperty()&CD3DWOWADTModelResource::SMP_IS_WATER)
+	//{
+	//	pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
+	//	pFX->SetTexture("TexLay1",((CD3DSceneRender *)pRender)->GetDepthTexture());
+	//}
+	//else
+	//{
+	//	for(UINT i=0;i<pMaterial->GetTextureLayerCount();i++)
+	//	{
+	//		char szTexName[64];
+	//		sprintf_s(szTexName,64,"TexLay%d",i);
+	//		if(pMaterial->GetTextureProperty(i)&CD3DWOWADTModelResource::TP_SHADOW_MAP)
+	//		{
+	//			pFX->SetTexture("TexShadow",pMaterial->GetTexture(i));
+	//		}
+	//		else
+	//		{
+	//			pFX->SetTexture(szTexName,pMaterial->GetTexture(i));
+	//		}					
+	//	}
+	//}
+	//if(pSubMesh->IsSelected())
+	//{
+	//	pFX->SetColor("GlobalColor",0xFFFF0000);
+	//}
+	//else
+	//{
+	//	pFX->SetColor("GlobalColor",0xFFFFFFFF);
+	//}
 }
 
 void CD3DWOWADTModel::OnPrepareRenderData()
@@ -439,7 +443,7 @@ bool CD3DWOWADTModel::LoadObjects()
 			{
 				if(!pObject->LoadFromResource(pInfo->pModelResource))
 				{
-					PrintSystemLog(0,"地图对象装载失败");
+					PrintSystemLog(0,_T("地图对象装载失败"));
 					SAFE_RELEASE(pObject);
 					return false;
 				}		
@@ -448,7 +452,7 @@ bool CD3DWOWADTModel::LoadObjects()
 			{
 				if(!pObject->LoadFromFile(pInfo->ModelFilePath))
 				{
-					PrintSystemLog(0,"地图对象装载失败");
+					PrintSystemLog(0,_T("地图对象装载失败"));
 					SAFE_RELEASE(pObject);
 					return false;
 				}
@@ -463,7 +467,7 @@ bool CD3DWOWADTModel::LoadObjects()
 			pObject->GetModelResource()->SetBoneAniCache(5,30);
 			pObject->Play(0,0,0,true);
 			CEasyString ObjectName;
-			ObjectName.Format("%u",
+			ObjectName.Format(_T("%u"),
 				pInfo->ID);
 			pObject->SetName(ObjectName);
 			pObject->AddFlag((pInfo->Flag>>CD3DWOWADTModelResource::DOODAD_FLAG_SHIFT)&CD3DWOWADTModelResource::DOODAD_FLAG_MASK);
@@ -482,7 +486,7 @@ bool CD3DWOWADTModel::LoadObjects()
 			{
 				if(!pObject->LoadFromResource(pInfo->pModelResource))
 				{
-					PrintSystemLog(0,"地图对象装载失败");
+					PrintSystemLog(0,_T("地图对象装载失败"));
 					SAFE_RELEASE(pObject);
 					return false;
 				}
@@ -491,7 +495,7 @@ bool CD3DWOWADTModel::LoadObjects()
 			{
 				if(!pObject->LoadFromFile(pInfo->ModelFilePath))
 				{
-					PrintSystemLog(0,"地图对象装载失败");
+					PrintSystemLog(0,_T("地图对象装载失败"));
 					SAFE_RELEASE(pObject);
 					return false;
 				}
@@ -504,7 +508,7 @@ bool CD3DWOWADTModel::LoadObjects()
 			pObject->SetParent(this);			
 			pObject->ShowDoodads(pInfo->DoodadSet);
 			CEasyString ObjectName;
-			ObjectName.Format("%u",
+			ObjectName.Format(_T("%u"),
 				pInfo->ID);
 			pObject->SetName(ObjectName);
 			pObject->AddFlag((pInfo->Flag>>CD3DWOWADTModelResource::DOODAD_FLAG_SHIFT)&CD3DWOWADTModelResource::DOODAD_FLAG_MASK);

@@ -16,7 +16,7 @@
 #undef new
 #endif
 
-#include <strstream>
+#include <sstream>
 
 #if defined(USE_CRT_DETAIL_NEW) && defined(_DEBUG)
 #define new new( __FILE__, __LINE__ )
@@ -77,7 +77,7 @@ void CD3DWnd::InitWnd(CD3DGUI *  pGUI)
 
 	ZeroMemory(&m_LogFont,sizeof(m_LogFont));
 
-	strcpy_s(m_LogFont.lfFaceName,LF_FACESIZE,"SimSun");
+	_tcscpy_s(m_LogFont.lfFaceName,LF_FACESIZE,_T("SimSun"));
 	m_LogFont.lfHeight=16;
 	m_LogFont.lfWidth=0;
 	m_LogFont.lfEscapement=0;
@@ -1034,31 +1034,31 @@ void CD3DWnd::Update()
 
 void CD3DWnd::SaveToXml(xml_node * pXMLNode)
 {
-	xml_node Wnd=pXMLNode->append_child(node_element,"Window");
-	Wnd.append_attribute("Name",(LPCTSTR)GetName());
-	Wnd.append_attribute("ID",(long)GetID());
-	Wnd.append_attribute("IsInternal",IsInternal());	
+	xml_node Wnd=pXMLNode->append_child(node_element,_T("Window"));
+	Wnd.append_attribute(_T("Name"),(LPCTSTR)GetName());
+	Wnd.append_attribute(_T("ID"),(long)GetID());
+	Wnd.append_attribute(_T("IsInternal"),IsInternal());	
 
-	xml_node Behavior=Wnd.append_child(node_element,"Behavior");
+	xml_node Behavior=Wnd.append_child(node_element,_T("Behavior"));
 	SaveBehaviorToXML(Behavior);
 
-	xml_node Frame=Wnd.append_child(node_element,"Frame");
+	xml_node Frame=Wnd.append_child(node_element,_T("Frame"));
 	SaveFrameToXML(Frame);
-	xml_node Borders=Wnd.append_child(node_element,"Borders");
+	xml_node Borders=Wnd.append_child(node_element,_T("Borders"));
 	SaveBorderToXML(Borders);
-	xml_node Text=Wnd.append_child(node_element,"Text");
+	xml_node Text=Wnd.append_child(node_element,_T("Text"));
 	SaveTextToXML(Text);
-	xml_node Font=Wnd.append_child(node_element,"Font");
+	xml_node Font=Wnd.append_child(node_element,_T("Font"));
 	SaveFontToXML(Font);
 	if(m_pTexture)
 	{	
-		xml_node Texture=Wnd.append_child(node_element,"Texture");
+		xml_node Texture=Wnd.append_child(node_element,_T("Texture"));
 		SaveTextureToXML(Texture);
 	}
 	
 	if(m_ChildWndList.GetCount())
 	{
-		xml_node Childs=Wnd.append_child(node_element,"Childs");
+		xml_node Childs=Wnd.append_child(node_element,_T("Childs"));
 		SaveChildsToXml(Childs);
 	}
 
@@ -1066,41 +1066,41 @@ void CD3DWnd::SaveToXml(xml_node * pXMLNode)
 
 bool CD3DWnd::LoadFromXml(xml_node * pXMLNode)
 {
-	if(_strnicmp(pXMLNode->name(),"Window",7)!=0)
+	if(_tcsnicmp(pXMLNode->name(),_T("Window"),7)!=0)
 		return false;
-	if(pXMLNode->has_attribute("Name"))
-		SetName(pXMLNode->attribute("Name").getvalue().c_str());
+	if(pXMLNode->has_attribute(_T("Name")))
+		SetName(pXMLNode->attribute(_T("Name")).getvalue());
 
-	if(pXMLNode->has_attribute("ID"))
-		SetID((long)pXMLNode->attribute("ID"));
+	if(pXMLNode->has_attribute(_T("ID")))
+		SetID((long)pXMLNode->attribute(_T("ID")));
 
-	if(pXMLNode->has_attribute("IsInternal"))
-		SetInternal((bool)pXMLNode->attribute("IsInternal"));
+	if(pXMLNode->has_attribute(_T("IsInternal")))
+		SetInternal((bool)pXMLNode->attribute(_T("IsInternal")));
 
 
 	for(int i=0;i<(int)pXMLNode->children();i++)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Behavior",9)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Behavior"),9)==0)
 		{
 			LoadBehaviorFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Frame",6)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Frame"),6)==0)
 		{
 			LoadFrameFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Borders",8)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Borders"),8)==0)
 		{
 			LoadBorderFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Text",5)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Text"),5)==0)
 		{
 			LoadTextFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Font",5)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Font"),5)==0)
 		{
 			LoadFontFromXML(pXMLNode->child(i));
 		}
-		else if(_strnicmp(pXMLNode->child(i).name(),"Texture",8)==0)
+		else if(_tcsnicmp(pXMLNode->child(i).name(),_T("Texture"),8)==0)
 		{
 			LoadTextureFromXML(pXMLNode->child(i));
 		}		
@@ -1110,7 +1110,7 @@ bool CD3DWnd::LoadFromXml(xml_node * pXMLNode)
 	//×°ÔØ×Ó´°¿Ú
 	for(int i=(int)pXMLNode->children()-1;i>=0;i--)
 	{
-		if(_strnicmp(pXMLNode->child(i).name(),"Childs",7)==0)
+		if(_tcsnicmp(pXMLNode->child(i).name(),_T("Childs"),7)==0)
 		{
 			LoadChildsFromXml(pXMLNode->child(i));
 			break;
@@ -1128,14 +1128,14 @@ bool CD3DWnd::LoadFromFile(LPCTSTR FileName,LPCTSTR WndName)
 
 	Xml.parse_file(FileName,pug::parse_trim_attribute);
 	xml_node GUI=Xml.document();
-	if(!GUI.moveto_child("D3DGUI"))
+	if(!GUI.moveto_child(_T("D3DGUI")))
 		return false;	
 
 	for(int i=0;i<(int)GUI.children();i++)
 	{
 		if(WndName==NULL)
 			return LoadFromXml(&GUI.child(i));
-		if(GUI.child(i).attribute("Name").getvalue()==WndName)
+		if(GUI.child(i).attribute(_T("Name")).getvalue()==WndName)
 			return LoadFromXml(&GUI.child(i));
 	}
 	return false;
@@ -1296,16 +1296,18 @@ UINT CD3DWnd::GetSmartStructSize(UINT Param)
 	Doc = Xml.document();	
 	
 	SaveToXml(&Doc);	
-
-	std::strstream os;		
+#ifdef UNICODE
+	std::wstringstream os;
+#else
+	std::stringstream os;		
+#endif
 
 	os << Xml.document();
 	os<<'\0';
-	os.freeze();
 
-	m_TempScript=os.str();
+	m_TempScript=os.str().c_str();
 
-	m_TempScript.Replace("\n","\r\n");
+	m_TempScript.Replace(_T("\n"),_T("\r\n"));
 
 	Size+=SMART_STRUCT_STRING_MEMBER_SIZE(m_TempScript.GetLength());
 
@@ -1327,69 +1329,69 @@ void CD3DWnd::SaveChildsToXml(xml_node& Childs)
 void CD3DWnd::SaveFrameToXML(xml_node& Frame)
 {
 	CEasyRect Rect=GetRect();
-	Frame.append_attribute("X",(long)Rect.left);
-	Frame.append_attribute("Y",(long)Rect.top);
-	Frame.append_attribute("Width",(long)Rect.Width());
-	Frame.append_attribute("Height",(long)Rect.Height());
-	Frame.append_attribute("BKColor",(long)GetBKColor());
+	Frame.append_attribute(_T("X"),(long)Rect.left);
+	Frame.append_attribute(_T("Y"),(long)Rect.top);
+	Frame.append_attribute(_T("Width"),(long)Rect.Width());
+	Frame.append_attribute(_T("Height"),(long)Rect.Height());
+	Frame.append_attribute(_T("BKColor"),(long)GetBKColor());
 }
 void CD3DWnd::SaveBorderToXML(xml_node& Borders)
 {
-	Borders.append_attribute("Top",(long)m_Borders[RECT_TOP]);
-	Borders.append_attribute("Bottom",(long)m_Borders[RECT_BOTTOM]);
-	Borders.append_attribute("Left",(long)m_Borders[RECT_LEFT]);
-	Borders.append_attribute("Right",(long)m_Borders[RECT_RIGHT]);
-	Borders.append_attribute("TopLeft",(long)m_Borders[RECT_TOP_LEFT]);
-	Borders.append_attribute("TopRight",(long)m_Borders[RECT_TOP_RIGHT]);
-	Borders.append_attribute("BottomLeft",(long)m_Borders[RECT_BOTTOM_LEFT]);
-	Borders.append_attribute("BottomRight",(long)m_Borders[RECT_BOTTOM_RIGHT]);
+	Borders.append_attribute(_T("Top"),(long)m_Borders[RECT_TOP]);
+	Borders.append_attribute(_T("Bottom"),(long)m_Borders[RECT_BOTTOM]);
+	Borders.append_attribute(_T("Left"),(long)m_Borders[RECT_LEFT]);
+	Borders.append_attribute(_T("Right"),(long)m_Borders[RECT_RIGHT]);
+	Borders.append_attribute(_T("TopLeft"),(long)m_Borders[RECT_TOP_LEFT]);
+	Borders.append_attribute(_T("TopRight"),(long)m_Borders[RECT_TOP_RIGHT]);
+	Borders.append_attribute(_T("BottomLeft"),(long)m_Borders[RECT_BOTTOM_LEFT]);
+	Borders.append_attribute(_T("BottomRight"),(long)m_Borders[RECT_BOTTOM_RIGHT]);
 }
 void CD3DWnd::SaveTextToXML(xml_node& Text)
 {
 	CEasyString WndText;
 	GetText(WndText);
-	WndText.Replace("\r\n","[&RetuRn]");
-	WndText.Replace("\"","[&InveRtedComMa]");
-	Text.append_attribute("Text",(LPCTSTR)WndText);
+	WndText.Replace(_T("\r\n"),_T("[&RetuRn]"));
+	WndText.Replace(_T("\""),_T("[&InveRtedComMa]"));
+	Text.append_attribute(_T("Text"),(LPCTSTR)WndText);
 }
 void CD3DWnd::SaveFontToXML(xml_node& Font)
 {
-	Font.append_attribute("FaceName",m_LogFont.lfFaceName);
-	Font.append_attribute("Height",(long)m_LogFont.lfHeight);
-	Font.append_attribute("Width",(long)m_LogFont.lfWidth);
-	Font.append_attribute("Weight",(long)m_LogFont.lfWeight);
-	Font.append_attribute("CharSet",(long)m_LogFont.lfCharSet);
-	Font.append_attribute("Italic",(bool)m_LogFont.lfItalic);
-	Font.append_attribute("OutPrecision",(long)m_LogFont.lfOutPrecision);
-	Font.append_attribute("PitchAndFamily",(long)m_LogFont.lfPitchAndFamily);
-	Font.append_attribute("Quality",(long)m_LogFont.lfQuality);
-	Font.append_attribute("FontColor",(long)m_FontColor);
-	Font.append_attribute("Align",(long)m_FontAlign);
-	Font.append_attribute("ShadowMode",(long)m_FontShadowMode);
-	Font.append_attribute("ShadowColor",(long)m_FontShadowColor);
-	Font.append_attribute("ShadowWidth",(long)m_FontShadowWidth);
-	Font.append_attribute("CharSpace",(long)m_FontCharSpace);
-	Font.append_attribute("LineSpace",(long)m_FontLineSpace);
+	Font.append_attribute(_T("FaceName"),m_LogFont.lfFaceName);
+	Font.append_attribute(_T("Height"),(long)m_LogFont.lfHeight);
+	Font.append_attribute(_T("Width"),(long)m_LogFont.lfWidth);
+	Font.append_attribute(_T("Weight"),(long)m_LogFont.lfWeight);
+	Font.append_attribute(_T("CharSet"),(long)m_LogFont.lfCharSet);
+	Font.append_attribute(_T("Italic"),(bool)m_LogFont.lfItalic);
+	Font.append_attribute(_T("OutPrecision"),(long)m_LogFont.lfOutPrecision);
+	Font.append_attribute(_T("PitchAndFamily"),(long)m_LogFont.lfPitchAndFamily);
+	Font.append_attribute(_T("Quality"),(long)m_LogFont.lfQuality);
+	Font.append_attribute(_T("FontColor"),(long)m_FontColor);
+	Font.append_attribute(_T("Align"),(long)m_FontAlign);
+	Font.append_attribute(_T("ShadowMode"),(long)m_FontShadowMode);
+	Font.append_attribute(_T("ShadowColor"),(long)m_FontShadowColor);
+	Font.append_attribute(_T("ShadowWidth"),(long)m_FontShadowWidth);
+	Font.append_attribute(_T("CharSpace"),(long)m_FontCharSpace);
+	Font.append_attribute(_T("LineSpace"),(long)m_FontLineSpace);
 }
 void CD3DWnd::SaveTextureToXML(xml_node& Texture)
 {
-	Texture.append_attribute("TextureFile",(LPCTSTR)m_pTexture->GetName());
-	Texture.append_attribute("RectLeft",m_TextureRect.left);
-	Texture.append_attribute("RectTop",m_TextureRect.top);
-	Texture.append_attribute("RectRight",m_TextureRect.right);
-	Texture.append_attribute("RectBottom",m_TextureRect.bottom);
+	Texture.append_attribute(_T("TextureFile"),(LPCTSTR)m_pTexture->GetName());
+	Texture.append_attribute(_T("RectLeft"),m_TextureRect.left);
+	Texture.append_attribute(_T("RectTop"),m_TextureRect.top);
+	Texture.append_attribute(_T("RectRight"),m_TextureRect.right);
+	Texture.append_attribute(_T("RectBottom"),m_TextureRect.bottom);
 }
 
 void CD3DWnd::SaveBehaviorToXML(xml_node& Behavior)
 {
-	Behavior.append_attribute("Visible",m_IsVisible);
-	Behavior.append_attribute("Enable",m_IsEnable);
-	Behavior.append_attribute("CanDrag",m_CanDrag);
-	Behavior.append_attribute("CanResize",m_CanResize);
-	Behavior.append_attribute("CanGetFocus",m_CanGetFocus);
-	Behavior.append_attribute("IsTopmost",m_IsTopmost);
-	Behavior.append_attribute("TabIndex",m_TabIndex);
-	Behavior.append_attribute("IsTabContainer",m_IsTabContainer);
+	Behavior.append_attribute(_T("Visible"),m_IsVisible);
+	Behavior.append_attribute(_T("Enable"),m_IsEnable);
+	Behavior.append_attribute(_T("CanDrag"),m_CanDrag);
+	Behavior.append_attribute(_T("CanResize"),m_CanResize);
+	Behavior.append_attribute(_T("CanGetFocus"),m_CanGetFocus);
+	Behavior.append_attribute(_T("IsTopmost"),m_IsTopmost);
+	Behavior.append_attribute(_T("TabIndex"),m_TabIndex);
+	Behavior.append_attribute(_T("IsTabContainer"),m_IsTabContainer);
 	
 }
 
@@ -1400,40 +1402,40 @@ void CD3DWnd::LoadChildsFromXml(xml_node& Childs)
 
 void CD3DWnd::LoadFrameFromXML(xml_node& Frame)
 {
-	if(Frame.has_attribute("X"))
+	if(Frame.has_attribute(_T("X")))
 	{
 		CEasyRect Rect(0,0,0,0);
-		Rect.left=(long)Frame.attribute("X");
-		Rect.top=(long)Frame.attribute("Y");
-		Rect.right=Rect.left+(long)Frame.attribute("Width");
-		Rect.bottom=Rect.top+(long)Frame.attribute("Height");
+		Rect.left=(long)Frame.attribute(_T("X"));
+		Rect.top=(long)Frame.attribute(_T("Y"));
+		Rect.right=Rect.left+(long)Frame.attribute(_T("Width"));
+		Rect.bottom=Rect.top+(long)Frame.attribute(_T("Height"));
 		SetRect(Rect);
 	}
-	if(Frame.has_attribute("BKColor"))
-		SetBKColor((long)Frame.attribute("BKColor"));
+	if(Frame.has_attribute(_T("BKColor")))
+		SetBKColor((long)Frame.attribute(_T("BKColor")));
 }
 
 void CD3DWnd::LoadBorderFromXML(xml_node& Borders)
 {
 	WIN_BORDERS WndBorders;
 
-	WndBorders[RECT_TOP]=(long)Borders.attribute("Top");
-	WndBorders[RECT_BOTTOM]=(long)Borders.attribute("Bottom");
-	WndBorders[RECT_LEFT]=(long)Borders.attribute("Left");
-	WndBorders[RECT_RIGHT]=(long)Borders.attribute("Right");
-	WndBorders[RECT_TOP_LEFT]=(long)Borders.attribute("TopLeft");
-	WndBorders[RECT_TOP_RIGHT]=(long)Borders.attribute("TopRight");
-	WndBorders[RECT_BOTTOM_LEFT]=(long)Borders.attribute("BottomLeft");
-	WndBorders[RECT_BOTTOM_RIGHT]=(long)Borders.attribute("BottomRight");
+	WndBorders[RECT_TOP]=(long)Borders.attribute(_T("Top"));
+	WndBorders[RECT_BOTTOM]=(long)Borders.attribute(_T("Bottom"));
+	WndBorders[RECT_LEFT]=(long)Borders.attribute(_T("Left"));
+	WndBorders[RECT_RIGHT]=(long)Borders.attribute(_T("Right"));
+	WndBorders[RECT_TOP_LEFT]=(long)Borders.attribute(_T("TopLeft"));
+	WndBorders[RECT_TOP_RIGHT]=(long)Borders.attribute(_T("TopRight"));
+	WndBorders[RECT_BOTTOM_LEFT]=(long)Borders.attribute(_T("BottomLeft"));
+	WndBorders[RECT_BOTTOM_RIGHT]=(long)Borders.attribute(_T("BottomRight"));
 
 	SetBorders(WndBorders);
 }
 
 void CD3DWnd::LoadTextFromXML(xml_node& Text)
 {
-	CEasyString WndText=Text.attribute("Text").getvalue().c_str();
-	WndText.Replace("[&RetuRn]","\r\n");
-	WndText.Replace("[&InveRtedComMa]","\"");
+	CEasyString WndText=Text.attribute(_T("Text")).getvalue();
+	WndText.Replace(_T("[&RetuRn]"),_T("\r\n"));
+	WndText.Replace(_T("[&InveRtedComMa]"),_T("\""));
 	SetText(WndText);
 }
 
@@ -1442,65 +1444,65 @@ void CD3DWnd::LoadFontFromXML(xml_node& Font)
 	LOGFONT LogFont;
 	ZeroMemory(&LogFont,sizeof(LogFont));
 
-	if(Font.has_attribute("FaceName"))
+	if(Font.has_attribute(_T("FaceName")))
 	{
-		strncpy_0(LogFont.lfFaceName,LF_FACESIZE,Font.attribute("FaceName").getvalue().c_str(),LF_FACESIZE);
-		LogFont.lfHeight=(long)Font.attribute("Height");
-		LogFont.lfWidth=(long)Font.attribute("Width");
-		LogFont.lfWeight=(long)Font.attribute("Weight");
-		LogFont.lfCharSet=(long)Font.attribute("CharSet");
-		LogFont.lfItalic=(bool)Font.attribute("Italic");
-		LogFont.lfOutPrecision=(long)Font.attribute("OutPrecision");
-		LogFont.lfPitchAndFamily=(long)Font.attribute("PitchAndFamily");
-		LogFont.lfQuality=(long)Font.attribute("Quality");
+		strncpy_0(LogFont.lfFaceName,LF_FACESIZE,Font.attribute(_T("FaceName")).getvalue(),LF_FACESIZE);
+		LogFont.lfHeight=(long)Font.attribute(_T("Height"));
+		LogFont.lfWidth=(long)Font.attribute(_T("Width"));
+		LogFont.lfWeight=(long)Font.attribute(_T("Weight"));
+		LogFont.lfCharSet=(long)Font.attribute(_T("CharSet"));
+		LogFont.lfItalic=(bool)Font.attribute(_T("Italic"));
+		LogFont.lfOutPrecision=(long)Font.attribute(_T("OutPrecision"));
+		LogFont.lfPitchAndFamily=(long)Font.attribute(_T("PitchAndFamily"));
+		LogFont.lfQuality=(long)Font.attribute(_T("Quality"));
 		SetFont(&LogFont);
 	}
-	if(Font.has_attribute("FontColor"))
-		SetFontColor((long)Font.attribute("FontColor"));
-	if(Font.has_attribute("Align"))
-		SetFontAlign((long)Font.attribute("Align"));
-	if(Font.has_attribute("ShadowMode"))
-		SetFontShadowMode((long)Font.attribute("ShadowMode"));
-	if(Font.has_attribute("ShadowColor"))
-		SetFontShadowColor((long)Font.attribute("ShadowColor"));
-	if(Font.has_attribute("ShadowWidth"))
-		SetFontShadowWidth((long)Font.attribute("ShadowWidth"));
-	if(Font.has_attribute("CharSpace"))
-		SetFontCharSpace((long)Font.attribute("CharSpace"));
-	if(Font.has_attribute("LineSpace"))
-		SetFontLineSpace((long)Font.attribute("LineSpace"));
+	if(Font.has_attribute(_T("FontColor")))
+		SetFontColor((long)Font.attribute(_T("FontColor")));
+	if(Font.has_attribute(_T("Align")))
+		SetFontAlign((long)Font.attribute(_T("Align")));
+	if(Font.has_attribute(_T("ShadowMode")))
+		SetFontShadowMode((long)Font.attribute(_T("ShadowMode")));
+	if(Font.has_attribute(_T("ShadowColor")))
+		SetFontShadowColor((long)Font.attribute(_T("ShadowColor")));
+	if(Font.has_attribute(_T("ShadowWidth")))
+		SetFontShadowWidth((long)Font.attribute(_T("ShadowWidth")));
+	if(Font.has_attribute(_T("CharSpace")))
+		SetFontCharSpace((long)Font.attribute(_T("CharSpace")));
+	if(Font.has_attribute(_T("LineSpace")))
+		SetFontLineSpace((long)Font.attribute(_T("LineSpace")));
 }
 
 void CD3DWnd::LoadTextureFromXML(xml_node& Texture)
 {	
 	CEasyString TexFile;
 	CEasyRect Rect;
-	TexFile=Texture.attribute("TextureFile").getvalue().c_str();
-	Rect.left=Texture.attribute("RectLeft");
-	Rect.top=Texture.attribute("RectTop");
-	Rect.right=Texture.attribute("RectRight");
-	Rect.bottom=Texture.attribute("RectBottom");
+	TexFile=Texture.attribute(_T("TextureFile")).getvalue();
+	Rect.left=Texture.attribute(_T("RectLeft"));
+	Rect.top=Texture.attribute(_T("RectTop"));
+	Rect.right=Texture.attribute(_T("RectRight"));
+	Rect.bottom=Texture.attribute(_T("RectBottom"));
 	SetTexture(TexFile,Rect);
 }
 
 void CD3DWnd::LoadBehaviorFromXML(xml_node& Behavior)
 {
-	if(Behavior.has_attribute("Visible"))
-		SetVisible((bool)Behavior.attribute("Visible"));
-	if(Behavior.has_attribute("Enable"))
-		EnableWindow((bool)Behavior.attribute("Enable"));
-	if(Behavior.has_attribute("CanDrag"))
-		EnableDrag((bool)Behavior.attribute("CanDrag"));
-	if(Behavior.has_attribute("CanResize"))
-		EnableResize((bool)Behavior.attribute("CanResize"));
-	if(Behavior.has_attribute("CanGetFocus"))
-		EnableFocus((bool)Behavior.attribute("CanGetFocus"));
-	if(Behavior.has_attribute("IsTopmost"))
-		SetTopmost((bool)Behavior.attribute("IsTopmost"));
-	if(Behavior.has_attribute("TabIndex"))
-		SetTabIndex((long)Behavior.attribute("TabIndex"));
-	if(Behavior.has_attribute("IsTabContainer"))
-		EnableTabContainer((bool)Behavior.attribute("IsTabContainer"));
+	if(Behavior.has_attribute(_T("Visible")))
+		SetVisible((bool)Behavior.attribute(_T("Visible")));
+	if(Behavior.has_attribute(_T("Enable")))
+		EnableWindow((bool)Behavior.attribute(_T("Enable")));
+	if(Behavior.has_attribute(_T("CanDrag")))
+		EnableDrag((bool)Behavior.attribute(_T("CanDrag")));
+	if(Behavior.has_attribute(_T("CanResize")))
+		EnableResize((bool)Behavior.attribute(_T("CanResize")));
+	if(Behavior.has_attribute(_T("CanGetFocus")))
+		EnableFocus((bool)Behavior.attribute(_T("CanGetFocus")));
+	if(Behavior.has_attribute(_T("IsTopmost")))
+		SetTopmost((bool)Behavior.attribute(_T("IsTopmost")));
+	if(Behavior.has_attribute(_T("TabIndex")))
+		SetTabIndex((long)Behavior.attribute(_T("TabIndex")));
+	if(Behavior.has_attribute(_T("IsTabContainer")))
+		EnableTabContainer((bool)Behavior.attribute(_T("IsTabContainer")));
 
 	
 }
@@ -1843,7 +1845,7 @@ CD3DWnd * CD3DWnd::GetChildWndByName(LPCTSTR Name)
 {
 	for(UINT i=0;i<m_ChildWndList.GetCount();i++)
 	{
-		if(strcmp(m_ChildWndList[i]->GetName(),Name)==0)
+		if(_tcscmp(m_ChildWndList[i]->GetName(),Name)==0)
 			return m_ChildWndList[i];
 	}
 	return NULL;

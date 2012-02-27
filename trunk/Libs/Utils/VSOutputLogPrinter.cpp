@@ -24,12 +24,12 @@ CVSOutputLogPrinter::~CVSOutputLogPrinter(void)
 void CVSOutputLogPrinter::PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_list vl)
 {
 #ifdef WIN32
-	char MsgBuff[4096];
-	vsprintf_s( MsgBuff, 4096, Format, vl );
+	TCHAR MsgBuff[4096];
+	_vstprintf_s( MsgBuff, 4096, Format, vl );
 	OutputDebugString(MsgBuff);
-	OutputDebugString("\r\n");
+	OutputDebugString(_T("\r\n"));
 #else
 	vprintf(Format,vl);
-	printf("\n");
+	printf(_T("\n"));
 #endif
 }

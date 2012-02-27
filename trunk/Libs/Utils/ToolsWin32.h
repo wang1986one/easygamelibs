@@ -19,7 +19,7 @@
 #define CHECK_HRESULT(hr) \
 	if(FAILED(hr))\
 {\
-	PrintSystemLog(0xff00ff,"HResult Error:<%s><%d>[%x]",__FILE__,__LINE__,hr);\
+	PrintSystemLog(0xff00ff,_T("HResult Error:<%s><%d>[%x]"),__FILE__,__LINE__,hr);\
 	return false;\
 }
 
@@ -86,7 +86,7 @@ inline CEasyString GetPathFileName(LPCTSTR Path)
 
 	FileName.Resize(MAX_PATH);
 	ExtName.Resize(8);
-	_splitpath_s(Path,NULL,0,NULL,0,FileName,MAX_PATH,ExtName,8);
+	_tsplitpath_s(Path,NULL,0,NULL,0,FileName,MAX_PATH,ExtName,8);
 	FileName.TrimBuffer();
 	ExtName.TrimBuffer();
 	FileName+=ExtName;
@@ -99,7 +99,7 @@ inline CEasyString GetPathFileExtName(LPCTSTR Path)
 	CEasyString ExtName;
 
 	ExtName.Resize(8);
-	_splitpath_s(Path,NULL,0,NULL,0,NULL,0,ExtName,8);
+	_tsplitpath_s(Path,NULL,0,NULL,0,NULL,0,ExtName,8);
 	ExtName.TrimBuffer();
 	return ExtName;
 }

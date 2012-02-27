@@ -10,14 +10,14 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include <vector>
+
 
 template < typename T>
 class CStringSplitterT
 {
 protected:
-	T *				m_pBuffer;
-	std::vector<T*>	m_StringList;
+	T *					m_pBuffer;
+	CEasyArray< T * >	m_StringList;
 public:
 	CStringSplitterT()
 	{
@@ -30,10 +30,10 @@ public:
 	}
 	~CStringSplitterT()
 	{
-		for(int i=0;i<(int)m_StringList.size();i++)
+		for(int i=0;i<(int)m_StringList.GetCount();i++)
 		{
 			SAFE_DELETE_ARRAY(m_StringList[i]);
-			m_StringList.clear();
+			m_StringList.Clear();
 		}
 	}
 	size_t Splitter(const char * pStr,char SplitterChar,size_t StrLen=0)
@@ -55,14 +55,14 @@ public:
 			pFinded=strchr(pSrc,SplitterChar);
 			if(pFinded)
 			{
-				m_StringList.push_back(pSrc);
+				m_StringList.Add(pSrc);
 				*pFinded=0;
 				pFinded++;
 				pSrc=pFinded;				
 			}
 			else
 			{
-				m_StringList.push_back(pSrc);
+				m_StringList.Add(pSrc);
 			}
 		}while(pFinded);
 
@@ -87,14 +87,14 @@ public:
 			pFinded=wcschr(pSrc,SplitterChar);
 			if(pFinded)
 			{
-				m_StringList.push_back(pSrc);
+				m_StringList.Add(pSrc);
 				*pFinded=0;
 				pFinded++;
 				pSrc=pFinded;				
 			}
 			else
 			{
-				m_StringList.push_back(pSrc);
+				m_StringList.Add(pSrc);
 			}
 		}while(pFinded);
 
@@ -102,11 +102,11 @@ public:
 	}
 	size_t GetCount()
 	{
-		return m_StringList.size();
+		return m_StringList.GetCount();
 	}
 	const T* GetAt(size_t Index)
 	{
-		if(Index<m_StringList.size())
+		if(Index<m_StringList.GetCount())
 			return m_StringList[Index];
 		else
 			return NULL;

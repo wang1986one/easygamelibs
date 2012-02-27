@@ -450,7 +450,7 @@ bool CD3DSubMesh::AllocDXVertexBuffer(DWORD Usage,D3DPOOL Pool)
 	}
 	else
 	{
-		PrintSystemLog(0,"申请顶点缓冲失败%X",hResult);
+		PrintSystemLog(0,_T("申请顶点缓冲失败%X"),hResult);
 	}
 	return false;	
 }
@@ -490,7 +490,7 @@ bool CD3DSubMesh::AllocDXIndexBuffer(DWORD Usage,D3DPOOL Pool)
 	}
 	else
 	{
-		PrintSystemLog(0,"申请索引缓冲失败%X",hResult);
+		PrintSystemLog(0,_T("申请索引缓冲失败%X"),hResult);
 	}
 	return false;
 }
@@ -550,7 +550,7 @@ void CD3DSubMesh::OnPrepareRenderData()
 
 bool CD3DSubMesh::SortByName(CD3DSubMesh * pSubMesh1,CD3DSubMesh * pSubMesh2)
 {
-	if(strcmp(pSubMesh1->GetName(),pSubMesh2->GetName())<0)
+	if(_tcscmp(pSubMesh1->GetName(),pSubMesh2->GetName())<0)
 		return true;
 	else
 		return false;
@@ -815,10 +815,10 @@ bool CD3DSubMesh::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pRe
 			m_IndexCount=Value;
 			break;
 		case SST_D3DSM_BOUNDING_BOX:
-			memcpy(&m_BoundingBox,(LPCTSTR)Value,sizeof(m_BoundingBox));
+			memcpy(&m_BoundingBox,(LPCSTR)Value,sizeof(m_BoundingBox));
 			break;
 		case SST_D3DSM_BOUNDING_SPHERE:
-			memcpy(&m_BoundingSphere,(LPCTSTR)Value,sizeof(m_BoundingSphere));
+			memcpy(&m_BoundingSphere,(LPCSTR)Value,sizeof(m_BoundingSphere));
 			break;
 		case SST_D3DSM_PROPERTY:
 			m_Property=Value;
@@ -831,7 +831,7 @@ bool CD3DSubMesh::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pRe
 				int DataSize=m_VertexCount*m_VertexFormat.VertexSize;		
 				BYTE *pDataBuff;
 				m_pDXVertexBuffer->Lock(0,0,(LPVOID *)&pDataBuff,0);
-				memcpy(	pDataBuff,(LPCTSTR)Value,DataSize);
+				memcpy(	pDataBuff,(LPCSTR)Value,DataSize);
 				m_pDXVertexBuffer->Unlock();				
 			}		
 			break;
@@ -842,7 +842,7 @@ bool CD3DSubMesh::FromSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pRe
 				int DataSize=m_IndexCount*m_VertexFormat.IndexSize;
 				BYTE *pDataBuff;
 				m_pDXIndexBuffer->Lock(0,0,(LPVOID *)&pDataBuff,0);
-				memcpy(	pDataBuff,(LPCTSTR)Value,DataSize);
+				memcpy(	pDataBuff,(LPCSTR)Value,DataSize);
 				m_pDXIndexBuffer->Unlock();				
 			}
 			break;
@@ -906,7 +906,7 @@ bool CD3DSubMesh::CheckValid()
 			}
 			if(Index<m_StartVertex||Index>=m_StartVertex+m_VertexCount)
 			{
-				PrintD3DLog(0,"CD3DSubMesh::CheckValid:索引值超出顶点范围");
+				PrintD3DLog(0,_T("CD3DSubMesh::CheckValid:索引值超出顶点范围"));
 				return false;
 			}
 		}
@@ -915,7 +915,7 @@ bool CD3DSubMesh::CheckValid()
 			float VertexValue=*((float *)(m_pVertexBuffer+i*m_VertexFormat.VertexSize));
 			if(VertexValue<-1e10f&&VertexValue>1e10f)
 			{
-				PrintD3DLog(0,"CD3DSubMesh::CheckValid:顶点数值异常");
+				PrintD3DLog(0,_T("CD3DSubMesh::CheckValid:顶点数值异常"));
 				return false;
 			}
 			BYTE LastByte=(m_pVertexBuffer+i*m_VertexFormat.VertexSize)[m_VertexFormat.VertexSize-1];
@@ -941,7 +941,7 @@ bool CD3DSubMesh::CheckValidR()
 			}
 			if(Index<m_StartVertexR||Index>=m_StartVertexR+m_VertexCountR)
 			{
-				PrintD3DLog(0,"CD3DSubMesh::CheckValidR:索引值超出顶点范围");
+				PrintD3DLog(0,_T("CD3DSubMesh::CheckValidR:索引值超出顶点范围"));
 				return false;
 			}
 		}
@@ -950,7 +950,7 @@ bool CD3DSubMesh::CheckValidR()
 			float VertexValue=*((float *)(GetVertexBufferR()+i*m_VertexFormat.VertexSize));
 			if(VertexValue<-1e10f&&VertexValue>1e10f)
 			{
-				PrintD3DLog(0,"CD3DSubMesh::CheckValidR:顶点数值异常");
+				PrintD3DLog(0,_T("CD3DSubMesh::CheckValidR:顶点数值异常"));
 				return false;
 			}
 			BYTE LastByte=(GetVertexBufferR()+i*m_VertexFormat.VertexSize)[m_VertexFormat.VertexSize-1];

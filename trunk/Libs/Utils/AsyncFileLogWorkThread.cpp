@@ -28,7 +28,7 @@ BOOL CAsyncFileLogWorkThread::Init(LPCTSTR FileName,int LogBufferLen)
 	{
 		if(!m_LogDataBuffer.Create(LogBufferLen))
 		{
-			PrintImportantLog(0,"无法创建Log缓冲%s",(LPCTSTR)FileName);
+			PrintImportantLog(0,_T("无法创建Log缓冲%s"),(LPCTSTR)FileName);
 		}
 	}
 	
@@ -45,7 +45,7 @@ BOOL CAsyncFileLogWorkThread::Init(LPCTSTR FileName,int LogBufferLen)
 
 
 	CEasyString LogFileName;
-	LogFileName.Format("%s.%u-%02u-%02u.log",
+	LogFileName.Format(_T("%s.%u-%02u-%02u.log"),
 		(LPCTSTR)m_LogFileName,
 		m_RecentLogTime.Year(),
 		m_RecentLogTime.Month(),
@@ -61,13 +61,13 @@ BOOL CAsyncFileLogWorkThread::Init(LPCTSTR FileName,int LogBufferLen)
 	m_pLogFile=CFileSystemManager::GetInstance()->CreateFileAccessor(FILE_CHANNEL_NORMAL1);
 	if(m_pLogFile==NULL)
 	{
-		PrintImportantLog(0,"无法创建文件存取器");
+		PrintImportantLog(0,_T("无法创建文件存取器"));
 		return FALSE;
 	}
 
 	if(!m_pLogFile->Open(LogFileName,FileOpenMode))
 	{
-		PrintImportantLog(0,"无法打开Log文件%s",(LPCTSTR)LogFileName);
+		PrintImportantLog(0,_T("无法打开Log文件%s"),(LPCTSTR)LogFileName);
 		return FALSE;
 	}
 	m_pLogFile->Seek(0,IFileAccessor::seekEnd);
@@ -129,7 +129,7 @@ void CAsyncFileLogWorkThread::OnTerminate()
 BOOL CAsyncFileLogWorkThread::PushLog(LPCTSTR LogData)
 {
 	
-	int DataLen=(int)strlen(LogData);
+	int DataLen=(int)_tcslen(LogData);
 	m_LogDataBuffer.PushBack((LPVOID)LogData,DataLen);
 
 	return TRUE;
@@ -141,7 +141,7 @@ void CAsyncFileLogWorkThread::CreateDir(LPCTSTR FilePath)
 	CEasyString FileDir=GetPathDirectory(FilePath);
 	if(!CreateDirEx(FileDir))
 	{
-		PrintImportantLog(0,"创建目录%s失败",(LPCTSTR)FileDir);
+		PrintImportantLog(0,_T("创建目录%s失败"),(LPCTSTR)FileDir);
 	}
 }
 

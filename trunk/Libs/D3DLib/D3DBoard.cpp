@@ -70,7 +70,7 @@ bool CD3DBoard::Create(CD3DVector3 V1,CD3DVector3 V2,CD3DVector3 V3,CD3DVector3 
 	m_pSubMesh[0]->CreateBounding();
 
 	m_pSubMesh[0]->GetMaterial().SetFX(
-		GetDevice()->GetFXManager()->LoadFXFromMemory("DEFAULT_BOARD_FX_NT",
+		GetDevice()->GetFXManager()->LoadFXFromMemory(_T("DEFAULT_BOARD_FX_NT"),
 		(void *)DEFAULT_BOARD_FX_NT,(int)strlen(DEFAULT_BOARD_FX_NT)));
 
 	m_pSubMesh[0]->SetTransparent(true);
@@ -100,7 +100,7 @@ bool CD3DBoard::Create(CD3DVector3 V1,CD3DVector3 V2,CD3DVector3 V3,CD3DVector3 
 	m_pSubMesh[1]->CreateBounding();
 
 	m_pSubMesh[1]->GetMaterial().SetFX(
-		GetDevice()->GetFXManager()->LoadFXFromMemory("DEFAULT_BOARD_FX_NT",
+		GetDevice()->GetFXManager()->LoadFXFromMemory(_T("DEFAULT_BOARD_FX_NT"),
 		(void *)DEFAULT_BOARD_FX_NT,(int)strlen(DEFAULT_BOARD_FX_NT)));
 
 	m_pSubMesh[1]->SetTransparent(true);
@@ -131,13 +131,13 @@ CD3DBoundingBox * CD3DBoard::GetBoundingBox()
 
 bool CD3DBoard::ToSmartStruct(CSmartStruct& Packet,CUSOResourceManager * pResourceManager,UINT Param)
 {
-	PrintSystemLog(0,"CD3DBoard被保存");
+	PrintSystemLog(0,_T("CD3DBoard被保存"));
 	return CD3DObject::ToSmartStruct(Packet,pResourceManager,Param);
 }
 
 UINT CD3DBoard::GetSmartStructSize(UINT Param)
 {
-	PrintSystemLog(0,"CD3DBoard被保存");
+	PrintSystemLog(0,_T("CD3DBoard被保存"));
 	return CD3DObject::GetSmartStructSize(Param);
 }
 

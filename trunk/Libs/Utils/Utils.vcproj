@@ -156,6 +156,75 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="DebugUnicode|Win32"
+			OutputDirectory="..\Bin\$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions="/EHa"
+				Optimization="0"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
+				ExceptionHandling="1"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="true"
+				DefaultCharIsUnsigned="false"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="4"
+				EnablePREfast="true"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/UtilsD.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -196,6 +265,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -316,6 +393,14 @@
 								Name="VCCLCompilerTool"
 							/>
 						</FileConfiguration>
+						<FileConfiguration
+							Name="DebugUnicode|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\LinuxFileAccessor.h"
@@ -334,6 +419,14 @@
 						</FileConfiguration>
 						<FileConfiguration
 							Name="Release|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="DebugUnicode|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -395,6 +488,14 @@
 					</FileConfiguration>
 					<FileConfiguration
 						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -512,11 +613,11 @@
 			Name="XML"
 			>
 			<File
-				RelativePath=".\pugxml.h"
+				RelativePath=".\pugxml.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pugxml_linux.h"
+				RelativePath=".\pugxml.h"
 				>
 			</File>
 		</Filter>
@@ -536,6 +637,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -684,6 +793,14 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1002,6 +1119,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\LZMA\Alloc.h"
@@ -1020,6 +1145,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1050,6 +1183,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\LZMA\LzFind.h"
@@ -1068,6 +1209,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1102,6 +1251,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\LZMA\Lzma2Dec.h"
@@ -1120,6 +1277,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1154,6 +1319,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\LZMA\Lzma86Enc.c"
@@ -1174,6 +1347,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\LZMA\LzmaDec.c"
@@ -1188,6 +1369,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1218,6 +1407,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\LZMA\LzmaEnc.h"
@@ -1242,6 +1439,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\LZMA\LzmaLib.h"
@@ -1260,6 +1465,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1296,6 +1509,14 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1387,11 +1608,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\hppa.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\hpc\hppa.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\hpc\hppa.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\hppa.h"
 					>
 				</File>
 				<File
@@ -1431,11 +1652,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\ibmc\powerpc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\powerpc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\powerpc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\ibmc\powerpc.h"
 					>
 				</File>
 				<File
@@ -1459,11 +1680,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\sparc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\sunc\sparc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\sunc\sparc.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\sparc.h"
 					>
 				</File>
 				<File
@@ -1479,11 +1700,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\x86.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\msftc\x86.h"
 					>
 				</File>
 				<File
-					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\msftc\x86.h"
+					RelativePath=".\atomic_ops\include\atomic_ops\sysdeps\gcc\x86.h"
 					>
 				</File>
 				<File
@@ -1534,6 +1755,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\LZO\minilzo.h"
@@ -1564,10 +1793,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\IndexSet.h"
-				>
-			</File>
-			<File
 				RelativePath=".\StaticMap.h"
 				>
 			</File>
@@ -1577,6 +1802,14 @@
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="DebugUnicode|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool

@@ -10,7 +10,6 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include "ifileobjectcreator.h"
 
 
 class CStandardFileObjectCreator :

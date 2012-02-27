@@ -145,7 +145,7 @@ public:
 						return true;
 					}
 				}
-				PrintD3DLog(0,"未能删除树节点记录");
+				PrintD3DLog(0,_T("未能删除树节点记录"));
 				UpdateFlag=TNUF_DEL_OBJECT;
 				return true;
 			}
@@ -197,6 +197,8 @@ protected:
 	CD3DTexture *							m_pDepthTexture;
 	
 	UINT									m_MergeRenderSubMeshCount;
+	UINT									m_FXApplyCount;
+	UINT									m_MaterialSetCount;
 	UINT									m_TreeCheckCount;
 	UINT									m_ObjectCheckCount;
 	UINT									m_DirectRenderCount;
@@ -293,6 +295,8 @@ public:
 	void SetSizeCullSize(float MiniSize);
 
 	UINT GetMergeSubMeshRenderCount();
+	UINT GetFXApplyCount();
+	UINT GetMaterialSetCount();
 	UINT GetTreeCheckCount();
 	UINT GetObjectCheckCount();
 	UINT GetDirectRenderCount();
@@ -355,6 +359,8 @@ protected:
 	void RenderSubMeshEx(CD3DSubMesh * pSubMesh);
 
 	bool CanTestCollide(UINT64 SubMeshProperty,UINT TestMode);
+
+	void SetSubMeshMaterialFXParams(CD3DSubMeshMaterial * pMaterial);
 };
 
 
@@ -457,6 +463,16 @@ inline UINT CD3DSceneRender::GetMergeSubMeshRenderCount()
 	return m_MergeRenderSubMeshCount;
 }
 
+
+
+inline UINT CD3DSceneRender::GetFXApplyCount()
+{
+	return m_FXApplyCount;
+}
+inline UINT CD3DSceneRender::GetMaterialSetCount()
+{
+	return m_MaterialSetCount;
+}
 inline UINT CD3DSceneRender::GetTreeCheckCount()
 {
 	return m_TreeCheckCount;

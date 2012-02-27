@@ -33,13 +33,13 @@ public:
 
 	void SetManager(CD3DFontManager * pManager);
 
-	virtual bool DrawTextA(LPCTSTR pText,int TextLen,RECT * pRect,DWORD Align,D3DCOLOR Color)=0;
+	virtual bool DrawTextA(LPCSTR pText,int TextLen,RECT * pRect,DWORD Align,D3DCOLOR Color)=0;
 	virtual bool DrawTextW(LPCWSTR pText,int TextLen,RECT * pRect,DWORD Align,D3DCOLOR Color)=0;
 
-	virtual bool GetTextSizeA(LPCTSTR pText,int TextLen,LPSIZE pSize,LPINT pCharWidths=NULL)=0;
+	virtual bool GetTextSizeA(LPCSTR pText,int TextLen,LPSIZE pSize,LPINT pCharWidths=NULL)=0;
 	virtual bool GetTextSizeW(LPCWSTR pText,int TextLen,LPSIZE pSize,LPINT pCharWidths=NULL)=0;
 
-	virtual bool TranslateTextA(LPCTSTR pSrcText,int StrLen,LPTSTR pDestText,int& BufferSize)=0;
+	virtual bool TranslateTextA(LPCSTR pSrcText,int StrLen,LPTSTR pDestText,int& BufferSize)=0;
 	virtual bool TranslateTextW(LPCWSTR pSrcText,int StrLen,LPWSTR pDestText,int& BufferSize)=0;
 
 	virtual bool GetLogFont(LOGFONT * pLogFont)=0;

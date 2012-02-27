@@ -1067,7 +1067,7 @@ int CMySQLConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 		ProcessErrorMsg(m_MySQLStmt,"准备SQL失败\r\n");
 		return DBERR_EXE_SQL_FAIL;
 	}
-	vector<MYSQL_BIND> ParamList;
+	CEasyArray<MYSQL_BIND> ParamList;
 
 	UINT ParamNum=mysql_stmt_param_count(m_MySQLStmt);
 	CEasyBuffer ParamBuffer;
@@ -1082,7 +1082,7 @@ int CMySQLConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 
 		
 
-		ParamList.resize(ParamNum);
+		ParamList.Resize(ParamNum);
 		ZeroMemory(&(ParamList[0]),sizeof(MYSQL_BIND)*ParamNum);
 
 		//计算参数需要的缓冲大小

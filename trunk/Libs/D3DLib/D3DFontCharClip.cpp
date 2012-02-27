@@ -87,7 +87,7 @@ void CD3DFontCharClip::SetTexture(CD3DTexture * pTexture,RECT * pTextureRect)
 
 	
 	if(!m_SubMesh.GetMaterial().SetTexture(0,pTexture))
-		m_SubMesh.GetMaterial().AddTexture(pTexture,0);
+		m_SubMesh.GetMaterial().AddTexture(pTexture,0,"","");
 	if(pTextureRect)
 		m_TextureRect=*pTextureRect;
 	else

@@ -454,7 +454,7 @@ public:
 	bool GetMapLightColor(UINT MapID,CD3DVector3 Pos,UINT ColorIndex,UINT Time,D3DCOLOR& Color);
 
 protected:
-	CEasyString UTF8ToLocal(LPCTSTR szStr,int StrLen);
+	CEasyString UTF8ToLocal(LPCSTR szStr,int StrLen);
 	void BuildCreatureModelInfo();
 
 	void PrintColors(BLZ_DB_LIGHT_INFO * pInfo);

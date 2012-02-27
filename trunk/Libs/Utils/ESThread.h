@@ -78,7 +78,7 @@ public:
 	
 	void Reset();
 
-	int PushScript(const char * szExpStr);
+	int PushScript(LPCTSTR szExpStr);
 };
 
 inline void CESThread::SetVariableList(CESVariableList * pVariableList)
@@ -235,7 +235,7 @@ inline void CESThread::Reset()
 	ClearInterrupt();
 	ClearLocalVariable();
 }
-inline int CESThread::PushScript(const char * szExpStr)
+inline int CESThread::PushScript(LPCTSTR szExpStr)
 {
 	if(m_pVariableList==NULL)
 	{

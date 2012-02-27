@@ -115,7 +115,7 @@ inline bool GetInterpolationValue(UINT Time,bool IsLoop,int InterpolationType,UI
 				Value=AniFrame.Keys[Frame]*(1.0f-S)+AniFrame.Keys[Frame+1]*S;
 				break;
 			case INTERPOLATE_TYPE_HERMITE:
-				PrintSystemLog(0,"Unsupport Hermite Interpolate in GetInterpolationValue");
+				PrintSystemLog(0,_T("Unsupport Hermite Interpolate in GetInterpolationValue"));
 				break;
 			}				
 		}
@@ -181,7 +181,7 @@ inline bool GetInterpolationValue(UINT Time,bool IsLoop,int InterpolationType,UI
 				Value=CD3DVector3::Lerp(AniFrame.Keys[Frame],AniFrame.Keys[Frame+1],S);
 				break;
 			case INTERPOLATE_TYPE_HERMITE:
-				PrintSystemLog(0,"Unsupport Hermite Interpolate in GetInterpolationValue");
+				PrintSystemLog(0,_T("Unsupport Hermite Interpolate in GetInterpolationValue"));
 				break;
 			}				
 		}
@@ -249,7 +249,7 @@ inline bool GetInterpolationValue(UINT Time,bool IsLoop,int InterpolationType,UI
 				Value=CD3DQuaternion::SLerp(AniFrame.Keys[Frame],AniFrame.Keys[Frame+1],S);
 				break;
 			case INTERPOLATE_TYPE_HERMITE:
-				PrintSystemLog(0,"Unsupport Hermite Interpolate in GetInterpolationValue");
+				PrintSystemLog(0,_T("Unsupport Hermite Interpolate in GetInterpolationValue"));
 				break;
 			}				
 		}
@@ -645,14 +645,14 @@ inline bool UnpackAnimationBlock(ANIMATION_BLOCK<KEY_TYPE>& AniBlock,const CSmar
 				{
 					AniBlock.Animations[AniIndex].TimeStamps.Resize(Count);
 					memcpy(AniBlock.Animations[AniIndex].TimeStamps.GetBuffer(),
-						(LPCTSTR)TimeStamps,sizeof(UINT)*Count);
+						(LPCSTR)TimeStamps,sizeof(UINT)*Count);
 				}
 				Count=Keys.GetLength()/sizeof(KEY_TYPE);
 				if(Count)
 				{
 					AniBlock.Animations[AniIndex].Keys.Resize(Count);
 					memcpy(AniBlock.Animations[AniIndex].Keys.GetBuffer(),
-						(LPCTSTR)Keys,sizeof(KEY_TYPE)*Count);
+						(LPCSTR)Keys,sizeof(KEY_TYPE)*Count);
 				}
 			}
 			AniIndex++;

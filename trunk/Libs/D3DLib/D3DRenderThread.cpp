@@ -25,7 +25,7 @@ BOOL CD3DRenderThread::OnStart()
 {
 	if(!CD3DDevice::IsUseMultiThreadRender())
 	{
-		PrintD3DLog(0,"未采用多线程模式创建设备,渲染线程无法启用");
+		PrintD3DLog(0,_T("未采用多线程模式创建设备,渲染线程无法启用"));
 		return FALSE;
 	}
 	m_FrameCountTimer.SaveTime();
@@ -50,25 +50,29 @@ BOOL CD3DRenderThread::OnRun()
 		m_FrameRate=(float)(m_FrameCount*1000.0f)/FRAME_COUNT_TIME;
 		m_FrameCount=0;
 
-		//for(UINT j=0;j<m_RenderInstances.GetCount();j++)
-		//{
-		//	for(UINT i=0;i<m_RenderInstances[j].RenderList.GetCount();i++)
-		//	{
-		//		if(m_RenderInstances[j].RenderList[i]->IsKindOf(GET_CLASS_INFO(CD3DSceneRender)))
-		//		{
-		//			PrintSystemLog(0,"FrameRate=%g,TreeCheck=%u,TreeCut=%u,ObjectCheck=%u,DirectRenderCount=%u,BranchObjectCheckCount=%u,ObjectCutCount=%u,MergeRender=%d",
-		//				m_FrameRate,
-		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetTreeCheckCount(),
-		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetTreeCutCount(),
-		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetObjectCheckCount(),
-		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetDirectRenderCount(),
-		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetBranchObjectCheckCount(),
-		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetObjectCutCount(),
-		//				((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetMergeSubMeshRenderCount());
-		//		}
+		for(UINT j=0;j<m_RenderInstances.GetCount();j++)
+		{
+			for(UINT i=0;i<m_RenderInstances[j].RenderList.GetCount();i++)
+			{
+				if(m_RenderInstances[j].RenderList[i]->IsKindOf(GET_CLASS_INFO(CD3DSceneRender)))
+				{
+					PrintSystemLog(0,_T("FrameRate=%g,FaceCount=%u,SubMeshCount=%u,TreeCheck=%u,TreeCut=%u,ObjectCheck=%u,DirectRenderCount=%u,BranchObjectCheckCount=%u,ObjectCutCount=%u,MergeRender=%u,FXApplyCount=%u,MaterialSetCount=%u"),
+						m_FrameRate,
+						((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetRenderFaceCount(),
+						((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetRenderSubMeshCount(),
+						((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetTreeCheckCount(),
+						((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetTreeCutCount(),
+						((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetObjectCheckCount(),
+						((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetDirectRenderCount(),
+						((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetBranchObjectCheckCount(),
+						((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetObjectCutCount(),
+						((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetMergeSubMeshRenderCount(),
+						((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetFXApplyCount(),
+						((CD3DSceneRender *)m_RenderInstances[j].RenderList[i])->GetMaterialSetCount());
+				}
 
-		//	}	
-		//}
+			}	
+		}
 	}
 
 	if(!m_RenderControlTimer.IsTimeOut(MINI_RENDER_TIME))

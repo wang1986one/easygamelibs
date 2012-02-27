@@ -31,32 +31,32 @@ BOOL CStandardFileAccessor::Open(LPCTSTR FileName,int OpenMode)
 	if(m_hFile)
 		Close();
 
-	char ModeStr[20];
+	TCHAR ModeStr[20];
 
 	ModeStr[0]=0;
 	switch(OpenMode&modeCreationMask)
 	{
 	case modeOpenAlways:
-		strcat_s(ModeStr,20,"r");
+		_tcscat_s(ModeStr,20,_T("r"));
 		break;
 	case modeCreate:
-		strcat_s(ModeStr,20,"w");
+		_tcscat_s(ModeStr,20,_T("w"));
 		break;
 	case modeCreateAlways:
-		strcat_s(ModeStr,20,"w");
+		_tcscat_s(ModeStr,20,_T("w"));
 		break;
 	case modeTruncate:
-		strcat_s(ModeStr,20,"w");
+		_tcscat_s(ModeStr,20,_T("w"));
 		break;
 	case modeAppend:
-		strcat_s(ModeStr,20,"a+");
+		_tcscat_s(ModeStr,20,_T("a+"));
 		break;
 	default:
-		strcat_s(ModeStr,20,"r");
+		_tcscat_s(ModeStr,20,_T("r"));
 	}	
 
 	if(((OpenMode&modeCreationMask)!=modeAppend)&&(OpenMode&modeReadWrite))
-		strcat_s(ModeStr,20,"+");
+		_tcscat_s(ModeStr,20,_T("+"));
 
 	if(OpenMode&(osWriteThrough|osNoBuffer))
 		m_IsWriteFlush=true;
@@ -65,7 +65,7 @@ BOOL CStandardFileAccessor::Open(LPCTSTR FileName,int OpenMode)
 
 	m_hFile=NULL;
 	BOOL Ret=FALSE;
-	fopen_s(&m_hFile,FileName,ModeStr);
+	_tfopen_s(&m_hFile,FileName,ModeStr);
 	if(m_hFile)
 	{
 		Ret=TRUE;

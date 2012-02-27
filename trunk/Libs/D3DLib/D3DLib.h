@@ -48,7 +48,6 @@ inline BOOL PrintD3DDebugLog(DWORD Color,LPCTSTR Format,...)
 #define new new( __FILE__, __LINE__ )
 #endif
 
-#include <map>
 #include <algorithm>
 
 #include "D3DVector2.h"

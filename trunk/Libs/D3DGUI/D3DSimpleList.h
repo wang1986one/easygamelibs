@@ -51,6 +51,7 @@ protected:
 	int						m_ClientCurWidth;
 	int						m_ClientCurHeight;
 
+	bool					m_IsLoopScroll;
 	int						m_ScrollBarWidth;
 	CD3DScrollBar*			m_pScrollBar;
 
@@ -95,6 +96,15 @@ public:
 	int GetLineSpace()
 	{
 		return m_LineSpace;
+	}
+
+	void EnableLoopScroll(bool Enable)
+	{
+		m_IsLoopScroll=Enable;
+	}
+	bool IsLoopScroll()
+	{
+		return m_IsLoopScroll;
 	}
 
 	void SetScrollBarWidth(int Width);

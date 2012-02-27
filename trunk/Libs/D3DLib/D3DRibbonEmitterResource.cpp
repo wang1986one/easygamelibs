@@ -75,7 +75,7 @@ bool CD3DRibbonEmitterResource::LoadM2RibbonEmitter(UINT ID,M2_RIBBON_EMITTER * 
 	m_RibbonEmitterInfo.Textures.Resize(pRibbonEmitter->TextureCount);
 	for(UINT j=0;j<pRibbonEmitter->TextureCount;j++)
 	{
-		LPCTSTR szTextureName=(char *)pModelData+pTextures[pRibbonTextures[j]].FileNameOffset;
+		CEasyString szTextureName=(char *)pModelData+pTextures[pRibbonTextures[j]].FileNameOffset;
 		CD3DTexture * pTexture=m_pManager->GetDevice()->GetTextureManager()->LoadTexture(szTextureName);
 		m_RibbonEmitterInfo.Textures[j]=pTexture;
 	}
@@ -292,18 +292,18 @@ UINT CD3DRibbonEmitterResource::GetSmartStructSize(UINT Param)
 
 CD3DFX * CD3DRibbonEmitterResource::BuildRibbonFX(UINT RenderFlag,UINT BlendingMode)
 {
-	CEasyString FXName;	
-	CEasyString EnableZWrite;
-	CEasyString EnableFog;
-	CEasyString CullMode;
-	CEasyString EnableAlphaBlend;
-	CEasyString BlendOp;
-	CEasyString SrcBlend;
-	CEasyString DestBlend;
-	CEasyString EnableAlphaTest;	
-	CEasyString DiffuseFunction;
+	CEasyString  FXName;	
+	CEasyStringA EnableZWrite;
+	CEasyStringA EnableFog;
+	CEasyStringA CullMode;
+	CEasyStringA EnableAlphaBlend;
+	CEasyStringA BlendOp;
+	CEasyStringA SrcBlend;
+	CEasyStringA DestBlend;
+	CEasyStringA EnableAlphaTest;	
+	CEasyStringA DiffuseFunction;
 
-	FXName.Format("M2Ribbon\\0x%X_0x%X",
+	FXName.Format(_T("M2Ribbon\\0x%X_0x%X"),
 		RenderFlag,BlendingMode);
 
 
@@ -358,7 +358,7 @@ CD3DFX * CD3DRibbonEmitterResource::BuildRibbonFX(UINT RenderFlag,UINT BlendingM
 		break;
 	}		
 
-	CEasyString FxContent=M2_RIBBON_FX;
+	CEasyStringA FxContent=M2_RIBBON_FX;
 
 	FxContent.Replace("<EnableZWrite>",EnableZWrite);
 	FxContent.Replace("<EnableFog>",EnableFog);

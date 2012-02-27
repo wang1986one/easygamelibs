@@ -10,7 +10,6 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include <vector>
 
 class CFileSearcher 
 {
@@ -20,7 +19,7 @@ protected:
 		struct dirent		FileInfo;
 		struct stat			FileStat;	
 	};	
-	std::vector<FILE_INFO>	m_FileInfoList;	
+	CEasyArray<FILE_INFO>	m_FileInfoList;	
 	CEasyString				m_SearchDir;
 	int						m_FetchIndex;
 public:

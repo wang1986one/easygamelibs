@@ -16,7 +16,7 @@
 class CSmartValue 
 {
 protected:
-	char *			m_pData;
+	BYTE *			m_pData;
 	UINT			m_DataLen;
 	bool			m_IsSelfData;
 	bool			m_AllowChange;	
@@ -236,74 +236,74 @@ public:
 		case VT_CHAR:
 		case VT_UCHAR:
 			m_DataLen=sizeof(char)+sizeof(BYTE);
-			m_pData=new char[m_DataLen];
+			m_pData=new BYTE[m_DataLen];
 			m_pData[0]=Type;
 			m_pData[1]=0;
 			break;
 		case VT_SHORT:
 		case VT_USHORT:
 			m_DataLen=sizeof(short)+sizeof(BYTE);
-			m_pData=new char[m_DataLen];
+			m_pData=new BYTE[m_DataLen];
 			m_pData[0]=Type;
 			*((short *)(m_pData+1))=0;
 			break;
 		case VT_INT:
 		case VT_UINT:
 			m_DataLen=sizeof(int)+sizeof(BYTE);
-			m_pData=new char[m_DataLen];
+			m_pData=new BYTE[m_DataLen];
 			m_pData[0]=Type;
 			*((int *)(m_pData+1))=0;
 			break;
 		case VT_BIGINT:
 		case VT_UBIGINT:
 			m_DataLen=sizeof(__int64)+sizeof(BYTE);
-			m_pData=new char[m_DataLen];
+			m_pData=new BYTE[m_DataLen];
 			m_pData[0]=Type;
 			*((__int64 *)(m_pData+1))=0;
 			break;
 		case VT_FLOAT:
 			m_DataLen=sizeof(float)+sizeof(BYTE);
-			m_pData=new char[m_DataLen];
+			m_pData=new BYTE[m_DataLen];
 			m_pData[0]=Type;
 			*((float *)(m_pData+1))=0;
 			break;
 		case VT_DOUBLE:
 			m_DataLen=sizeof(double)+sizeof(BYTE);
-			m_pData=new char[m_DataLen];
+			m_pData=new BYTE[m_DataLen];
 			m_pData[0]=Type;
 			*((double *)(m_pData+1))=0;
 			break;
 		case VT_STRING:
 			m_DataLen=sizeof(char)*(Len+1)+sizeof(BYTE)+sizeof(UINT);
-			m_pData=new char[m_DataLen];
+			m_pData=new BYTE[m_DataLen];
 			m_pData[0]=Type;
 			*((UINT *)(m_pData+sizeof(BYTE)))=0;
 			*((char *)(m_pData+sizeof(BYTE)+sizeof(UINT)))=0;
 			break;
 		case VT_USTRING:
 			m_DataLen=sizeof(wchar_t)*(Len/sizeof(wchar_t)+1)+sizeof(BYTE)+sizeof(UINT);
-			m_pData=new char[m_DataLen];
+			m_pData=new BYTE[m_DataLen];
 			m_pData[0]=Type;
 			*((UINT *)(m_pData+sizeof(BYTE)))=0;
 			*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(UINT)))=0;
 			break;
 		case VT_STRING_TINY:
 			m_DataLen=sizeof(char)*(Len+1)+sizeof(BYTE)+sizeof(WORD);
-			m_pData=new char[m_DataLen];
+			m_pData=new BYTE[m_DataLen];
 			m_pData[0]=Type;
 			*((WORD *)(m_pData+sizeof(BYTE)))=0;
 			*((char *)(m_pData+sizeof(BYTE)+sizeof(WORD)))=0;
 			break;
 		case VT_USTRING_TINY:
 			m_DataLen=sizeof(wchar_t)*(Len/sizeof(wchar_t)+1)+sizeof(BYTE)+sizeof(WORD);
-			m_pData=new char[m_DataLen];
+			m_pData=new BYTE[m_DataLen];
 			m_pData[0]=Type;
 			*((WORD *)(m_pData+sizeof(BYTE)))=0;
 			*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(WORD)))=0;
 			break;
 		case VT_BOOL:
 			m_DataLen=sizeof(bool)+sizeof(BYTE);
-			m_pData=new char[m_DataLen];
+			m_pData=new BYTE[m_DataLen];
 			m_pData[0]=Type;
 			*((bool *)(m_pData+1))=false;
 			break;
@@ -319,7 +319,7 @@ public:
 	{
 		Destory();
 		m_IsSelfData=false;
-		m_pData=(char *)pData;
+		m_pData=(BYTE *)pData;
 
 		int DataType=ClearType;
 		UINT BinaryDataLen=0;
@@ -924,9 +924,9 @@ public:
 		switch(GetType())
 		{	
 		case VT_STRING:
-			return m_pData+sizeof(BYTE)+sizeof(UINT);
+			return (const char *)(m_pData+sizeof(BYTE)+sizeof(UINT));
 		case VT_STRING_TINY:
-			return m_pData+sizeof(BYTE)+sizeof(WORD);
+			return (const char *)(m_pData+sizeof(BYTE)+sizeof(WORD));
 		}		
 		return "";
 	}

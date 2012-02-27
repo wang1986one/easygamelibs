@@ -71,7 +71,7 @@ void CD3DGUIWndRect::SetRender(CD3DBaseRender * pRender)
 	{
 		SetDevice(m_pRender->GetDevice());
 		if(m_SubMesh.GetMaterial().GetFX()==NULL)
-			SetFXFromMemory("DEFAULT_UI_WIN_RECT_FX",DEFAULT_UI_WIN_RECT_FX,(int)strlen(DEFAULT_UI_WIN_RECT_FX));
+			SetFXFromMemory(_T("DEFAULT_UI_WIN_RECT_FX"),(LPVOID)DEFAULT_UI_WIN_RECT_FX,(int)strlen(DEFAULT_UI_WIN_RECT_FX));
 	}
 }
 
@@ -154,11 +154,11 @@ void CD3DGUIWndRect::SetTexture(IUITexture * pTexture)
 	D3DLOCK_FOR_OBJECT_MODIFY
 	CD3DTexture * pTex=dynamic_cast<CD3DTexture *>(pTexture);
 	if(!m_SubMesh.GetMaterial().SetTexture(0,pTex))
-		m_SubMesh.GetMaterial().AddTexture(pTex,0);
+		m_SubMesh.GetMaterial().AddTexture(pTex,0,"","");
 	if(pTex)
 		pTex->AddUseRef();
 	if(m_SubMesh.GetMaterial().GetFX()==NULL)
-		SetFXFromMemory("DEFAULT_UI_WIN_RECT_FX",DEFAULT_UI_WIN_RECT_FX,(int)strlen(DEFAULT_UI_WIN_RECT_FX));
+		SetFXFromMemory(_T("DEFAULT_UI_WIN_RECT_FX"),(LPVOID)DEFAULT_UI_WIN_RECT_FX,(int)strlen(DEFAULT_UI_WIN_RECT_FX));
 }
 
 IUITexture * CD3DGUIWndRect::GetTexture()
@@ -184,9 +184,9 @@ bool CD3DGUIWndRect::SetEffectMode(int Mode)
 	switch(Mode)
 	{
 	case D3DGUI_EFFECT_INVERSE_COLOR:
-		return SetFXFromMemory("INVERSE_COLOR_FX",INVERSE_COLOR_FX,(int)strlen(INVERSE_COLOR_FX));
+		return SetFXFromMemory(_T("INVERSE_COLOR_FX"),(LPVOID)INVERSE_COLOR_FX,(int)strlen(INVERSE_COLOR_FX));
 	case D3DGUI_EFFECT_TEXTURE_FILTER:
-		return SetFXFromMemory("DEFAULT_UI_WIN_RECT_FX_TF",DEFAULT_UI_WIN_RECT_FX_TF,(int)strlen(DEFAULT_UI_WIN_RECT_FX_TF));
+		return SetFXFromMemory(_T("DEFAULT_UI_WIN_RECT_FX_TF"),(LPVOID)DEFAULT_UI_WIN_RECT_FX_TF,(int)strlen(DEFAULT_UI_WIN_RECT_FX_TF));
 	}
 	
 	return false;
@@ -204,7 +204,7 @@ bool CD3DGUIWndRect::SetFX(LPCTSTR FXFileName)
 	return false;
 }
 
-bool CD3DGUIWndRect::SetFXFromMemory(LPCTSTR FXName,LPCTSTR FXContent,int Size)
+bool CD3DGUIWndRect::SetFXFromMemory(LPCTSTR FXName,LPVOID FXContent,int Size)
 {
 	D3DLOCK_FOR_OBJECT_MODIFY
 	CD3DFX * pFX=GetDevice()->GetFXManager()->LoadFXFromMemory(FXName,(void *)FXContent,Size);

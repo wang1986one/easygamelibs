@@ -38,10 +38,10 @@ BOOL CResourceFileAccessor::Open(LPCTSTR FileName,int OpenMode)
 		return FALSE;
 	}
 
-	HMODULE hModule=(HMODULE)ResourceInfo.GetInteger64(NULL,"Module",0);
-	LPCTSTR Type=ResourceInfo.GetString(NULL,"Type","");
-	LPCTSTR Name=ResourceInfo.GetString(NULL,"Name","");
-	UINT ID=ResourceInfo.GetInteger(NULL,"ID",0);
+	HMODULE hModule=(HMODULE)ResourceInfo.GetInteger64(NULL,_T("Module"),0);
+	LPCTSTR Type=ResourceInfo.GetString(NULL,_T("Type"),_T(""));
+	LPCTSTR Name=ResourceInfo.GetString(NULL,_T("Name"),_T(""));
+	UINT ID=ResourceInfo.GetInteger(NULL,_T("ID"),0);
 	
 	if(ID)
 	{

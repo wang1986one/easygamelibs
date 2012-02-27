@@ -11,150 +11,150 @@
 /****************************************************************************/
 #include "StdAfx.h"
 
-LPCTSTR OPERATOR_STRINGS[OPERATOR_MAX]={"加","减","乘","除","右括号","左括号","取负","逗号",
-			"小于","大于","小于等于","大于等于","等于","不等于","赋值","与","或","非","跳转",
-			"条件跳转","函数调用","函数调用返回","清空堆栈","添加临时变量","添加调用参数","脚本退出","空操作"};
+LPCTSTR OPERATOR_STRINGS[OPERATOR_MAX]={_T("加"),_T("减"),_T("乘"),_T("除"),_T("右括号"),_T("左括号"),_T("取负"),_T("逗号"),
+			_T("小于"),_T("大于"),_T("小于等于"),_T("大于等于"),_T("等于"),_T("不等于"),_T("赋值"),_T("与"),_T("或"),_T("非"),_T("跳转"),
+			_T("条件跳转"),_T("函数调用"),_T("函数调用返回"),_T("清空堆栈"),_T("添加临时变量"),_T("添加调用参数"),_T("脚本退出"),_T("空操作")};
 
 LPCTSTR KEYWORD_STRINGS[KW_MAX]=
-{"EXIT","IF","THEN","ELSE","ELSEIF","ENDIF","WHILE","DO","ENDWHILE","BREAK","CONTINUE","GOTO",";",
-"INT","INT64","FLOAT","DOUBLE","STRING","FUNCTION","ENDFUN"};
+{_T("EXIT"),_T("IF"),_T("THEN"),_T("ELSE"),_T("ELSEIF"),_T("ENDIF"),_T("WHILE"),_T("DO"),_T("ENDWHILE"),_T("BREAK"),_T("CONTINUE"),_T("GOTO"),_T(";"),
+_T("INT"),_T("INT64"),_T("FLOAT"),_T("DOUBLE"),_T("STRING"),_T("FUNCTION"),_T("ENDFUN")};
 
 
 
 
 
-const char * ESGetErrorMsg(int ErrCode)
+LPCTSTR ESGetErrorMsg(int ErrCode)
 {
 	switch(ErrCode)
 	{
 	case -1:
-		return "执行中断";
+		return _T("执行中断");
 		break;
 	case 0:
-		return "执行成功";
+		return _T("执行成功");
 		break;
 	case 1001:
-		return "字符串常量过长";
+		return _T("字符串常量过长");
 		break;
 	case 1002:
-		return "缺少字符串结尾符";
+		return _T("缺少字符串结尾符");
 		break;
 	case 1003:
-		return "标识符过长";
+		return _T("标识符过长");
 		break;
 	case 1005:
-		return "非法字符";
+		return _T("非法字符");
 		break;
 	case 2001:
-		return "有IF语句未正确配对";
+		return _T("有IF语句未正确配对");
 		break;	
 	case 2011:
-		return "WHILE DO与ENDWHILE未能配对";
+		return _T("WHILE DO与ENDWHILE未能配对");
 		break;
 	case 2012:
-		return "BREAK必须出现在WHILE循环中";
+		return _T("BREAK必须出现在WHILE循环中");
 		break;
 	case 2013:
-		return "CONTINUE必须出现在WHILE循环中";
+		return _T("CONTINUE必须出现在WHILE循环中");
 		break;
 	case 2014:
-		return "GOTO语句后面缺少标记";
+		return _T("GOTO语句后面缺少标记");
 		break;
 	case 2015:
-		return "GOTO语句后面的标记未定义";
+		return _T("GOTO语句后面的标记未定义");
 		break;
 	case 2016:
-		return "FUNCTION和ENDFUN未配对";
+		return _T("FUNCTION和ENDFUN未配对");
 		break;
 	case 2018:
-		return "不允许在函数内定义函数";
+		return _T("不允许在函数内定义函数");
 		break;
 	case 2019:
-		return "函数定义格式错误";
+		return _T("函数定义格式错误");
 		break;	
 	case 2020:
-		return "IF,ELSEIF,WHILE所需的表达式必须有返回值";
+		return _T("IF,ELSEIF,WHILE所需的表达式必须有返回值");
 		break;
 	case 2021:
-		return "括号未配对";
+		return _T("括号未配对");
 		break;
 	case 3001:
-		return "赋值目标不是变量";
+		return _T("赋值目标不是变量");
 		break;	
 	case 3002:
-		return "字符串不能进行减法操作";
+		return _T("字符串不能进行减法操作");
 		break;
 	case 3003:
-		return "字符串不能进行乘法操作";
+		return _T("字符串不能进行乘法操作");
 		break;
 	case 3004:
-		return "操作符前后的变量或常量类型不兼容";
+		return _T("操作符前后的变量或常量类型不兼容");
 		break;
 	case 3005:
-		return "字符串不能进行除法操作";
+		return _T("字符串不能进行除法操作");
 		break;
 	case 3006:
-		return "字符串不能进行取负数操作";
+		return _T("字符串不能进行取负数操作");
 		break;
 	case 3007:
-		return "函数参数不足";
+		return _T("函数参数不足");
 		break;
 	case 3008:
-		return "非法的函数参数";
+		return _T("非法的函数参数");
 		break;
 	case 3009:
-		return "函数执行错误";
+		return _T("函数执行错误");
 		break;
 	case 3010:
-		return "AND不能对字符串使用";
+		return _T("AND不能对字符串使用");
 	case 3011:
-		return "OR不能对字符串使用";
+		return _T("OR不能对字符串使用");
 	case 3012:
-		return "NOT不能对字符串使用";
+		return _T("NOT不能对字符串使用");
 	case 3013:
-		return "堆栈溢出";
+		return _T("堆栈溢出");
 	case 3014:
-		return "中断溢出";
+		return _T("中断溢出");
 	case 3015:
-		return "赋值的源不是变量或值";
+		return _T("赋值的源不是变量或值");
 	case 3016:
-		return "第一操作数必须是变量或值";
+		return _T("第一操作数必须是变量或值");
 	case 3017:
-		return "第二操作数必须是变量或值";
+		return _T("第二操作数必须是变量或值");
 	case 3018:
-		return "操作符不支持此操作数类型";
+		return _T("操作符不支持此操作数类型");
 	case 3019:
-		return "未知操作符";
+		return _T("未知操作符");
 	case 4010:	
-		return "定义变量错误";		
+		return _T("定义变量错误");		
 	case 4012:
-		return "未知标识符";	
+		return _T("未知标识符");	
 	case 4013:
-		return "操作符参数不足";
+		return _T("操作符参数不足");
 	case 4016:
-		return "变量未定义";
+		return _T("变量未定义");
 	case 5001:
-		return "中断不存在";
+		return _T("中断不存在");
 	case 6001:
-		return "未设置变量列表";
+		return _T("未设置变量列表");
 	case 6002:
-		return "未设置函数列表";
+		return _T("未设置函数列表");
 	case 6003:
-		return "未设置脚本代码";
+		return _T("未设置脚本代码");
 	case 6004:
-		return "当前线程正在中断中，请用ContinueScript";
+		return _T("当前线程正在中断中，请用ContinueScript");
 	case 6005:
-		return "当前线程未在中断中，不能使用ContinueScript";
+		return _T("当前线程未在中断中，不能使用ContinueScript");
 	case 6006:
-		return "要调用的函数未找到";
+		return _T("要调用的函数未找到");
 	case 6007:
-		return "要调用的函数不是脚本函数";
+		return _T("要调用的函数不是脚本函数");
 	case 6008:
-		return "添加局部变量失败";		
+		return _T("添加局部变量失败");		
 	case 10000:
-		return "遇到意外的布兰式";
+		return _T("遇到意外的布兰式");
 	}
-	return "未知错误";
+	return _T("未知错误");
 }
 
 CEasyScriptExecutor::CEasyScriptExecutor(void)

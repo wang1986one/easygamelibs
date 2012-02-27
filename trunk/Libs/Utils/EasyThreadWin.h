@@ -10,7 +10,6 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
-#include "nameobject.h"
 
 #define DEFAULT_THREAD_TERMINATE_TIME		60000
 #define DEFAULT_THREAD_STARTUP_TIME			60000

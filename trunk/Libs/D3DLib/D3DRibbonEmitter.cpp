@@ -249,11 +249,16 @@ void CD3DRibbonEmitter::OnPrepareRenderSubMesh(CD3DBaseRender * pRender,CD3DFX *
 	//pFX->SetFloat("MaterialPower",pD3DMaterial->Power);
 
 	//设置纹理
-	pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
+	//pFX->SetTexture("TexLay0",pMaterial->GetTexture(0));
 
 	//设置视投影矩阵
 	//pFX->SetMatrix("ViewMatrix",pCamera->GetViewMatR());
 	//pFX->SetMatrix("ProjMatrix",pCamera->GetProjectMatR());
+
+	if(pSubMesh->IsSelected())			
+	{
+		pFX->SetColor("GlobalColor",0xFFFF0000);
+	}
 }
 
 
@@ -387,7 +392,7 @@ bool CD3DRibbonEmitter::LoadFromResource(CD3DRibbonEmitterResource * pModelResou
 	}
 	for(UINT i=0;i<pRibbonEmitterInfo->Textures.GetCount();i++)
 	{
-		m_SubMesh.GetMaterial().AddTexture(pRibbonEmitterInfo->Textures[i],0);
+		m_SubMesh.GetMaterial().AddTexture(pRibbonEmitterInfo->Textures[i],0,"TexLay0","");
 		if(pRibbonEmitterInfo->Textures[i])
 			pRibbonEmitterInfo->Textures[i]->AddUseRef();
 	}
@@ -398,6 +403,8 @@ bool CD3DRibbonEmitter::LoadFromResource(CD3DRibbonEmitterResource * pModelResou
 		pRibbonEmitterInfo->pFX->AddUseRef();
 	
 	m_SubMesh.SetTransparent(pRibbonEmitterInfo->IsTransparent);
+
+	m_SubMesh.GetMaterial().CaculateHashCode();
 
 	m_RibbonCount=0;
 	return true;

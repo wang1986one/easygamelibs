@@ -36,6 +36,7 @@ public:
 	void AddData(BYTE * inBuf, unsigned int inLen);
 	void MD5Final(void);
 	CEasyString GetHashCodeString(void);
+	void GetHashCode(BYTE * pBuff);
 
 protected:
 	void Transform(UINT4 * buf, UINT4 * in);

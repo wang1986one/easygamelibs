@@ -11,11 +11,11 @@
 // NF 29 Mar 2003  Added xml_attribute_struct::matches_attribute_name_value() and
 //                 changed xml_node::matches_attribute_name_value() to use same.
 // NF 29 Mar 2003  Changed xml_attribute_struct::matches_attribute_name_value() to
-//                 compare value lengths instead of using _tcsncmp(,,max(..)) which
+//                 compare value lengths instead of using _tcsncmp(,,Max(..)) which
 //                 doesn't work when str1 is shorter than str2, but otherwise match.
 // NF 31 Mar 2003  Added findattribute( const TCHAR* name, const TCHAR* value ).
 // NF 31 Mar 2003  Changed first_xx functions to const.
-// NF 31 Mar 2003  Added std::string xml_to_text( const std::string& sxml_pcdata ).
+// NF 31 Mar 2003  Added CEasyString xml_to_text( const CEasyString& sxml_pcdata ).
 // NF 17 Apr 2003  Added visible_children to xml_node_struct.
 // NF 29 May 2003  Changed static pug::parse() to xml_parser::parse()
 // NF 29 May 2003  Added code to xml_parser::parse() to set node expand flag when
@@ -39,8 +39,8 @@
 // NF 7 Oct 2003   Applied fix to xml_node Copy constructor as per http://www.codeproject.com/soap/pugxml.asp?msg=609169#xx609169xx
 //
 // TODO:
-//   P4 Change calls to _tcsncmp( ..., max(l1,l2) ) to 'l1 == l2 && _tcsncmp( .., l1 )
-//      It is more efficient to compare lengths first, than using max() and  _tcsncmp().
+//   P4 Change calls to _tcsncmp( ..., Max(l1,l2) ) to 'l1 == l2 && _tcsncmp( .., l1 )
+//      It is more efficient to compare lengths first, than using Max() and  _tcsncmp().
 //      See: matches_attribute_name_value()
 //
 //   PZ I'd like to see pcdata stored in the element node.value if possible, instead of
@@ -71,20 +71,19 @@
 #endif
 
 
-#include <iostream>
-#include <ostream>
-#include <string>
-#include <vector>
-using std::vector;
 
-#if defined(PUGOPT_MEMFIL) | defined(PUGOPT_NONSEG)
-#	include <assert.h>
-#endif
+
+//#include <vector>
+//using std::vector;
+//
+//#if defined(PUGOPT_MEMFIL) | defined(PUGOPT_NONSEG)
+//#	include <assert.h>
+//#endif
 
 
 #ifndef HIWORD
-#	define HIWORD(X) ((unsigned short)((unsigned long)(X)>>16))
-#	define LOWORD(X) ((unsigned short)((unsigned long)(X)&0xFFFF))
+#	define HIWORD(X) ((unsigned short)((unsigned int)(X)>>16))
+#	define LOWORD(X) ((unsigned short)((unsigned int)(X)&0xFFFF))
 #endif
 
 
@@ -115,10 +114,13 @@ namespace pug
 
 //<summary>The Library Variant ID. See PUGAPI_INTERNAL_VARIANT for an explanation.</summary>
 //<returns>The current Library Variant ID.</returns>
-inline static unsigned long lib_variant(){ return PUGAPI_INTERNAL_VARIANT; }
+inline static unsigned int lib_variant(){ return PUGAPI_INTERNAL_VARIANT; }
 //<summary>The library version. High word is major version. Low word is minor version.</summary>
 //<returns>The current Library Version.</returns>
-inline static unsigned long lib_version(){ return PUGAPI_INTERNAL_VERSION; }
+inline static unsigned int lib_version(){ return PUGAPI_INTERNAL_VERSION; }
+
+#define Min(a,b)	(a<b?a:b)
+#define Max(a,b)	(a>b?a:b)
 
 
 //<summary>A 'name=value' XML attribute structure.</summary>
@@ -165,27 +167,27 @@ typedef enum t_xml_node_type
 	xml_node_type;
 
 
-static const unsigned long parse_grow = 4; //Default child element & attribute space growth increment.
+static const unsigned int parse_grow = 4; //Default child element & attribute space growth increment.
 
 
 //Parser Options
-static const unsigned long parse_minimal		= 0x00000000; //Unset the following flags.
-static const unsigned long parse_pi				= 0x00000002; //Parse '&lt;?...?&gt;'
-static const unsigned long parse_doctype		= 0x00000004; //Parse '&lt;!DOCTYPE ...&gt;' section, setting '[...]' as data member.
-static const unsigned long parse_comments		= 0x00000008; //Parse &lt;!--...--&gt;'
-static const unsigned long parse_cdata			= 0x00000010; //Parse '&lt;![CDATA[...]]&gt;', and/or '&lt;![INCLUDE[...]]&gt;'
-static const unsigned long parse_escapes		= 0x00000020; //Not implemented.
-static const unsigned long parse_trim_pcdata	= 0x00000040; //Trim '&gt;...&lt;'
-static const unsigned long parse_trim_attribute = 0x00000080; //Trim 'foo="..."'.
-static const unsigned long parse_trim_cdata		= 0x00000100; //Trim '&lt;![CDATA[...]]&gt;', and/or '&lt;![INCLUDE[...]]&gt;'
-static const unsigned long parse_trim_entity	= 0x00000200; //Trim '&lt;!ENTITY name ...&gt;', etc.
-static const unsigned long parse_trim_doctype	= 0x00000400; //Trim '&lt;!DOCTYPE [...]&gt;'
-static const unsigned long parse_trim_comment	= 0x00000800; //Trim &lt;!--...--&gt;'
-static const unsigned long parse_wnorm			= 0x00001000; //Normalize all entities that are flagged to be trimmed.
-static const unsigned long parse_dtd			= 0x00002000; //If parse_doctype set, then parse whatever is in data member ('[...]').
-static const unsigned long parse_dtd_only		= 0x00004000; //If parse_doctype|parse_dtd set, then parse only '&lt;!DOCTYPE [*]&gt;'
-static const unsigned long parse_default		= 0x0000FFFF;
-static const unsigned long parse_noset			= 0x80000000;
+static const unsigned int parse_minimal			= 0x00000000; //Unset the following flags.
+static const unsigned int parse_pi				= 0x00000002; //Parse '&lt;?...?&gt;'
+static const unsigned int parse_doctype			= 0x00000004; //Parse '&lt;!DOCTYPE ...&gt;' section, setting '[...]' as data member.
+static const unsigned int parse_comments		= 0x00000008; //Parse &lt;!--...--&gt;'
+static const unsigned int parse_cdata			= 0x00000010; //Parse '&lt;![CDATA[...]]&gt;', and/or '&lt;![INCLUDE[...]]&gt;'
+static const unsigned int parse_escapes			= 0x00000020; //Not implemented.
+static const unsigned int parse_trim_pcdata		= 0x00000040; //Trim '&gt;...&lt;'
+static const unsigned int parse_trim_attribute	= 0x00000080; //Trim 'foo="..."'.
+static const unsigned int parse_trim_cdata		= 0x00000100; //Trim '&lt;![CDATA[...]]&gt;', and/or '&lt;![INCLUDE[...]]&gt;'
+static const unsigned int parse_trim_entity		= 0x00000200; //Trim '&lt;!ENTITY name ...&gt;', etc.
+static const unsigned int parse_trim_doctype	= 0x00000400; //Trim '&lt;!DOCTYPE [...]&gt;'
+static const unsigned int parse_trim_comment	= 0x00000800; //Trim &lt;!--...--&gt;'
+static const unsigned int parse_wnorm			= 0x00001000; //Normalize all entities that are flagged to be trimmed.
+static const unsigned int parse_dtd				= 0x00002000; //If parse_doctype set, then parse whatever is in data member ('[...]').
+static const unsigned int parse_dtd_only		= 0x00004000; //If parse_doctype|parse_dtd set, then parse only '&lt;!DOCTYPE [*]&gt;'
+static const unsigned int parse_default			= 0x0000FFFF;
+static const unsigned int parse_noset			= 0x80000000;
 
 #ifdef PUGOPT_NODE_FLAGS
 // xml_node_struct state flags
@@ -308,21 +310,21 @@ inline static bool strcatgrown_impl(TCHAR** lhs,const TCHAR* rhs,unsigned int& l
 {
 	if(!*lhs) //Null, allocate and copy.
 	{
-		*lhs = (TCHAR*) malloc(rsize+sizeof(TCHAR));
+		*lhs = (TCHAR*) malloc((rsize+1)*sizeof(TCHAR));
 		if(!*lhs)
 		{
 			lsize = 0;
 			return false; //Allocate failed.
 		}
-		memcpy(*lhs,rhs,rsize); //Concatenate.
+		memcpy(*lhs,rhs,rsize*sizeof(TCHAR)); //Concatenate.
 		*(*lhs + rsize) = 0; //Terminate it.
 		lsize = rsize;
 	}
 	else //Reallocate. NF I don't think this is right for MBCS, nor is code in 'StrCatGrow()'.
 	{
-		TCHAR* temp = (TCHAR*) realloc(*lhs,lsize + rsize + sizeof(TCHAR));
+		TCHAR* temp = (TCHAR*) realloc(*lhs,(lsize + rsize + 1)*sizeof(TCHAR));
 		if(!temp) return false; //Realloc failed.
-		memcpy(temp+lsize,rhs,rsize); //Concatenate.
+		memcpy(temp+lsize,rhs,rsize*sizeof(TCHAR)); //Concatenate.
 		lsize += rsize; //Set new length.
 		temp[lsize] = 0; //Terminate it.
 		*lhs = temp;
@@ -338,7 +340,7 @@ inline static bool strcatgrown_impl(TCHAR** lhs,const TCHAR* rhs,unsigned int& l
 //<remarks>'lhs' is resized and 'rhs' is concatenated to it.</remarks>
 inline static bool strcatgrown(TCHAR** lhs,const TCHAR* rhs,unsigned int& lsize)
 {
-	const unsigned int rsize = _tcslen(rhs) * sizeof(TCHAR);
+	const unsigned int rsize = _tcslen(rhs);
 	return pug::strcatgrown_impl(lhs,rhs,lsize,rsize);
 }
 
@@ -840,26 +842,26 @@ inline static void free_node_recursive(xml_node_struct* root)
 //<param name="tempsize">Temporary read buffer size.</param>
 //<returns>Success if file at 'path' was opened and bytes were read into memory.</returns>
 //<remarks>Memory is allocated at '*buffer'. Free with 'free'.</remarks>
-inline static bool load_file(const TCHAR* path,TCHAR** buffer,unsigned long* size,unsigned long tempsize = 4096)
-{
-	if(!path || !buffer || !size) return false;
-	*size = 0;
-	*buffer = 0;
-	HANDLE file_handle = CreateFile(path,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-	if(file_handle == INVALID_HANDLE_VALUE) return false;
-	TCHAR* temp = (TCHAR*) malloc(sizeof(TCHAR)*tempsize);
-	if(!temp) return false;
-	unsigned long read_bytes = 0;
-	ZeroMemory(temp,sizeof(TCHAR)*tempsize);
-	while(ReadFile(file_handle,(void*)temp,tempsize-1,&read_bytes,0) && read_bytes && strcatgrow(buffer,temp))
-	{
-		*size += read_bytes;
-		ZeroMemory(temp,sizeof(TCHAR)*tempsize);
-	}
-	CloseHandle(file_handle);
-	free(temp);
-	return (*size) ? true : false;
-}
+//inline static bool load_file(const TCHAR* path,TCHAR** buffer,unsigned long* size,unsigned long tempsize = 4096)
+//{
+//	if(!path || !buffer || !size) return false;
+//	*size = 0;
+//	*buffer = 0;
+//	HANDLE file_handle = CreateFile(path,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+//	if(file_handle == INVALID_HANDLE_VALUE) return false;
+//	TCHAR* temp = (TCHAR*) malloc(sizeof(TCHAR)*tempsize);
+//	if(!temp) return false;
+//	unsigned long read_bytes = 0;
+//	ZeroMemory(temp,sizeof(TCHAR)*tempsize);
+//	while(ReadFile(file_handle,(void*)temp,tempsize-1,&read_bytes,0) && read_bytes && strcatgrow(buffer,temp))
+//	{
+//		*size += read_bytes;
+//		ZeroMemory(temp,sizeof(TCHAR)*tempsize);
+//	}
+//	CloseHandle(file_handle);
+//	free(temp);
+//	return (*size) ? true : false;
+//}
 
 
 //<summary>A void pointer array. Used by various xml_node::find* functions.</summary>
@@ -1263,13 +1265,9 @@ inline static void outer_xml(std::basic_ostream<TCHAR,std::char_traits<TCHAR> > 
 
 //<summary>Abstract iterator class for interating over a node's members.</summary>
 //<remarks>Used as base class for 'xml_node_iterator' and 'xml_attribute_iterator'.</remarks>
-#if _MSC_VER < 1300
-template <class _Ty,class _D>
-class xml_iterator : public std::_Ranit<_Ty,_D>
-#else
+
 template <class _Ty,class _Diff,class _Pointer,class _Reference>
-class xml_iterator : public std::_Ranit<_Ty,_Diff,_Pointer,_Reference>
-#endif
+class xml_iterator : public std::iterator<std::random_access_iterator_tag,_Ty,_Diff,_Pointer,_Reference>
 {
 protected:
 	xml_node_struct* _vref; //A pointer to the node over which to iterate.
@@ -1359,17 +1357,17 @@ public:
 	bool operator==(const xml_attribute& r){ return (_attr == r._attr); } //Compare internal pointer.
 	bool operator!=(const xml_attribute& r){ return (_attr != r._attr); }
 	operator xml_attribute_struct*(){ return _attr; }
-	//<summary>Cast attribute value as std::string. If not found, return empty.</summary>
-	//<returns>The std::string attribute value, or empty.</returns>
+	//<summary>Cast attribute value as CEasyString. If not found, return empty.</summary>
+	//<returns>The CEasyString attribute value, or empty.</returns>
 	//<remarks>Note: Modifying this will not change the value, e.g. read only.</remarks>
-	operator std::string()
+	operator CEasyString()
 	{
-		std::string temp;
+		CEasyString temp;
 		if(has_value())
 		{
 #ifdef PUGOPT_NONSEG
 			// temp.append(_attr->value,_attr->value_size);
-			temp.assign(_attr->value,_attr->value_size);  // NF 2 Mar 2003
+			temp.SetString(_attr->value,_attr->value_size);  // NF 2 Mar 2003
 #else
 			temp = _attr->value;
 #endif
@@ -1396,7 +1394,7 @@ public:
 #ifdef PUGOPT_NONSEG
 		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
 		unsigned int valulen = sizeof(temp)-1;
-		const unsigned int maxlen = valulen ? min(valulen,_attr->value_size) : _attr->value_size;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
 		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
 		temp[maxlen] = 0;
                 return (int)_tcstol( temp, NULL, 0 );    // rem: base = 0 so value can be Dec|Octal|Hex
@@ -1411,7 +1409,37 @@ public:
 #ifdef PUGOPT_NONSEG
 		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
 		unsigned int valulen = sizeof(temp)-1;
-		const unsigned int maxlen = valulen ? min(valulen,_attr->value_size) : _attr->value_size;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
+		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
+		temp[maxlen] = 0;
+		return (unsigned int)_tcstoul( temp, NULL, 0 );    // rem: base = 0 so value can be Dec|Octal|Hex
+#else
+		return (unsigned int)_tcstoul( _attr->value, NULL, 0 ); // rem: base = 0 so value can be Dec|Octal|Hex
+#endif
+	}
+
+	operator short()
+	{
+		if(!has_value()) return 0;
+#ifdef PUGOPT_NONSEG
+		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
+		unsigned int valulen = sizeof(temp)-1;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
+		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
+		temp[maxlen] = 0;
+		return (int)_tcstol( temp, NULL, 0 );    // rem: base = 0 so value can be Dec|Octal|Hex
+#else
+		return (int)_tcstol( _attr->value, NULL, 0 ); // rem: base = 0 so value can be Dec|Octal|Hex
+#endif
+	}
+
+	operator unsigned short()
+	{
+		if(!has_value()) return 0;
+#ifdef PUGOPT_NONSEG
+		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
+		unsigned int valulen = sizeof(temp)-1;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
 		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
 		temp[maxlen] = 0;
 		return (unsigned int)_tcstoul( temp, NULL, 0 );    // rem: base = 0 so value can be Dec|Octal|Hex
@@ -1429,7 +1457,7 @@ public:
 #ifdef PUGOPT_NONSEG
 		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
 		unsigned int valulen = sizeof(temp)-1;
-		const unsigned int maxlen = valulen ? min(valulen,_attr->value_size) : _attr->value_size;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
 		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
 		temp[maxlen] = 0;
 		return _tcstol(temp,NULL,10);
@@ -1444,7 +1472,7 @@ public:
 #ifdef PUGOPT_NONSEG
 		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
 		unsigned int valulen = sizeof(temp)-1;
-		const unsigned int maxlen = valulen ? min(valulen,_attr->value_size) : _attr->value_size;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
 		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
 		temp[maxlen] = 0;
 		return _tcstoul(temp,NULL,10);
@@ -1459,7 +1487,7 @@ public:
 #ifdef PUGOPT_NONSEG
 		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
 		unsigned int valulen = sizeof(temp)-1;
-		const unsigned int maxlen = valulen ? min(valulen,_attr->value_size) : _attr->value_size;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
 		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
 		temp[maxlen] = 0;
 		return _tcstoi64(temp,NULL,10);
@@ -1474,7 +1502,7 @@ public:
 #ifdef PUGOPT_NONSEG
 		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
 		unsigned int valulen = sizeof(temp)-1;
-		const unsigned int maxlen = valulen ? min(valulen,_attr->value_size) : _attr->value_size;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
 		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
 		temp[maxlen] = 0;
 		return _tcstoui64(temp,NULL,10);
@@ -1492,7 +1520,7 @@ public:
 #ifdef PUGOPT_NONSEG
 		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
 		unsigned int valulen = sizeof(temp)-1;
-		const unsigned int maxlen = valulen ? min(valulen,_attr->value_size) : _attr->value_size;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
 		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
 		temp[maxlen] = 0;
 		return _tcstod(temp,0);
@@ -1506,7 +1534,7 @@ public:
 #ifdef PUGOPT_NONSEG
 		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
 		unsigned int valulen = sizeof(temp)-1;
-		const unsigned int maxlen = valulen ? min(valulen,_attr->value_size) : _attr->value_size;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
 		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
 		temp[maxlen] = 0;
 		return (float)_tcstod(temp,0);
@@ -1534,10 +1562,10 @@ public:
 		}
 		return false;
 	}
-	//<summary>Set attribute to std::string.</summary>
-	//<param name="rhs">Value std::string to set.</param>
+	//<summary>Set attribute to CEasyString.</summary>
+	//<param name="rhs">Value CEasyString to set.</param>
 	//<returns>Reference to xml_attribute.</returns>
-	xml_attribute& operator=(const std::string& rhs){ value(rhs.c_str()); return *this; }
+	//Need Recovery xml_attribute& operator=(const CEasyString& rhs){ value(rhs.GetBuffer()); return *this; }
 	//<summary>Set attribute to string.</summary>
 	//<param name="rhs">Value string to set.</param>
 	//<returns>Reference to xml_attribute.</returns>
@@ -1582,15 +1610,15 @@ public:
 		value(rhs?_T("true"):_T("false"));
 		return *this;
 	}
-	//<summary>Right-shift attribute value to std::string.</summary>
-	//<param name="rhs">Reference to std::string to set.</param>
+	//<summary>Right-shift attribute value to CEasyString.</summary>
+	//<param name="rhs">Reference to CEasyString to set.</param>
 	//<returns>Reference to xml_attribute.</returns>
-	xml_attribute& operator>>(std::string& rhs)
+	xml_attribute& operator>>(CEasyString& rhs)
 	{
 #ifdef PUGOPT_NONSEG
 		// rhs.clear();  // NF 2 Mar 2003
 		// rhs.append(_attr->value,_attr->value_size);
-		rhs.assign(_attr->value,_attr->value_size);
+		rhs.SetString(_attr->value,_attr->value_size);
 #else
 		rhs = value();
 #endif
@@ -1653,13 +1681,13 @@ public:
 	const TCHAR* name() const { return (!empty() && _attr->name) ? _attr->name : _T(""); } //Access the attribute name.
     //Access the attribute name.
     //<since>2 Mar 2003 NF</since>
-	std::string getname()
+	CEasyString getname()
     {
-		std::string temp;
+		CEasyString temp;
 		if( has_name() )
 		{
 #ifdef PUGOPT_NONSEG
-			temp.assign(_attr->name,_attr->name_size);
+			temp.SetString(_attr->name,_attr->name_size);
 #else
 			temp = _attr->name;
 #endif
@@ -1681,7 +1709,7 @@ public:
 		return false;
 	}
 	const TCHAR* value(){ return (!empty()) ? _attr->value : _T(""); } //Access the attribute value.
-	std::string getvalue() { return *this; } // Access the attribute value. uses operator std::string(). NF 2 Mar 2003
+	CEasyString getvalue() { return *this; } // Access the attribute value. uses operator CEasyString(). NF 2 Mar 2003
 #ifdef PUGOPT_NONSEG
 	const unsigned int value_size(){ return (!empty()) ? _attr->value_size : 0; } //Access the attribute name length (for PUGOPT_NONSEG).
 #endif
@@ -1785,28 +1813,23 @@ public:
 		return prev;
 	}
 
+	void SaveToString(CEasyString& String);
+	bool SaveToFile(int FileChannel,LPCTSTR FileName);
+
 //Iteration
 public:
 
 	//<summary>Child node iterator.</summary>
-#if _MSC_VER < 1300
-    class xml_node_iterator : public xml_iterator<xml_node,long>
-#else
-    class xml_node_iterator : public xml_iterator<xml_node,long,xml_node*,xml_node&>
-#endif
+
+	class xml_node_iterator : public xml_iterator<xml_node,long,xml_node*,xml_node&>
 	{
 	protected:
 		forward_class<xml_node> _wrap; //Wrapper for xml_node.
 	public:
-#if _MSC_VER < 1300
-        xml_node_iterator() : _wrap(), xml_iterator<xml_node,long>() {} //Default constructor.
-        xml_node_iterator(xml_node_struct* vref,long sscr = 0) : _wrap(), xml_iterator<xml_node,long>(vref,sscr) { } //Initializing constructor.
-        xml_node_iterator(const xml_node_iterator& r) : _wrap(), xml_iterator<xml_node,long>(r) { } //Copy constructor.
-#else
+
         xml_node_iterator() : _wrap(), xml_iterator<xml_node,long,xml_node*,xml_node&>() {} //Default constructor.
         xml_node_iterator(xml_node_struct* vref,long sscr = 0) : _wrap(), xml_iterator<xml_node,long,xml_node*,xml_node&>(vref,sscr) { } //Initializing constructor.
         xml_node_iterator(const xml_node_iterator& r) : _wrap(), xml_iterator<xml_node,long,xml_node*,xml_node&>(r) { } //Copy constructor.
-#endif
 		virtual bool good() //Internal validity.
 		{
 			if
@@ -1850,24 +1873,16 @@ public:
 	};
 
 	//<summary>Attribute iterator.</summary>
-#if _MSC_VER < 1300
-    class xml_attribute_iterator : public xml_iterator<xml_attribute,long>
-#else
-    class xml_attribute_iterator : public xml_iterator<xml_attribute,long,xml_attribute*,xml_attribute&>
-#endif
+
+	class xml_attribute_iterator : public xml_iterator<xml_attribute,long,xml_attribute*,xml_attribute&>
 	{
 	protected:
 		forward_class<xml_attribute> _wrap;
 	public:
-#if _MSC_VER < 1300
-        xml_attribute_iterator() : _wrap(), xml_iterator<xml_attribute,long>() {} //Default constructor.
-        xml_attribute_iterator(xml_node_struct* vref,long sscr = 0) : _wrap(), xml_iterator<xml_attribute,long>(vref,sscr) { } //Initializing constructor.
-        xml_attribute_iterator(const xml_attribute_iterator& r) : _wrap(), xml_iterator<xml_attribute,long>(r) { } //Copy constructor.
-#else
+
         xml_attribute_iterator() : _wrap(), xml_iterator<xml_attribute,long,xml_attribute*,xml_attribute&>() {} //Default constructor.
         xml_attribute_iterator(xml_node_struct* vref,long sscr = 0) : _wrap(), xml_iterator<xml_attribute,long,xml_attribute*,xml_attribute&>(vref,sscr) { } //Initializing constructor.
         xml_attribute_iterator(const xml_attribute_iterator& r) : _wrap(), xml_iterator<xml_attribute,long,xml_attribute*,xml_attribute&>(r) { } //Copy constructor.
-#endif
 		virtual bool good() //Internal validity check.
 		{
 			if
@@ -2005,8 +2020,8 @@ public:
 	bool has_attributes() const { return (!empty() && attributes() > 0); } //Node has 1 or more attributes.
 	bool has_siblings() const { return (!empty() && siblings() > 0); } //Node has one or more siblings.
 	bool has_name() const { return (!empty() && _root->name != 0); } //Node has a name.
-	bool has_name(const std::string& name) const { return has_name(name.c_str()); } //Node is named 'name'.
-	bool has_attribute(const std::string& name) const { return has_attribute(name.c_str()); } //Node has an attribute named 'name'.
+	//Need Recovery bool has_name(const CEasyString& name) const { return has_name(name.GetBuffer()); } //Node is named 'name'.
+	//Need Recovery bool has_attribute(const CEasyString& name) const { return has_attribute(name.GetBuffer()); } //Node has an attribute named 'name'.
 #ifdef PUGOPT_NONSEG
 	bool has_name(const TCHAR* name) const { return (name && _root && _root->name && _tcsncmp(_root->name,name,_root->name_size)==0); } //Node is named 'name'.
 #else
@@ -2035,13 +2050,13 @@ public:
 	}
 	unsigned int name_size() const { return (has_name()) ? _root->name_size : 0; } //Get node name length if any, else 0.
 	unsigned int value_size() const { return (has_value()) ? _root->value_size : 0; } //Get node value length if any, else 0.
-    // TODO: update all of these to compare lengths instead of using max. Ditto for all uses of max() NF 29 Mar 2003 See: xml_attribute_struct::matches_attribute_name_value()
-	inline bool matches_attribute_name(const TCHAR* name,const unsigned int namelen,const int i) const { return (_tcsncmp(name,_root->attribute[i]->name,max(namelen,_root->attribute[i]->name_size))==0); } //There is an attribute at 'i' named 'name'.
-	inline bool matches_child_name(const TCHAR* name,const unsigned int namelen,const int i) const { return (_tcsncmp(name,_root->child[i]->name,max(namelen,_root->child[i]->name_size))==0); } //There is a child at 'i' named 'name'.
-	inline bool matches_name(const TCHAR* name,const unsigned int namelen,xml_node_struct* node) const { return (_tcsncmp(name,node->name,max(namelen,node->name_size))==0); } //This is named 'name'.
-	inline bool matches_value(const TCHAR* data,const unsigned int datalen,xml_node_struct* node) const { return (_tcsncmp(data,node->value,max(datalen,node->value_size))==0); } //This is valued 'value'.
-	inline bool matches_attribute_name(const TCHAR* name,const unsigned int namelen,xml_attribute_struct* attr) const { return (_tcsncmp(name,attr->name,max(namelen,attr->name_size))==0); } //The given attribute is named 'name'.
-	// inline bool matches_attribute_name_value(const TCHAR* value,const unsigned int valulen,xml_attribute_struct* attr) const { return (_tcsncmp(value,attr->value,max(valulen,attr->value_size))==0); } //The given attribute is valued 'value'.
+    // TODO: update all of these to compare lengths instead of using Max. Ditto for all uses of Max() NF 29 Mar 2003 See: xml_attribute_struct::matches_attribute_name_value()
+	inline bool matches_attribute_name(const TCHAR* name,const unsigned int namelen,const int i) const { return (_tcsncmp(name,_root->attribute[i]->name,Max(namelen,_root->attribute[i]->name_size))==0); } //There is an attribute at 'i' named 'name'.
+	inline bool matches_child_name(const TCHAR* name,const unsigned int namelen,const int i) const { return (_tcsncmp(name,_root->child[i]->name,Max(namelen,_root->child[i]->name_size))==0); } //There is a child at 'i' named 'name'.
+	inline bool matches_name(const TCHAR* name,const unsigned int namelen,xml_node_struct* node) const { return (_tcsncmp(name,node->name,Max(namelen,node->name_size))==0); } //This is named 'name'.
+	inline bool matches_value(const TCHAR* data,const unsigned int datalen,xml_node_struct* node) const { return (_tcsncmp(data,node->value,Max(datalen,node->value_size))==0); } //This is valued 'value'.
+	inline bool matches_attribute_name(const TCHAR* name,const unsigned int namelen,xml_attribute_struct* attr) const { return (_tcsncmp(name,attr->name,Max(namelen,attr->name_size))==0); } //The given attribute is named 'name'.
+	// inline bool matches_attribute_name_value(const TCHAR* value,const unsigned int valulen,xml_attribute_struct* attr) const { return (_tcsncmp(value,attr->value,Max(valulen,attr->value_size))==0); } //The given attribute is valued 'value'.
 	inline bool matches_attribute_name_value(const TCHAR* value,const unsigned int valulen,xml_attribute_struct* attr) const { return attr->matches_attribute_name_value(value,valulen); } //The given attribute is valued 'value'.
 #else
 	const TCHAR* name(){ return (has_name()) ? _root->name : _T(""); } //Access pointer to node name if any, else empty string.
@@ -2056,16 +2071,16 @@ public:
 	xml_node_type type() const { return (_root) ? (xml_node_type)_root->type : node_null; } //Access node entity type.
 	const TCHAR* value() const { return (has_value()) ? _root->value : _T(""); } //Access pointer to data if any, else empty string.
 
-	//<summary>Get node name as const std::string. If no name, return empty.</summary>
-	//<returns>The std::string node name, or empty string.</returns>
+	//<summary>Get node name as const CEasyString. If no name, return empty.</summary>
+	//<returns>The CEasyString node name, or empty string.</returns>
     //<since>NF 24 Mar 2003</since>
-	const std::string get_name() const
+	const CEasyString get_name() const
 	{
-	    std::string temp;
+	    CEasyString temp;
 		if(has_name())
 		{
 #ifdef PUGOPT_NONSEG
-			temp.assign(_root->name,_root->name_size);
+			temp.SetString(_root->name,_root->name_size);
 #else
 			temp = _root->name;
 #endif
@@ -2073,16 +2088,16 @@ public:
 		return temp;
 	}
 
-	//<summary>Get node value as const std::string. If no value, return empty.</summary>
-	//<returns>The std::string node value, or empty string.</returns>
+	//<summary>Get node value as const CEasyString. If no value, return empty.</summary>
+	//<returns>The CEasyString node value, or empty string.</returns>
     //<since>NF 24 Mar 2003</since>
-	const std::string get_value() const
+	const CEasyString get_value() const
 	{
-	    std::string temp;
+	    CEasyString temp;
 		if(has_value())
 		{
 #ifdef PUGOPT_NONSEG
-			temp.assign(_root->value,_root->value_size);
+			temp.SetString(_root->value,_root->value_size);
 #else
 			temp = _root->value;
 #endif
@@ -2097,7 +2112,7 @@ public:
 	//<summary>Access or create the attribute having 'name'.</summary>
 	//<param name="name">Name of attribute to access/create.</param>
 	//<returns>Reference to xml_attribute wrapper.</returns>
-	xml_attribute attribute(const std::string& name){ return attribute(name.c_str()); }
+	//Need Recovery xml_attribute attribute(const CEasyString& name){ return attribute(name.GetBuffer()); }
 	//<summary>Access or create the attribute having 'name'.</summary>
 	//<param name="name">Name of attribute to access/create.</param>
 	//<returns>Reference to xml_attribute wrapper.</returns>
@@ -2173,9 +2188,9 @@ public:
 	//	Pompey, would ne'er have&lt;/LINE&gt;, where 'this' points to &lt;LINE&gt;.
 	//</remarks>
     //<since>3 Mar 2003 NF</since>
-	const std::string child_value() const
+	const CEasyString child_value() const
     {
-		std::string temp;
+		CEasyString temp;
 		if(_root->children)
 		{
 			for(register unsigned int i=0; i < _root->children; ++i)
@@ -2184,7 +2199,7 @@ public:
 				if(node->value)
 				{
 #ifdef PUGOPT_NONSEG
-			        temp.assign(node->value,node->value_size);
+			        temp.SetString(node->value,node->value_size);
 #else
 			        temp = node->value;
 #endif
@@ -2215,9 +2230,9 @@ public:
 				{
 					const unsigned int n =
 #ifdef PUGOPT_NONSEG
-						min(valuelen,node->value_size);
+						Min(valuelen,node->value_size);
 #else
-						min(valuelen,_tcslen(node->value));
+						Min(valuelen,_tcslen(node->value));
 #endif
 					_tcsncpy_s(value,valuelen,node->value,n);
 					value[n] = 0;
@@ -2236,7 +2251,7 @@ public:
 	//<param name="name">Reference to name of attribute to find.</param>
 	//<returns>Pointer to attribute, or NULL if not found.</returns>
 	//<remarks>Implement your own hash table if you have a great many attributes.</remarks>
-	xml_attribute_struct* mapto_attribute_ptr(const std::string& name) const { return mapto_attribute_ptr(name.c_str()); }
+	//Need Recovery xml_attribute_struct* mapto_attribute_ptr(const CEasyString& name) const { return mapto_attribute_ptr(name.GetBuffer()); }
 
 	//<summary>Map an attribute name to a pointer to that attribute, if found.</summary>
 	//<param name="name">Pointer to name of attribute to find.</param>
@@ -2285,7 +2300,7 @@ public:
 	//<param name="name">Reference to name of child to find.</param>
 	//<returns>Index of child, or -1 if not found.</returns>
 	//<remarks>Implement your own hash table if you have a great many children.</remarks>
-	xml_node_struct* mapto_child_ptr(const std::string& name) const { return mapto_child_ptr(name.c_str()); }
+	//Need Recovery xml_node_struct* mapto_child_ptr(const CEasyString& name) const { return mapto_child_ptr(name.GetBuffer()); }
 
 	//<summary>Map a child name to a pointer to the first instance, if found.</summary>
 	//<param name="name">Pointer to name of child to find.</param>
@@ -2318,7 +2333,7 @@ public:
 	//<param name="name">Reference to name of child to find.</param>
 	//<returns>Index of child, or -1 if not found.</returns>
 	//<remarks>Implement your own hash table if you have a great many children.</remarks>
-	int mapto_child_idx(const std::string& name) const { return mapto_child_idx(name.c_str()); }
+	//Need Recovery int mapto_child_idx(const CEasyString& name) const { return mapto_child_idx(name.GetBuffer()); }
 
 	//<summary>Map a child name to the index of the first instance, if found.</summary>
 	//<param name="name">Pointer to name of child to find.</param>
@@ -2353,7 +2368,7 @@ public:
 	//<summary>Find all elements having the given name.</summary>
 	//<param name="name">Reference to name of child to find.</param>
 	//<param name="found">Reference to xml_node_list or pointer_array to receive the matching elements.
-	void all_elements_by_name(const std::string& name,pointer_array& found) const { all_elements_by_name(name.c_str(),found); }
+	//Need Recovery void all_elements_by_name(const CEasyString& name,pointer_array& found) const { all_elements_by_name(name.GetBuffer(),found); }
 
 	//<summary>Find all elements having the given name.</summary>
 	//<param name="name">Pointer to name of child to find.</param>
@@ -2397,7 +2412,7 @@ public:
 	//<param name="type">Type of node to find, or node_null to match any node type.</param>
 	//<returns>Valid xml_node if such element named 'name' is found.</returns>
 	//<remarks>xml_node may be invalid if not found; test with 'empty'.</remarks>
-	xml_node first_element_by_name(const std::string& name,const xml_node_type type=node_null) const { return first_element_by_name(name.c_str(),type); }
+	//Need Recovery xml_node first_element_by_name(const CEasyString& name,const xml_node_type type=node_null) const { return first_element_by_name(name.GetBuffer(),type); }
 
 	//<summary>
 	//	Recursively-implemented depth-first find the first matching element. 
@@ -2451,7 +2466,7 @@ public:
 	//<param name="value">Reference to PCDATA to find.</param>
 	//<returns>Valid xml_node if such element named 'name' is found with PCDATA 'value'.</returns>
 	//<remarks>xml_node may be invalid if not found; test with 'empty'.</remarks>
-	xml_node first_element_by_value(const std::string& name,const std::string& value) const { return first_element_by_value(name.c_str(),value.c_str()); }
+	//Need Recovery xml_node first_element_by_value(const CEasyString& name,const CEasyString& value) const { return first_element_by_value(name.GetBuffer(),value.GetBuffer()); }
 
 	//<summary>
 	//	Recursively-implemented depth-first find the first matching element 
@@ -2525,7 +2540,7 @@ public:
         //<since>bDescend NF 21 Sep 2003</since>
 	//<returns>Valid xml_node if such element named 'name' is found.</returns>
 	//<remarks>xml_node may be invalid if not found; test with 'empty'.</remarks>
-	xml_node first_element_by_attribute(const std::string& name,const std::string& attr_name,const std::string& attr_value,const bool bDescend=true)const { return first_element_by_attribute(name.c_str(),attr_name.c_str(),attr_value.c_str(),bDescend); }
+	//Need Recovery xml_node first_element_by_attribute(const CEasyString& name,const CEasyString& attr_name,const CEasyString& attr_value,const bool bDescend=true)const { return first_element_by_attribute(name.GetBuffer(),attr_name.GetBuffer(),attr_value.GetBuffer(),bDescend); }
 
 	//<summary>
 	//	Recursively-implemented depth-first find the first matching element 
@@ -2678,7 +2693,7 @@ public:
 	//<param name="name">Element name of sibling to move to.</param>
 	//<returns>True if sibling was found, and cursor points thereto.</returns>
 	//<remarks>If matching co-node was found, '_root' points thereto.</remarks>
-	bool moveto_first_sibling(const std::string& name){ return moveto_first_sibling(name.c_str()); }
+	//Need Recovery bool moveto_first_sibling(const CEasyString& name){ return moveto_first_sibling(name.GetBuffer()); }
 
 	//<summary>Move to the current node's first sibling matching given name.</summary>
 	//<param name="name">Element name of sibling to move to.</param>
@@ -2701,7 +2716,7 @@ public:
 				if(node.type_element()||node.type_pi()) //Other types won't have names.
 				{
 #ifdef PUGOPT_NONSEG
-					if(_tcsncmp(name,node.name(),max(namelen,node.name_size()))==0) //Do names match?
+					if(_tcsncmp(name,node.name(),Max(namelen,node.name_size()))==0) //Do names match?
 #else
 					if(strcmpwild(name,node.name())==0) //Do names match?
 #endif
@@ -2735,7 +2750,7 @@ public:
 	//<param name="name">Element name of child to move to if found.</param>
 	//<returns>True if child was found, and cursor points thereto.</returns>
 	//<remarks>If matching sub-node was found, '_root' points thereto.</remarks>
-	bool moveto_child(const std::string& name){ return moveto_child(name.c_str()); }
+	//Need Recovery bool moveto_child(const CEasyString& name){ return moveto_child(name.GetBuffer()); }
 
 	//<summary>Move to the current node's child matching given name.</summary>
 	//<param name="name">Element name of child to move to if found.</param>
@@ -2753,7 +2768,7 @@ public:
 			//NF 24 Jan 2003: Changed to get child(i) just once per iteration.
 			xml_node node = child(i); //Access child node at subscript as xml_node or xml_node(NULL) if bad subscript.
 #ifdef PUGOPT_NONSEG
-			if(_tcsncmp(name,node.name(),max(namelen,node.name_size()))==0) //Do names match?
+			if(_tcsncmp(name,node.name(),Max(namelen,node.name_size()))==0) //Do names match?
 #else
 			if(strcmpwild(name,node.name())==0) //If the name is identical with 'name'.
 #endif
@@ -2768,7 +2783,7 @@ public:
 	//<summary>Move to the current node's next sibling by position and name.</summary>
 	//<param name="name">Name of sibling to move to if found.</param>
 	//<returns>True if there is a next sibling, and cursor points thereto.</returns>
-	bool moveto_next_sibling(const std::string& name){ return moveto_next_sibling(name.c_str()); }
+	//Need Recovery bool moveto_next_sibling(const CEasyString& name){ return moveto_next_sibling(name.GetBuffer()); }
 
 	//<summary>Move to the current node's next sibling by position and name.</summary>
 	//<param name="name">Name of sibling to move to if found.</param>
@@ -2842,7 +2857,7 @@ public:
 	//<summary>Compile the absolute node path from root as a text string.</summary>
 	//<param name="delimiter">Delimiter string to insert between element names.</param>
 	//<returns>Path string (e.g. with '/' as delimiter, '/document/.../this'.</returns>
-	std::string path(const TCHAR* delimiter = _T("/"))
+	CEasyString path(const TCHAR* delimiter = _T("/"))
 	{
 		TCHAR* path = NULL; //Current path.
 		TCHAR* temp; //Temporary pointer.
@@ -2871,7 +2886,7 @@ public:
 		strcatgrow(&temp,delimiter); //Prepend final delimiter.
 		strcatgrow(&temp,path); //Append current path.
 		free(path); //Free the old path.
-		std::string returns = temp; //Set path as new string.
+		CEasyString returns = temp; //Set path as new string.
 		free(temp);
 		return returns; //Return the path;
 	}
@@ -2879,17 +2894,17 @@ public:
 	//<summary>Compile the absolute node path from root as a text string of xml_node_struct hex addresses..</summary>
 	//<param name="delimiter">Delimiter string to insert between element names.</param>
 	//<returns>Path string (e.g. with '/' as delimiter, '/A4EF/.../this'.</returns>
-	std::string pathaddress(const TCHAR* delimiter = _T("/"))
+	CEasyString pathaddress(const TCHAR* delimiter = _T("/"))
 	{
 		xml_node cursor = *this; //Make a copy.
         char szTemp[ 50 ];
 		_itoa_s( (int)(xml_node_struct*)cursor, szTemp,50, 16 );
-		std::string spath(szTemp);
+		CEasyString spath(szTemp);
 
 		while(cursor.moveto_parent() && !cursor.type_document()) //Loop to parent (stopping on actual root because it has no name).
 		{
             _itoa_s( (int)(xml_node_struct*)cursor, szTemp,50, 16 );
-            spath = std::string( szTemp ) + delimiter + spath;
+            spath = CEasyString( szTemp ) + delimiter + spath;
 		}
 		return spath; //Return the path;
 	}
@@ -2901,7 +2916,7 @@ public:
 	//</param>
 	//<param name="delimiter">Delimiter string to use in tokenizing path.</param>
 	//<returns>Matching node, or xml_node(NULL) if not found.</returns>
-	xml_node first_element_by_path(const std::string& path,const std::string& delimiter = _T("/")){ return first_element_by_path(path.c_str(),delimiter.c_str()); }
+	//Need Recovery xml_node first_element_by_path(const CEasyString& path,const CEasyString& delimiter = _T("/")){ return first_element_by_path(path.GetBuffer(),delimiter.GetBuffer()); }
 
 	//<summary>Search for a node by path.</summary>
 	//<param name="path">
@@ -3020,7 +3035,7 @@ public:
 	//<summary>Set element name.</summary>
 	//<param name="new_name">New element name.</param>
 	//<returns>Success.</returns>
-	bool name(const std::string& new_name){ return name(new_name.c_str()); }
+	//Need Recovery bool name(const CEasyString& new_name){ return name(new_name.GetBuffer()); }
 
 	//<summary>Set element name.</summary>
 	//<param name="new_name">New element name.</param>
@@ -3039,7 +3054,7 @@ public:
 	//<summary>Set node data.</summary>
 	//<param name="value">New data (PCDATA, CDATA, or comment) value.</param>
 	//<returns>Success.</returns>
-	bool value(const std::string& new_value){ return value(new_value.c_str()); }
+	//Need Recovery bool value(const CEasyString& new_value){ return value(new_value.GetBuffer()); }
 
 	//<summary>Set node data.</summary>
 	//<param name="value">New data (PCDATA, CDATA, or comment) value.</param>
@@ -3080,7 +3095,7 @@ public:
 	//<summary>Remove attribute having the given name.</summary>
 	//<param name="name">Name of attribute to delete.</param>
 	//<returns>Success.</returns>
-	bool remove_attribute(const std::string& name){ return remove_attribute(name.c_str()); }
+	//Need Recovery bool remove_attribute(const CEasyString& name){ return remove_attribute(name.GetBuffer()); }
 
 	//<summary>Remove attribute having the given name.</summary>
 	//<param name="name">Name of attribute to delete.</param>
@@ -3097,7 +3112,7 @@ public:
 	//<param name="value">Value thereof.</param>
 	//<returns>Attribute structure wrapper.</returns>
 	//<remarks>Pointer space may be grown, memory for name/value members allocated.</remarks>
-	xml_attribute append_attribute(const std::string& name,const std::string& value){ return append_attribute(name.c_str(),value.c_str()); }
+	//Need Recovery xml_attribute append_attribute(const CEasyString& name,const CEasyString& value){ return append_attribute(name.GetBuffer(),value.GetBuffer()); }
 
 	//<summary>Append a new attribute to the node list of attributes.</summary>
 	//<param name="name">Name.</param>
@@ -3244,8 +3259,8 @@ public:
 	//<returns>xml_node wrapping the new child. Use empty() to test for success.</returns>
 	//<remarks>Pointer space may be grown. An xml_node_struct structure maybe allocated.</remarks>
     //<since>4 Mar 2003 NF</since>
-	xml_node set_child_value(xml_node_type type, const std::string& new_value)
-	    { return set_child_value(type, new_value.c_str()); }
+	//Need Recovery xml_node set_child_value(xml_node_type type, const CEasyString& new_value)
+	//Need Recovery     { return set_child_value(type, new_value.GetBuffer()); }
 
 	//<summary>
 	//	Sets the value for the first child of this node, appending a child node
@@ -3276,8 +3291,8 @@ public:
 	//<returns>xml_node wrapping the new child. Use empty() to test for success.</returns>
 	//<remarks>Pointer space may be grown. An xml_node_struct structure is allocated.</remarks>
     //<since>4 Mar 2003 NF</since>
-	xml_node append_child(xml_node_type type, const std::string& new_name)
-            { return append_child(type,new_name.c_str()); }
+	//Need Recovery xml_node append_child(xml_node_type type, const CEasyString& new_name)
+    //Need Recovery         { return append_child(type,new_name.GetBuffer()); }
 
 	//<summary>
 	//	Allocate & append a child node of the given type and name at the
@@ -3508,22 +3523,22 @@ public:
     // </remarks>
     // <since>NF 31 Mar 2003</since>
     // <returns>string with converted Ascii text.</returns>
-    std::string xml_to_text( const std::string& sxml_pcdata ) const
+    CEasyString xml_to_text( const CEasyString& sxml_pcdata ) const
     {
         assert( type_doctype() );  // must be DTD - see cmt above.
 
-	    std::string sxml_value( sxml_pcdata );
-        std::string::size_type idx = 0;
+	    CEasyString sxml_value( sxml_pcdata );
+		CEasyString::SIZE_TYPE idx = 0;
         do  // parse sxml_value
         {       // find an entity reference "&...;"
-            idx = sxml_value.find( '&', idx );
-            std::string::size_type idxe = sxml_value.find( ';', idx );
-            if ( idx != std::string::npos
-              && idxe != std::string::npos
+            idx = sxml_value.Find( '&', idx );
+            CEasyString::SIZE_TYPE idxe = sxml_value.Find( ';', idx );
+			if ( idx != CEasyString::ERROR_CHAR_POS
+              && idxe != CEasyString::ERROR_CHAR_POS
                )
             {       // get the text in between "&...;"
                 const int len = ( idxe - idx ) - 1;
-                std::string token = sxml_value.substr( ++idx, len );  // rem: incr past the '&'
+                CEasyString token = sxml_value.SubStr( ++idx, len );  // rem: incr past the '&'
 
                     // if there is a DTD Entity for this referernce use its value
                 xml_node dtdentity;
@@ -3531,34 +3546,34 @@ public:
                     dtdentity = first_element_by_name(token,node_dtd_entity);
                 if ( !dtdentity.empty() )
                 {       // get the entity value, stripping off the surrounding quotes.
-                    std::string entvalue = dtdentity.get_value().substr( 1, dtdentity.get_value().length()-2 );
+                    CEasyString entvalue = dtdentity.get_value().SubStr( 1, dtdentity.get_value().GetLength()-2 );
                     token = entvalue;
 
                         // Start by seeing if the entity-value is a simple replacement character.
 
                         // &lt; and &amp; use special case values with a leading &#38 (&)
-                    if ( token.compare( 0, 5, "&#38;" ) == 0 )
+                    if ( token.Compare( 0, 5, _T("&#38;") ) == 0 )
                     {
-                        token.erase( 0, 4 );     // remove "&#38"
+                        token.Delete( 0, 4 );     // remove "&#38"
                         token[0] = '&';          // change ; to # so we have "&#..."
                     }
                         // if the entity-value is an Ascii character value
-                    if ( token.compare( 0, 2, "&#" ) == 0 )
+                    if ( token.Compare( 0, 2, _T("&#") ) == 0 )
                     {
                         // if the entity-value represents more than a single replacement
                         // character we must use the entire entity-value as the replacement.
                         // eg. <!ENTITY  test "&#x0a;&lf;line1 with amp &amp;&#x0a;&quot;line2&quot;&lf;&lt;line3&gt;">
                         // Note that Entities like: <!ENTITY amp "&#38;#38;"> complicate things.
-                        const std::string::size_type idxsc = token.find( ';' );      // see if > 1 ";"
-                        if ( idxsc == std::string::npos || idxsc == token.length()-1 )
+						const CEasyString::SIZE_TYPE idxsc = token.Find( ';' );      // see if > 1 ";"
+                        if ( idxsc == CEasyString::ERROR_CHAR_POS || idxsc == token.GetLength()-1 )
                         {
-                            token = token.substr( 1 );  // skip past "&"
+                            token = token.SubStr( 1,-1 );  // skip past "&"
                             goto cvt_to_char;
                         }
                     }
 
                     // replace the entity reference with the spec'd text.
-                    sxml_value.replace( idx-1, len+2, entvalue );
+                    sxml_value.Replace( idx-1, len+2, entvalue );
                     --idx;   // continue from where we just replaced.
                 }
                 else  // if "&#x...;" or "&#..." numeric value spec'd
@@ -3568,14 +3583,14 @@ cvt_to_char:        // if hex "&#x.." change to 0x.. for _tcstol()
                     if ( token[1] == 'x' )
                         token[0] = '0';
                     else
-                        token.erase( 0, 1 );   // remove #
+                        token.Delete( 0, 1 );   // remove #
 
-                    char ch = (char)_tcstol( token.c_str(), NULL, 0 );     // rem: base=0 to auto-determine base
-                    sxml_value.replace( idx-1, len+2, 1, ch );
+                    char ch = (char)_tcstol( token.GetBuffer(), NULL, 0 );     // rem: base=0 to auto-determine base
+                    sxml_value.Replace( idx-1, len+2, 1, ch );
                 }
             }
         }
-        while( idx != std::string::npos );
+        while( idx != CEasyString::ERROR_CHAR_POS );
 
         return sxml_value;
     }
@@ -3592,7 +3607,7 @@ protected:
 	xml_node_struct*	_xmldoc; //Pointer to current XML document tree root.
 	long				_growby; //Attribute & child pointer space growth increment.
 	bool				_autdel; //Delete the tree on destruct?
-	TCHAR*				_buffer; //Pointer to in-memory buffer (for 'parse_file').
+	CEasyString			_buffer; //Pointer to in-memory buffer (for 'parse_file').
 	TCHAR*				_strpos; //Where parsing left off (for 'parse_file').
 	unsigned long		_optmsk; //Parser options.
 #ifdef PUGOPT_MEMFIL
@@ -3610,6 +3625,8 @@ public:
 //Construction/Destruction
 public:
 
+	static int FILE_CHANNEL;
+
 	//<summary>Constructor.</summary>
 	//<param name="optmsk">Options mask.</param>
 	//<param name="autdel">Delete tree on destruct?</param>
@@ -3620,7 +3637,6 @@ public:
 			_growby(growby),
 			_autdel(autdel),
 			_optmsk(optmsk),
-			_buffer(0),
 			_strpos(0)
 #ifdef PUGOPT_MEMFIL
 			,
@@ -3647,7 +3663,6 @@ public:
 			_growby(growby),
 			_autdel(autdel),
 			_optmsk(optmsk),
-			_buffer(0),
 			_strpos(0)
 #ifdef PUGOPT_MEMFIL
 			,
@@ -3666,10 +3681,9 @@ public:
 		virtual ~xml_parser()
 		{
 			if(_autdel && _xmldoc) free_node(_xmldoc);
-			if(_buffer) free(_buffer);
-#ifdef PUGOPT_MEMFIL
-			close_memfile();
-#endif
+			_buffer.Clear();
+			
+
 		}
 
 //Accessors/Operators
@@ -3696,10 +3710,8 @@ public:
 	void clear()
 	{
 		if(_xmldoc){ free_node(_xmldoc); _xmldoc = 0; }
-		if(_buffer){ free(_buffer); _buffer = 0; }
-#ifdef PUGOPT_MEMFIL
-		close_memfile();
-#endif
+		_buffer.Clear();
+
 	}
 
 #ifdef PUGOPT_MEMFIL
@@ -3707,32 +3719,8 @@ public:
 //Memory-Mapped File Support
 protected:
 
-	//<summary>Closes any existing memory-mapped file.</summary>
-	void close_memfile()
-	{
-		if(_mmaddr != 0)
-		{
-			UnmapViewOfFile(_mmaddr);
-			_mmaddr = 0;
-		}
-		if(_mmfmap != 0)
-		{
-			CloseHandle(_mmfmap);
-			_mmfmap = 0;
-		}
-		if(_mmfile != 0)
-		{
-			if(_addeos) //Remove the 0 we added to the end of the file.
-			{
-				SetFilePointer(_mmfile,_mfsize,NULL,FILE_BEGIN);
-				SetEndOfFile(_mmfile);
-				_addeos = false;
-			}
-			CloseHandle(_mmfile);
-			_mmfile = 0;
-		}
-		_mfsize = 0;
-	}
+
+	
 
 public:
 
@@ -3826,48 +3814,70 @@ public:
 	//	The file contents is loaded and stored in the member '_buffer' until 
 	//	freed by calling 'Parse', 'parse_file', 'clear' or '~xml_parser'.
 	//</remarks>
-	bool parse_file(const TCHAR* path,unsigned long optmsk = parse_noset,unsigned long tempsize = 4096)
+	bool parse_file(const TCHAR* path,unsigned long optmsk = parse_noset)
 	{
-#ifdef PUGOPT_NONSEG
-		assert((optmsk & parse_wnorm) == 0); // Normalization isn't implemented for non-segmented strings, as of 24 Mar 2003
-#endif
-
-		if(!path) return false;
-		clear(); //clear any existing data.
-		unsigned long bytes;
-		if(optmsk != parse_noset) _optmsk = optmsk;
-		if(load_file(path,&_buffer,&bytes,tempsize) && bytes > 0)
+		return parse_file(FILE_CHANNEL,path,optmsk);
+	}
+	bool parse_file(int FileChannel,const TCHAR* path,unsigned long optmsk = parse_noset)
+	{
+		bool Ret=false;
+		IFileAccessor * pFile=CFileSystemManager::GetInstance()->CreateFileAccessor(FileChannel);
+		if(pFile)
 		{
-			_xmldoc = pug::new_node(node_document);
-			_xmldoc->parent = _xmldoc; //Point to self.
-			// TCHAR* s = pug::parse(_buffer,_xmldoc,_growby,_optmsk);
-			TCHAR* s = parse( _buffer, _xmldoc, _growby, _optmsk );
-			_strpos = s;
-			return true;
+			if(pFile->Open(path,IFileAccessor::modeOpen|IFileAccessor::modeRead|IFileAccessor::shareShareAll))
+			{
+				UINT FileSize=(UINT)pFile->GetSize();
+				BYTE * pBuffer=new BYTE[FileSize];
+				if(pFile->Read(pBuffer,FileSize)==FileSize)
+				{
+					bool IsUnicode=false;					
+					if(FileSize>=2)
+					{
+						if(pBuffer[0]==0xFF&&pBuffer[1]==0xFE)
+						{
+							IsUnicode=true;
+						}
+					}
+					if(IsUnicode)
+						_buffer.SetString((WCHAR *)(pBuffer+2),FileSize/2-1);
+					else
+						_buffer.SetString((char *)(pBuffer),FileSize);
+
+					_xmldoc = new_node(node_document); //Allocate a new root.
+					_xmldoc->parent = _xmldoc; //Point to self.
+					if(optmsk != parse_noset) _optmsk = optmsk;
+					_strpos=parse( _buffer, _xmldoc, _growby, _optmsk );
+					Ret=true;
+				}
+				delete[] pBuffer;
+			}
+			SAFE_RELEASE(pFile);
 		}
-		return false;
+		return Ret;
+
+
 	}
 
 	///
-	void set_null() { _buffer = 0; }
+	void set_null() { _buffer.Clear(); }
 //	bool parse_file_in_mem(TCHAR *bits, size_t bytes, unsigned long optmsk = parse_noset)
-	bool parse_file_in_mem(TCHAR *bits, unsigned long optmsk = parse_noset)
-	{
-#ifdef PUGOPT_NONSEG
-		assert((optmsk & parse_wnorm) == 0); // Normalization isn't implemented for non-segmented strings, as of 24 Mar 2003
-#endif
-		clear(); //clear any existing data.
-		if(optmsk != parse_noset) _optmsk = optmsk;
-		{
-			_buffer = bits;
-			_xmldoc = pug::new_node(node_document);
-			_xmldoc->parent = _xmldoc; //Point to self.
-			TCHAR* s = parse( _buffer, _xmldoc, _growby, _optmsk );
-			_strpos = s;
-			return true;
-		}
-		return false;
-	}
+//	bool parse_file_in_mem(TCHAR *bits, unsigned long optmsk = parse_noset)
+//	{
+//#ifdef PUGOPT_NONSEG
+//		assert((optmsk & parse_wnorm) == 0); // Normalization isn't implemented for non-segmented strings, as of 24 Mar 2003
+//#endif
+//		clear(); //clear any existing data.
+//		if(optmsk != parse_noset) _optmsk = optmsk;
+//		{
+//			_buffer = bits;
+//			_xmldoc = pug::new_node(node_document);
+//			_xmldoc->parent = _xmldoc; //Point to self.
+//			TCHAR* s = parse( _buffer, _xmldoc, _growby, _optmsk );
+//			_strpos = s;
+//			return true;
+//		}
+//		return false;
+//	}
 
 #ifdef PUGOPT_MEMFIL
 
@@ -3882,41 +3892,41 @@ public:
 	//	The file contents are available until closed by calling 'parse', 
 	//	'parse_file', 'clear' or '~xml_parser'.
 	//</remarks>
-	int parse_mmfile(const TCHAR* path,unsigned long optmsk = parse_noset)
-	{
-		int status = 0;
-		if(path)
-		{
-			clear(); //Clear any existing data.
-			if(optmsk != parse_noset) _optmsk = optmsk;
-			assert((optmsk & parse_wnorm) == 0); //Normalization isn't implemented for memory-mapped files, as of 23 Jan 2003.
-			const bool readonly = (optmsk & (parse_dtd|parse_dtd_only)) == 0;
-			if(open_mmfile(path,readonly,false))
-			{
-				//If the file has a 0 at the end we are ok to proceed, otherwise add one.
-				if  ( has_eos_terminator()
-				   || open_mmfile(path,false,true) //Re-open and add 0 at EOF.
-				    )
-				{
-					try
-					{
-						_xmldoc = new_node(node_document);
-						_xmldoc->parent = _xmldoc; //Point to self.
-						// TCHAR* s = pug::parse( (TCHAR*)_mmaddr, _xmldoc, _growby, _optmsk );
-						TCHAR* s = parse( (TCHAR*)_mmaddr, _xmldoc, _growby, _optmsk );
-						_strpos = s;
-						status = 1;
-					}
-					catch(...)
-					{
-						status = -1;
-						assert(false);
-					}
-				}
-			}
-		}
-		return status;
-	}
+	//int parse_mmfile(const TCHAR* path,unsigned long optmsk = parse_noset)
+	//{
+	//	int status = 0;
+	//	if(path)
+	//	{
+	//		clear(); //Clear any existing data.
+	//		if(optmsk != parse_noset) _optmsk = optmsk;
+	//		assert((optmsk & parse_wnorm) == 0); //Normalization isn't implemented for memory-mapped files, as of 23 Jan 2003.
+	//		const bool readonly = (optmsk & (parse_dtd|parse_dtd_only)) == 0;
+	//		if(open_mmfile(path,readonly,false))
+	//		{
+	//			//If the file has a 0 at the end we are ok to proceed, otherwise add one.
+	//			if  ( has_eos_terminator()
+	//			   || open_mmfile(path,false,true) //Re-open and add 0 at EOF.
+	//			    )
+	//			{
+	//				try
+	//				{
+	//					_xmldoc = new_node(node_document);
+	//					_xmldoc->parent = _xmldoc; //Point to self.
+	//					// TCHAR* s = pug::parse( (TCHAR*)_mmaddr, _xmldoc, _growby, _optmsk );
+	//					TCHAR* s = parse( (TCHAR*)_mmaddr, _xmldoc, _growby, _optmsk );
+	//					_strpos = s;
+	//					status = 1;
+	//				}
+	//				catch(...)
+	//				{
+	//					status = -1;
+	//					assert(false);
+	//				}
+	//			}
+	//		}
+	//	}
+	//	return status;
+	//}
 
 protected:
 
@@ -3925,44 +3935,44 @@ protected:
 	//<param name="readonly">True to open the file for read-only access.</param>
 	//<param name="addeos">True to add a 0 to the end of the file.</param>
 	//<returns>Success if the file was opened.</returns>
-	bool open_mmfile(const TCHAR* path,const bool readonly,const bool addeos)
-	{
-		clear(); //Close any existing MMF and clear any existing data.
-		assert(_mmfile == NULL && _mmfile == NULL && _mmaddr == NULL);
-		_addeos = false;
-		_mmfile = CreateFile(path,readonly?GENERIC_READ:GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL); //Open read-only, no share, no security attrs, ..., no template.
-		if(_mmfile != INVALID_HANDLE_VALUE)
-		{
-			_mfsize = ::GetFileSize(_mmfile,NULL);
-			_mmfmap = CreateFileMapping(_mmfile,NULL,readonly?PAGE_READONLY:PAGE_READWRITE,0,_mfsize+(addeos?sizeof(TCHAR):0),NULL); //Create map: handle, no security attr, read|read/write, larger if addeos, anonymous.
-			if(_mmfmap != NULL)
-			{
-				assert(_mmaddr == NULL);
-				_mmaddr = MapViewOfFile(_mmfmap,readonly?FILE_MAP_READ:FILE_MAP_WRITE,0,0,0); //Map the view: handle, read|read/write, start at beginning, map entire file.
-				if(_mmaddr != NULL)
-				{
-					if(addeos) //Add a terminating 0 to the end of the file for 'parse()'.
-					{
-						assert(!readonly);
-						*(((TCHAR*)_mmaddr) + _mfsize) = 0;
-						_addeos = true;
-					}
-				}
-				else
-				{
-					CloseHandle(_mmfmap);
-					CloseHandle(_mmfile);
-					_mmfile = _mmfmap = 0;
-				}
-			}
-			else
-			{
-				CloseHandle(_mmfile);
-				_mmfile = 0;
-			}
-		}
-		return (_mmaddr != NULL);
-	}
+	//bool open_mmfile(const TCHAR* path,const bool readonly,const bool addeos)
+	//{
+	//	clear(); //Close any existing MMF and clear any existing data.
+	//	assert(_mmfile == NULL && _mmfile == NULL && _mmaddr == NULL);
+	//	_addeos = false;
+	//	_mmfile = CreateFile(path,readonly?GENERIC_READ:GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL); //Open read-only, no share, no security attrs, ..., no template.
+	//	if(_mmfile != INVALID_HANDLE_VALUE)
+	//	{
+	//		_mfsize = ::GetFileSize(_mmfile,NULL);
+	//		_mmfmap = CreateFileMapping(_mmfile,NULL,readonly?PAGE_READONLY:PAGE_READWRITE,0,_mfsize+(addeos?sizeof(TCHAR):0),NULL); //Create map: handle, no security attr, read|read/write, larger if addeos, anonymous.
+	//		if(_mmfmap != NULL)
+	//		{
+	//			assert(_mmaddr == NULL);
+	//			_mmaddr = MapViewOfFile(_mmfmap,readonly?FILE_MAP_READ:FILE_MAP_WRITE,0,0,0); //Map the view: handle, read|read/write, start at beginning, map entire file.
+	//			if(_mmaddr != NULL)
+	//			{
+	//				if(addeos) //Add a terminating 0 to the end of the file for 'parse()'.
+	//				{
+	//					assert(!readonly);
+	//					*(((TCHAR*)_mmaddr) + _mfsize) = 0;
+	//					_addeos = true;
+	//				}
+	//			}
+	//			else
+	//			{
+	//				CloseHandle(_mmfmap);
+	//				CloseHandle(_mmfile);
+	//				_mmfile = _mmfmap = 0;
+	//			}
+	//		}
+	//		else
+	//		{
+	//			CloseHandle(_mmfile);
+	//			_mmfile = 0;
+	//		}
+	//	}
+	//	return (_mmaddr != NULL);
+	//}
 
     // returns true if there is a 0 at the end of the file.
     //<since>3 Mar 2003 NF</since>
@@ -4360,9 +4370,9 @@ LOC_DOCTYPE_QUOTE:
 					xml_node_type e = node_dtd_entity;
 #ifdef PUGOPT_NONSEG
 					const unsigned int dtdilen = (s - 1) - mark;
-					if(_tcsncmp(mark,_T("ATTLIST"),max((7*sizeof(TCHAR)),dtdilen))==0) e = node_dtd_attlist;
-					else if(_tcsncmp(mark,_T("ELEMENT"),max((7*sizeof(TCHAR)),dtdilen))==0) e = node_dtd_element;
-					else if(_tcsncmp(mark,_T("NOTATION"),max((8*sizeof(TCHAR)),dtdilen))==0) e = node_dtd_notation;
+					if(_tcsncmp(mark,_T("ATTLIST"),Max((7*sizeof(TCHAR)),dtdilen))==0) e = node_dtd_attlist;
+					else if(_tcsncmp(mark,_T("ELEMENT"),Max((7*sizeof(TCHAR)),dtdilen))==0) e = node_dtd_element;
+					else if(_tcsncmp(mark,_T("NOTATION"),Max((8*sizeof(TCHAR)),dtdilen))==0) e = node_dtd_notation;
 #else
 					if(_tcscmp(mark,_T("ATTLIST"))==0) e = node_dtd_attlist;
 					else if(_tcscmp(mark,_T("ELEMENT"))==0) e = node_dtd_element;
@@ -4540,8 +4550,8 @@ LOC_ATTRIBUTE:
 
 #ifdef PUGOPT_NODE_FLAGS        // NF 29 May 2003
                                 // If we have an "expanded=true" attribute set expand().
-                                if ( _tcsncmp( a->name, _T("expanded"), max( (8*sizeof(TCHAR)), a->name_size ) ) == 0
-                                  && _tcsncmp( a->value, _T("true"), max( 4*sizeof(TCHAR), a->value_size ) ) == 0
+                                if ( _tcsncmp( a->name, _T("expanded"), Max( (8*sizeof(TCHAR)), a->name_size ) ) == 0
+                                  && _tcsncmp( a->value, _T("true"), Max( 4*sizeof(TCHAR), a->value_size ) ) == 0
                                    )
                                 {
                                     cursor->expand( true );

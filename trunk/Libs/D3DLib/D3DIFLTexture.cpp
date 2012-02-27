@@ -48,17 +48,17 @@ bool CD3DIFLTexture::LoadTexture(LPCTSTR TextureFileName,UINT MipLevels,bool Use
 		return false;
 	Temp=FindFileOne(TextureFileName);
 #ifdef _DEBUG
-	PrintSystemLog(0,"装载IFL纹理<%s>...",Temp);
+	PrintSystemLog(0,_T("装载IFL纹理<%s>..."),Temp);
 #endif
 
 	CStringFile	Lines(Temp,m_FileChannel);
 	
 	for(int i=0;i<Lines.GetLineCount();i++)
 	{
-		char Line[MAX_PATH+1];
-		strcpy_s(Line,MAX_PATH,Lines[i]);
+		TCHAR Line[MAX_PATH+1];
+		_tcscpy_s(Line,MAX_PATH,Lines[i]);
 		
-		char * time=strchr(Line,' ');
+		TCHAR * time=_tcschr(Line,' ');
 		if(time)
 		{
 			TEXTURE_FRAME Frame;
@@ -68,7 +68,7 @@ bool CD3DIFLTexture::LoadTexture(LPCTSTR TextureFileName,UINT MipLevels,bool Use
 			Frame.pTexture=m_pManager->LoadTexture(Temp,MipLevels,UseFilter,IsManaged,KeyColor);
 			if(Frame.pTexture)
 			{
-				Frame.FrameTime=(FLOAT)atof(time);
+				Frame.FrameTime=(FLOAT)_tstof(time);
 				m_TextrueList.Add(Frame);
 			}
 			else

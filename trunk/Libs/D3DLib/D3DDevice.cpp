@@ -43,6 +43,8 @@ CD3DDevice::~CD3DDevice(void)
 bool CD3DDevice::Create(D3DDEVICE_PARAMS& Params)
 {
 	ReleaseObject();
+
+	HRESULT hr;
 	
 	m_D3DParams=Params;
 
@@ -59,7 +61,8 @@ bool CD3DDevice::Create(D3DDEVICE_PARAMS& Params)
 		m_D3DParams.BehaviorFlags|=D3DCREATE_MULTITHREADED;
 	}
 
-    if( FAILED( m_pD3D->CreateDevice(m_D3DParams.Adapter,m_D3DParams.DeviceType,m_D3DParams.hFocusWindow,m_D3DParams.BehaviorFlags,&m_D3DParams.PresentParams,&m_pd3dDevice)))
+	hr=m_pD3D->CreateDevice(m_D3DParams.Adapter,m_D3DParams.DeviceType,m_D3DParams.hFocusWindow,m_D3DParams.BehaviorFlags,&m_D3DParams.PresentParams,&m_pd3dDevice);
+    if( FAILED( hr ))
     {
         return false;
     }
@@ -68,7 +71,7 @@ bool CD3DDevice::Create(D3DDEVICE_PARAMS& Params)
 
 	if(m_D3DCaps.NumSimultaneousRTs==0)
 	{
-		PrintD3DLog(0,"异常，RenderTarget数量为0");
+		PrintD3DLog(0,_T("异常，RenderTarget数量为0"));
 		return false;
 	}
 

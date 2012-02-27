@@ -42,7 +42,7 @@ BOOL CFileSearcher::FindFirst(LPCTSTR FindPattern)
 				FileInfo.FileInfo=*pFileInfo;
 				if(stat(m_SearchDir+pFileInfo->d_name,&(FileInfo.FileStat))==0)
 				{
-					m_FileInfoList.push_back(FileInfo);
+					m_FileInfoList.Add(FileInfo);
 				}
 			}
 			pFileInfo=readdir(pDir);
@@ -56,7 +56,7 @@ BOOL CFileSearcher::FindFirst(LPCTSTR FindPattern)
 
 BOOL CFileSearcher::FindNext()
 {
-	if(m_FileInfoList.size()&&m_FetchIndex<(int)m_FileInfoList.size()-1)
+	if(m_FileInfoList.GetCount()&&m_FetchIndex<(int)m_FileInfoList.GetCount()-1)
 	{
 		m_FetchIndex++;
 		return TRUE;
@@ -66,33 +66,33 @@ BOOL CFileSearcher::FindNext()
 
 void CFileSearcher::Close()
 {
-	m_FileInfoList.clear();
+	m_FileInfoList.Clear();
 	m_SearchDir.Clear();
 	m_FetchIndex=-1;
 }
 
 CEasyString CFileSearcher::GetFileName()
 {
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		return m_FileInfoList[m_FetchIndex].FileInfo.d_name;
 	}
 	else
 	{
-		return "";
+		return _T("");
 	}
 
 }
 
 CEasyString CFileSearcher::GetFilePath()
 {
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		return m_SearchDir+m_FileInfoList[m_FetchIndex].FileInfo.d_name;
 	}
 	else
 	{
-		return "";
+		return _T("");
 	}
 }
 
@@ -103,7 +103,7 @@ CEasyString CFileSearcher::GetFileDirect()
 
 CEasyString CFileSearcher::GetFileTitle()
 {
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		CEasyString FileName=m_FileInfoList[m_FetchIndex].FileInfo.d_name;
 		int Pos=FileName.Find('.');
@@ -111,13 +111,13 @@ CEasyString CFileSearcher::GetFileTitle()
 	}
 	else
 	{
-		return "";
+		return _T("");
 	}
 }
 
 CEasyString CFileSearcher::GetFileExt()
 {
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		CEasyString FileName=m_FileInfoList[m_FetchIndex].FileInfo.d_name;
 		int Pos=FileName.ReverseFind('.');
@@ -125,7 +125,7 @@ CEasyString CFileSearcher::GetFileExt()
 	}
 	else
 	{
-		return "";
+		return _T("");
 	}
 }
 
@@ -136,7 +136,7 @@ CEasyString CFileSearcher::GetFileURL()
 
 ULONG64 CFileSearcher::GetFileSize()
 {
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		return m_FileInfoList[m_FetchIndex].FileStat.st_size;
 	}
@@ -149,7 +149,7 @@ ULONG64 CFileSearcher::GetFileSize()
 CEasyTime CFileSearcher::GetLastWriteTime()
 {
     CEasyTime FileTime;
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
         FileTime=m_FileInfoList[m_FetchIndex].FileStat.st_mtime;
 
@@ -160,7 +160,7 @@ CEasyTime CFileSearcher::GetLastWriteTime()
 CEasyTime CFileSearcher::GetLastAccessTime()
 {
      CEasyTime FileTime;
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		FileTime=m_FileInfoList[m_FetchIndex].FileStat.st_atime;
 	}
@@ -170,7 +170,7 @@ CEasyTime CFileSearcher::GetLastAccessTime()
 CEasyTime CFileSearcher::GetCreationTime()
 {
      CEasyTime FileTime;
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		FileTime=m_FileInfoList[m_FetchIndex].FileStat.st_ctime;
 	}
@@ -179,7 +179,7 @@ CEasyTime CFileSearcher::GetCreationTime()
 
 DWORD CFileSearcher::GetFileAttributes()
 {
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		return m_FileInfoList[m_FetchIndex].FileStat.st_mode;
 	}
@@ -191,7 +191,7 @@ DWORD CFileSearcher::GetFileAttributes()
 
 BOOL CFileSearcher::MatchesMask(DWORD dwMask)
 {
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		return (m_FileInfoList[m_FetchIndex].FileStat.st_mode & dwMask);
 	}
@@ -205,7 +205,7 @@ BOOL CFileSearcher::IsDots()
 {
 	if (IsDirectory())
 	{
-		if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+		if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 		{
 			if (m_FileInfoList[m_FetchIndex].FileInfo.d_name[0] == '.')
 			{
@@ -257,7 +257,7 @@ BOOL CFileSearcher::IsArchived()
 
 BOOL CFileSearcher::CanRead()
 {
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		uid_t UserID=getuid();
 		gid_t GroupID=getgid();
@@ -282,7 +282,7 @@ BOOL CFileSearcher::CanRead()
 }
 BOOL CFileSearcher::CanWrite()
 {
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		uid_t UserID=getuid();
 		gid_t GroupID=getgid();
@@ -307,7 +307,7 @@ BOOL CFileSearcher::CanWrite()
 }
 BOOL CFileSearcher::CanExec()
 {
-	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.size())
+	if(m_FetchIndex>=0&&m_FetchIndex<(int)m_FileInfoList.GetCount())
 	{
 		uid_t UserID=getuid();
 		gid_t GroupID=getgid();

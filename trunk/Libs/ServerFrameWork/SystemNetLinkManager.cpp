@@ -38,7 +38,7 @@ void CSystemNetLinkManager::SendLogMsg(LPCTSTR LogMsg)
 
 	static char s_SendBuffer[65536];
 
-	if(m_ConnectionMap.size())
+	if(m_ConnectionMap.GetObjectCount())
 	{
 		CSmartStruct LogStr(5000);
 
@@ -54,14 +54,18 @@ void CSystemNetLinkManager::SendLogMsg(LPCTSTR LogMsg)
 
 		SendBuffer.PushBack(LogStr.GetData(),LogStr.GetDataLen());
 
-
-		std::map<UINT,CEasyNetLinkConnection*>::iterator itr;
-		for(itr=m_ConnectionMap.begin();itr!=m_ConnectionMap.end();itr++)
+		void * Pos=m_ConnectionMap.GetFirstObjectPos();
+		while(Pos)
 		{
-			CSystemNetLink * pLink=(CSystemNetLink *)(itr->second);
-			if(pLink->IsLinkLog())
+			UINT Key;
+			CEasyNetLinkConnection ** ppValue=m_ConnectionMap.GetNextObject(Pos,Key);
+			if(ppValue)
 			{
-				pLink->SendData(SendBuffer.GetBuffer(),SendBuffer.GetUsedSize());
+				CSystemNetLink * pLink=(CSystemNetLink *)(*ppValue);
+				if(pLink->IsLinkLog())
+				{
+					pLink->SendData(SendBuffer.GetBuffer(),SendBuffer.GetUsedSize());
+				}
 			}
 		}
 	}

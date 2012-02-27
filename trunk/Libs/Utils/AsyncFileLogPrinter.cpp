@@ -30,13 +30,13 @@ void CAsyncFileLogPrinter::ResetLog(int Level,LPCTSTR FileName,int FileLogBuffer
 {
 	m_LogLevel=Level;
 	m_LogFileName=FileName;
-	
+
 	CAutoLock Lock(m_EasyCriticalSection);
-	
+
 	m_FileLogWorkThread.Init(FileName,FileLogBufferLen);
 	if(!m_FileLogWorkThread.IsWorking())
 		m_FileLogWorkThread.Start();
-	
+
 }
 
 void CAsyncFileLogPrinter::CloseLog()
@@ -53,28 +53,28 @@ void CAsyncFileLogPrinter::PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_li
 		{
 			return;
 		}
-		char MsgBuff[5000];
+		TCHAR MsgBuff[5000];
 
 		CEasyTime CurTime;
 		CurTime.FetchLocalTime();
 
 
-		sprintf_s(MsgBuff,5000,"[%02d-%02d][%02d:%02d:%02d]:",
+		_stprintf_s(MsgBuff,5000,_T("[%02d-%02d][%02d:%02d:%02d]:"),
 			CurTime.Month(),CurTime.Day(),
 			CurTime.Hour(),CurTime.Minute(),CurTime.Second());
 
 
-		vsprintf_s(MsgBuff+17,4096-17,Format, vl );
+		_vstprintf_s(MsgBuff+17,4096-17,Format, vl );
 		MsgBuff[4095]=0;
-		strncat_s(MsgBuff,5000,"\r\n",4096);
+		_tcsncat_s(MsgBuff,5000,_T("\r\n"),4096);
 
 		m_FileLogWorkThread.PushLog(MsgBuff);
-			
+
 
 	}
 	catch(...)
 	{
-		PrintImportantLog(0,"Log[%s]输出发生异常[%s]",(LPCTSTR)m_LogFileName,Format);
+		PrintImportantLog(0,_T("Log[%s]输出发生异常[%s]"),(LPCTSTR)m_LogFileName,Format);
 	}
 }
 

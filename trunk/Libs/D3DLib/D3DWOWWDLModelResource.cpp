@@ -121,7 +121,7 @@ bool CD3DWOWWDLModelResource::LoadFromFile(LPCTSTR ModelFileName)
 						pD3DSubMesh->GetMaterial().GetMaterial().Emissive=BlackColor;
 						pD3DSubMesh->GetMaterial().GetMaterial().Power=40.0f;
 
-						pD3DSubMesh->GetMaterial().SetFX(m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory("WDL_MODEL_FX",WDL_MODEL_FX,strlen(WDL_MODEL_FX)));
+						pD3DSubMesh->GetMaterial().SetFX(m_pManager->GetDevice()->GetFXManager()->LoadFXFromMemory(_T("WDL_MODEL_FX"),WDL_MODEL_FX,strlen(WDL_MODEL_FX)));
 
 						WORD * pModelIndices=NULL;
 						pD3DSubMesh->GetDXIndexBuffer()->Lock(0,0,(LPVOID *)&pModelIndices,0);
@@ -218,7 +218,7 @@ bool CD3DWOWWDLModelResource::LoadFromFile(LPCTSTR ModelFileName)
 
 						pD3DSubMesh->SetID(Y*100+X);
 						CEasyString SubMeshName;
-						SubMeshName.Format("[%d,%d]",X,Y);
+						SubMeshName.Format(_T("[%d,%d]"),X,Y);
 						pD3DSubMesh->SetName(SubMeshName);
 
 
@@ -226,7 +226,7 @@ bool CD3DWOWWDLModelResource::LoadFromFile(LPCTSTR ModelFileName)
 					}
 					else
 					{
-						PrintD3DLog(0,"CD3DWOWWDLModelResource::LoadFromFile:区块[%d,%d]没有洞信息",X,Y);
+						PrintD3DLog(0,_T("CD3DWOWWDLModelResource::LoadFromFile:区块[%d,%d]没有洞信息"),X,Y);
 					}
 				}
 			}
