@@ -28,14 +28,24 @@ protected:
 	int										m_IOCPThreadCount;
 	int										m_IOCPThreadNumPerCPU;
 	int										m_IOCPObjectPoolSize;
-	int										m_EventRouterPoolSiz;
+	int										m_IOCPObjectPoolGrowSize;
+	int										m_IOCPObjectPoolGrowLimit;
+	int										m_EventRouterPoolSize;
+	int										m_EventRouterPoolGrowSize;
+	int										m_EventRouterPoolGrowLimit;
 
 	DECLARE_CLASS_INFO_STATIC(CNetServer);
 public:
 	CNetServer(void);
 	virtual ~CNetServer(void);
 
-	virtual BOOL StartUp(int EventObjectPoolSize=MAX_EVENT_OBJECT,int ThreadNumberPerCPU=DEFAULT_THREAD_NUMBER_PER_CPU,int EventRouterPoolSiz=DEFAULT_EVENT_ROUTER_COUNT);
+	virtual BOOL StartUp(int EventObjectPoolSize=MAX_EVENT_OBJECT,
+		int ThreadNumberPerCPU=DEFAULT_THREAD_NUMBER_PER_CPU,
+		int EventRouterPoolSiz=DEFAULT_EVENT_ROUTER_COUNT,
+		int EventObjectPoolGrowSize=DEFAULT_EVENT_OBJECT_POOL_GROW_SIZE,
+		int EventObjectPoolGrowLimit=DEFAULT_EVENT_OBJECT_POOL_GROW_LIMIT,
+		int EventRouterPoolGrowSize=DEFAULT_EVENT_ROUTER_POOL_GROW_SIZE,
+		int EventRouterPoolGrowlimit=DEFAULT_EVENT_ROUTER_POOL_GROW_LIMIT);
 	virtual void ShutDown(DWORD Milliseconds=DEFAULT_THREAD_TERMINATE_TIME);
 
 

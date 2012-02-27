@@ -63,7 +63,13 @@ public:
 		m_UDPSendCount=0;
 	}
 
-	virtual BOOL StartUp(int EventObjectPoolSize=MAX_EVENT_OBJECT,int ThreadNumberPerCPU=DEFAULT_THREAD_NUMBER_PER_CPU,int EventRouterPoolSiz=DEFAULT_EVENT_ROUTER_COUNT)=0;
+	virtual BOOL StartUp(int EventObjectPoolSize=MAX_EVENT_OBJECT,
+		int ThreadNumberPerCPU=DEFAULT_THREAD_NUMBER_PER_CPU,
+		int EventRouterPoolSiz=DEFAULT_EVENT_ROUTER_COUNT,
+		int EventObjectPoolGrowSize=DEFAULT_EVENT_OBJECT_POOL_GROW_SIZE,
+		int EventObjectPoolGrowLimit=DEFAULT_EVENT_OBJECT_POOL_GROW_LIMIT,
+		int EventRouterPoolGrowSize=DEFAULT_EVENT_ROUTER_POOL_GROW_SIZE,
+		int EventRouterPoolGrowlimit=DEFAULT_EVENT_ROUTER_POOL_GROW_LIMIT)=0;
 	virtual void ShutDown(DWORD Milliseconds=DEFAULT_THREAD_TERMINATE_TIME)=0;
 
 protected:
