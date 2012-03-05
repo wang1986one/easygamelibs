@@ -25,9 +25,11 @@ protected:
 	CThreadSafeIDStorage<CEpollEventRouter>	m_EventRouterPool;
 	
 	CEpollThread *							m_pEpollThreads;
-	int										m_IOCPObjectPoolSize;
-	int										m_IOCPObjectPoolGrowSize;
-	int										m_IOCPObjectPoolGrowLimit;
+	int										m_EpollThreadCount;
+	int										m_EpollThreadNumPerCPU;
+	int										m_EventObjectPoolSize;
+	int										m_EventObjectPoolGrowSize;
+	int										m_EventObjectPoolGrowLimit;
 	int										m_EventRouterPoolSize;
 	int										m_EventRouterPoolGrowSize;
 	int										m_EventRouterPoolGrowLimit;

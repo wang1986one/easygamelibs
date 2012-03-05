@@ -18,9 +18,9 @@ CNetServer::CNetServer(void):CBaseServer()
 	m_hEpoll=INVALID_HANDLE_VALUE;	
 	m_pEpollThreads=NULL;	
 	m_EpollThreadCount=0;
-	m_IOCPObjectPoolSize=MAX_EVENT_OBJECT;
-	m_IOCPObjectPoolGrowSize=DEFAULT_EVENT_OBJECT_POOL_GROW_SIZE;
-	m_IOCPObjectPoolGrowLimit=DEFAULT_EVENT_OBJECT_POOL_GROW_LIMIT;
+	m_EventObjectPoolSize=MAX_EVENT_OBJECT;
+	m_EventObjectPoolGrowSize=DEFAULT_EVENT_OBJECT_POOL_GROW_SIZE;
+	m_EventObjectPoolGrowLimit=DEFAULT_EVENT_OBJECT_POOL_GROW_LIMIT;
 	m_EventRouterPoolSize=DEFAULT_EVENT_ROUTER_COUNT;
 	m_EventRouterPoolGrowSize=DEFAULT_EVENT_ROUTER_POOL_GROW_SIZE;
 	m_EventRouterPoolGrowLimit=DEFAULT_EVENT_ROUTER_POOL_GROW_LIMIT;
@@ -40,11 +40,11 @@ BOOL CNetServer::StartUp(int EventObjectPoolSize,
 						 int EventRouterPoolGrowSize,
 						 int EventRouterPoolGrowlimit)
 {
-	m_IOCPObjectPoolSize=EventObjectPoolSize;
+	m_EventObjectPoolSize=EventObjectPoolSize;
 	m_EventRouterPoolSize=EventRouterPoolSiz;
-	m_IOCPThreadNumPerCPU=ThreadNumberPerCPU;
-	m_IOCPObjectPoolGrowSize=EventObjectPoolGrowSize;
-	m_IOCPObjectPoolGrowLimit=EventObjectPoolGrowLimit;
+	m_EpollThreadNumPerCPU=ThreadNumberPerCPU;
+	m_EventObjectPoolGrowSize=EventObjectPoolGrowSize;
+	m_EventObjectPoolGrowLimit=EventObjectPoolGrowLimit;
 	m_EventRouterPoolGrowSize=EventRouterPoolGrowSize;
 	m_EventRouterPoolGrowLimit=EventRouterPoolGrowlimit;
 	return Start();	
@@ -63,7 +63,7 @@ BOOL CNetServer::OnStart()
 	if(m_hEpoll!=INVALID_HANDLE_VALUE)
 		return FALSE;
 
-	m_OverLappedObjectPool.Create(m_IOCPObjectPoolSize,m_IOCPObjectPoolGrowSize,m_IOCPObjectPoolGrowLimit);
+	m_EpollEventObjectPool.Create(m_EventObjectPoolSize,m_EventObjectPoolGrowSize,m_EventObjectPoolGrowLimit);
 	m_EventRouterPool.Create(m_EventRouterPoolSize,m_EventRouterPoolGrowSize,m_EventRouterPoolGrowLimit);
 
 	m_hEpoll = epoll_create( m_EventRouterPoolSize );
