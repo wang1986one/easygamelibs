@@ -1,0 +1,44 @@
+int C<InterfaceName>MsgCaller::<MethodName>(<Params>)
+{
+	if(m_pOperator==NULL)
+	{
+		return COMMON_RESULT_FAILED;
+	}
+
+	UINT MsgDataSize=CSmartStruct::GetEmptyStructSize()<PacketSizes>;
+		
+	CDOSMessagePacket * pMsgPacket=m_pOperator->NewMessagePacket(MsgDataSize,m_TargetIDs.GetCount());
+	if(pMsgPacket==NULL)
+	{
+		return COMMON_RESULT_MSG_ALLOC_ERROR;
+	}
+
+	pMsgPacket->GetMessage().SetMsgID(MAKE_MSG_ID(<InterfaceID>,<MethodID>,<IsAckMsg>));
+	pMsgPacket->GetMessage().SetSenderID(m_SenderID);
+	pMsgPacket->GetMessage().SetDataLength(MsgDataSize);
+
+	UINT FailCount=0;
+	
+	CSmartStruct MsgPacket=pMsgPacket->GetMessage().GetEmptyDataPacket();
+	
+	if(PackMsg<MethodName>(MsgPacket<,Params>))
+	{	
+		pMsgPacket->SetTargetIDs(m_TargetIDs.GetCount(),m_TargetIDs.GetBuffer());
+		if(m_pOperator->SendMessagePacket(pMsgPacket))
+		{
+			m_pOperator->ReleaseMessagePacket(pMsgPacket);
+			return COMMON_RESULT_SUCCEED;
+		}
+		else
+		{
+			m_pOperator->ReleaseMessagePacket(pMsgPacket);
+			return COMMON_RESULT_MSG_SEND_ERROR;
+		}
+	}
+	else
+	{
+		m_pOperator->ReleaseMessagePacket(pMsgPacket);
+		return COMMON_RESULT_MSG_PACK_ERROR;
+	}
+	
+}

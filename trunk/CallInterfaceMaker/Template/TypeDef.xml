@@ -1,0 +1,99 @@
+<TypeDef>
+  <Type Name="char" CType="char" IsFixedLength="true" 
+        ConstructOperation="&tab;&tab;&lt;Variable&gt; = 0;" 
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(char))"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt; = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+  
+  <Type Name="short" CType="short" IsFixedLength="true" 
+        ConstructOperation="&tab;&tab;&lt;Variable&gt; = 0;" 
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(short))"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt; = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+  
+  <Type Name="int" CType="int" IsFixedLength="true" 
+        ConstructOperation="&tab;&tab;&lt;Variable&gt; = 0;" 
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(int))"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt; = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+  
+  <Type Name="LONGLONG" CType="LONGLONG" IsFixedLength="true" 
+        ConstructOperation="&tab;&tab;&lt;Variable&gt; = 0;" 
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(LONGLONG))"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt; = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+  
+  <Type Name="BYTE" CType="BYTE" IsFixedLength="true" 
+        ConstructOperation="&tab;&tab;&lt;Variable&gt; = 0;" 
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(BYTE))"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt; = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+  
+  <Type Name="WORD" CType="WORD" IsFixedLength="true" 
+        ConstructOperation="&tab;&tab;&lt;Variable&gt; = 0;" 
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(WORD))"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt; = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+  
+  <Type Name="UINT" CType="UINT" IsFixedLength="true" 
+        ConstructOperation="&tab;&tab;&lt;Variable&gt; = 0;" 
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(UINT))"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt; = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+  
+  <Type Name="INT64" CType="INT64" IsFixedLength="true" 
+        ConstructOperation="&tab;&tab;&lt;Variable&gt; = 0;" 
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(INT64))"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt; = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+  
+  <Type Name="UINT64" CType="UINT64" IsFixedLength="true" 
+        ConstructOperation="&tab;&tab;&lt;Variable&gt; = 0;" 
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(UINT64))"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt; = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+  
+  <Type Name="LPCTSTR" CType="const TChar *" IsFixedLength="true" NeedNULLCheck="true" 
+        ConstructOperation="&tab;&tab;&lt;Variable&gt; = 0;" 
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;" 
+        NULLCheckOperation="&tab;&tab;if( &lt;Variable&gt; == NULL)&rt;&nl;&tab;&tab;{&rt;&nl;&tab;&tab;&tab;return NULL_POINTER;&rt;&nl;&tab;&tab;}&rt;&nl;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(UINT) + (&lt;Variable&gt;!=NULL?strlen(&lt;Variable&gt;):0) + sizeof(TChar))"
+        PackOperation="&tab;if( &lt;Variable&gt; != NULL)&rt;&nl;&tab;{&rt;&nl;&tab;&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;))&rt;&nl;&tab;&tab;{&rt;&nl;&tab;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;&tab;}&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt; = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+  
+  <Type Name="CSmartStruct" CType="CSmartStruct" IsFixedLength="true" 
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + &lt;Variable&gt;.GetDataLen())"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt; = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+  
+  <Type Name="STDOid" CType="STDOid" IsFixedLength="true"
+        ConstructOperation="&tab;&tab;&lt;Variable&gt;.m_oid = 0;"
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(UINT64))"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;.m_oid))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt;.m_oid = MsgPacket.GetMember(&lt;SST_ID&gt;);"/>
+
+  <Type Name="TTDDoid" CType="TTDDoid" IsFixedLength="true"
+        EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+        SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(UINT64))"
+        PackOperation="&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,&lt;Variable&gt;.ToLong64()))&rt;&nl;&tab;{&rt;&nl;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;}&rt;&nl;"
+        UnpackOperation="&tab;&lt;Variable&gt;.FromLong64(MsgPacket.GetMember(&lt;SST_ID&gt;));"/>
+
+  <Type Name="STDTLV" CType="STDTLV *" IsFixedLength="true" NeedNULLCheck="true"
+       ConstructOperation="&tab;&tab;&lt;Variable&gt; = NULL;"
+       EvaluateOperation="&tab;&tab;&lt;LVariable&gt; = &lt;RVariable&gt;;"
+       NULLCheckOperation="&tab;&tab;if( &lt;Variable&gt; == NULL)&rt;&nl;&tab;&tab;{&rt;&nl;&tab;&tab;&tab;return NULL_POINTER;&rt;&nl;&tab;&tab;}&rt;&nl;"
+       SizeCaculateOperation="(sizeof(WORD) + sizeof(BYTE) + sizeof(UINT) + (&lt;Variable&gt;!=NULL?(&lt;Variable&gt;-&gt;GetLength()+sizeof(STDTLV)):0) )"
+       PackOperation="&tab;if( &lt;Variable&gt; != NULL)&rt;&nl;&tab;{&rt;&nl;&tab;&tab;if(!MsgPacket.AddMember(&lt;SST_ID&gt;,(const char *)&lt;Variable&gt;,(&lt;Variable&gt;-&gt;GetLength()+sizeof(STDTLV))))&rt;&nl;&tab;&tab;{&rt;&nl;&tab;&tab;&tab;return OUT_OF_MEM;&rt;&nl;&tab;&tab;}&rt;&nl;&tab;}&rt;&nl;"
+       UnpackOperation="&tab;&lt;Variable&gt; = (STDTLV *)((const char *)MsgPacket.GetMember(&lt;SST_ID&gt;));"/>
+</TypeDef>

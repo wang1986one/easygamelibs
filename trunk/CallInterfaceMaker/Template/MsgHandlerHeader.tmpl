@@ -1,0 +1,42 @@
+#pragma once
+
+
+
+class STDIf<InterfaceName>_<MethodName>_MsgHandler
+{
+protected:
+<MemberDefines>
+public:
+	STDIf<InterfaceName>_<MethodName>_MsgHandler()
+	{
+<ConstructOperations>
+	}
+	~STDIf<InterfaceName>_<MethodName>_MsgHandler()
+	{
+
+	}
+
+	int Init(<Params>)
+	{
+<NULLChecks>
+<InitOperations>
+		return SUCCESS;
+	}
+	int HandleMsg(STDIf<InterfaceName> *pSrv,SCTDMessageHeader *pMsg);
+	int GetLen()
+	{
+		return (int)(sizeof(BYTE) + sizeof(UINT)<Len>);
+	}
+	int GetMinLen()
+	{
+		return (int)(sizeof(BYTE) + sizeof(UINT));
+	}
+
+	int Marshall(char *pStream,int len);
+	int UnMarshall(char *pStream,int len);
+public:
+	static int GetMethodId()
+	{
+		return (<MethodID>);
+	}
+};

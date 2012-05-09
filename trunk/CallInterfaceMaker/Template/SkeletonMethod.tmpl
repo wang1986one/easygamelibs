@@ -1,0 +1,29 @@
+int STDIf<InterfaceName>Skeleton::<MethodName>(<Params>)
+{
+	STDIf<InterfaceName>_<MethodName>_MsgHandler handler;
+	int result = handler.Init(<Members>);
+	if (SUCCESS != result)
+	{
+		//warning!
+		return result;
+	}
+	int len = handler.GetLen();
+	SCTDMessageHeader *pMsg = m_pObject->PrepareMsg(len,handler.GetMethodId(), &m_destDoid,1);
+	if (NULL == pMsg)
+	{
+		return OUT_OF_MEM;
+	}
+	char *pStream = pMsg->GetBuffer();
+	len = handler.Marshall(pStream,len);
+	if (len < 0)
+	{
+		return FAIL;
+	}
+	pMsg->SetBodyLength(len);	
+	result = m_pObject->SendMsg(pMsg);
+	if (SUCCESS != result)
+	{
+		//warning!
+	}
+	return result;      
+}
