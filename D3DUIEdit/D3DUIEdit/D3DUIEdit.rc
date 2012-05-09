@@ -1,0 +1,810 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(中华人民共和国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#pragma code_page(936)\r\n"
+    "#include ""res\\D3DUIEdit.rc2""  // 非 Microsoft Visual C++ 编辑资源\r\n"
+    "#include ""afxres.rc""         // 标准组件\r\n"
+    "#include ""afxprint.rc""       // 打印/打印预览资源\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\D3DUIEdit.ico"
+IDR_D3DUITYPE           ICON                    "res\\D3DUIEditDoc.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+IDR_UIOBJECT            BITMAP                  "res\\mainfram.bmp"
+IDR_ALIGN               BITMAP                  "res\\toolbar1.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR  16, 15
+BEGIN
+    BUTTON      ID_FILE_NEW
+    BUTTON      ID_FILE_OPEN
+    BUTTON      ID_FILE_SAVE
+    SEPARATOR
+    BUTTON      ID_EDIT_CUT
+    BUTTON      ID_EDIT_COPY
+    BUTTON      ID_EDIT_PASTE
+    SEPARATOR
+    BUTTON      ID_SET_PARENT
+    SEPARATOR
+    BUTTON      ID_APP_ABOUT
+END
+
+IDR_UIOBJECT TOOLBAR  16, 15
+BEGIN
+    BUTTON      ID_NEW_WND
+    BUTTON      ID_NEW_BUTTON
+    BUTTON      ID_NEW_EDIT
+    BUTTON      ID_NEW_SIMPLELIST
+    BUTTON      ID_NEW_COMBO
+    BUTTON      ID_NEW_SCROLL
+    BUTTON      ID_NEW_PROGRESSBAR
+END
+
+IDR_ALIGN TOOLBAR  16, 15
+BEGIN
+    BUTTON      ID_ALIGN_LEFT
+    BUTTON      ID_ALIGN_RIGHT
+    BUTTON      ID_ALIGN_TOP
+    BUTTON      ID_ALIGN_BOTTON
+    SEPARATOR
+    BUTTON      ID_VCENTER
+    BUTTON      ID_HCENTER
+    SEPARATOR
+    BUTTON      ID_HARRANGE
+    BUTTON      ID_VARRANGE
+    SEPARATOR
+    BUTTON      ID_SAME_WIDTH
+    BUTTON      ID_SAME_HEIGHT
+    BUTTON      ID_SAME_SIZE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU 
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "新建\tCtrl+N(&N)",              ID_FILE_NEW
+        MENUITEM "打开...\tCtrl+O(&O)",           ID_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "打印设置(&R)...",                 ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "最近的文件",                       ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "关闭(&C)",                      ID_FILE_CLOSE
+        MENUITEM "退出(&X)",                      ID_APP_EXIT
+    END
+    POPUP "视图(&V)"
+    BEGIN
+        MENUITEM "工具栏(&T)",                     ID_VIEW_TOOLBAR
+        MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "关于 D3DUIEdit(&A)...",         ID_APP_ABOUT
+    END
+END
+
+IDR_D3DUITYPE MENU 
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "新建\tCtrl+N(&N)",              ID_FILE_NEW
+        MENUITEM "打开...\tCtrl+O(&O)",           ID_FILE_OPEN
+        MENUITEM "关闭(&C)",                      ID_FILE_CLOSE
+        MENUITEM "保存\tCtrl+S(&S)",              ID_FILE_SAVE
+        MENUITEM "另存为(&A)...",                  ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "打印...\tCtrl+P(&P)",           ID_FILE_PRINT
+        MENUITEM "打印预览(&V)",                    ID_FILE_PRINT_PREVIEW
+        MENUITEM "打印设置(&R)...",                 ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "最近的文件",                       ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)",                      ID_APP_EXIT
+    END
+    POPUP "编辑(&E)"
+    BEGIN
+        MENUITEM "撤消\tCtrl+Z(&U)",              ID_EDIT_UNDO
+        MENUITEM "删除选中对象\tDel",                 ID_EDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "剪切\tCtrl+X(&T)",              ID_EDIT_CUT
+        MENUITEM "复制\tCtrl+C(&C)",              ID_EDIT_COPY
+        MENUITEM "粘贴\tCtrl+V(&P)",              ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "选中对象左移\tCtrl+←",              ID_EDIT_MOVE_LEFT
+        MENUITEM "选中对象右移\tCtrl+→",              ID_EDIT_MOVE_RIGHT
+        MENUITEM "选中对象上移\tCtrl+↑",              ID_EDIT_MOVE_UP
+        MENUITEM "选中对象下移\tCtrl+↓",              ID_EDIT_MOVE_DOWN
+        MENUITEM "选中对象水平缩小\tShift+←",           ID_EDIT_HORIZONTAL_SHRINK
+        MENUITEM "选中对象水平放大\tShift+→",           ID_EDIT_HORIZONTAL_STRENGTHEN
+        MENUITEM "选中对象垂直缩小\tShift+↑",           ID_EDIT_VERTICAL_SHRINK
+        MENUITEM "选中对象垂直放大\tShift+↓",           ID_EDIT_VERTICAL_STRENGTHEN
+        MENUITEM SEPARATOR
+        POPUP "创建UI对象"
+        BEGIN
+            MENUITEM "窗口",                          ID_NEW_WND
+            MENUITEM "按钮",                          ID_NEW_BUTTON
+            MENUITEM "编辑框",                         ID_NEW_EDIT
+            MENUITEM "简单列表",                        ID_NEW_SIMPLELIST
+            MENUITEM "组合框",                         ID_NEW_COMBO
+            MENUITEM "滚动条",                         ID_NEW_SCROLL
+            MENUITEM "进度条",                         ID_NEW_PROGRESSBAR
+        END
+        POPUP "对齐"
+        BEGIN
+            MENUITEM "左对齐",                         ID_ALIGN_LEFT
+            MENUITEM "右对齐",                         ID_ALIGN_RIGHT
+            MENUITEM "顶部对齐",                        ID_ALIGN_TOP
+            MENUITEM "底部对齐",                        ID_ALIGN_BOTTON
+            MENUITEM SEPARATOR
+            MENUITEM "垂直居中",                        ID_VCENTER
+            MENUITEM "水平居中",                        ID_HCENTER
+            MENUITEM SEPARATOR
+            MENUITEM "水平均匀排列",                      ID_HARRANGE
+            MENUITEM "垂直均匀排列",                      ID_VARRANGE
+            MENUITEM SEPARATOR
+            MENUITEM "等宽",                          ID_SAME_WIDTH
+            MENUITEM "等高",                          ID_SAME_HEIGHT
+            MENUITEM "相同大小",                        ID_SAME_SIZE
+        END
+        MENUITEM "将背景窗口设为父窗口\tCtrl+P(&P)",      ID_SET_PARENT
+    END
+    POPUP "视图(&V)"
+    BEGIN
+        MENUITEM "工具栏(&T)",                     ID_VIEW_TOOLBAR
+        MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
+    END
+    POPUP "窗口(&W)"
+    BEGIN
+        MENUITEM "新建窗口(&N)",                    ID_WINDOW_NEW
+        MENUITEM "层叠(&C)",                      ID_WINDOW_CASCADE
+        MENUITEM "平铺(&T)",                      ID_WINDOW_TILE_HORZ
+        MENUITEM "排列图标(&A)",                    ID_WINDOW_ARRANGE
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "关于 D3DUIEdit(&A)...",         ID_APP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS 
+BEGIN
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_EDIT_DELETE,         VIRTKEY, NOINVERT
+    VK_LEFT,        ID_EDIT_HORIZONTAL_SHRINK, VIRTKEY, SHIFT, NOINVERT
+    VK_UP,          ID_EDIT_VERTICAL_SHRINK, VIRTKEY, SHIFT, NOINVERT
+    VK_RIGHT,       ID_EDIT_HORIZONTAL_STRENGTHEN, VIRTKEY, SHIFT, NOINVERT
+    VK_DOWN,        ID_EDIT_MOVE_DOWN,      VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT,        ID_EDIT_MOVE_LEFT,      VIRTKEY, CONTROL, NOINVERT
+    VK_RIGHT,       ID_EDIT_MOVE_RIGHT,     VIRTKEY, CONTROL, NOINVERT
+    VK_UP,          ID_EDIT_MOVE_UP,        VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    VK_DOWN,        ID_EDIT_VERTICAL_STRENGTHEN, VIRTKEY, SHIFT, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    "P",            ID_SET_PARENT,          VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 235, 55
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 D3DUIEdit"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    LTEXT           "D3DUIEdit Version 1.0",IDC_STATIC,40,10,119,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2006",IDC_STATIC,40,25,119,8
+    DEFPUSHBUTTON   "确定",IDOK,178,7,50,16,WS_GROUP
+END
+
+IDD_DIALOG_TEXTURE DIALOGEX 0, 0, 567, 351
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "纹理设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT1,44,291,498,12,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT2,44,306,28,12,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "",IDC_SPIN1,"msctls_updown32",UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,61,306,10,11
+    DEFPUSHBUTTON   "确定",IDOK,178,330,50,14
+    PUSHBUTTON      "取消",IDCANCEL,338,330,50,14
+    LTEXT           "纹理文件:",IDC_STATIC,7,293,36,8
+    LTEXT           "显示倍数:",IDC_STATIC,7,308,36,8
+    PUSHBUTTON      "...",IDC_BUTTON_SELECT_FILE,544,291,16,12
+    PUSHBUTTON      "应用",IDAPPLY,259,330,50,14
+    LTEXT           "左:",IDC_STATIC,77,308,12,8
+    EDITTEXT        IDC_EDIT3,90,306,26,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "上:",IDC_STATIC,118,308,12,8
+    EDITTEXT        IDC_EDIT4,131,306,26,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "右:",IDC_STATIC,160,308,12,8
+    EDITTEXT        IDC_EDIT5,173,306,26,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "下:",IDC_STATIC,202,308,12,8
+    EDITTEXT        IDC_EDIT6,215,306,26,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "L:",IDC_STATIC,243,308,8,8
+    EDITTEXT        IDC_EDIT7,255,306,16,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "T:",IDC_STATIC,273,308,8,8
+    EDITTEXT        IDC_EDIT8,285,306,16,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "R:",IDC_STATIC,304,308,8,8
+    EDITTEXT        IDC_EDIT9,316,306,16,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "B:",IDC_STATIC,334,308,8,8
+    EDITTEXT        IDC_EDIT10,346,306,16,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "TL:",IDC_STATIC,365,309,8,8
+    EDITTEXT        IDC_EDIT11,377,306,16,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "TR:",IDC_STATIC,395,309,8,8
+    EDITTEXT        IDC_EDIT12,407,306,16,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "BL:",IDC_STATIC,426,309,8,8
+    EDITTEXT        IDC_EDIT13,438,306,16,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "BR:",IDC_STATIC,456,309,8,8
+    EDITTEXT        IDC_EDIT14,468,306,16,12,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "编辑",IDC_BUTTON_EDIT_BORDERS,491,306,25,12
+END
+
+IDD_DIALOG_FONT DIALOGEX 0, 0, 244, 164
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "字体设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,61,143,31,14
+    PUSHBUTTON      "取消",IDCANCEL,151,143,31,14
+    LTEXT           "字体:",IDC_STATIC,7,9,20,8
+    EDITTEXT        IDC_EDIT1,37,7,184,12,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "...",IDC_BUTTON_SELECT_FONT,223,7,14,12
+    LTEXT           "字间距:",IDC_STATIC,7,24,28,8
+    EDITTEXT        IDC_EDIT15,37,22,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "行间距:",IDC_STATIC,71,24,28,8
+    EDITTEXT        IDC_EDIT16,101,22,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "颜色:",IDC_STATIC,135,24,20,8
+    EDITTEXT        IDC_EDIT17,165,22,56,12,ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER
+    PUSHBUTTON      "...",IDC_BUTTON_SELECT_FONT_COLOR,223,22,14,12
+    LTEXT           "阴影:",IDC_STATIC,7,40,20,8
+    CONTROL         "左",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,39,21,10
+    CONTROL         "上",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,71,39,21,10
+    CONTROL         "右",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,105,39,21,10
+    CONTROL         "下",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,139,39,21,10
+    CONTROL         "上左",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,51,31,10
+    CONTROL         "上右",IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,71,51,31,10
+    CONTROL         "下左",IDC_CHECK7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,105,51,31,10
+    CONTROL         "下右",IDC_CHECK8,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,139,51,31,10
+    LTEXT           "阴影宽度:",IDC_STATIC,7,66,36,8
+    LTEXT           "阴影颜色:",IDC_STATIC,81,66,36,8
+    EDITTEXT        IDC_EDIT18,45,64,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT19,119,64,56,12,ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER
+    PUSHBUTTON      "...",IDC_BUTTON_SELECT_SHADOW_COLOR,177,64,14,12
+    LTEXT           "字体对其方式:",IDC_STATIC,7,82,52,8
+    PUSHBUTTON      "应用",IDAPPLY,106,143,31,14
+    LTEXT           "水平:",IDC_STATIC,66,82,20,8
+    CONTROL         "居左",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,94,82,32,10
+    CONTROL         "居中",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,136,82,32,10
+    CONTROL         "居右",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,178,82,32,10
+    LTEXT           "垂直:",IDC_STATIC,66,95,20,8
+    CONTROL         "居上",IDC_RADIO5,"Button",BS_AUTORADIOBUTTON,94,95,32,10
+    CONTROL         "居中",IDC_RADIO6,"Button",BS_AUTORADIOBUTTON,136,95,32,10
+    CONTROL         "居下",IDC_RADIO7,"Button",BS_AUTORADIOBUTTON,178,95,32,10
+    CONTROL         "自动换行",IDC_CHECK9,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,67,108,48,10
+    LTEXT           "字体缩放:",IDC_STATIC,7,122,36,8
+    EDITTEXT        IDC_EDIT20,43,120,30,12,ES_AUTOHSCROLL
+END
+
+IDD_DIALOG_COLOR DIALOGEX 0, 0, 221, 86
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "颜色设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,53,65,37,14
+    PUSHBUTTON      "取消",IDCANCEL,131,65,37,14
+    EDITTEXT        IDC_EDIT1,48,18,26,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "红:",IDC_STATIC,34,20,12,8
+    EDITTEXT        IDC_EDIT15,94,18,26,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "绿:",IDC_STATIC,80,20,12,8
+    EDITTEXT        IDC_EDIT2,142,18,26,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "蓝:",IDC_STATIC,128,20,12,8
+    EDITTEXT        IDC_EDIT17,94,35,26,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "通道:",IDC_STATIC,72,38,20,8
+    PUSHBUTTON      "...",IDC_BUTTON_SELECT_COLOR,173,18,15,12
+END
+
+IDD_DIALOG_BOTTON_TEXTURE DIALOGEX 0, 0, 264, 155
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "按钮纹理设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,53,134,37,14
+    PUSHBUTTON      "取消",IDCANCEL,163,134,37,14
+    PUSHBUTTON      "应用",IDAPPLY,108,134,37,14
+    LTEXT           "普通:",IDC_STATIC,7,14,20,8
+    EDITTEXT        IDC_EDIT1,27,12,213,12,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "...",IDC_BUTTON_SET_TEXTURE,242,12,15,12
+    LTEXT           "激活:",IDC_STATIC,7,44,20,8
+    EDITTEXT        IDC_EDIT15,27,42,213,12,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "...",IDC_BUTTON_SET_TEXTURE2,242,42,15,12
+    LTEXT           "按下:",IDC_STATIC,7,73,20,8
+    EDITTEXT        IDC_EDIT2,27,71,213,12,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "...",IDC_BUTTON_SET_TEXTURE3,242,71,15,12
+    LTEXT           "禁用:",IDC_STATIC,7,101,20,8
+    EDITTEXT        IDC_EDIT17,27,99,213,12,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "...",IDC_BUTTON_SET_TEXTURE4,242,99,15,12
+    LTEXT           "文字X偏移:",IDC_STATIC,27,29,40,8
+    EDITTEXT        IDC_EDIT3,68,27,25,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "文字Y偏移:",IDC_STATIC,97,29,40,8
+    EDITTEXT        IDC_EDIT4,138,27,25,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "文字X偏移:",IDC_STATIC,27,58,40,8
+    EDITTEXT        IDC_EDIT5,68,56,25,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "文字Y偏移:",IDC_STATIC,97,58,40,8
+    EDITTEXT        IDC_EDIT6,138,56,25,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "文字X偏移:",IDC_STATIC,27,87,40,8
+    EDITTEXT        IDC_EDIT7,68,85,25,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "文字Y偏移:",IDC_STATIC,97,87,40,8
+    EDITTEXT        IDC_EDIT8,138,85,25,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "文字X偏移:",IDC_STATIC,27,115,40,8
+    EDITTEXT        IDC_EDIT9,68,113,25,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "文字Y偏移:",IDC_STATIC,97,115,40,8
+    EDITTEXT        IDC_EDIT10,138,113,25,12,ES_AUTOHSCROLL | ES_NUMBER
+END
+
+IDD_DIALOG_SCROLLBAR_TEXTURE DIALOGEX 0, 0, 259, 74
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "滚动条纹理设定"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,66,53,33,14
+    PUSHBUTTON      "取消",IDCANCEL,160,53,33,14
+    PUSHBUTTON      "应用",IDAPPLY,113,53,33,14
+    LTEXT           "基本框架:",IDC_STATIC,7,17,36,8
+    EDITTEXT        IDC_EDIT1,45,14,189,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BUTTON_SELECT_TEXTURE,236,14,16,12
+    PUSHBUTTON      "减量按钮设定",IDC_BUTTON_DEC,35,31,56,12
+    PUSHBUTTON      "增量按钮设定",IDC_BUTTON_INC,101,31,56,12
+    PUSHBUTTON      "滑动块设定",IDC_BUTTON_TRACK,167,31,56,12
+END
+
+IDD_DIALOG_EDIT_TEXTURE DIALOGEX 0, 0, 186, 90
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "编辑框纹理设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "基本框架设置",IDC_BUTTON1,58,23,61,14
+    PUSHBUTTON      "滚动条设置",IDC_BUTTON2,58,51,61,14
+END
+
+IDD_DIALOG_SIMPLELIST_TEXTURE DIALOGEX 0, 0, 186, 90
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "简单列表框纹理设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "基本框架设置",IDC_BUTTON1,58,23,61,14
+    PUSHBUTTON      "滚动条设置",IDC_BUTTON2,58,51,61,14
+END
+
+IDD_DIALOG_COMBO_TEXTURE DIALOGEX 0, 0, 186, 105
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "组合框纹理设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "基本框架设置",IDC_BUTTON1,58,23,61,14
+    PUSHBUTTON      "弹出按钮设置",IDC_BUTTON2,58,46,61,14
+    PUSHBUTTON      "列表框设置",IDC_BUTTON3,58,69,61,14
+END
+
+IDD_DIALOG_PROGRESSBAR_TEXTURE DIALOGEX 0, 0, 100, 66
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "进度条纹理设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "窗体纹理",IDC_BUTTON_TEXTURE1,25,15,50,14
+    PUSHBUTTON      "进度块纹理",IDC_BUTTON_TEXTURE2,25,37,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080403a8"
+        BEGIN
+            VALUE "CompanyName", "TODO: <公司名>"
+            VALUE "FileDescription", "TODO: <文件说明>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "D3DUIEdit.exe"
+            VALUE "LegalCopyright", "TODO: (C) <公司名>。保留所有权利。"
+            VALUE "OriginalFilename", "D3DUIEdit.exe"
+            VALUE "ProductName", "TODO: <产品名>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "翻译", 0x804, 936
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
+    END
+
+    IDD_DIALOG_TEXTURE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 560
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 344
+    END
+
+    IDD_DIALOG_FONT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 237
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 157
+    END
+
+    IDD_DIALOG_COLOR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 214
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 79
+    END
+
+    IDD_DIALOG_BOTTON_TEXTURE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 257
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 148
+    END
+
+    IDD_DIALOG_SCROLLBAR_TEXTURE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 252
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 67
+    END
+
+    IDD_DIALOG_EDIT_TEXTURE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_DIALOG_SIMPLELIST_TEXTURE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_DIALOG_COMBO_TEXTURE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 98
+    END
+
+    IDD_DIALOG_PROGRESSBAR_TEXTURE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 93
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 59
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTURE
+//
+
+IDT_DOT_LINE            TEXTURE                 "res\\DotLine.png"
+IDT_SIZE_BAR            TEXTURE                 "res\\SizeBar.png"
+IDT_DEFAULT             TEXTURE                 "res\\Default.png"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDR_MAINFRAME           "D3DUI"
+    IDR_D3DUITYPE           "\nD3DUI\nD3DUI\nD3DUI Files (*.UI)\n.UI\nD3DUI.Document\nD3DUI.Document"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "D3DUIEdit"
+    AFX_IDS_IDLEMESSAGE     "就绪"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_FILE_NEW             "创建新文档\n新建"
+    ID_FILE_OPEN            "打开现有文档\n打开"
+    ID_FILE_CLOSE           "关闭活动文档\n关闭"
+    ID_FILE_SAVE            "保存活动文档\n保存"
+    ID_FILE_SAVE_AS         "用新名称保存活动文档\n另存为"
+    ID_FILE_PAGE_SETUP      "更改打印选项\n页面设置"
+    ID_FILE_PRINT_SETUP     "更改打印机选项和打印选项\n打印设置"
+    ID_FILE_PRINT           "打印活动文档\n打印"
+    ID_FILE_PRINT_PREVIEW   "显示整页\n打印预览"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_APP_ABOUT            "显示程序信息、版本号和版权\n关于"
+    ID_APP_EXIT             "退出应用程序；提示保存文档\n退出"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_FILE_MRU_FILE1       "打开此文档"
+    ID_FILE_MRU_FILE2       "打开此文档"
+    ID_FILE_MRU_FILE3       "打开此文档"
+    ID_FILE_MRU_FILE4       "打开此文档"
+    ID_FILE_MRU_FILE5       "打开此文档"
+    ID_FILE_MRU_FILE6       "打开此文档"
+    ID_FILE_MRU_FILE7       "打开此文档"
+    ID_FILE_MRU_FILE8       "打开此文档"
+    ID_FILE_MRU_FILE9       "打开此文档"
+    ID_FILE_MRU_FILE10      "打开此文档"
+    ID_FILE_MRU_FILE11      "打开此文档"
+    ID_FILE_MRU_FILE12      "打开此文档"
+    ID_FILE_MRU_FILE13      "打开此文档"
+    ID_FILE_MRU_FILE14      "打开此文档"
+    ID_FILE_MRU_FILE15      "打开此文档"
+    ID_FILE_MRU_FILE16      "打开此文档"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_NEXT_PANE            "切换到下一个窗格\n下一窗格"
+    ID_PREV_PANE            "切换回上一个窗格\n上一窗格"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_WINDOW_NEW           "为活动文档打开另一个窗口\n新建窗口"
+    ID_WINDOW_ARRANGE       "在窗口底部排列图标\n排列图标"
+    ID_WINDOW_CASCADE       "以重叠方式排列窗口\n层叠窗口"
+    ID_WINDOW_TILE_HORZ     "以非重叠的平铺方式排列窗口\n平铺窗口"
+    ID_WINDOW_TILE_VERT     "以非重叠的平铺方式排列窗口\n平铺窗口"
+    ID_WINDOW_SPLIT         "将活动窗口拆分为多个窗格\n拆分"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_CLEAR           "清除选定内容\n清除"
+    ID_EDIT_CLEAR_ALL       "清除全部内容\n全部清除"
+    ID_EDIT_COPY            "复制选定内容并将其放到剪贴板上\n复制"
+    ID_EDIT_CUT             "剪切选定内容并将其放到剪贴板上\n剪切"
+    ID_EDIT_FIND            "查找指定的文本\n查找"
+    ID_EDIT_PASTE           "插入剪贴板内容\n粘贴"
+    ID_EDIT_REPEAT          "重复上一操作\n重复"
+    ID_EDIT_REPLACE         "用其他文本替换特定的文本\n替换"
+    ID_EDIT_SELECT_ALL      "选定整个文档\n全选"
+    ID_EDIT_UNDO            "撤消上一操作\n撤消"
+    ID_EDIT_REDO            "恢复上次撤消的操作\n重做"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "显示或隐藏工具栏\n切换工具栏"
+    ID_VIEW_STATUS_BAR      "显示或隐藏状态栏\n切换状态栏"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "更改窗口大小"
+    AFX_IDS_SCMOVE          "更改窗口位置"
+    AFX_IDS_SCMINIMIZE      "将窗口缩小为图标"
+    AFX_IDS_SCMAXIMIZE      "使窗口最大化显示"
+    AFX_IDS_SCNEXTWINDOW    "切换到下一个文档窗口"
+    AFX_IDS_SCPREVWINDOW    "切换到前一个文档窗口"
+    AFX_IDS_SCCLOSE         "关闭活动窗口并提示保存文档"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "将窗口恢复到正常大小"
+    AFX_IDS_SCTASKLIST      "激活任务列表"
+    AFX_IDS_MDICHILD        "激活此窗口"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "关闭打印预览模式\n取消预览"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_ALIGN_LEFT           "左对齐\n左对齐"
+    ID_ALIGN_RIGHT          "右对齐\n右对齐"
+    ID_ALIGN_TOP            "顶部对齐\n顶部对齐"
+    ID_ALIGN_BOTTON         "底部对齐\n底部对齐"
+    ID_VCENTER              "垂直居中\n垂直居中"
+    ID_HCENTER              "水平居中\n水平居中"
+    ID_HARRANGE             "水平均匀排列\n水平均匀排列"
+    ID_VARRANGE             "垂直均匀排列"
+    ID_SAME_WIDTH           "等宽\n等宽"
+    ID_SAME_HEIGHT          "等高\n等高"
+    ID_SAME_SIZE            "相同大小\n相同大小"
+    ID_SET_PARENT           "将背景窗口设为父窗口\n将背景窗口设为父窗口"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_NEW_WND              "窗口\n窗口"
+    ID_NEW_BUTTON           "按钮\n按钮"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_NEW_EDIT             "编辑框\n编辑框"
+    ID_NEW_SIMPLELIST       "简单列表\n简单列表"
+    ID_NEW_COMBO            "组合框\n组合框"
+    ID_NEW_SCROLL           "滚动条\n滚动条"
+END
+
+#endif    // 中文(中华人民共和国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#pragma code_page(936)
+#include "res\D3DUIEdit.rc2"  // 非 Microsoft Visual C++ 编辑资源
+#include "afxres.rc"         // 标准组件
+#include "afxprint.rc"       // 打印/打印预览资源
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

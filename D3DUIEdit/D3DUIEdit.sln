@@ -1,0 +1,66 @@
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "D3DUIEdit", "D3DUIEdit\D3DUIEdit.vcproj", "{270E3C78-5795-46B2-AE41-70EA817339DA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{91126404-C4E5-47CA-9B3C-C13CC341518E} = {91126404-C4E5-47CA-9B3C-C13CC341518E}
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8} = {F4126B50-6B57-4B34-A58A-987D6B4219C8}
+		{4C55A45C-EC01-4531-9440-D042CC1BF8A5} = {4C55A45C-EC01-4531-9440-D042CC1BF8A5}
+		{D7E49994-599F-4180-94BE-384311E2544C} = {D7E49994-599F-4180-94BE-384311E2544C}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "D3DGUI", "..\Libs\D3DGUI\D3DGUI.vcproj", "{91126404-C4E5-47CA-9B3C-C13CC341518E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "D3DLib", "..\Libs\D3DLib\D3DLib.vcproj", "{4C55A45C-EC01-4531-9440-D042CC1BF8A5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utils", "..\Libs\Utils\Utils.vcproj", "{F4126B50-6B57-4B34-A58A-987D6B4219C8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Work", "Work", "{561A3BFA-2F8A-4054-B6AD-58725E91B66F}"
+	ProjectSection(SolutionItems) = preProject
+		Work\Default.tga = Work\Default.tga
+		Work\Msflxgrd.ocx = Work\Msflxgrd.ocx
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MFCExtensionLib", "..\Libs\MFCExtensionLib\MFCExtensionLib.vcproj", "{D7E49994-599F-4180-94BE-384311E2544C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		DebugUnicode|Win32 = DebugUnicode|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{270E3C78-5795-46B2-AE41-70EA817339DA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{270E3C78-5795-46B2-AE41-70EA817339DA}.Debug|Win32.Build.0 = Debug|Win32
+		{270E3C78-5795-46B2-AE41-70EA817339DA}.DebugUnicode|Win32.ActiveCfg = DebugUnicode|Win32
+		{270E3C78-5795-46B2-AE41-70EA817339DA}.DebugUnicode|Win32.Build.0 = DebugUnicode|Win32
+		{270E3C78-5795-46B2-AE41-70EA817339DA}.Release|Win32.ActiveCfg = Release|Win32
+		{270E3C78-5795-46B2-AE41-70EA817339DA}.Release|Win32.Build.0 = Release|Win32
+		{91126404-C4E5-47CA-9B3C-C13CC341518E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{91126404-C4E5-47CA-9B3C-C13CC341518E}.Debug|Win32.Build.0 = Debug|Win32
+		{91126404-C4E5-47CA-9B3C-C13CC341518E}.DebugUnicode|Win32.ActiveCfg = DebugUnicode|Win32
+		{91126404-C4E5-47CA-9B3C-C13CC341518E}.DebugUnicode|Win32.Build.0 = DebugUnicode|Win32
+		{91126404-C4E5-47CA-9B3C-C13CC341518E}.Release|Win32.ActiveCfg = Release|Win32
+		{91126404-C4E5-47CA-9B3C-C13CC341518E}.Release|Win32.Build.0 = Release|Win32
+		{4C55A45C-EC01-4531-9440-D042CC1BF8A5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4C55A45C-EC01-4531-9440-D042CC1BF8A5}.Debug|Win32.Build.0 = Debug|Win32
+		{4C55A45C-EC01-4531-9440-D042CC1BF8A5}.DebugUnicode|Win32.ActiveCfg = DebugUnicode|Win32
+		{4C55A45C-EC01-4531-9440-D042CC1BF8A5}.DebugUnicode|Win32.Build.0 = DebugUnicode|Win32
+		{4C55A45C-EC01-4531-9440-D042CC1BF8A5}.Release|Win32.ActiveCfg = Release|Win32
+		{4C55A45C-EC01-4531-9440-D042CC1BF8A5}.Release|Win32.Build.0 = Release|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Debug|Win32.Build.0 = Debug|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.DebugUnicode|Win32.ActiveCfg = DebugUnicode|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.DebugUnicode|Win32.Build.0 = DebugUnicode|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Release|Win32.ActiveCfg = Release|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Release|Win32.Build.0 = Release|Win32
+		{D7E49994-599F-4180-94BE-384311E2544C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D7E49994-599F-4180-94BE-384311E2544C}.Debug|Win32.Build.0 = Debug|Win32
+		{D7E49994-599F-4180-94BE-384311E2544C}.DebugUnicode|Win32.ActiveCfg = DebugUnicode|Win32
+		{D7E49994-599F-4180-94BE-384311E2544C}.DebugUnicode|Win32.Build.0 = DebugUnicode|Win32
+		{D7E49994-599F-4180-94BE-384311E2544C}.Release|Win32.ActiveCfg = Release|Win32
+		{D7E49994-599F-4180-94BE-384311E2544C}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

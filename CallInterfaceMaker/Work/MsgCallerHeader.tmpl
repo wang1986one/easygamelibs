@@ -1,0 +1,17 @@
+#pragma once
+
+
+class C<InterfaceName>MsgCaller :
+	public I<InterfaceName>
+{
+protected:
+	IDistributedObjectOperator *	m_pOperator;
+	OBJECT_ID						m_SenderID;
+	CEasyArray<OBJECT_ID>			m_TargetIDs;
+public:
+	C<InterfaceName>MsgCaller(IDistributedObjectOperator * pOperator,OBJECT_ID SenderID,OBJECT_ID TargetID);
+	C<InterfaceName>MsgCaller(IDistributedObjectOperator * pOperator,OBJECT_ID SenderID,OBJECT_ID * pTargetIDs,ID_LIST_COUNT_TYPE TargetIDCount);
+	~C<InterfaceName>MsgCaller(void);
+	
+	<Methods>
+};

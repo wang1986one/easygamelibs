@@ -1,0 +1,25 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using CSharpUtils;
+using CSharpUtils.DOSBase;
+using <SpaceName>;
+
+
+namespace <SpaceName>
+{
+	
+	class C<InterfaceName>MsgHandler : CBaseMsgHandler
+	{
+		I<InterfaceName>	m_pMsgHandler;
+		public void InitMsgMap(I<InterfaceName> pMsgHandler,Dictionary<uint,MsgHandler> MsgMap)
+		{
+			m_pMsgHandler=pMsgHandler;
+<MsgMapInits>
+		}
+
+<Methods>
+	};
+};

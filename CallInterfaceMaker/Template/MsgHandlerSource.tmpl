@@ -1,0 +1,61 @@
+#include "stdafx.h"
+
+enum <SST_ID_DEFINE_NAME>
+{
+<SST_ID_DEFINES>
+};
+
+int STDIf<InterfaceName>_<MethodName>_MsgHandler::HandleMsg(STDIf<InterfaceName> *pSrv,SCTDMessageHeader *pMsg)
+{
+	if ((NULL == pSrv)||(NULL == pMsg))
+	{
+		return NULL_POINTER;
+	}
+
+	int  msgLen = pMsg->GetBodyLength();
+
+
+	int result = UnMarshall(pMsg->GetBuffer(),msgLen);
+	if (result != SUCCESS)
+	{
+		return result;
+	}
+
+	return pSrv-><MethodName>(<Members>);
+}
+
+int STDIf<InterfaceName>_<MethodName>_MsgHandler::Marshall(char *pStream,int len)
+{
+	if ( NULL == pStream )
+	{
+		return NULL_POINTER;
+	}
+	if (len < GetLen())
+	{
+		return OUT_OF_RANGE;
+	}
+
+	CSmartStruct MsgPacket(pStream,len,true);
+
+<PackOperations>
+
+
+	return MsgPacket.GetDataLen();
+}
+int STDIf<InterfaceName>_<MethodName>_MsgHandler::UnMarshall(char *pStream,int len)
+{
+	if ( NULL == pStream )
+	{
+		return NULL_POINTER;
+	}
+	if (len < GetMinLen())
+	{
+		return OUT_OF_RANGE;
+	}
+	
+	CSmartStruct MsgPacket(pStream,len,false);
+
+<UnpackOperations>
+
+	return SUCCESS;
+}

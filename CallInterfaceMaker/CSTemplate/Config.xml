@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="gb2312"?>
+<Config>
+	<ProtocolFileExport IsExport="false" FileExt=""/>
+	<InterfaceExport IsExport="true" FileExt="cs"/>
+	<CallHeaderExport IsExport="false" FileExt=""/>
+	<CallSourceExport IsExport="true" FileExt="cs"/>
+	<HandlerHeaderExport IsExport="false" FileExt=""/>
+	<HandlerSourceExport IsExport="true" FileExt="cs"/>
+</Config>

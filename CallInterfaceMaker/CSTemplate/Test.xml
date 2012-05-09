@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="gb2312"?>
+<Interfaces Name="LittleWorld" ID="">
+	<Interface Name="PlayerCharOperator" Type="0" ID="INTERFACE_LW_PLAYER_CHAR_OPERATOR" Description="">
+		<Method Name="GetCharList" ID="METHOD_PCO_GET_CHAR_LIST" ParamIDSeed="0" Description=""/>
+		<Method Name="CreateChar" ID="METHOD_PCO_CREATE_CHAR" ParamIDSeed="1" Description="">
+			<Param Name="CharCreateData" Type="CSmartStruct" ID="1" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+		</Method>
+		<Method Name="DeleteChar" ID="METHOD_PCO_DELETE_CHAR" ParamIDSeed="1" Description="">
+			<Param Name="CharID" Type="UINT64" ID="1" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+		</Method>
+		<Method Name="SelectChar" ID="METHOD_PCO_SELECT_CHAR" ParamIDSeed="1" Description="">
+			<Param Name="CharID" Type="UINT64" ID="1" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+		</Method>
+	</Interface>
+	<Interface Name="PlayerCharOperatorAck" Type="1" ID="INTERFACE_LW_PLAYER_CHAR_OPERATOR" Description="">
+		<Method Name="GetCharListAck" ID="METHOD_PCO_GET_CHAR_LIST" ParamIDSeed="2" Description="">
+			<Param Name="Result" Type="int" ID="1" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+			<Param Name="CharData" Type="CSmartStruct" ID="2" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+		</Method>
+		<Method Name="CreateCharAck" ID="METHOD_PCO_CREATE_CHAR" ParamIDSeed="2" Description="">
+			<Param Name="Result" Type="int" ID="1" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+			<Param Name="CharData" Type="CSmartStruct" ID="2" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+		</Method>
+		<Method Name="DeleteCharAck" ID="METHOD_PCO_DELETE_CHAR" ParamIDSeed="2" Description="">
+			<Param Name="Result" Type="int" ID="1" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+			<Param Name="CharID" Type="UINT64" ID="2" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+		</Method>
+		<Method Name="SelectCharAck" ID="METHOD_PCO_SELECT_CHAR" ParamIDSeed="3" Description="">
+			<Param Name="Result" Type="int" ID="1" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+			<Param Name="CharID" Type="UINT64" ID="2" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+			<Param Name="CharData" Type="CSmartStruct" ID="3" Length="0" CanNull="false" IsReference="false" DefaultValue="" Description=""/>
+		</Method>
+	</Interface>
+	<Prefix Content=""/>
+	<Postfix Content=""/>
+	<Config>
+		<ProtocolFileExport IsExport="false" FileExt=""/>
+		<InterfaceExport IsExport="true" FileExt="cs"/>
+		<CallHeaderExport IsExport="false" FileExt=""/>
+		<CallSourceExport IsExport="true" FileExt="cs"/>
+		<HandlerHeaderExport IsExport="false" FileExt=""/>
+		<HandlerSourceExport IsExport="true" FileExt="cs"/>
+	</Config>
+</Interfaces>

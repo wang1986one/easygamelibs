@@ -1,0 +1,393 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(中华人民共和国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#pragma code_page(936)\r\n"
+    "#include ""res\\CallInterfaceMaker.rc2""  // 非 Microsoft Visual C++ 编辑的资源\r\n"
+    "#include ""l.CHS\\afxres.rc""      // 标准组件\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\CallInterfaceMaker.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 CallInterfaceMaker"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,14,14,21,20
+    LTEXT           "CallInterfaceMaker，1.0 版",IDC_STATIC,42,14,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2009",IDC_STATIC,42,26,114,8
+    DEFPUSHBUTTON   "确定",IDOK,113,41,50,14,WS_GROUP
+END
+
+IDD_CALLINTERFACEMAKER_DIALOG DIALOGEX 0, 0, 391, 291
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "CallInterfaceMaker"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_INTERFACE_LIST,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,377,236,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "添加接口",IDC_BUTTON_ADD_INTERFACE,9,270,31,14
+    PUSHBUTTON      "编辑接口",IDC_BUTTON_EDIT_INTERFACE,43,270,31,14
+    PUSHBUTTON      "删除接口",IDC_BUTTON_DEL_INTERFACE,77,270,31,14
+    PUSHBUTTON      "编辑前缀",IDC_BUTTON_EDIT_PREFIX,111,270,31,14
+    PUSHBUTTON      "编辑后缀",IDC_BUTTON_EDIT_POSTFIX,145,270,31,14
+    PUSHBUTTON      "保存",IDC_BUTTON_SAVE,247,270,31,14
+    PUSHBUTTON      "另存为",IDC_BUTTON_SAVE_AS,281,270,31,14
+    PUSHBUTTON      "打开",IDC_BUTTON_LOAD,213,270,31,14
+    EDITTEXT        IDC_EDIT_NAME,34,245,126,14,ES_AUTOHSCROLL
+    LTEXT           "模块名:",IDC_STATIC,7,248,24,8
+    PUSHBUTTON      "导出",IDC_BUTTON_SAVE_EXPORT,315,270,31,14
+    EDITTEXT        IDC_EDIT_MODULE_ID,189,245,126,14,ES_AUTOHSCROLL
+    LTEXT           "ID:",IDC_STATIC,171,248,10,8
+    PUSHBUTTON      "类型定义",IDC_BUTTON_TYPE_DEF,179,270,31,14
+    PUSHBUTTON      "设置",IDC_BUTTON_CONFIG,349,270,31,14
+END
+
+IDD_DIALOG_INTERFACE_EDITOR DIALOGEX 0, 0, 408, 329
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确认",IDOK,151,308,50,14
+    PUSHBUTTON      "取消",IDCANCEL,205,308,50,14
+    CONTROL         "",IDC_LIST_METHOD,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,394,208,WS_EX_CLIENTEDGE
+    LTEXT           "接口名称:",IDC_STATIC,7,221,36,8
+    EDITTEXT        IDC_EDIT_NAME,45,218,74,14,ES_AUTOHSCROLL
+    LTEXT           "接口描述:",IDC_STATIC,7,242,36,8
+    EDITTEXT        IDC_EDIT_DESCRIPTION,45,238,347,41,ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL
+    PUSHBUTTON      "添加方法",IDC_BUTTON_ADD_METHOD,141,286,41,14
+    PUSHBUTTON      "编辑方法",IDC_BUTTON_EDIT_METHOD,183,286,41,14
+    PUSHBUTTON      "删除方法",IDC_BUTTON_DEL_METHOD,225,286,41,14
+    CONTROL         "调用接口",IDC_RADIO_CALL,"Button",BS_AUTORADIOBUTTON,293,221,48,10
+    CONTROL         "回调接口",IDC_RADIO_CALL_BACK,"Button",BS_AUTORADIOBUTTON,345,221,48,10
+    LTEXT           "ID:",IDC_STATIC,127,221,11,8
+    EDITTEXT        IDC_EDIT_ID,146,218,74,14,ES_AUTOHSCROLL
+END
+
+IDD_DIALOG_METHOD_EDITOR DIALOGEX 0, 0, 316, 305
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,106,284,50,14
+    PUSHBUTTON      "取消",IDCANCEL,160,284,50,14
+    CONTROL         "",IDC_LIST_PARAM,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,302,169
+    PUSHBUTTON      "添加参数",IDC_BUTTON_ADD_PARAM,55,265,41,14
+    PUSHBUTTON      "编辑参数",IDC_BUTTON_EDIT_PARAM,96,265,41,14
+    PUSHBUTTON      "删除参数",IDC_BUTTON_DEL_PARAM,137,265,41,14
+    LTEXT           "名称:",IDC_STATIC,7,183,20,8
+    EDITTEXT        IDC_EDIT_NAME,39,179,137,14,ES_AUTOHSCROLL
+    LTEXT           "描述:",IDC_STATIC,7,217,20,8
+    EDITTEXT        IDC_EDIT_DESCRIPTION,39,214,257,46,ES_MULTILINE | ES_AUTOHSCROLL | WS_VSCROLL
+    LTEXT           "ID:",IDC_STATIC,7,199,11,8
+    EDITTEXT        IDC_EDIT_METHOD_ID,39,196,103,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "参数上移",IDC_BUTTON_PARAM_UP,178,266,41,14
+    PUSHBUTTON      "参数下移",IDC_BUTTON_PARAM_DOWN,219,265,41,14
+END
+
+IDD_DIALOG_PARAM_EDITOR DIALOGEX 0, 0, 296, 161
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,86,140,50,14
+    PUSHBUTTON      "取消",IDCANCEL,158,140,50,14
+    LTEXT           "名称:",IDC_STATIC,7,17,20,8
+    EDITTEXT        IDC_EDIT_NAME,53,14,115,14,ES_AUTOHSCROLL
+    LTEXT           "类型:",IDC_STATIC,7,36,20,8
+    COMBOBOX        IDC_COMBO_TYPE,53,33,115,128,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "长度:",IDC_STATIC,7,56,20,8
+    EDITTEXT        IDC_EDIT_LENGTH,53,53,39,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "描述:",IDC_STATIC,7,94,20,8
+    EDITTEXT        IDC_EDIT_DESCRIPTION,53,91,219,38,ES_MULTILINE | ES_AUTOHSCROLL | WS_VSCROLL
+    LTEXT           "缺省值:",IDC_STATIC,7,75,28,8
+    EDITTEXT        IDC_EDIT_DEFAULT_VALUE,53,72,115,14,ES_AUTOHSCROLL
+    CONTROL         "可以为空",IDC_CHECK_CAN_NULL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,74,48,10
+    CONTROL         "引用",IDC_CHECK_IS_REFERENCE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,35,32,10
+    LTEXT           "ID:",IDC_STATIC,177,17,11,8
+    EDITTEXT        IDC_EDIT_PARAM_ID,195,14,40,14,ES_AUTOHSCROLL | ES_READONLY
+END
+
+IDD_DIALOG_TEXT_EDITOR DIALOGEX 0, 0, 316, 266
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,105,245,50,14
+    PUSHBUTTON      "取消",IDCANCEL,159,245,50,14
+    EDITTEXT        IDC_EDIT1,7,7,302,224,ES_MULTILINE | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL
+END
+
+IDD_DIALOG_TYPE_EDIT DIALOGEX 0, 0, 401, 300
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "类型定义编辑"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,205,279,38,14
+    PUSHBUTTON      "取消",IDCANCEL,252,279,38,14
+    CONTROL         "",IDC_LIST_TYPES,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,132,259
+    LTEXT           "名称:",IDC_STATIC,151,18,20,8
+    EDITTEXT        IDC_EDIT_NAME,173,15,69,14,ES_AUTOHSCROLL
+    LTEXT           "C类型:",IDC_STATIC,251,18,24,8
+    EDITTEXT        IDC_EDIT_CTYPE,277,15,69,14,ES_AUTOHSCROLL
+    CONTROL         "定长类型",IDC_CHECK_IS_FIX_LENGTH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,154,38,48,10
+    CONTROL         "需要NULL检测",IDC_CHECK_NEED_NULL_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,210,38,64,10
+    EDITTEXT        IDC_EDIT_CONTENT1,151,61,243,203,ES_MULTILINE | ES_WANTRETURN | NOT WS_VISIBLE | WS_VSCROLL | WS_HSCROLL
+    CONTROL         "",IDC_TAB1,"SysTabControl32",0x0,151,49,243,13
+    PUSHBUTTON      "删除",ID_DEL,158,279,38,14
+    PUSHBUTTON      "新建",ID_NEW,111,279,38,14
+    EDITTEXT        IDC_EDIT_CONTENT2,151,61,243,203,ES_MULTILINE | ES_WANTRETURN | NOT WS_VISIBLE | WS_VSCROLL | WS_HSCROLL
+    EDITTEXT        IDC_EDIT_CONTENT3,151,61,243,203,ES_MULTILINE | ES_WANTRETURN | NOT WS_VISIBLE | WS_VSCROLL | WS_HSCROLL
+    EDITTEXT        IDC_EDIT_CONTENT4,151,61,243,203,ES_MULTILINE | ES_WANTRETURN | NOT WS_VISIBLE | WS_VSCROLL | WS_HSCROLL
+    EDITTEXT        IDC_EDIT_CONTENT5,151,61,243,203,ES_MULTILINE | ES_WANTRETURN | NOT WS_VISIBLE | WS_VSCROLL | WS_HSCROLL
+    EDITTEXT        IDC_EDIT_CONTENT6,151,61,243,203,ES_MULTILINE | ES_WANTRETURN | NOT WS_VISIBLE | WS_VSCROLL | WS_HSCROLL
+    EDITTEXT        IDC_EDIT_CONTENT7,151,61,243,203,ES_MULTILINE | ES_WANTRETURN | NOT WS_VISIBLE | WS_VSCROLL | WS_HSCROLL
+END
+
+IDD_DIALOG_CONFIG DIALOGEX 0, 0, 252, 150
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,74,129,50,14
+    PUSHBUTTON      "取消",IDCANCEL,128,129,50,14
+    GROUPBOX        "输出设置",IDC_STATIC,14,7,231,99
+    CONTROL         "输出ProtocolFile",IDC_CHECK_EXP_PROTOCOL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,22,69,10
+    CONTROL         "输出Interface",IDC_CHECK_EXP_INTERFACE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,35,62,10
+    CONTROL         "输出MsgCallerHeader",IDC_EXP_CALL_HEADER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,48,86,10
+    CONTROL         "输出MsgCallerSource",IDC_EXP_CALL_SOURCE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,61,85,10
+    CONTROL         "输出MsgHandlerHeader",IDC_EXP_HANDLER_HEADER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,74,93,10
+    CONTROL         "输出MsgHandlerSource",IDC_EXP_HANDLER_SOURCE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,87,91,10
+    LTEXT           "输出扩展名:",IDC_STATIC,127,22,44,8
+    EDITTEXT        IDC_EDIT1,171,20,40,12,ES_AUTOHSCROLL
+    LTEXT           "输出扩展名:",IDC_STATIC,127,35,44,8
+    EDITTEXT        IDC_EDIT2,171,33,40,12,ES_AUTOHSCROLL
+    LTEXT           "输出扩展名:",IDC_STATIC,127,48,44,8
+    EDITTEXT        IDC_EDIT3,171,46,40,12,ES_AUTOHSCROLL
+    LTEXT           "输出扩展名:",IDC_STATIC,127,61,44,8
+    EDITTEXT        IDC_EDIT4,171,59,40,12,ES_AUTOHSCROLL
+    LTEXT           "输出扩展名:",IDC_STATIC,127,74,44,8
+    EDITTEXT        IDC_EDIT5,171,72,40,12,ES_AUTOHSCROLL
+    LTEXT           "输出扩展名:",IDC_STATIC,127,87,44,8
+    EDITTEXT        IDC_EDIT6,171,85,40,12,ES_AUTOHSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080403a8"
+        BEGIN
+            VALUE "CompanyName", "TODO: <公司名>"
+            VALUE "FileDescription", "TODO: <文件说明>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "CallInterfaceMaker.exe"
+            VALUE "LegalCopyright", "TODO: (C) <公司名>。保留所有权利。"
+            VALUE "OriginalFilename", "CallInterfaceMaker.exe"
+            VALUE "ProductName", "TODO: <产品名>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 936
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 163
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_CALLINTERFACEMAKER_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 384
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 284
+    END
+
+    IDD_DIALOG_INTERFACE_EDITOR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 401
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 322
+    END
+
+    IDD_DIALOG_METHOD_EDITOR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 298
+    END
+
+    IDD_DIALOG_PARAM_EDITOR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 289
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 154
+    END
+
+    IDD_DIALOG_TEXT_EDITOR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 259
+    END
+
+    IDD_DIALOG_TYPE_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 394
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 293
+    END
+
+    IDD_DIALOG_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 143
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_ABOUTBOX            "关于 CallInterfaceMaker(&A)..."
+END
+
+#endif    // 中文(中华人民共和国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#pragma code_page(936)
+#include "res\CallInterfaceMaker.rc2"  // 非 Microsoft Visual C++ 编辑的资源
+#include "l.CHS\afxres.rc"      // 标准组件
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
