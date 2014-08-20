@@ -11,7 +11,93 @@
 /****************************************************************************/
 #pragma once
 
-#define MAX_MESSAGE_PACKET_SIZE		4096
+typedef WORD	ROUTE_ID_TYPE;
+
+struct OBJECT_ID_BASE
+{
+	union
+	{
+		UINT64	ID;
+		struct
+		{
+			WORD ObjectIndex;
+			WORD GroupIndex;
+			WORD ObjectTypeID;
+			WORD RouterID;
+		};
+	};
+};
+
+struct OBJECT_ID:public OBJECT_ID_BASE
+{
+	OBJECT_ID()
+	{
+		ID=0;
+	}	
+	OBJECT_ID(const OBJECT_ID_BASE& ObjectID)
+	{
+		ID=ObjectID.ID;
+	}
+	OBJECT_ID(unsigned __int64 Value)
+	{
+		ID=Value;
+	}
+	OBJECT_ID& operator=(const OBJECT_ID_BASE& ObjectID)
+	{
+		ID=ObjectID.ID;
+		return *this;
+	}
+	bool operator==(const OBJECT_ID& ObjectID) const
+	{
+		return ID==ObjectID.ID;
+	}
+	bool operator!=(const OBJECT_ID& ObjectID) const
+	{
+		return ID!=ObjectID.ID;
+	}
+	bool operator>(const OBJECT_ID& ObjectID) const
+	{
+		return ID>ObjectID.ID;
+	}
+	bool operator<(const OBJECT_ID& ObjectID) const
+	{
+		return ID<ObjectID.ID;
+	}
+	static int Compare(const void * Value1,const void * Value2);
+};
+
+struct PROXY_CLIENT_IP_INFO
+{
+	UINT	IP;
+	UINT	Port;
+};
+
+inline int OBJECT_ID::Compare(const void * Value1,const void * Value2)
+{
+	if(((OBJECT_ID *)Value1)->ID==((OBJECT_ID *)Value2)->ID)
+		return 0;
+	else if(((OBJECT_ID *)Value1)->ID<((OBJECT_ID *)Value2)->ID)
+		return -1;
+	else
+		return 1;
+}
+
+#define BROAD_CAST_ROUTER_ID		(0xFFFF)
+#define BROAD_CAST_OBJECT_TYPE_ID	(0xFFFF)
+#define BROAD_CAST_GROUP_INDEX		(0xFFFF)
+#define BROAD_CAST_OBJECT_INDEX		(0xFFFF)
+
+enum DOS_OBJECT_TYPE
+{
+	DOT_UNKNOW,
+	DOT_PROXY_OBJECT,
+	//DOT_MAIN_CONTROL_OBJECT,
+	//DOT_MAIN_NORMAL_OBJECT,
+	DOT_NORMAL_OBJECT,
+	DOT_MAX,
+};
+
+//#define MAX_MESSAGE_PACKET_SIZE		4096
 
 typedef DWORD	MSG_ID_TYPE;
 typedef DWORD	MSG_LEN_TYPE;
@@ -100,7 +186,7 @@ public:
 
 class CDOSMessage
 {
-protected:		
+public:	
 	struct DOS_MESSAGE_HEAD
 	{
 		union
@@ -119,6 +205,7 @@ protected:
 			};
 		};
 	};
+protected:	
 	DOS_MESSAGE_HEAD					m_MsgHeader;
 	char								m_DataBuffer[4];
 public:
@@ -128,6 +215,10 @@ public:
 		m_MsgHeader.MsgID=0;
 		m_MsgHeader.MsgFlag=0;
 		m_MsgHeader.SenderID.ID=0;
+	}
+	DOS_MESSAGE_HEAD& GetMsgHeader()
+	{
+		return m_MsgHeader;
 	}
 	void SetMsgID(MSG_ID_TYPE CmdID)
 	{
@@ -211,6 +302,7 @@ class CDOSMessagePacket
 {
 protected:
 	UINT			m_AllocTime;
+	UINT			m_AllocSize;
 	volatile UINT	m_RefCount;
 	MSG_LEN_TYPE	m_PacketLen;
 	CDOSMessage		m_Message;
@@ -229,10 +321,18 @@ public:
 	void SetAllocTime(UINT Time)
 	{
 		m_AllocTime=Time;
-	}
+	}	
 	UINT GetAllocTime() const
 	{
 		return m_AllocTime;
+	}
+	void SetAllocSize(UINT Size)
+	{
+		m_AllocSize=Size;
+	}
+	UINT GetAllocSize()
+	{
+		return m_AllocSize;
 	}
 	UINT IncRefCount()
 	{
@@ -281,13 +381,17 @@ public:
 	{
 		m_PacketLen=sizeof(MSG_LEN_TYPE)+GetMessage().GetMsgLength()+sizeof(ID_LIST_COUNT_TYPE)+sizeof(OBJECT_ID)*GetTargetIDCount();
 	}
+	bool CheckPacket()
+	{
+		return m_PacketLen<=m_AllocSize;
+	}
 	static MSG_LEN_TYPE CaculatePacketLength(MSG_LEN_TYPE DataLength,ID_LIST_COUNT_TYPE TargetIDCount)
 	{
 		return sizeof(MSG_LEN_TYPE)+CDOSMessage::CaculateMsgLength(DataLength)+sizeof(ID_LIST_COUNT_TYPE)+sizeof(OBJECT_ID)*TargetIDCount;
 	}
 	static MSG_LEN_TYPE CaculateRealPacketLength(MSG_LEN_TYPE PacketLength)
 	{
-		return sizeof(UINT)+sizeof(UINT)+PacketLength;
+		return sizeof(UINT)+sizeof(UINT)+sizeof(UINT)+PacketLength;
 	}
 };
 
@@ -307,10 +411,13 @@ enum DOS_SYSTEM_MESSAGE
 	DSM_PROXY_UNREGISTER_GLOBAL_MSG_MAP_RESULT,
 	DSM_PROXY_DISCONNECT,
 	DSM_PROXY_KEEP_ALIVE,
-	DSM_ROUTE_LINK_LOST,
-	DSM_OBJECT_ALIVE_TEST,	
+	DSM_PROXY_GET_IP,
+	DSM_PROXY_IP_REPORT,
+	DSM_ROUTE_LINK_LOST=100,
+	DSM_OBJECT_ALIVE_TEST=200,	
 	DSM_OBJECT_FIND,
 	DSM_OBJECT_REPORT,
+	DSM_SYSTEM_SHUTDOWN,
 	DSM_MAX,
 };
 

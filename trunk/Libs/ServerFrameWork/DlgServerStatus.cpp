@@ -29,6 +29,7 @@ void CDlgServerStatus::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CDlgServerStatus, CDialog)
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
@@ -44,6 +45,11 @@ BOOL CDlgServerStatus::OnInitDialog()
 
 	m_lvServerStatus.InsertColumn(0,"项",LVCFMT_LEFT,200);
 	m_lvServerStatus.InsertColumn(1,"值",LVCFMT_LEFT,150);
+
+	CRect ClientRect;
+	GetClientRect(&ClientRect);
+
+	m_lvServerStatus.MoveWindow(&ClientRect);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
@@ -127,12 +133,16 @@ void CDlgServerStatus::FlushStatus(CSmartStruct& ServerStatus)
 		case CSmartValue::VT_FLOAT:
 			if(FormatType==SSFT_FLOW)
 				ValueStr=FormatNumberWordsFloat((float)Value,true);
+			else if(FormatType==SSFT_PERCENT)
+				ValueStr.Format("%.2f%%",(float)Value*100);
 			else
 				ValueStr.Format("%g",(float)Value);
 			break;
 		case CSmartValue::VT_DOUBLE:
 			if(FormatType==SSFT_FLOW)
-				ValueStr=FormatNumberWordsFloat((double)Value,true);
+				ValueStr=FormatNumberWordsFloat((float)Value,true);
+			else if(FormatType==SSFT_PERCENT)
+				ValueStr.Format("%.2f%%",(double)Value*100);
 			else
 				ValueStr.Format("%g",(double)Value);
 			break;
@@ -147,5 +157,18 @@ void CDlgServerStatus::FlushStatus(CSmartStruct& ServerStatus)
 		}
 		int Item=m_lvServerStatus.InsertItem(m_lvServerStatus.GetItemCount(),MemberIDStr);
 		m_lvServerStatus.SetItemText(Item,1,ValueStr);
+	}
+}
+void CDlgServerStatus::OnSize(UINT nType, int cx, int cy)
+{
+	CDialog::OnSize(nType, cx, cy);
+
+	// TODO: 在此处添加消息处理程序代码
+	if(::IsWindow(m_lvServerStatus.GetSafeHwnd()))
+	{
+		CRect ClientRect;
+		GetClientRect(&ClientRect);
+
+		m_lvServerStatus.MoveWindow(&ClientRect);
 	}
 }

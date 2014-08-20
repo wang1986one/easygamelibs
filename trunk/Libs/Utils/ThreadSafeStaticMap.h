@@ -90,11 +90,21 @@ public:
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CStaticMap<KEY,T,StorageMode>::GetNextObject(Pos,Key);
 	}
+	T * GetNextObject(LPVOID& Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CStaticMap<KEY,T,StorageMode>::GetNextObject(Pos);
+	}
 
 	T * GetPrevObject(LPVOID& Pos,KEY& Key)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CStaticMap<KEY,T,StorageMode>::GetPrevObject(Pos,Key);
+	}
+	T * GetPrevObject(LPVOID& Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CStaticMap<KEY,T,StorageMode>::GetPrevObject(Pos);
 	}
 	
 	T * GetSortedNextObject(LPVOID& Pos,KEY& Key)
@@ -102,11 +112,21 @@ public:
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CStaticMap<KEY,T,StorageMode>::GetSortedNextObject(Pos,Key);
 	}
+	T * GetSortedNextObject(LPVOID& Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CStaticMap<KEY,T,StorageMode>::GetSortedNextObject(Pos);
+	}
 
 	T * GetSortedPrevObject(LPVOID& Pos,KEY& Key)
 	{
 		CAutoLock Lock(m_EasyCriticalSection);
 		return CStaticMap<KEY,T,StorageMode>::GetSortedPrevObject(Pos,Key);
+	}
+	T * GetSortedPrevObject(LPVOID& Pos)
+	{
+		CAutoLock Lock(m_EasyCriticalSection);
+		return CStaticMap<KEY,T,StorageMode>::GetSortedPrevObject(Pos);
 	}
 	
 };

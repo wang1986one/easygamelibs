@@ -14,9 +14,9 @@
 
 CESThread::CESThread(void)
 {
-	m_pVariableList=NULL;
-	m_LocalVariableList.Create(DEFAULT_LOCAL_VARIABLE_COUNT);
-	m_LocalVariableList.SetIDStart(LOCAL_VARIABLE_ID_START);
+	m_pVariableList=NULL;	
+	m_MaxLocalVariableCount=DEFAULT_LOCAL_VARIABLE_COUNT;
+	m_pCurLocalVariableList=NULL;
 	m_pFunctionList=NULL;
 	m_pScript=NULL;
 	m_IsInInterrupt=false;
@@ -29,8 +29,8 @@ CESThread::CESThread(void)
 CESThread::CESThread(UINT MaxLocalVariableCount)
 {
 	m_pVariableList=NULL;
-	m_LocalVariableList.Create(MaxLocalVariableCount);
-	m_LocalVariableList.SetIDStart(LOCAL_VARIABLE_ID_START);
+	m_MaxLocalVariableCount=MaxLocalVariableCount;
+	m_pCurLocalVariableList=NULL;
 	m_pFunctionList=NULL;
 	m_pScript=NULL;
 	m_IsInInterrupt=false;

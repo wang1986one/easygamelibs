@@ -111,6 +111,11 @@ int  CESBolanStack::PushScript(LPCTSTR ExpStr,CESVariableList* pVariableList,CES
 				if(*ExpStr==0)
 					return 1002;
 				TempBuff[i++]=*ExpStr++;
+				if(*ExpStr=='"'&&*(ExpStr+1)=='"')
+				{
+					TempBuff[i++]=*ExpStr++;
+					ExpStr++;
+				}
 			}
 			TempBuff[i]=0;
 			ExpStr++;
@@ -124,7 +129,8 @@ int  CESBolanStack::PushScript(LPCTSTR ExpStr,CESVariableList* pVariableList,CES
 		else if((*ExpStr>='0'&&*ExpStr<='9')||*ExpStr=='.')	//数字
 		{
 			UINT i=0;
-			while((*ExpStr>='0'&&*ExpStr<='9')||*ExpStr=='.'||*ExpStr=='F'||*ExpStr=='D'||*ExpStr=='I'||*ExpStr=='L'||*ExpStr=='E')
+			while((*ExpStr>='0'&&*ExpStr<='9')||*ExpStr=='.'||*ExpStr=='F'||*ExpStr=='D'||*ExpStr=='I'||*ExpStr=='L'||*ExpStr=='E'||
+				*ExpStr=='A'||*ExpStr=='B'||*ExpStr=='C'||*ExpStr=='X')
 			{
 				TempBuff[i++]=*ExpStr++;
 			}
@@ -540,19 +546,24 @@ int  CESBolanStack::PushScript(LPCTSTR ExpStr,CESVariableList* pVariableList,CES
 					Pos=FindCoupleKeyWord(KW_ENDWHILE,KW_WHILE,KW_ENDWHILE,i+1);
 					if(Pos<0)
 						return 2011;
+					ES_BOLAN * pEndBolan=GetAt(Pos);
 					pDoBolan->Type=BOLAN_TYPE_OPERATOR;
 					pDoBolan->Index=OPERATOR_JZ;
 					pDoBolan->Level=Pos+1;
+					pEndBolan->Type=BOLAN_TYPE_OPERATOR;
+					pEndBolan->Index=OPERATOR_JMP;
+					pEndBolan->Level=i+1;
 				}
 				break;			
 			case KW_ENDWHILE:
 				{
-					int Pos=FindCoupleKeyWordReverse(KW_WHILE,KW_WHILE,KW_ENDWHILE,i-1);
-					if(Pos<0)
-						return 2011;
-					pBolan->Type=BOLAN_TYPE_OPERATOR;
-					pBolan->Index=OPERATOR_JMP;
-					pBolan->Level=Pos+1;
+					return 2011;
+					//int Pos=FindCoupleKeyWordReverse(KW_WHILE,KW_WHILE,KW_ENDWHILE,i-1);
+					//if(Pos<0)
+					//	return 2011;
+					//pBolan->Type=BOLAN_TYPE_OPERATOR;
+					//pBolan->Index=OPERATOR_JMP;
+					//pBolan->Level=Pos+1;
 				}
 				break;
 			case KW_BREAK:
@@ -596,7 +607,7 @@ int  CESBolanStack::PushScript(LPCTSTR ExpStr,CESVariableList* pVariableList,CES
 					if(Pos<0)
 						return 2016;
 					pBolan->Type=BOLAN_TYPE_OPERATOR;
-					pBolan->Index=OPERATOR_JMP;
+					pBolan->Index=OPERATOR_JMP_FUNC;
 					pBolan->Level=Pos+1;
 
 					
@@ -639,7 +650,7 @@ int  CESBolanStack::PushScript(LPCTSTR ExpStr,CESVariableList* pVariableList,CES
 		ES_BOLAN * pBolan=GetAt(i);
 		if(pBolan->Type!=BOLAN_TYPE_VALUE&&
 			pBolan->Type!=BOLAN_TYPE_OPERATOR&&
-			pBolan->Type!=BOLAN_TYPE_VARIABLE)
+			pBolan->Type!=BOLAN_TYPE_VARIABLE&&(pBolan->Type!=BOLAN_TYPE_KEYWORD||pBolan->Index!=KW_FUNCTION))
 		{
 			DeleteBolan(this,pFunctionList,i);
 		}
@@ -770,9 +781,11 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 	if(IsDealLocalVar)
 		FunctionLayer++;
 
-	while(StartPos<(int)pESThread->GetScript()->GetSize())
+	int CurPos=StartPos;
+
+	while(CurPos<(int)pESThread->GetScript()->GetSize())
 	{
-		ES_BOLAN * pBolan=pESThread->GetScript()->GetAt(StartPos);
+		ES_BOLAN * pBolan=pESThread->GetScript()->GetAt(CurPos);
 		pESThread->SetLastLine(pBolan->Line);
 		switch(pBolan->Type)
 		{
@@ -796,17 +809,18 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 					}
 					else
 					{
-						return 4012;
+						//暂时不返回错误，等下回再出理
+						//return 4012;
 					}
 				}
 			}
-			StartPos++;
+			CurPos++;
 			break;
 		case BOLAN_TYPE_OPERATOR:
 			//取负值操作符判定
 			if(pBolan->Index==OPERATOR_SUB&&(!IsDealLocalVar))
 			{
-				int Pos=StartPos-1;
+				int Pos=CurPos-1;
 				int IsInBrackets=0;
 				int IsNeg=0;
 				while(pESThread->GetScript()->GetAt(Pos)&&IsNeg==0)
@@ -852,7 +866,7 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 					pBolan->Level=50;
 				}
 			}
-			StartPos++;
+			CurPos++;
 			break;
 		case BOLAN_TYPE_KEYWORD:
 			switch((int)(pBolan->Index))
@@ -860,8 +874,8 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 			case KW_INT:
 				pBolan->Type=BOLAN_TYPE_OPERATOR;
 				pBolan->Index=OPERATOR_NOP;
-				StartPos++;
-				pBolan=pESThread->GetScript()->GetAt(StartPos);
+				CurPos++;
+				pBolan=pESThread->GetScript()->GetAt(CurPos);
 				if(pBolan->Type!=BOLAN_TYPE_IDENTIFIER)
 					return 4010;
 				if(FunctionLayer)
@@ -870,7 +884,7 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 					pBolan->Index=OPERATOR_ADD_VAR;
 					pBolan->Level=5;
 					pBolan->ValueType=VALUE_TYPE_INT;
-					pESThread->GetLocalVariableList()->AddVariable(pBolan->StrValue,(int)0);
+					pESThread->AddLocalVariable(pBolan->StrValue,(int)0);
 				}
 				else
 				{
@@ -878,13 +892,13 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 					pESThread->GetVariableList()->AddVariable(pBolan->StrValue,(int)0);
 				}
 			
-				StartPos++;
+				CurPos++;
 				break;
 			case KW_INT64:
 				pBolan->Type=BOLAN_TYPE_OPERATOR;
 				pBolan->Index=OPERATOR_NOP;
-				StartPos++;
-				pBolan=pESThread->GetScript()->GetAt(StartPos);
+				CurPos++;
+				pBolan=pESThread->GetScript()->GetAt(CurPos);
 				if(pBolan->Type!=BOLAN_TYPE_IDENTIFIER)
 					return 4010;
 				if(FunctionLayer)
@@ -893,20 +907,20 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 					pBolan->Index=OPERATOR_ADD_VAR;
 					pBolan->Level=5;
 					pBolan->ValueType=VALUE_TYPE_INT64;
-					pESThread->GetLocalVariableList()->AddVariable(pBolan->StrValue,(INT64)0);
+					pESThread->AddLocalVariable(pBolan->StrValue,(INT64)0);
 				}
 				else
 				{
 					pBolan->Index=IDENTIFIER_TYPE_VARIABLE_DEFINE;
 					pESThread->GetVariableList()->AddVariable(pBolan->StrValue,(INT64)0);
 				}
-				StartPos++;
+				CurPos++;
 				break;
 			case KW_FLOAT:
 				pBolan->Type=BOLAN_TYPE_OPERATOR;
 				pBolan->Index=OPERATOR_NOP;
-				StartPos++;
-				pBolan=pESThread->GetScript()->GetAt(StartPos);
+				CurPos++;
+				pBolan=pESThread->GetScript()->GetAt(CurPos);
 				if(pBolan->Type!=BOLAN_TYPE_IDENTIFIER)
 					return 4010;
 				if(FunctionLayer)
@@ -915,20 +929,20 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 					pBolan->Index=OPERATOR_ADD_VAR;
 					pBolan->Level=5;
 					pBolan->ValueType=VALUE_TYPE_FLOAT;
-					pESThread->GetLocalVariableList()->AddVariable(pBolan->StrValue,(float)0);
+					pESThread->AddLocalVariable(pBolan->StrValue,(float)0);
 				}
 				else
 				{
 					pBolan->Index=IDENTIFIER_TYPE_VARIABLE_DEFINE;
 					pESThread->GetVariableList()->AddVariable(pBolan->StrValue,(float)0);
 				}
-				StartPos++;
+				CurPos++;
 				break;
 			case KW_DOUBLE:
 				pBolan->Type=BOLAN_TYPE_OPERATOR;
 				pBolan->Index=OPERATOR_NOP;
-				StartPos++;
-				pBolan=pESThread->GetScript()->GetAt(StartPos);
+				CurPos++;
+				pBolan=pESThread->GetScript()->GetAt(CurPos);
 				if(pBolan->Type!=BOLAN_TYPE_IDENTIFIER)
 					return 4010;
 				if(FunctionLayer)
@@ -937,7 +951,7 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 					pBolan->Index=OPERATOR_ADD_VAR;
 					pBolan->Level=5;
 					pBolan->ValueType=VALUE_TYPE_DOUBLE;
-					pESThread->GetLocalVariableList()->AddVariable(pBolan->StrValue,(double)0);
+					pESThread->AddLocalVariable(pBolan->StrValue,(double)0);
 				}
 				else
 				{
@@ -945,13 +959,13 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 					pESThread->GetVariableList()->AddVariable(pBolan->StrValue,(double)0);
 				}
 				
-				StartPos++;
+				CurPos++;
 				break;
 			case KW_STRING:
 				pBolan->Type=BOLAN_TYPE_OPERATOR;
 				pBolan->Index=OPERATOR_NOP;
-				StartPos++;
-				pBolan=pESThread->GetScript()->GetAt(StartPos);
+				CurPos++;
+				pBolan=pESThread->GetScript()->GetAt(CurPos);
 				if(pBolan->Type!=BOLAN_TYPE_IDENTIFIER)
 					return 4010;
 				if(FunctionLayer)
@@ -960,14 +974,14 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 					pBolan->Index=OPERATOR_ADD_VAR;
 					pBolan->Level=5;
 					pBolan->ValueType=VALUE_TYPE_STRING;
-					pESThread->GetLocalVariableList()->AddVariable(pBolan->StrValue,_T(""));
+					pESThread->AddLocalVariable(pBolan->StrValue,_T(""));
 				}
 				else
 				{
 					pBolan->Index=IDENTIFIER_TYPE_VARIABLE_DEFINE;
 					pESThread->GetVariableList()->AddVariable(pBolan->StrValue,_T(""));
 				}
-				StartPos++;
+				CurPos++;
 				break;		
 			case KW_FUNCTION:
 				if(!IsDealLocalVar)
@@ -975,56 +989,102 @@ int CESBolanStack::DealIdentifiers(CESThread * pESThread,int StartPos,int EndPos
 					if(FunctionLayer)
 						return 2018;
 					FunctionLayer++;					
-					StartPos++;
-					pBolan=pESThread->GetScript()->GetAt(StartPos);
+					CurPos++;
+					pBolan=pESThread->GetScript()->GetAt(CurPos);
 					if(pBolan->Type!=BOLAN_TYPE_IDENTIFIER)
 						return 2019;
 					int ParaCount=0;
-					int Ret=GetFunctionParamCount(pESThread->GetScript(),StartPos+1,ParaCount);
+					int Ret=GetFunctionParamCount(pESThread->GetScript(),CurPos+1,ParaCount);
 					if(Ret)
 						return Ret;
 					pBolan->Index=IDENTIFIER_TYPE_FUNCTION_DEFINE;
-					int EndFunPos=pESThread->GetScript()->FindKeyWord(KW_ENDFUN,StartPos,-1);
+					int EndFunPos=pESThread->GetScript()->FindKeyWord(KW_ENDFUN,CurPos,-1);
 					if(EndFunPos<0)
 					{						
 						return 2017;
 					}
 					pESThread->GetFunctionList()->AddFunction(pBolan->StrValue,ParaCount,0,0);
+					pESThread->NewLocalVariableList();
 				}
-				StartPos++;
+				CurPos++;
 				break;
 			case KW_GOTO:
 				if(!IsDealLocalVar)
 				{
-					StartPos++;
-					pBolan=pESThread->GetScript()->GetAt(StartPos);
+					CurPos++;
+					pBolan=pESThread->GetScript()->GetAt(CurPos);
 					if(pBolan->Type!=BOLAN_TYPE_IDENTIFIER)
 						return 2014;
 					pBolan->Index=IDENTIFIER_TYPE_JUMP;
 				}
-				StartPos++;
+				CurPos++;
 				break;
 			case KW_ENDFUN:
 				if(!IsDealLocalVar)
 				{
 					if(FunctionLayer==0)
 						return 2016;
-					pESThread->ClearLocalVariable();
+					pESThread->ReleaseLocalVariableList();
 					FunctionLayer--;
 				}
-				StartPos++;
+				CurPos++;
 				break;
 			default:
-				StartPos++;
+				CurPos++;
 			}
 			break;
 		default:
-			StartPos++;
+			CurPos++;
 		}
 
 		if(EndPos>=0)
 		{
-			if(StartPos>EndPos)
+			if(CurPos>EndPos)
+				break;
+		}
+	}
+
+	CurPos=StartPos;
+
+	while(CurPos<(int)pESThread->GetScript()->GetSize())
+	{
+		ES_BOLAN * pBolan=pESThread->GetScript()->GetAt(CurPos);
+		pESThread->SetLastLine(pBolan->Line);
+		switch(pBolan->Type)
+		{
+		case BOLAN_TYPE_IDENTIFIER:
+			if(pBolan->Index==IDENTIFIER_TYPE_UNKNOW&&(!IsDealLocalVar))
+			{
+				pVar=pESThread->FindVariable(pBolan->StrValue);				
+				if(pVar)
+				{
+					pBolan->Type=BOLAN_TYPE_VARIABLE;
+					pBolan->ValueType=pVar->Type;
+				}
+				else
+				{
+					ES_FUNCTION * pFun=pESThread->GetFunctionList()->FindFunction(pBolan->StrValue);
+					if(pFun)
+					{
+						pBolan->Type=BOLAN_TYPE_FUNCTION;
+						pBolan->Level=60;
+						pBolan->Index=pFun->ID;
+					}
+					else
+					{
+						return 4012;
+					}
+				}
+			}
+			CurPos++;
+			break;
+		default:
+			CurPos++;
+		}
+
+		if(EndPos>=0)
+		{
+			if(CurPos>EndPos)
 				break;
 		}
 	}
@@ -1127,7 +1187,7 @@ void CESBolanStack::DeleteBolan(CESBolanStack * pScript,CESFunctionList * pFunct
 		{
 			ES_BOLAN * pBolan=pScript->GetAt(i);
 			if(pBolan->Type==BOLAN_TYPE_OPERATOR&&
-				(pBolan->Index==OPERATOR_JMP||pBolan->Index==OPERATOR_JZ))
+				(pBolan->Index==OPERATOR_JMP||pBolan->Index==OPERATOR_JMP_FUNC||pBolan->Index==OPERATOR_JZ))
 			{
 				if(pBolan->Level>Index)
 					pBolan->Level--;
@@ -1175,39 +1235,48 @@ int CESBolanStack::ReverseFunctionParam(CESBolanStack * pScript,UINT StartIndex,
 
 int CESBolanStack::DoVariableBind(CESThread * pESThread,int& LastLine)
 {
-	pESThread->ClearLocalVariable();
 	for(UINT i=0;i<pESThread->GetScript()->GetSize();i++)
 	{
 		ES_BOLAN * pBolan=pESThread->GetScript()->GetAt(i);
 		LastLine=pBolan->Line;
-		if(pBolan->Type==BOLAN_TYPE_VARIABLE)
+		switch (pBolan->Type)
 		{
-			ES_VARIABLE * pVar=pESThread->FindVariable(pBolan->StrValue);
-			if(pVar)
+		case BOLAN_TYPE_VARIABLE:
 			{
-				pBolan->Index=pVar->ID;				
-				pBolan->ValueType=pVar->Type;
-			}
-			else
-			{
-				return 4016;
-			}
-		}
-		else if(pBolan->Type==BOLAN_TYPE_OPERATOR)
-		{
-			if(pBolan->Index==OPERATOR_ADD_VAR||pBolan->Index==OPERATOR_ADD_CALL_PARAM)
-			{
-				ES_VARIABLE * pVar=pESThread->GetLocalVariableList()->AddEmptyVariable(pBolan->StrValue,pBolan->ValueType);
-				if(pVar==NULL)
+				ES_VARIABLE * pVar=pESThread->FindVariable(pBolan->StrValue);
+				if(pVar)
 				{
-					return 6009;
+					pBolan->Index=pVar->ID;				
+					pBolan->ValueType=pVar->Type;
+				}
+				else
+				{
+					return 4016;
 				}
 			}
-			else if(pBolan->Index==OPERATOR_RET)
+			break;
+		case BOLAN_TYPE_OPERATOR:
 			{
-				pESThread->ClearLocalVariable();
+				if(pBolan->Index==OPERATOR_ADD_VAR||pBolan->Index==OPERATOR_ADD_CALL_PARAM)
+				{
+					ES_VARIABLE * pVar=pESThread->AddEmptyLocalVariable(pBolan->StrValue,pBolan->ValueType);
+					if(pVar==NULL)
+					{
+						return 6009;
+					}
+				}
+				else if(pBolan->Index==OPERATOR_JMP_FUNC)
+				{
+					pESThread->NewLocalVariableList();
+				}
+				else if(pBolan->Index==OPERATOR_RET)
+				{
+					pESThread->ReleaseLocalVariableList();
+				}
 			}
-		}
+			break;		
+		}	
+		
 	}
 	return 0;
 }

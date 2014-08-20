@@ -1,0 +1,193 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using CSharpUtils;
+using CSharpUtils.DOSBase;
+using <SpaceName>;
+
+//<GenerateArea1Start>
+<Description>
+//<GenerateArea1End>
+
+public class <ClassName><IfHaveBaseClass>: <BaseClass></IfHaveBaseClass>
+
+{
+
+	protected <IfHaveBaseClass>new</IfHaveBaseClass> ulong	m_ModifyFlag=0;
+	
+//<GenerateArea2Start>	   
+	<Members>
+//<GenerateArea2End>
+	
+
+//<GenerateArea3Start>
+	<SSTIDEnumDefine>
+	<ModifyFlagEnumDefine>
+//<GenerateArea3End>
+
+
+	public <ClassName>()
+	{
+		Clear();
+	}
+	
+	public <IfHaveBaseClass>override</IfHaveBaseClass><IfNotHaveBaseClass>virtual</IfNotHaveBaseClass> void Clear()
+	{
+//<GenerateArea4Start>
+		<IfHaveBaseClass>base.Clear();</IfHaveBaseClass>
+
+		m_ModifyFlag=0;
+	   
+		<InitOperations>
+//<GenerateArea4End>
+
+	}
+	 
+//<GenerateArea5Start>
+
+	public <IfHaveBaseClass>new</IfHaveBaseClass> void SetModifyFlag(ulong RemoveFlags,ulong AddFlags)
+	{
+		m_ModifyFlag&=~RemoveFlags;
+		m_ModifyFlag|=AddFlags;
+	}
+
+
+	<SetMethodsDefine>
+			   
+	<GetMethodsDefine>
+
+//<GenerateArea5End>
+
+	public <IfHaveBaseClass>override</IfHaveBaseClass><IfNotHaveBaseClass>virtual</IfNotHaveBaseClass> void GetModifyFlag(ulong[] ModifyFlags,int GetType,ulong[] MemberFlags)
+	{
+//<GenerateArea6Start>
+		<IfHaveBaseClass>base.GetModifyFlag(ModifyFlags,GetType,MemberFlags);</IfHaveBaseClass>
+		switch(GetType)
+		{
+		case (int)GET_MODIFY_FLAG_TYPE.GMFT_COPY:
+			ModifyFlags[(int)DATA_OBJECT_FLAGS.<CLASS_FLAG_INDEX>]=m_ModifyFlag&MemberFlags[(int)DATA_OBJECT_FLAGS.<CLASS_FLAG_INDEX>];
+			break;
+		case (int)GET_MODIFY_FLAG_TYPE.GMFT_AND:
+			ModifyFlags[(int)DATA_OBJECT_FLAGS.<CLASS_FLAG_INDEX>]&=m_ModifyFlag&MemberFlags[(int)DATA_OBJECT_FLAGS.<CLASS_FLAG_INDEX>];
+			break;
+		case (int)GET_MODIFY_FLAG_TYPE.GMFT_OR:
+			ModifyFlags[(int)DATA_OBJECT_FLAGS.<CLASS_FLAG_INDEX>]|=m_ModifyFlag&MemberFlags[(int)DATA_OBJECT_FLAGS.<CLASS_FLAG_INDEX>];
+			break;
+		}
+		<DataObjectMembersGetModifyFlag>
+//<GenerateArea6End>
+	}
+	
+	public <IfHaveBaseClass>override</IfHaveBaseClass><IfNotHaveBaseClass>virtual</IfNotHaveBaseClass> bool IsModified(ulong[] MemberFlags)
+	{
+		bool IsModified=false;
+//<GenerateArea7Start>
+		<IfHaveBaseClass>IsModified=IsModified||base.IsModified(MemberFlags);</IfHaveBaseClass>
+		
+		IsModified=IsModified||(m_ModifyFlag&MemberFlags[(int)DATA_OBJECT_FLAGS.<CLASS_FLAG_INDEX>])!=0;
+		IsModified=IsModified
+			<DataObjectMembersIsModified>;
+//<GenerateArea7End>
+		return IsModified;
+
+	}
+	
+	public <IfHaveBaseClass>override</IfHaveBaseClass><IfNotHaveBaseClass>virtual</IfNotHaveBaseClass> void ClearModifyFlag(ulong[] MemberFlags)
+	{
+//<GenerateArea8Start>
+		<IfHaveBaseClass>base.ClearModifyFlag(MemberFlags);</IfHaveBaseClass>
+		m_ModifyFlag&=~MemberFlags[(int)DATA_OBJECT_FLAGS.<CLASS_FLAG_INDEX>];
+		<DataObjectMembersClearModifyFlag>
+//<GenerateArea8End>
+	}
+
+	public <IfHaveBaseClass>override</IfHaveBaseClass><IfNotHaveBaseClass>virtual</IfNotHaveBaseClass> bool MakeUpdatePacket(CSmartStruct Packet,ulong[] MemberFlags)
+	{
+//<GenerateArea9Start>
+		ulong[] ModifyFlags=new ulong[(int)DATA_OBJECT_FLAGS.DATA_OBJECT_FLAG_MAX];		
+		GetModifyFlag(ModifyFlags,(int)GET_MODIFY_FLAG_TYPE.GMFT_OR,MemberFlags);	
+//<GenerateArea9End>
+		return MakePacket(Packet,ModifyFlags);
+	}
+	
+	public <IfHaveBaseClass>override</IfHaveBaseClass><IfNotHaveBaseClass>virtual</IfNotHaveBaseClass> bool MakePacket(CSmartStruct Packet,ulong[] MemberFlags)
+	{
+//<GenerateArea10Start>
+		uint FailCount=0;
+		<IfHaveBaseClass>
+		if(!base.MakePacket(Packet,MemberFlags))
+			FailCount++;
+		</IfHaveBaseClass>
+		
+		ulong Flag=MemberFlags[(int)DATA_OBJECT_FLAGS.<CLASS_FLAG_INDEX>];
+
+		<PackOperations>
+//<GenerateArea10End>
+		return FailCount==0;
+	}
+		
+	public <IfHaveBaseClass>override</IfHaveBaseClass><IfNotHaveBaseClass>virtual</IfNotHaveBaseClass> void ParsePacket(CSmartStruct Packet,ulong[] MemberFlags)
+	{
+//<GenerateArea11Start>
+		<IfHaveBaseClass>
+		base.ParsePacket(Packet,MemberFlags);
+		</IfHaveBaseClass>
+		
+		ulong Flag=MemberFlags[(int)DATA_OBJECT_FLAGS.<CLASS_FLAG_INDEX>];
+		ulong UpdateFlag=0;
+		
+		<IfHaveMember>
+		int Pos=Packet.GetFirstMemberPosition();
+		while(Pos>0)
+		{
+			ushort MemberID=0;
+			CSmartValue Value=Packet.GetNextMember(ref Pos,ref MemberID);
+			switch(MemberID)
+			{
+			<UnpackOperations>
+			}
+		}
+		</IfHaveMember>
+//<GenerateArea11End>
+		m_ModifyFlag|=UpdateFlag;	
+	}
+	
+	public void CloneFrom(<ClassName> DataObject,ulong[] MemberFlags)
+	{
+	//<GenerateArea12Start>
+		<IfHaveBaseClass>
+		base.CloneFrom(DataObject,MemberFlags);
+		</IfHaveBaseClass>
+		
+		ulong Flag=MemberFlags[(int)DATA_OBJECT_FLAGS.<CLASS_FLAG_INDEX>];
+		ulong UpdateFlag=0;
+		
+		<CloneOperations>
+		
+	//<GenerateArea12End>
+
+		m_ModifyFlag|=UpdateFlag;
+	}
+	public <IfHaveBaseClass>override</IfHaveBaseClass><IfNotHaveBaseClass>virtual</IfNotHaveBaseClass> uint GetSmartStructSize(ulong[] MemberFlags)
+	{
+//<GenerateArea13Start>
+		uint Size=0;
+		<PacketSizes>
+			
+		<IfHaveBaseClass>
+		Size+=base.GetSmartStructSize(MemberFlags);
+		</IfHaveBaseClass>
+//<GenerateArea13End>	
+		return Size;
+	}
+	public <IfHaveBaseClass>override</IfHaveBaseClass><IfNotHaveBaseClass>virtual</IfNotHaveBaseClass> object Clone()
+	{
+//<GenerateArea14Start>
+		<ClassName> DataObject=new <ClassName>();
+		DataObject.CloneFrom(this,DATA_OBJECT_MODIFY_FLAGS.<FULL_MODIFY_FLAG>);
+		return DataObject;
+//<GenerateArea14End>	
+	}
+};
+

@@ -214,6 +214,68 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="ReleaseUnicode|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="1"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/PropertyGrid.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -316,6 +378,14 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\stdafx.h"
@@ -345,6 +415,10 @@
 		<Filter
 			Name="Í·ÎÄ¼þ"
 			>
+			<File
+				RelativePath=".\MFCExtensionLib.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\MFCExtensionLib.h"
 				>

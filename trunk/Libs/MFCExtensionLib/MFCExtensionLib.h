@@ -13,3 +13,5 @@ inline int AfxMessageBoxEx(UINT nType,UINT nIDHelp,LPCTSTR szFormat,...)
 	va_end( vl);
 	return Ret;
 }
+
+extern bool ExportListViewToCSV(CListCtrl& ListView,LPCTSTR szExportFileName,int ExportCodePage);

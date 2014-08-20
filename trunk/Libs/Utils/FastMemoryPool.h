@@ -67,6 +67,12 @@ protected:
 	UINT			m_BufferSize;
 	bool			m_IsThreadLock;
 
+	volatile UINT	m_AllocCount;
+	volatile UINT	m_FreeCount;
+	volatile UINT	m_SystemAllocCount;
+	volatile UINT	m_SystemFreeCount;
+
+
 	CEasyCriticalSection	m_EasyCriticalSection;	
 
 	DECLARE_CLASS_INFO_STATIC(CFastMemoryPool)
@@ -77,7 +83,7 @@ public:
 	BOOL Create(UINT BlockSize,UINT LevelSize,UINT MaxLevel=0,bool IsThreadLock=false);
 	virtual void Destory();
 	void Clear();
-	void Verfy();
+	void Verfy(int LogChannel);
 
 	LPVOID Alloc(UINT Size);
 	BOOL Free(LPVOID pMem);
@@ -95,4 +101,28 @@ protected:
 #ifdef LOG_MEM_CALL_STACK
 	void PrintCallStackLog(BlockNode * pNode);
 #endif
+
+public:
+	UINT GetAllocCount();
+	UINT GetFreeCount();
+	UINT GetSystemAllocCount();
+	UINT GetSystemFreeCount();
+	void DoStat();
 };
+
+inline UINT CFastMemoryPool::GetAllocCount()
+{
+	return m_AllocCount;
+}
+inline UINT CFastMemoryPool::GetFreeCount()
+{
+	return m_FreeCount;
+}
+inline UINT CFastMemoryPool::GetSystemAllocCount()
+{
+	return m_SystemAllocCount;
+}
+inline UINT CFastMemoryPool::GetSystemFreeCount()
+{
+	return m_SystemFreeCount;
+}

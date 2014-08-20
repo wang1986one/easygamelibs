@@ -34,22 +34,25 @@ BOOL CDOSObjectProxyService::Init(CDOSServer * pServer)
 BOOL CDOSObjectProxyService::OnStart()
 {
 	FUNCTION_BEGIN;
+
+	m_ThreadPerformanceCounter.Init(GetThreadHandle(),THREAD_CPU_COUNT_TIME);
+
 	if(!m_ConnectionPool.Create(((CDOSServer *)GetServer())->GetConfig().MaxProxyConnection))
 	{
-		PrintDOSLog(0xff0000,"创建%u大小的连接池失败！",
+		PrintDOSLog(0xff0000,_T("创建%u大小的连接池失败！"),
 			((CDOSServer *)GetServer())->GetConfig().MaxProxyConnection);
 		return FALSE;
 	}
 	if(!m_MsgQueue.Create(((CDOSServer *)GetServer())->GetConfig().MaxProxyMsgQueue))
 	{
-		PrintDOSLog(0xff0000,"创建%u大小的消息队列失败！",
+		PrintDOSLog(0xff0000,_T("创建%u大小的消息队列失败！"),
 			((CDOSServer *)GetServer())->GetConfig().MaxProxyMsgQueue);
 		return FALSE;
 	}
 	
 	if(!m_MessageMap.Create(((CDOSServer *)GetServer())->GetConfig().MaxProxyGlobalMsgMap))
 	{
-		PrintDOSLog(0xff0000,"创建%u大小的消息映射表失败！",
+		PrintDOSLog(0xff0000,_T("创建%u大小的消息映射表失败！"),
 			((CDOSServer *)GetServer())->GetConfig().MaxProxyGlobalMsgMap);
 		return FALSE;
 	}
@@ -58,10 +61,10 @@ BOOL CDOSObjectProxyService::OnStart()
 	{
 		if (lzo_init() != LZO_E_OK)
 		{
-			PrintDOSLog(0xff0000,"代理服务开启消息压缩失败");
+			PrintDOSLog(0xff0000,_T("代理服务开启消息压缩失败"));
 			return FALSE;
 		}
-		PrintDOSDebugLog(0xff0000,"代理服务开启消息压缩");
+		PrintDOSDebugLog(0xff0000,_T("代理服务开启消息压缩"));
 	}
 
 	if(!Create(IPPROTO_TCP,
@@ -72,21 +75,22 @@ BOOL CDOSObjectProxyService::OnStart()
 		DEFAULT_PARALLEL_RECV,
 		false))
 	{
-		PrintDOSLog(0xffff,"代理服务创建失败！");
+		PrintDOSLog(0xffff,_T("代理服务创建失败！"));
 		return FALSE;
 	}
 
 	if(!StartListen(((CDOSServer *)GetServer())->GetConfig().ObjectProxyServiceListenAddress))
 	{
-		PrintDOSLog(0xffff,"代理服务侦听于(%s:%u)失败！",
+		PrintDOSLog(0xffff,_T("代理服务侦听于(%s:%u)失败！"),
 			((CDOSServer *)GetServer())->GetConfig().ObjectProxyServiceListenAddress.GetIPString(),
 			((CDOSServer *)GetServer())->GetConfig().ObjectProxyServiceListenAddress.GetPort());
 		return FALSE;
 	}
-	PrintDOSLog(0xffff,"代理服务侦听于(%s:%u)！",
+	PrintDOSLog(0xffff,_T("代理服务侦听于(%s:%u)！"),
 		((CDOSServer *)GetServer())->GetConfig().ObjectProxyServiceListenAddress.GetIPString(),
 		((CDOSServer *)GetServer())->GetConfig().ObjectProxyServiceListenAddress.GetPort());
 
+	PrintDOSLog(0xff0000,_T("对象代理线程[%u]已启动"),GetThreadID());
 	return TRUE;
 	FUNCTION_END;
 	return FALSE;
@@ -95,6 +99,17 @@ BOOL CDOSObjectProxyService::OnStart()
 void CDOSObjectProxyService::OnClose()
 {
 	FUNCTION_BEGIN;
+	CAutoLock Lock(m_EasyCriticalSection);
+
+	CDOSMessagePacket * pPacket;
+	while(m_MsgQueue.PopFront(pPacket))
+	{		
+		if(!((CDOSServer *)GetServer())->ReleaseMessagePacket(pPacket))
+		{
+			PrintDOSLog(0xff0000,_T("CDOSObjectProxyService::OnClose:释放消息内存块失败！"));
+		}
+	}
+
 	LPVOID Pos=m_ConnectionPool.GetFirstObjectPos();
 	while(Pos)
 	{
@@ -113,6 +128,8 @@ BOOL CDOSObjectProxyService::OnRun()
 	FUNCTION_BEGIN;
 	EXCEPTION_CATCH_START
 
+	m_ThreadPerformanceCounter.DoPerformanceCount();
+
 	int ProcessCount=CNetService::Update();
 	LPVOID Pos=m_ConnectionPool.GetFirstObjectPos();
 	while(Pos)
@@ -121,7 +138,7 @@ BOOL CDOSObjectProxyService::OnRun()
 		if(pConnection->IsConnected())
 			ProcessCount+=pConnection->Update();
 		else
-			m_ConnectionPool.DeleteObject(pConnection->GetID());
+			DeleteConnection(pConnection);
 	}
 
 	ProcessCount+=DoMessageProcess();
@@ -170,7 +187,10 @@ BOOL CDOSObjectProxyService::DeleteConnection(CBaseTCPConnection * pConnection)
 BOOL CDOSObjectProxyService::PushMessage(CDOSMessagePacket * pPacket)
 {
 	FUNCTION_BEGIN;
+	CAutoLock Lock(m_EasyCriticalSection);
+
 	((CDOSServer *)GetServer())->AddRefMessagePacket(pPacket);
+	pPacket->SetAllocTime(4);
 	if(m_MsgQueue.PushBack(pPacket))
 	{		
 		return TRUE;
@@ -179,6 +199,23 @@ BOOL CDOSObjectProxyService::PushMessage(CDOSMessagePacket * pPacket)
 	{
 		((CDOSServer *)GetServer())->ReleaseMessagePacket(pPacket);
 	}
+	FUNCTION_END;
+	return FALSE;
+}
+
+BOOL CDOSObjectProxyService::PushBroadcastMessage(CDOSMessagePacket * pPacket)
+{
+	FUNCTION_BEGIN;
+	LPVOID Pos=m_ConnectionPool.GetFirstObjectPos();
+	while(Pos)
+	{
+		CDOSProxyConnection * pConnection=m_ConnectionPool.GetNext(Pos);
+		if(pConnection)
+		{
+			pConnection->PushMessage(pPacket);
+		}
+	}
+	return TRUE;
 	FUNCTION_END;
 	return FALSE;
 }
@@ -202,12 +239,12 @@ int CDOSObjectProxyService::DoMessageProcess(int ProcessPacketLimit)
 	CDOSMessagePacket * pPacket;
 	while(m_MsgQueue.PopFront(pPacket))
 	{
-		//PrintDOSDebugLog(0,"发送了消息[%u]",pPacket->GetMessage().GetMsgID());
+		//PrintDOSDebugLog(0,_T("发送了消息[%u]"),pPacket->GetMessage().GetMsgID());
 
 		OnMsg(&(pPacket->GetMessage()));
 		if(!((CDOSServer *)GetServer())->ReleaseMessagePacket(pPacket))
 		{
-			PrintDOSLog(0xff0000,"释放消息内存块失败！");
+			PrintDOSLog(0xff0000,_T("释放消息内存块失败！"));
 		}
 
 		ProcessCount++;
@@ -258,7 +295,7 @@ void CDOSObjectProxyService::OnMsg(CDOSMessage * pMessage)
 BOOL CDOSObjectProxyService::RegisterGlobalMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID)
 {
 	FUNCTION_BEGIN;
-	PrintDOSDebugLog(0xff0000,"0x%llX注册了全局代理消息映射[%u]！",ObjectID.ID,MsgID);
+	PrintDOSDebugLog(0xff0000,_T("0x%llX注册了全局代理消息映射[0x%X]！"),ObjectID.ID,MsgID);
 	return m_MessageMap.Insert(MsgID,ObjectID);
 	FUNCTION_END;
 	return FALSE;
@@ -266,7 +303,7 @@ BOOL CDOSObjectProxyService::RegisterGlobalMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID Ob
 BOOL CDOSObjectProxyService::UnregisterGlobalMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID)
 {
 	FUNCTION_BEGIN;
-	PrintDOSDebugLog(0xff0000,"0x%llX注销了全局代理消息映射[%u]！",ObjectID.ID,MsgID);
+	PrintDOSDebugLog(0xff0000,_T("0x%llX注销了全局代理消息映射[0x%X]！"),ObjectID.ID,MsgID);
 	return m_MessageMap.Delete(MsgID);
 	FUNCTION_END;
 	return FALSE;

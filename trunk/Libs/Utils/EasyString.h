@@ -12,28 +12,6 @@
 #pragma once
 
 
-#ifdef WIN32
-inline size_t AnsiToUnicode(const char * SrcStr,size_t SrcLen,wchar_t * DestStr,size_t DestLen)
-{
-	return (size_t)MultiByteToWideChar(CP_ACP,0,SrcStr,(int)SrcLen,(LPWSTR)DestStr,(int)DestLen);
-}
-
-inline size_t UnicodeToAnsi(const wchar_t * SrcStr,size_t SrcLen,char * DestStr,size_t DestLen)
-{
-	return (size_t)WideCharToMultiByte(CP_ACP,0,(LPWSTR)SrcStr,(int)SrcLen,DestStr,(int)DestLen,NULL,NULL);
-}
-#else
-inline size_t AnsiToUnicode(const char * SrcStr,size_t SrcLen,wchar_t * DestStr,size_t DestLen)
-{
-	return mbstowcs(DestStr,SrcStr,SrcLen);
-}
-
-inline size_t UnicodeToAnsi(const wchar_t * SrcStr,size_t SrcLen,char * DestStr,size_t DestLen)
-{
-	return wcstombs(DestStr,SrcStr,SrcLen);
-}
-#endif
-
 inline int strncpy_0(char *strDest,size_t DestSize, const char *strSource, size_t count)
 {
 	if(strDest&&strSource)
@@ -54,6 +32,34 @@ inline int strncpy_0( wchar_t *strDest,size_t DestSize, const wchar_t *strSource
 		return Ret;
 	}
 	return 0;
+}
+
+inline TCHAR * __cdecl strstri (
+					   const TCHAR * str1,
+					   const TCHAR * str2
+					   )
+{
+	TCHAR *cp = (TCHAR *) str1;
+	TCHAR *s1, *s2;
+
+	if ( !*str2 )
+		return((TCHAR *)str1);
+
+	while (*cp)
+	{
+		s1 = cp;
+		s2 = (TCHAR *) str2;
+
+		while ( *s1 && *s2 && !(_totlower(*s1)-_totlower(*s2)) )
+			s1++, s2++;
+
+		if (!*s2)
+			return(cp);
+
+		cp++;
+	}
+	return(NULL);
+
 }
 
 inline int CompareString(const char * pStr1,const char * pStr2)
@@ -226,14 +232,14 @@ public:
 		m_pBuffer=new T[1];
 		m_BufferSize=1;
 		m_StringLength=0;
-		SetString(Str.m_pBuffer,Str.m_StringLength);
+		SetString(Str.GetBuffer(),Str.GetLength());
 	}
 	CEasyStringT(const CEasyStringT<wchar_t>& Str)
 	{
 		m_pBuffer=new T[1];
 		m_BufferSize=1;
 		m_StringLength=0;
-		SetString(Str.m_pBuffer,Str.m_StringLength);
+		SetString(Str.GetBuffer(),Str.GetLength());
 	}
 	~CEasyStringT()
 	{
@@ -242,6 +248,10 @@ public:
 	void Clear()
 	{
 		Resize(0,false);
+	}
+	bool IsUnicode()
+	{
+		return sizeof(T)==sizeof(wchar_t);
 	}
 	void Resize(SIZE_TYPE Size,bool ReserveData=true)
 	{
@@ -318,6 +328,10 @@ public:
 	T& operator[](int Index) const
 	{
 		return m_pBuffer[Index];
+	}
+	void SetChar(int Index,T Char)
+	{
+		m_pBuffer[Index]=Char;
 	}
 	CEasyStringT<T>& operator=(const char* pStr)
 	{

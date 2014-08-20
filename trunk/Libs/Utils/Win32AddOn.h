@@ -78,19 +78,29 @@
 
 #include "windows.h"
 #include "Winsvc.h"
+
 #include "shlobj.h"
 #include "tchar.h"
 #include <time.h>
 #include <conio.h>
 #include <Dbghelp.h>
+#include <Psapi.h>
 
+#pragma comment(lib,"Psapi.lib")
+#pragma comment(lib,"Dbghelp.lib")
 
 #pragma warning (push)
 #pragma warning (disable : 4311)
 #include "atomic_ops\include\atomic_ops.h"
 #pragma warning (pop)
 
-
+#include <intrin.h>
+#pragma intrinsic(_InterlockedIncrement)
+#pragma intrinsic(_InterlockedDecrement)
+#pragma intrinsic(_InterlockedExchangeAdd)
+#pragma intrinsic(_InterlockedCompareExchange)
+#pragma intrinsic(_InterlockedAnd)
+#pragma intrinsic(_InterlockedOr)
 
 typedef double DOUBLE;
 
@@ -102,28 +112,32 @@ typedef __int64 INTG64;
 
 inline unsigned int AtomicInc(volatile unsigned int * pVal)
 {
-	return AO_int_fetch_and_add1_read(pVal)+1;
+	//return AO_int_fetch_and_add1_read(pVal)+1;
+	return _InterlockedIncrement((volatile LONG *)pVal);
 }
 
 inline unsigned int AtomicDec(volatile unsigned int * pVal)
 {
-	return AO_int_fetch_and_sub1_read(pVal)-1;
+	//return AO_int_fetch_and_sub1_read(pVal)-1;
+	return _InterlockedDecrement((volatile LONG *)pVal);
 }
 
 
 inline unsigned int AtomicAdd(volatile unsigned int * pVal,int AddVal)
 {
-	return AO_int_fetch_and_add(pVal,AddVal);
+	//return AO_int_fetch_and_add(pVal,AddVal);
+	return _InterlockedExchangeAdd((volatile LONG *)pVal,AddVal)+AddVal;
 }
 
 inline unsigned int AtomicSub(volatile unsigned int * pVal,int SubVal)
 {
-	return AO_int_fetch_and_add(pVal,-SubVal);
+	//return AO_int_fetch_and_add(pVal,-SubVal);
+	return _InterlockedExchangeAdd((volatile LONG *)pVal,-SubVal)-SubVal;
 }
 
 inline int AtomicCompareAndSet(volatile unsigned int * pVal,unsigned int CompValue,unsigned int NewVal)
 {
-	return InterlockedCompareExchange((volatile LONG *)pVal,NewVal,CompValue)!=*pVal;
+	return _InterlockedCompareExchange((volatile LONG *)pVal,NewVal,CompValue)!=*pVal;
 }
 
 inline unsigned int AtomicAnd(volatile unsigned int * pVal,int AndVal)
@@ -157,6 +171,45 @@ inline bool SetEnvVar(LPCTSTR pszVarName,LPTSTR pszValue)
 		return true;
 #endif
 	return false;
+}
+
+inline size_t AnsiToUnicode(const char * SrcStr,size_t SrcLen,wchar_t * DestStr,size_t DestLen)
+{
+	return (size_t)MultiByteToWideChar(CP_ACP,0,SrcStr,(int)SrcLen,(LPWSTR)DestStr,(int)DestLen);
+}
+
+inline size_t UnicodeToAnsi(const wchar_t * SrcStr,size_t SrcLen,char * DestStr,size_t DestLen)
+{
+	return (size_t)WideCharToMultiByte(CP_ACP,0,(LPWSTR)SrcStr,(int)SrcLen,DestStr,(int)DestLen,NULL,NULL);
+}
+
+inline size_t UnicodeToUTF8(const wchar_t * SrcStr,size_t SrcLen,char * DestStr,size_t DestLen)
+{
+	return (size_t)WideCharToMultiByte(CP_UTF8,0,(LPWSTR)SrcStr,(int)SrcLen,DestStr,(int)DestLen,NULL,NULL);
+}
+
+inline size_t AnsiToUTF8(const char * SrcStr,size_t SrcLen,char * DestStr,size_t DestLen)
+{
+	int WLen=MultiByteToWideChar(CP_ACP,0,SrcStr,(int)SrcLen,NULL,0);
+	wchar_t * pWBuffer=new wchar_t[WLen+1];
+	WLen=MultiByteToWideChar(CP_ACP,0,SrcStr,(int)SrcLen,pWBuffer,WLen);
+	pWBuffer[WLen]=0;
+
+	int Len=WideCharToMultiByte(CP_UTF8,0,pWBuffer,WLen,DestStr,(int)DestLen,NULL,NULL);
+	delete[] pWBuffer;
+	return (size_t)Len;
+}
+
+inline size_t UTF8ToAnsi(const char * SrcStr,size_t SrcLen,char * DestStr,size_t DestLen)
+{
+	int WLen=MultiByteToWideChar(CP_UTF8,0,SrcStr,(int)SrcLen,NULL,0);
+	wchar_t * pWBuffer=new wchar_t[WLen+1];
+	WLen=MultiByteToWideChar(CP_UTF8,0,SrcStr,(int)SrcLen,pWBuffer,WLen);
+	pWBuffer[WLen]=0;
+
+	int Len=WideCharToMultiByte(CP_ACP,0,pWBuffer,WLen,DestStr,(int)DestLen,NULL,NULL);
+	delete[] pWBuffer;
+	return (size_t)Len;
 }
 
 #include "EasyCriticalSectionWin.h"

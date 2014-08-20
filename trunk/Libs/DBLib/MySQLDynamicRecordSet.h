@@ -37,17 +37,18 @@ public:
 	~CMySQLDynamicRecordSet(void);
 
 	int Init(CMySQLConnection * pDBConnection,MYSQL_STMT_HANDLE hStmt);
+	int NextResults();
 	virtual void Destory();
 
 	virtual int GetRecordCount();
 	virtual int GetColumnCount();
-	virtual LPCTSTR GetColumnName(int Index);
-	virtual int GetIndexByColumnName(LPCTSTR Name);
+	virtual LPCSTR GetColumnName(int Index);
+	virtual int GetIndexByColumnName(LPCSTR Name);
 	virtual DB_COLUMN_INFO * GetColumnInfo(int Index);
 
 
 	virtual CDBValue& GetField(int Index);
-	virtual CDBValue& GetField(LPCTSTR Name);
+	virtual CDBValue& GetField(LPCSTR Name);
 	virtual int MoveFirst();
 	virtual int MoveLast();
 	virtual int MoveNext();

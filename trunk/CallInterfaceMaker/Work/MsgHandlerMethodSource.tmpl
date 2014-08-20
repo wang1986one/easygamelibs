@@ -1,8 +1,21 @@
-int C<InterfaceName>MsgHandler::HandleMsg<MethodName>(CSmartStruct& MsgPacket)
+int C<InterfaceName>MsgHandler::HandleMsg<MethodName>(CSmartStruct& Packet)
 {
-<ParamDefines>
+	<ParamDefines>
+	
+	<ParamInitOperations>
 
-<UnpackOperations>	
+	<IfHaveMember>
+	void * Pos=Packet.GetFirstMemberPosition();
+	while(Pos)
+	{
+		WORD MemberID;
+		CSmartValue Value=Packet.GetNextMember(Pos,MemberID);
+		switch(MemberID)
+		{
+		<UnpackOperations>
+		}
+	}
+	</IfHaveMember>	
 
 	return <MethodName>(<Params>);
 }

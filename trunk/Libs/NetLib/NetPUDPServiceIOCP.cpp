@@ -37,7 +37,7 @@ BOOL CNetPUDPService::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObj
 		{			
 			if(!QueryUDPRecv())
 			{
-				PrintNetLog(0xffffffff,"PUDPService无法发出更多的UDPRecv请求！");
+				PrintNetLog(0xffffffff,_T("PUDPService无法发出更多的UDPRecv请求！"));
 				Close();
 			}
 
@@ -50,7 +50,7 @@ BOOL CNetPUDPService::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObj
 			}
 			else
 			{
-				PrintNetLog(0xffffffff,"接收失败！");
+				PrintNetLog(0xffffffff,_T("接收失败！"));
 			}				
 		}
 		else if(pOverLappedObject->GetType()==IO_SEND)
@@ -62,13 +62,13 @@ BOOL CNetPUDPService::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObj
 				return TRUE;
 			}
 			else
-				PrintNetLog(0xffffffff,"发送失败！");
+				PrintNetLog(0xffffffff,_T("发送失败！"));
 		}			
 		else
-			PrintNetLog(0xffffffff,"PUDPService收到非法IOCP包！");
+			PrintNetLog(0xffffffff,_T("PUDPService收到非法IOCP包！"));
 	}
 	else
-		PrintNetLog(0xffffffff,"PUDPService未启用，IOCP包被忽略！");
+		PrintNetLog(0xffffffff,_T("PUDPService未启用，IOCP包被忽略！"));
 	GetServer()->DeleteOverLappedObject(pOverLappedObject);
 	return FALSE;
 }
@@ -118,7 +118,7 @@ BOOL CNetPUDPService::StartListen(const CIPAddress& Address)
 	}
 	if(!m_Socket.Listen(Address))
 	{
-		PrintNetLog(0xffffffff,"(%d)PUDPService侦听失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)PUDPService侦听失败！"),GetID());
 		return FALSE;
 	}
 
@@ -127,7 +127,7 @@ BOOL CNetPUDPService::StartListen(const CIPAddress& Address)
 	
 	if(!GetServer()->BindSocket(m_Socket.GetSocket()))
 	{
-		PrintNetLog(0xffffffff,"(%d)PUDPService绑定IOCP失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)PUDPService绑定IOCP失败！"),GetID());
 		Close();
 		return FALSE;
 	}	
@@ -138,7 +138,7 @@ BOOL CNetPUDPService::StartListen(const CIPAddress& Address)
 	{
 		if(!QueryUDPRecv())
 		{
-			PrintNetLog(0xffffffff,"(%d)Service发出UDPRecv请求失败！",GetID());
+			PrintNetLog(0xffffffff,_T("(%d)Service发出UDPRecv请求失败！"),GetID());
 			Close();
 			return FALSE;
 		}
@@ -173,7 +173,7 @@ BOOL CNetPUDPService::QueryUDPRecv()
 	COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
 	if(pOverLappedObject==NULL)
 	{
-		PrintNetLog(0xffffffff,"(%d)PUDPService创建热UDPRecv用OverLappedObject失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)PUDPService创建热UDPRecv用OverLappedObject失败！"),GetID());
 		return FALSE;
 	}
 
@@ -197,7 +197,7 @@ BOOL CNetPUDPService::QueryUDPRecv()
 	{
 		return TRUE;
 	}
-	PrintNetLog(0xffffffff,"(%d)PUDPService发出UDPRecv请求失败！",GetID());	
+	PrintNetLog(0xffffffff,_T("(%d)PUDPService发出UDPRecv请求失败！"),GetID());	
 	GetServer()->DeleteOverLappedObject(pOverLappedObject);
 	return FALSE;
 }
@@ -207,7 +207,7 @@ BOOL CNetPUDPService::QueryUDPSend(const CIPAddress& IPAddress,LPCVOID pData,int
 	COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
 	if(pOverLappedObject==NULL)
 	{
-		PrintNetLog(0xffffffff,"(%d)PUDPService创建UDPSend用OverLappedObject失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)PUDPService创建UDPSend用OverLappedObject失败！"),GetID());
 		return FALSE;
 	}
 
@@ -221,7 +221,7 @@ BOOL CNetPUDPService::QueryUDPSend(const CIPAddress& IPAddress,LPCVOID pData,int
 	if(!pOverLappedObject->GetDataBuff()->PushBack(pData,Size))
 	{
 		GetServer()->DeleteOverLappedObject(pOverLappedObject);
-		PrintNetLog(0xffffffff,"(%d)PUDPService要发送的数据包过大！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)PUDPService要发送的数据包过大！"),GetID());
 		return FALSE;
 	}
 	
@@ -240,7 +240,7 @@ BOOL CNetPUDPService::QueryUDPSend(const CIPAddress& IPAddress,LPCVOID pData,int
 	{				
 		return TRUE;
 	}
-	PrintNetLog(0xffffffff,"(%d)PUDPService发出UDPSend请求失败！",GetID());	
+	PrintNetLog(0xffffffff,_T("(%d)PUDPService发出UDPSend请求失败！"),GetID());	
 	GetServer()->DeleteOverLappedObject(pOverLappedObject);
 	return FALSE;
 }

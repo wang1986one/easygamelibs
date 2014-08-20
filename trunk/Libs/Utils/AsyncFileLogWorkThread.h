@@ -27,14 +27,16 @@ class CAsyncFileLogWorkThread :
 {
 protected:
 	CEasyString								m_LogFileName;
+	CEasyString								m_LogFileExtName;
+	CEasyString								m_LogFileHeaderString;
 	IFileAccessor							*m_pLogFile;
 	CThreadSafeCycleBuffer					m_LogDataBuffer;	
-	CEasyTime								m_RecentLogTime;	
+	CEasyTime								m_RecentLogTime;
 
 	DECLARE_CLASS_INFO_STATIC(CAsyncFileLogWorkThread);
 public:
 	CAsyncFileLogWorkThread();
-	BOOL Init(LPCTSTR FileName,int LogBufferLen);
+	BOOL Init(LPCTSTR FileName,LPCTSTR FileExtName,int LogBufferLen);
 	virtual ~CAsyncFileLogWorkThread(void);
 
 	virtual BOOL OnStart();
@@ -46,6 +48,11 @@ public:
 	LPCTSTR GetLogFileName()
 	{
 		return m_LogFileName;
+	}
+	void SetLogFileHeaderString(LPCTSTR szString)
+	{
+		m_LogFileHeaderString=szString;
+		m_LogFileHeaderString="Time,"+m_LogFileHeaderString+"\r\n";
 	}
 	
 protected:

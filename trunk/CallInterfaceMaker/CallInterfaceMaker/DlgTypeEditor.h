@@ -23,20 +23,12 @@ protected:
 	CTabCtrl	m_tabMain;
 	CListCtrl	m_lvTypeList;
 	CString		m_TypeName;
-	CString		m_CType;
-	BOOL		m_IsFixLength;
-	BOOL		m_NeedNullCheck;
-	CEdit		m_edConstructOperation;
-	CEdit		m_edEvaluateOperation;
-	CEdit		m_edSizeCaculateOperation;
-	CEdit		m_edPackOperation;
-	CEdit		m_edUnpackOperation;
-	CEdit		m_edNULLCheckOperation;
-	CEdit		m_edReferenceDefine;
+	CString		m_CType;	
+	CEdit		m_edOperation;	
 	bool		m_IsModified;
 	int			m_CurSelectItem;
 public:
-	vector<PARAM_TYPE>		m_TypeList;
+	vector<TYPE_DEFINE>		m_TypeList;
 
 
 	CDlgTypeEditor(CWnd* pParent = NULL);   // 标准构造函数
@@ -59,9 +51,12 @@ public:
 	afx_msg void OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult);	
 	
 	afx_msg void OnEnChangeEdit();	
-	afx_msg void OnBnClickedCheckIsFixLength();
-	afx_msg void OnBnClickedCheckNeedNullCheck();
 	afx_msg void OnNMClickListTypes(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedNew();
 	afx_msg void OnBnClickedDel();
+protected:
+	virtual void OnCancel();
+	virtual void OnOK();
+public:
+	afx_msg void OnTcnSelchangingTab1(NMHDR *pNMHDR, LRESULT *pResult);
 };

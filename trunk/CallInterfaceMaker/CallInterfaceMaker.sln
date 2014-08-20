@@ -1,36 +1,28 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CallInterfaceMaker", "CallInterfaceMaker\CallInterfaceMaker.vcproj", "{5378F213-DE66-44FC-8AA4-065CBFCF26F3}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Template", "Template", "{14FAF343-58A5-41DA-B5D9-A6D53E0F0430}"
-	ProjectSection(SolutionItems) = preProject
-		Template\Interface.tmpl = Template\Interface.tmpl
-		Template\InterfaceDoc.tmpl = Template\InterfaceDoc.tmpl
-		Template\InterfaceFile.tmpl = Template\InterfaceFile.tmpl
-		Template\InterfaceFileDoc.tmpl = Template\InterfaceFileDoc.tmpl
-		Template\Method.tmpl = Template\Method.tmpl
-		Template\MethodDoc.tmpl = Template\MethodDoc.tmpl
-		Template\MethodHeaderPureTail.tmpl = Template\MethodHeaderPureTail.tmpl
-		Template\MsgHandler.tmpl = Template\MsgHandler.tmpl
-		Template\MsgHandlerHeader.tmpl = Template\MsgHandlerHeader.tmpl
-		Template\MsgHandlerSource.tmpl = Template\MsgHandlerSource.tmpl
-		Template\Param.tmpl = Template\Param.tmpl
-		Template\ParamDescript.tmpl = Template\ParamDescript.tmpl
-		Template\SkeletonFile.tmpl = Template\SkeletonFile.tmpl
-		Template\SkeletonHeader.tmpl = Template\SkeletonHeader.tmpl
-		Template\SkeletonMethod.tmpl = Template\SkeletonMethod.tmpl
-		Template\SkeletonSource.tmpl = Template\SkeletonSource.tmpl
-		Template\TypeDef.xml = Template\TypeDef.xml
-	EndProjectSection
-EndProject
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Work", "Work", "{7BA9BAB8-5128-4C87-8D63-81F813C3304E}"
 	ProjectSection(SolutionItems) = preProject
+		Work\Config.xml = Work\Config.xml
+		Work\ConstDefine.tmpl = Work\ConstDefine.tmpl
+		Work\ConstDefineHeader.tmpl = Work\ConstDefineHeader.tmpl
+		Work\DataObjectDefineHeader.tmpl = Work\DataObjectDefineHeader.tmpl
+		Work\DataObjectDefineSource.tmpl = Work\DataObjectDefineSource.tmpl
+		Work\DataObjectModifyFlagDefine.tmpl = Work\DataObjectModifyFlagDefine.tmpl
+		Work\DataObjectModifyFlags.tmpl = Work\DataObjectModifyFlags.tmpl
+		Work\DataObjectModifyFlagUnit.tmpl = Work\DataObjectModifyFlagUnit.tmpl
+		Work\EnumDefine.tmpl = Work\EnumDefine.tmpl
+		Work\EnumDefineHeader.tmpl = Work\EnumDefineHeader.tmpl
+		Work\EnumMemberDefine.tmpl = Work\EnumMemberDefine.tmpl
+		Work\EnumStrValueDefine.tmpl = Work\EnumStrValueDefine.tmpl
 		Work\Interface.tmpl = Work\Interface.tmpl
+		Work\InterfaceHeader.tmpl = Work\InterfaceHeader.tmpl
+		Work\MacroDefine.tmpl = Work\MacroDefine.tmpl
 		Work\MethodCallerSource.tmpl = Work\MethodCallerSource.tmpl
 		Work\MethodHeader.tmpl = Work\MethodHeader.tmpl
 		Work\MethodHeaderPureTail.tmpl = Work\MethodHeaderPureTail.tmpl
-		Work\MethodSSTIDEnumDefine.tmpl = Work\MethodSSTIDEnumDefine.tmpl
 		Work\MsgCallerHeader.tmpl = Work\MsgCallerHeader.tmpl
 		Work\MsgCallerSource.tmpl = Work\MsgCallerSource.tmpl
 		Work\MsgHandlerHeader.tmpl = Work\MsgHandlerHeader.tmpl
@@ -40,20 +32,39 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Work", "Work", "{7BA9BAB8-5
 		Work\MsgMapInit.tmpl = Work\MsgMapInit.tmpl
 		Work\MsgPackMethodHeader.tmpl = Work\MsgPackMethodHeader.tmpl
 		Work\MsgPackMethodSource.tmpl = Work\MsgPackMethodSource.tmpl
+		Work\PackOperationUnit.tmpl = Work\PackOperationUnit.tmpl
+		Work\PackSize.tmpl = Work\PackSize.tmpl
 		Work\Param.tmpl = Work\Param.tmpl
 		Work\ParamDescript.tmpl = Work\ParamDescript.tmpl
-		Work\ProtocolFile.tmpl = Work\ProtocolFile.tmpl
+		Work\StringConstDefine.tmpl = Work\StringConstDefine.tmpl
+		Work\StructDefine.tmpl = Work\StructDefine.tmpl
+		Work\StructDefineHeader.tmpl = Work\StructDefineHeader.tmpl
+		Work\StructMember.tmpl = Work\StructMember.tmpl
+		Work\SystemEnumDefineHeader.tmpl = Work\SystemEnumDefineHeader.tmpl
 		Work\TypeDef.xml = Work\TypeDef.xml
+		Work\UnpackOperationUnit.tmpl = Work\UnpackOperationUnit.tmpl
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CSTemplate", "CSTemplate", "{E8A0666B-65B4-4435-9D37-2CCCE10B95BE}"
 	ProjectSection(SolutionItems) = preProject
 		CSTemplate\Config.xml = CSTemplate\Config.xml
+		CSTemplate\ConstDefine.tmpl = CSTemplate\ConstDefine.tmpl
+		CSTemplate\ConstDefineHeader.tmpl = CSTemplate\ConstDefineHeader.tmpl
+		CSTemplate\DataObjectDefineHeader.tmpl = CSTemplate\DataObjectDefineHeader.tmpl
+		CSTemplate\DataObjectDefineSource.tmpl = CSTemplate\DataObjectDefineSource.tmpl
+		CSTemplate\DataObjectModifyFlagDefine.tmpl = CSTemplate\DataObjectModifyFlagDefine.tmpl
+		CSTemplate\DataObjectModifyFlags.tmpl = CSTemplate\DataObjectModifyFlags.tmpl
+		CSTemplate\DataObjectModifyFlagUnit.tmpl = CSTemplate\DataObjectModifyFlagUnit.tmpl
+		CSTemplate\EnumDefine.tmpl = CSTemplate\EnumDefine.tmpl
+		CSTemplate\EnumDefineHeader.tmpl = CSTemplate\EnumDefineHeader.tmpl
+		CSTemplate\EnumMemberDefine.tmpl = CSTemplate\EnumMemberDefine.tmpl
+		CSTemplate\EnumStrValueDefine.tmpl = CSTemplate\EnumStrValueDefine.tmpl
 		CSTemplate\Interface.tmpl = CSTemplate\Interface.tmpl
+		CSTemplate\InterfaceHeader.tmpl = CSTemplate\InterfaceHeader.tmpl
+		CSTemplate\MacroDefine.tmpl = CSTemplate\MacroDefine.tmpl
 		CSTemplate\MethodCallerSource.tmpl = CSTemplate\MethodCallerSource.tmpl
 		CSTemplate\MethodHeader.tmpl = CSTemplate\MethodHeader.tmpl
 		CSTemplate\MethodHeaderPureTail.tmpl = CSTemplate\MethodHeaderPureTail.tmpl
-		CSTemplate\MethodSSTIDEnumDefine.tmpl = CSTemplate\MethodSSTIDEnumDefine.tmpl
 		CSTemplate\MsgCallerHeader.tmpl = CSTemplate\MsgCallerHeader.tmpl
 		CSTemplate\MsgCallerSource.tmpl = CSTemplate\MsgCallerSource.tmpl
 		CSTemplate\MsgHandlerHeader.tmpl = CSTemplate\MsgHandlerHeader.tmpl
@@ -63,26 +74,73 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CSTemplate", "CSTemplate", 
 		CSTemplate\MsgMapInit.tmpl = CSTemplate\MsgMapInit.tmpl
 		CSTemplate\MsgPackMethodHeader.tmpl = CSTemplate\MsgPackMethodHeader.tmpl
 		CSTemplate\MsgPackMethodSource.tmpl = CSTemplate\MsgPackMethodSource.tmpl
+		CSTemplate\PackOperationUnit.tmpl = CSTemplate\PackOperationUnit.tmpl
+		CSTemplate\PackSize.tmpl = CSTemplate\PackSize.tmpl
 		CSTemplate\Param.tmpl = CSTemplate\Param.tmpl
 		CSTemplate\ParamDescript.tmpl = CSTemplate\ParamDescript.tmpl
-		CSTemplate\ProtocolFile.tmpl = CSTemplate\ProtocolFile.tmpl
+		CSTemplate\StringConstDefine.tmpl = CSTemplate\StringConstDefine.tmpl
+		CSTemplate\StructDefine.tmpl = CSTemplate\StructDefine.tmpl
+		CSTemplate\StructDefineHeader.tmpl = CSTemplate\StructDefineHeader.tmpl
+		CSTemplate\StructMember.tmpl = CSTemplate\StructMember.tmpl
+		CSTemplate\SystemEnumDefineHeader.tmpl = CSTemplate\SystemEnumDefineHeader.tmpl
 		CSTemplate\Test.xml = CSTemplate\Test.xml
 		CSTemplate\TypeDef.xml = CSTemplate\TypeDef.xml
+		CSTemplate\UnpackOperationUnit.tmpl = CSTemplate\UnpackOperationUnit.tmpl
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CallInterfaceMaker", "CallInterfaceMaker\CallInterfaceMaker.vcxproj", "{5378F213-DE66-44FC-8AA4-065CBFCF26F3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utils", "..\Libs\Utils\Utils.vcxproj", "{F4126B50-6B57-4B34-A58A-987D6B4219C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		DebugUnicode|Win32 = DebugUnicode|Win32
+		DebugUnicode|x64 = DebugUnicode|x64
 		MinRelease|Win32 = MinRelease|Win32
+		MinRelease|x64 = MinRelease|x64
 		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+		ReleaseUnicode|Win32 = ReleaseUnicode|Win32
+		ReleaseUnicode|x64 = ReleaseUnicode|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.Debug|Win32.ActiveCfg = Debug|Win32
 		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.Debug|Win32.Build.0 = Debug|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.Debug|x64.ActiveCfg = Debug|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.DebugUnicode|Win32.ActiveCfg = Debug|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.DebugUnicode|Win32.Build.0 = Debug|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.DebugUnicode|x64.ActiveCfg = Debug|Win32
 		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.MinRelease|Win32.ActiveCfg = Release|Win32
 		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.MinRelease|Win32.Build.0 = Release|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.MinRelease|x64.ActiveCfg = Release|Win32
 		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.Release|Win32.ActiveCfg = Release|Win32
 		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.Release|Win32.Build.0 = Release|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.Release|x64.ActiveCfg = Release|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.ReleaseUnicode|Win32.ActiveCfg = Release|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.ReleaseUnicode|Win32.Build.0 = Release|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.ReleaseUnicode|x64.ActiveCfg = Release|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Debug|Win32.Build.0 = Debug|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Debug|x64.ActiveCfg = Debug|x64
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Debug|x64.Build.0 = Debug|x64
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.DebugUnicode|Win32.ActiveCfg = DebugUnicode|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.DebugUnicode|Win32.Build.0 = DebugUnicode|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.DebugUnicode|x64.ActiveCfg = DebugUnicode|x64
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.DebugUnicode|x64.Build.0 = DebugUnicode|x64
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.MinRelease|Win32.ActiveCfg = Release|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.MinRelease|Win32.Build.0 = Release|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.MinRelease|x64.ActiveCfg = Release|x64
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.MinRelease|x64.Build.0 = Release|x64
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Release|Win32.ActiveCfg = Release|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Release|Win32.Build.0 = Release|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Release|x64.ActiveCfg = Release|x64
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.Release|x64.Build.0 = Release|x64
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.ReleaseUnicode|Win32.ActiveCfg = ReleaseUnicode|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.ReleaseUnicode|Win32.Build.0 = ReleaseUnicode|Win32
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.ReleaseUnicode|x64.ActiveCfg = ReleaseUnicode|x64
+		{F4126B50-6B57-4B34-A58A-987D6B4219C8}.ReleaseUnicode|x64.Build.0 = ReleaseUnicode|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

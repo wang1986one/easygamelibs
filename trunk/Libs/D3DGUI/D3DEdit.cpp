@@ -598,7 +598,7 @@ void CD3DEdit::UpdateText()
 			EncryptionText.SetLength(TextEnd-TextStart);
 			for(UINT i=0;i<EncryptionText.GetLength();i++)
 			{
-				EncryptionText[i]='*';
+				EncryptionText.SetChar(i,'*');
 			}
 			TextRect()->SetTextW(EncryptionText,EncryptionText.GetLength());
 		}

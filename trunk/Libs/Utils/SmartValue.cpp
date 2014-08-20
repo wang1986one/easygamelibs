@@ -11,7 +11,7 @@
 /****************************************************************************/
 #include "StdAfx.h"
 
-
+bool CSmartValue::m_ConvertWideCharToUTF8=false;
 
 int CSmartValue::GetTypeFromData(LPCVOID pData,UINT DataSize)
 {
@@ -19,4 +19,12 @@ int CSmartValue::GetTypeFromData(LPCVOID pData,UINT DataSize)
 		return VT_UNKNOWN;
 
 	return *((BYTE *)pData);
+}
+void CSmartValue::EnableConvertWideCharToUTF8(bool Enable)
+{
+	m_ConvertWideCharToUTF8=Enable;
+}
+bool CSmartValue::IsConvertWideCharToUTF8()
+{
+	return m_ConvertWideCharToUTF8;
 }

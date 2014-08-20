@@ -348,7 +348,7 @@ inline CEasyPoint CEasyRect::CenterPoint() const throw()
 inline void CEasyRect::SwapLeftRight() throw()
 { SwapLeftRight(LPRECT(this)); }
 inline void WINAPI CEasyRect::SwapLeftRight(LPRECT lpRect) throw()
-{ LONG temp = lpRect->left; lpRect->left = lpRect->right; lpRect->right = temp; }
+{ int temp = lpRect->left; lpRect->left = lpRect->right; lpRect->right = temp; }
 inline CEasyRect::operator LPRECT() throw()
 { return this; }
 inline CEasyRect::operator LPCRECT() const throw()

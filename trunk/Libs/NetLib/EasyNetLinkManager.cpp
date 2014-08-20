@@ -37,7 +37,7 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,LPCTSTR ConfigFileName)
 		return FALSE;
 	}
 	xml_node Config=Parser.document();
-	if(!Config.moveto_child("EasyLink"))
+	if(!Config.moveto_child(_T("EasyLink")))
 		return FALSE;
 
 	return Init(pServer,Config);
@@ -49,38 +49,38 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 	if(m_pServer==NULL)
 		return FALSE;
 
-	if(!Config.has_attribute("ServerID"))
+	if(!Config.has_attribute(_T("ServerID")))
 	{
 		return FALSE;
 	}
-	CClassifiedID ServerID=(LPCTSTR)Config.attribute("ServerID").getvalue();
+	CClassifiedID ServerID=(LPCTSTR)Config.attribute(_T("ServerID")).getvalue();
 
 	UINT ReallocIDRange=2048;
-	if(Config.has_attribute("ReallocIDRange"))
+	if(Config.has_attribute(_T("ReallocIDRange")))
 	{
-		ReallocIDRange=Config.attribute("ReallocIDRange");
+		ReallocIDRange=Config.attribute(_T("ReallocIDRange"));
 	}
 
 	if(!m_ConnectionIDPool.Create(ReallocIDRange))
 	{
-		PrintNetLog(0xffffff,"CEasyNetLinkManager::Init 创建[%u]大小的ConnectionIDPool失败",
+		PrintNetLog(0xffffff,_T("CEasyNetLinkManager::Init 创建[%u]大小的ConnectionIDPool失败"),
 			ReallocIDRange);
 		return FALSE;
 	}
 
 	for(UINT i=0;i<Config.children();i++)
 	{
-		if(_strnicmp(Config.child(i).name(),"Services",8)==0)
+		if(_tcsnicmp(Config.child(i).name(),_T("Services"),8)==0)
 		{
 			xml_node Services=Config.child(i);
 			BOOL NeedReallocConnectionID=FALSE;
-			if(Services.has_attribute("ReallocConnectionID"))
-				NeedReallocConnectionID=(bool)Services.attribute("ReallocConnectionID");
+			if(Services.has_attribute(_T("ReallocConnectionID")))
+				NeedReallocConnectionID=(bool)Services.attribute(_T("ReallocConnectionID"));
 
 			CClassifiedID ReportID;
-			if(Services.has_attribute("ReportID"))
+			if(Services.has_attribute(_T("ReportID")))
 			{
-				ReportID=Services.attribute("ReportID").getvalue();
+				ReportID=Services.attribute(_T("ReportID")).getvalue();
 			}
 			else
 			{
@@ -89,13 +89,13 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 
 			for(UINT j=0;j<Services.children();j++)
 			{
-				if(_strnicmp(Services.child(j).name(),"Service",7)==0)
+				if(_tcsnicmp(Services.child(j).name(),_T("Service"),7)==0)
 				{
 					xml_node Service=Services.child(j);
-					if(Service.has_attribute("ID")&&
-						Service.has_attribute("Port"))
+					if(Service.has_attribute(_T("ID"))&&
+						Service.has_attribute(_T("Port")))
 					{
-						CClassifiedID ID=(LPCTSTR)Service.attribute("ID").getvalue();
+						CClassifiedID ID=(LPCTSTR)Service.attribute(_T("ID")).getvalue();
 						CIPAddress Address;
 						UINT MaxPacketSize=MAX_DATA_PACKET_SIZE;
 						bool IsUseListenThread=true;
@@ -103,45 +103,49 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 						UINT AcceptQueueSize=DEFAULT_SERVER_ACCEPT_QUEUE;
 						UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE;
 						UINT SendQueueSize=0;
-						if(Service.has_attribute("IP"))
-							Address.SetIP(Service.attribute("IP").getvalue());
-						if(Service.has_attribute("MaxPacketSize"))
-							MaxPacketSize=Service.attribute("MaxPacketSize");
-						if(Service.has_attribute("IsUseListenThread"))
-							IsUseListenThread=(bool)Service.attribute("IsUseListenThread");
-						if(Service.has_attribute("ParallelAcceptCount"))
-							ParallelAcceptCount=Service.attribute("ParallelAcceptCount");
-						if(Service.has_attribute("AcceptQueueSize"))
-							AcceptQueueSize=Service.attribute("AcceptQueueSize");
-						if(Service.has_attribute("RecvQueueSize"))
-							RecvQueueSize=Service.attribute("RecvQueueSize");
-						if(Service.has_attribute("SendQueueSize"))
-							SendQueueSize=Service.attribute("SendQueueSize");
-						Address.SetPort(Service.attribute("Port"));
+						if(Service.has_attribute(_T("IP")))
+						{
+							CEasyStringA IPStr=Service.attribute(_T("IP")).getvalue();
+							Address.SetIP(IPStr);
+						}
+						if(Service.has_attribute(_T("MaxPacketSize")))
+							MaxPacketSize=Service.attribute(_T("MaxPacketSize"));
+						if(Service.has_attribute(_T("IsUseListenThread")))
+							IsUseListenThread=(bool)Service.attribute(_T("IsUseListenThread"));
+						if(Service.has_attribute(_T("ParallelAcceptCount")))
+							ParallelAcceptCount=Service.attribute(_T("ParallelAcceptCount"));
+						if(Service.has_attribute(_T("AcceptQueueSize")))
+							AcceptQueueSize=Service.attribute(_T("AcceptQueueSize"));
+						if(Service.has_attribute(_T("RecvQueueSize")))
+							RecvQueueSize=Service.attribute(_T("RecvQueueSize"));
+						if(Service.has_attribute(_T("SendQueueSize")))
+							SendQueueSize=Service.attribute(_T("SendQueueSize"));
+						Address.SetPort(Service.attribute(_T("Port")));
 						CEasyNetLinkService * pService=AddService(ID,ReportID,Address,NeedReallocConnectionID,
 							MaxPacketSize,IsUseListenThread,
 							ParallelAcceptCount,AcceptQueueSize,RecvQueueSize,SendQueueSize);
 						if(!pService)
 						{
-							PrintNetLog(0xffffff,"CEasyNetLinkManager::Init 创建Service[%s][%s:%u]失败",
+							PrintNetLog(0xffffff,_T("CEasyNetLinkManager::Init 创建Service[%s][%s:%u]失败"),
 								ID.ToStr(),Address.GetIPString(),Address.GetPort());
 							return FALSE;
 						}
 						for(UINT k=0;k<Service.children();k++)
 						{
-							if(_strnicmp(Service.child(k).name(),"IPList",6)==0)
+							if(_tcsnicmp(Service.child(k).name(),_T("IPList"),6)==0)
 							{
 								CEasyArray<CIPPattern> IPPatternList;
 								xml_node IPList=Service.child(k);
 
 								for(UINT l=0;l<IPList.children();l++)
 								{
-									if(_strnicmp(IPList.child(l).name(),"IP",2)==0)
+									if(_tcsnicmp(IPList.child(l).name(),_T("IP"),2)==0)
 									{
 										xml_node IP=IPList.child(l);
-										if(IP.has_attribute("IP"))
+										if(IP.has_attribute(_T("IP")))
 										{
-											IPPatternList.Add(CIPPattern(IP.attribute("IP").getvalue()));
+											CEasyStringA IPStr=Service.attribute(_T("IP")).getvalue();
+											IPPatternList.Add(CIPPattern(IPStr));
 										}
 									}
 								}
@@ -152,14 +156,14 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 				}
 			}
 		}
-		if(_strnicmp(Config.child(i).name(),"Connections",11)==0)
+		if(_tcsnicmp(Config.child(i).name(),_T("Connections"),11)==0)
 		{
 			xml_node Connections=Config.child(i);
 
 			CClassifiedID ReportID;
-			if(Connections.has_attribute("ReportID"))
+			if(Connections.has_attribute(_T("ReportID")))
 			{
-				ReportID=Connections.attribute("ReportID").getvalue();
+				ReportID=Connections.attribute(_T("ReportID")).getvalue();
 			}
 			else
 			{
@@ -168,27 +172,28 @@ BOOL CEasyNetLinkManager::Init(CNetServer * pServer,xml_node& Config)
 
 			for(UINT j=0;j<Connections.children();j++)
 			{
-				if(_strnicmp(Connections.child(j).name(),"Connection",10)==0)
+				if(_tcsnicmp(Connections.child(j).name(),_T("Connection"),10)==0)
 				{
 					xml_node Connection=Connections.child(j);
-					if(Connection.has_attribute("IP")&&
-						Connection.has_attribute("Port"))
+					if(Connection.has_attribute(_T("IP"))&&
+						Connection.has_attribute(_T("Port")))
 					{
 						CIPAddress Address;
 						UINT MaxPacketSize=MAX_DATA_PACKET_SIZE;
 						UINT RecvQueueSize=DEFAULT_SERVER_RECV_DATA_QUEUE;
 						UINT SendQueueSize=0;
-						Address.SetIP(Connection.attribute("IP").getvalue());
-						Address.SetPort(Connection.attribute("Port"));
-						if(Connection.has_attribute("MaxPacketSize"))
-							MaxPacketSize=Connection.attribute("MaxPacketSize");
-						if(Connection.has_attribute("RecvQueueSize"))
-							RecvQueueSize=Connection.attribute("RecvQueueSize");
-						if(Connection.has_attribute("SendQueueSize"))
-							SendQueueSize=Connection.attribute("SendQueueSize");
+						CEasyStringA IPStr=Connection.attribute(_T("IP")).getvalue();
+						Address.SetIP(IPStr);
+						Address.SetPort(Connection.attribute(_T("Port")));
+						if(Connection.has_attribute(_T("MaxPacketSize")))
+							MaxPacketSize=Connection.attribute(_T("MaxPacketSize"));
+						if(Connection.has_attribute(_T("RecvQueueSize")))
+							RecvQueueSize=Connection.attribute(_T("RecvQueueSize"));
+						if(Connection.has_attribute(_T("SendQueueSize")))
+							SendQueueSize=Connection.attribute(_T("SendQueueSize"));
 						if(!AddConnection(ReportID,Address,MaxPacketSize,RecvQueueSize,SendQueueSize))
 						{
-							PrintNetLog(0xffffff,"CEasyNetLinkManager::Init 创建Connection[%s][%s:%u]失败",
+							PrintNetLog(0xffffff,_T("CEasyNetLinkManager::Init 创建Connection[%s][%s:%u]失败"),
 								ReportID.ToStr(),Address.GetIPString(),Address.GetPort());
 							return FALSE;
 						}
@@ -242,11 +247,11 @@ CEasyNetLinkService * CEasyNetLinkManager::AddService(UINT ID,UINT ReportID,cons
 		{
 			if(pService->StartListen(ListenAddress))
 			{
-				PrintNetLog(0xffffff,"CEasyNetLinkManager::AddService 创建Service[%s][%s:%u],%s,并发Accept=%d,Accept队列长度=%u,接收队列长度=%u,发送队列长度=%u",
+				PrintNetLog(0xffffff,_T("CEasyNetLinkManager::AddService 创建Service[%s][%s:%u],%s,并发Accept=%d,Accept队列长度=%u,接收队列长度=%u,发送队列长度=%u"),
 					CClassifiedID(ID).ToStr(),
 					ListenAddress.GetIPString(),
 					ListenAddress.GetPort(),
-					IsUseListenThread?"使用侦听线程":"使用IOCP侦听",
+					IsUseListenThread?_T("使用侦听线程"):_T("使用IOCP侦听"),
 					ParallelAcceptCount,AcceptQueueSize,RecvQueueSize,SendQueueSize);
 				return pService;
 			}
@@ -267,7 +272,7 @@ BOOL CEasyNetLinkManager::AddConnection(UINT ReportID,const CIPAddress& Connecti
 		pConnection->SetMaxPacketSize(MaxPacketSize);
 		pConnection->SetKeepConnect(TRUE);
 		pConnection->SetRemoteAddress(ConnectionAddress);
-		PrintNetLog(0xffffff,"CEasyNetLinkManager::AddConnection 创建Connection[%s][%s:%u],接收队列长度=%u,发送队列长度=%u",
+		PrintNetLog(0xffffff,_T("CEasyNetLinkManager::AddConnection 创建Connection[%s][%s:%u],接收队列长度=%u,发送队列长度=%u"),
 			CClassifiedID(ReportID).ToStr(),
 			ConnectionAddress.GetIPString(),
 			ConnectionAddress.GetPort(),
@@ -390,7 +395,7 @@ BOOL CEasyNetLinkManager::AcceptConnection(CEasyNetLinkConnection * pConnection)
 		UINT ID=m_ConnectionIDPool.NewObject(&Stay);
 		if(ID==0)
 		{
-			PrintNetLog(0xffffffff,"CEasyNetLinkManager::AcceptConnection 无法给连接[%u]重新分配一个ID。",
+			PrintNetLog(0xffffffff,_T("CEasyNetLinkManager::AcceptConnection 无法给连接[%s]重新分配一个ID。"),
 				CClassifiedID(pConnection->GetID()).ToStr());
 			return FALSE;
 		}
@@ -409,7 +414,7 @@ BOOL CEasyNetLinkManager::AcceptConnection(CEasyNetLinkConnection * pConnection)
 				pConnection->OnLinkStart();
 				return TRUE;
 			}
-			PrintNetLog(0xffffffff,"CEasyNetLinkManager::AcceptConnection 连接[%u]已经存在。",
+			PrintNetLog(0xffffffff,_T("CEasyNetLinkManager::AcceptConnection 连接[%s]已经存在。"),
 				CClassifiedID(pConnection->GetID()).ToStr());
 			return FALSE;
 		}
@@ -419,7 +424,7 @@ BOOL CEasyNetLinkManager::AcceptConnection(CEasyNetLinkConnection * pConnection)
 	CEasyNetLinkConnection * pNewConnection=CreateConnection(pConnection->GetID());
 	if(pNewConnection==NULL)
 	{
-		PrintNetLog(0xffffffff,"CEasyNetLinkManager::AcceptConnection 无法给连接[%s]创建合适的对象。",
+		PrintNetLog(0xffffffff,_T("CEasyNetLinkManager::AcceptConnection 无法给连接[%s]创建合适的对象。"),
 			CClassifiedID(pConnection->GetID()).ToStr());
 
 		return FALSE;
@@ -456,7 +461,7 @@ CEasyNetLinkService * CEasyNetLinkManager::CreateLinkService(UINT ID)
 {
 	if(GetService(ID))
 	{
-		PrintNetLog(0xffffffff,"CEasyNetLinkManager::CreateService 服务[%u]已经存在。",ID);
+		PrintNetLog(0xffffffff,_T("CEasyNetLinkManager::CreateService 服务[%u]已经存在。"),ID);
 		return NULL;
 	}
 
@@ -499,12 +504,12 @@ void CEasyNetLinkManager::OnLinkEnd(CEasyNetLinkConnection * pConnection)
 
 void CEasyNetLinkManager::PrintLinkInfo(UINT LogChannel)
 {
-	CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"Service List:");
+	CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,_T("Service List:"));
 	for(size_t i=0;i<m_ServiceList.GetCount();i++)
 	{
 		m_ServiceList[i]->PrintInfo(LogChannel);
 	}
-	CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,"Link List:");
+	CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,_T("Link List:"));
 	for(int i=(int)m_ConnectionList.GetCount()-1;i>=0;i--)
 	{
 		m_ConnectionList[i]->PrintInfo(LogChannel);

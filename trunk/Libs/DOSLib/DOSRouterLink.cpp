@@ -25,13 +25,13 @@ CDOSRouterLink::~CDOSRouterLink(void)
 void CDOSRouterLink::OnLinkStart()
 {
 	FUNCTION_BEGIN;
-	PrintDOSLog(0xff0000,"收到路由(%d)的连接",GetID());	
+	PrintDOSLog(0xff0000,_T("收到路由(%d)的连接"),GetID());	
 	FUNCTION_END;
 }
 void CDOSRouterLink::OnLinkEnd()
 {
 	FUNCTION_BEGIN;
-	PrintDOSLog(0xff0000,"路由(%d)的连接断开！",GetID());
+	PrintDOSLog(0xff0000,_T("路由(%d)的连接断开！"),GetID());
 	OBJECT_ID SenderID;
 	SenderID.RouterID=GetID();
 	OBJECT_ID TargetID;
@@ -55,6 +55,6 @@ void CDOSRouterLink::OnData(const CEasyBuffer& DataBuffer)
 		GetRouter()->GetServer()->ReleaseMessagePacket(pNewPacket);
 	}
 	else
-		PrintDOSLog(0xff0000,"分配消息内存块失败！");
+		PrintDOSLog(0xff0000,_T("分配消息内存块失败！"));
 	FUNCTION_END;
 }

@@ -24,7 +24,18 @@ protected:
 	CThreadSafeIDStorage<CDOSMessagePacket *>	m_MsgQueue;
 	CStaticMap<MSG_ID_TYPE,OBJECT_ID>			m_MessageMap;
 
+	UINT										m_KeepAliveCount;
+	UINT										m_MaxKeepAliveCount;
+	UINT										m_KeepAliveTime;
+	CEasyTimer									m_KeepAliveTimer;
+	CEasyTimer									m_UnacceptConnectionKeepTimer;
+	bool										m_UseServerInitiativeKeepAlive;
+	
+	bool										m_NeedDelayClose;
+	CEasyTimer									m_DelayCloseTimer;
+
 	static CEasyBuffer							m_CompressBuffer;
+
 
 	DECLARE_CLASS_INFO(CDOSProxyConnection);
 public:
@@ -57,9 +68,9 @@ protected:
 	BOOL RegisterMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID);
 	BOOL UnregisterMsgMap(MSG_ID_TYPE MsgID,OBJECT_ID ObjectID);
 
-	UINT SortTargetObjectID(OBJECT_ID * pObjectIDs,UINT Count);
-	int FindMinObjectID(OBJECT_ID * pObjectIDs,UINT Count);
 	void ClearMsgMapByRouterID(UINT RouterID);
+
+	CDOSSimpleMessage * CompressMsg(CDOSSimpleMessage * pMsg);
 };
 
 inline OBJECT_ID CDOSProxyConnection::GetObjectID()

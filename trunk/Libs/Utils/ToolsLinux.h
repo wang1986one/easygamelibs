@@ -81,7 +81,7 @@ inline CEasyString GetPathDirectory(LPCTSTR Path)
 	return Dir;
 }
 
-inline CEasyString GetPathFileName(LPCTSTR Path)
+inline CEasyString GetPathFileNameExt(LPCTSTR Path)
 {
 	CEasyString FileName=Path;
 	int Pos=FileName.ReverseFind('/');

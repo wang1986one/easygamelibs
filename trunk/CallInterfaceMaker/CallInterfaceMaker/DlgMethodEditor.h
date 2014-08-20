@@ -23,7 +23,7 @@ protected:
 	vector<METHOD_PARAM>		m_ParamList;
 	CString						m_Name;
 	CString						m_Description;
-	CString						m_ID;
+	UINT						m_ID;
 	UINT						m_ParamIDSeed;
 public:
 	CDlgMethodEditor(CWnd* pParent = NULL);   // 标准构造函数
@@ -42,6 +42,7 @@ protected:
 	void AddListItem(METHOD_PARAM& ParamInfo,UINT Index);
 	void EditListItem(int Item,METHOD_PARAM& ParamInfo);
 	void FillListItem();
+	void SelectItemByName(LPCTSTR szName);
 	virtual void OnOK();
 	virtual void OnCancel();
 	
@@ -50,6 +51,7 @@ protected:
 	afx_msg void OnBnClickedButtonDelParam();
 public:
 	void SetData(INTERFACE_METHOD& MethodInfo);
+	void SetID(UINT ID);
 	void GetData(INTERFACE_METHOD& MethodInfo);
 	
 	
@@ -66,6 +68,10 @@ inline void CDlgMethodEditor::SetData(INTERFACE_METHOD& MethodInfo)
 	m_Description=MethodInfo.Description;
 	m_ID=MethodInfo.ID;
 	m_ParamIDSeed=MethodInfo.ParamIDSeed;
+}
+inline void CDlgMethodEditor::SetID(UINT ID)
+{
+	m_ID=ID;
 }
 inline void CDlgMethodEditor::GetData(INTERFACE_METHOD& MethodInfo)
 {

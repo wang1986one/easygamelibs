@@ -11,7 +11,7 @@
 /****************************************************************************/
 #include "StdAfx.h"
 
-CStringFile::CStringFile( LPCTSTR pszTextFile ,int FileChannel)
+CStringFile::CStringFile( LPCTSTR pszTextFile ,bool bSplitLine,int FileChannel)
 {
 	m_FileChannel=FileChannel;
 	m_pData = NULL;
@@ -19,7 +19,9 @@ CStringFile::CStringFile( LPCTSTR pszTextFile ,int FileChannel)
 	m_pLines = NULL;
 	m_iLineCount = 0;
 	m_LineDelimiter=0;
-	LoadFile( pszTextFile );
+	m_LocalCodePage=CP_ACP;
+	m_SaveCodePage=CP_ACP;
+	LoadFile( pszTextFile ,bSplitLine);
 }
 CStringFile::CStringFile(int FileChannel)
 {
@@ -29,6 +31,8 @@ CStringFile::CStringFile(int FileChannel)
 	m_pLines = NULL;
 	m_iLineCount = 0;
 	m_LineDelimiter=0;
+	m_LocalCodePage=CP_ACP;
+	m_SaveCodePage=CP_ACP;
 }
 CStringFile::~CStringFile()
 {
@@ -72,70 +76,134 @@ void CStringFile::MakeDeflate()
 		*p1 = 0;
 	}
 }
-BOOL CStringFile::LoadFile( LPCTSTR pszTextFile )
+BOOL CStringFile::LoadFile( LPCTSTR pszTextFile ,bool bSplitLine)
 {
+	Destroy();
+
 	IFileAccessor * pFile;
 
 	pFile=CFileSystemManager::GetInstance()->CreateFileAccessor(m_FileChannel);
 	if(pFile==NULL)
 		return false;
-	if(!pFile->Open(pszTextFile,IFileAccessor::modeRead))
+	if(!pFile->Open(pszTextFile,IFileAccessor::modeRead|IFileAccessor::shareShareAll))
 	{
 		pFile->Release();
 		return false;
 	}
-	BOOL Ret=LoadFile(pFile);	
+	BOOL Ret=LoadFile(pFile,bSplitLine);	
 	pFile->Release();	
 	return Ret;
 }
 
-BOOL CStringFile::LoadFile( IFileAccessor * pFile )
+BOOL CStringFile::LoadFile( IFileAccessor * pFile ,bool bSplitLine)
 {
+	Destroy();
+
+	CEasyBuffer Buffer;
+
 	UINT FileSize=(UINT)pFile->GetSize();
-	BYTE * pBuffer=new BYTE[FileSize];
-	bool IsUnicode=false;
-	pFile->Read(pBuffer,FileSize);
-	if(FileSize>=2)
+	Buffer.Create(FileSize);
+	if(pFile->Read(Buffer.GetBuffer(),FileSize)<FileSize)
 	{
-		if(pBuffer[0]==0xFF&&pBuffer[1]==0xFE)
-			IsUnicode=true;
+		return false;
 	}
+
+	UINT BomHeader=GetBomHeader(Buffer.GetBuffer());
+
+	
 #ifdef UNICODE
-	if(IsUnicode)
+	if(BomHeader==0)
 	{
-		m_iDataSize=FileSize/sizeof(WCHAR);
-		m_pData=new WCHAR[m_iDataSize+2];
-		memcpy(m_pData,pBuffer,FileSize);
+		m_iDataSize=AnsiToUnicode((char *)Buffer.GetBuffer(),FileSize,NULL,0);
+		m_pData=new TCHAR[m_iDataSize+1];
+		AnsiToUnicode((char *)Buffer.GetBuffer(),FileSize,m_pData,m_iDataSize);
+	}
+	else if(BomHeader==BMT_UNICODE)
+	{
+		m_iDataSize=(FileSize-2)/2;
+		m_pData=new TCHAR[m_iDataSize+1];
+		memcpy(m_pData,(char *)Buffer.GetBuffer()+2,m_iDataSize*sizeof(TCHAR));
+	}
+	else if(BomHeader==BMT_UTF_8)
+	{
+		m_iDataSize=MultiByteToWideChar(CP_UTF8,0,(char *)Buffer.GetBuffer()+3,FileSize-3,NULL,0);
+		m_pData=new TCHAR[m_iDataSize+1];
+		MultiByteToWideChar(CP_UTF8,0,(char *)Buffer.GetBuffer()+3,FileSize-3,m_pData,m_iDataSize);
 	}
 	else
 	{
-		m_iDataSize=AnsiToUnicode((char *)pBuffer,FileSize,NULL,0);
-		m_pData=new WCHAR[m_iDataSize+2];
-		AnsiToUnicode((char *)pBuffer,FileSize,m_pData,m_iDataSize);
+		return false;
 	}
+	m_pData[m_iDataSize]=0;
 #else
-	if(IsUnicode)
+	if(BomHeader==0)
 	{
-		m_iDataSize=UnicodeToAnsi((WCHAR *)pBuffer,FileSize/sizeof(WCHAR),NULL,0);
-		m_pData=new char[m_iDataSize+2];
-		UnicodeToAnsi((WCHAR *)pBuffer,FileSize/sizeof(WCHAR),m_pData,m_iDataSize);
+		if(m_LocalCodePage==CP_UTF8)
+		{
+			m_iDataSize=AnsiToUTF8((char *)Buffer.GetBuffer(),FileSize,NULL,0);
+			m_pData=new TCHAR[m_iDataSize+1];
+			AnsiToUTF8((char *)Buffer.GetBuffer(),FileSize,m_pData,m_iDataSize);
+		}
+		else
+		{
+			m_iDataSize=FileSize;
+			m_pData=new TCHAR[m_iDataSize+1];
+			memcpy(m_pData,Buffer.GetBuffer(),m_iDataSize*sizeof(TCHAR));
+			m_pData[m_iDataSize]=0;
+		}
+	}
+	else if(BomHeader==BMT_UNICODE)
+	{
+		if(m_LocalCodePage==CP_UTF8)
+		{
+			m_iDataSize=UnicodeToUTF8((wchar_t *)Buffer.GetBuffer()+1,FileSize/2-1,NULL,0);
+			m_pData=new TCHAR[m_iDataSize+1];
+			UnicodeToUTF8((wchar_t *)Buffer.GetBuffer()+1,FileSize/2-1,m_pData,m_iDataSize);
+		}
+		else
+		{
+			m_iDataSize=UnicodeToAnsi((wchar_t *)Buffer.GetBuffer()+1,FileSize/2-1,NULL,0);
+			m_pData=new TCHAR[m_iDataSize+1];
+			UnicodeToAnsi((wchar_t *)Buffer.GetBuffer()+1,FileSize/2-1,m_pData,m_iDataSize);
+		}
+	}
+	else if(BomHeader==BMT_UTF_8)
+	{
+		if(m_LocalCodePage==CP_UTF8)
+		{
+			m_iDataSize=FileSize-3;
+			m_pData=new TCHAR[m_iDataSize+1];
+			memcpy(m_pData,(char *)Buffer.GetBuffer()+3,m_iDataSize*sizeof(TCHAR));
+			m_pData[m_iDataSize]=0;
+		}
+		else
+		{
+			m_iDataSize=UTF8ToAnsi((char *)Buffer.GetBuffer()+3,FileSize-3,NULL,0);
+			m_pData=new TCHAR[m_iDataSize+1];
+			UTF8ToAnsi((char *)Buffer.GetBuffer()+3,FileSize-3,m_pData,m_iDataSize);
+		}
 	}
 	else
 	{
-		m_iDataSize=FileSize/sizeof(char);
-		m_pData=new char[m_iDataSize+2];
-		memcpy(m_pData,pBuffer,FileSize);
+		return false;
 	}
+	m_pData[m_iDataSize]=0;	
 #endif
-	SAFE_DELETE_ARRAY(pBuffer);
-	m_pData[m_iDataSize] = 0;
-	m_pData[m_iDataSize+1] = 0;
-	m_iLineCount = ProcData();
-	return BuildLines();
+	if(bSplitLine)
+	{
+		m_iLineCount = ProcData();
+		return BuildLines();
+	}
+	else
+	{
+		return true;
+	}
 }
 
-BOOL CStringFile::LoadFromString(LPCTSTR pStr,int Len)
+BOOL CStringFile::LoadFromString(LPCTSTR pStr,int Len,bool bSplitLine)
 {
+	Destroy();
+
 	if(Len<0)
 		Len=(UINT)_tcslen(pStr);
 	m_iDataSize=Len;
@@ -143,8 +211,79 @@ BOOL CStringFile::LoadFromString(LPCTSTR pStr,int Len)
 	_tcsncpy_s(m_pData,m_iDataSize+2,pStr,Len);
 	m_pData[m_iDataSize] = 0;
 	m_pData[m_iDataSize+1] = 0;
-	m_iLineCount = ProcData();
-	return BuildLines();
+	if(bSplitLine)
+	{
+		m_iLineCount = ProcData();
+		return BuildLines();
+	}
+	else
+	{
+		return true;
+	}
+}
+
+BOOL CStringFile::SaveToFile(LPCTSTR pszTextFile)
+{
+	IFileAccessor * pFile;
+
+	pFile=CFileSystemManager::GetInstance()->CreateFileAccessor(m_FileChannel);
+	if(pFile==NULL)
+		return false;
+	if(!pFile->Open(pszTextFile,IFileAccessor::modeWrite|IFileAccessor::modeCreateAlways|IFileAccessor::shareShareAll))
+	{
+		pFile->Release();
+		return false;
+	}
+	BOOL Ret=SaveToFile(pFile);	
+	pFile->Release();	
+	return Ret;
+}
+
+BOOL CStringFile::SaveToFile(IFileAccessor * pFile)
+{
+	BOOL Ret=TRUE;
+#ifdef UNICODE
+	if(m_SaveCodePage==CP_UTF8)
+	{
+		UINT BomHeader=BMT_UTF_8;
+		pFile->Write(&BomHeader,3);
+		size_t StrLen=_tcslen(m_pData);
+		UINT64 WriteLen=UnicodeToUTF8(m_pData,StrLen,NULL,0);
+		char * pBuffer=new char[WriteLen+1];
+		WriteLen=UnicodeToUTF8(m_pData,StrLen,pBuffer,WriteLen);
+		if(pFile->Write(pBuffer,WriteLen)!=WriteLen)
+			Ret=FALSE;
+		delete[] pBuffer;
+	}
+	else
+	{
+		UINT BomHeader=BMT_UNICODE;
+		pFile->Write(&BomHeader,2);
+		UINT64 WriteLen=_tcslen(m_pData)*sizeof(TCHAR);
+		if(pFile->Write(m_pData,WriteLen)!=WriteLen)
+			Ret=FALSE;
+	}
+#else
+	if(m_SaveCodePage==CP_UTF8)
+	{
+		UINT BomHeader=BMT_UTF_8;
+		pFile->Write(&BomHeader,3);
+		size_t StrLen=_tcslen(m_pData);
+		UINT64 WriteLen=AnsiToUTF8(m_pData,StrLen,NULL,0);
+		char * pBuffer=new char[WriteLen+1];
+		WriteLen=AnsiToUTF8(m_pData,StrLen,pBuffer,WriteLen);
+		if(pFile->Write(pBuffer,WriteLen)!=WriteLen)
+			Ret=FALSE;
+		delete[] pBuffer;
+	}
+	else
+	{
+		UINT64 WriteLen=_tcslen(m_pData);
+		if(pFile->Write(m_pData,WriteLen)!=WriteLen)
+			Ret=FALSE;
+	}
+#endif
+	return Ret;
 }
 
 TCHAR * CStringFile::operator[]( UINT line )

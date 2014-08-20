@@ -39,7 +39,6 @@ public:
 
 protected:
 	void GetProgamVersion();
-
 	//DECLARE_MESSAGE_MAP()
 	
 };

@@ -45,4 +45,6 @@ public:
 
 	virtual void PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_list vl);	
 
+	void PrintLogDirect(int Level,DWORD Color,LPCTSTR szMsg);
+
 };

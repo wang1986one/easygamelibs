@@ -97,7 +97,7 @@ int CDBStaticRecordSet::GetColumnCount()
 	return (int)m_pColumnInfos.GetCount();
 }
 
-LPCTSTR CDBStaticRecordSet::GetColumnName(int Index)
+LPCSTR CDBStaticRecordSet::GetColumnName(int Index)
 {
 	if(Index>=0&&Index<(int)m_pColumnInfos.GetCount())
 	{
@@ -106,7 +106,7 @@ LPCTSTR CDBStaticRecordSet::GetColumnName(int Index)
 	return NULL;
 }
 
-int CDBStaticRecordSet::GetIndexByColumnName(LPCTSTR Name)
+int CDBStaticRecordSet::GetIndexByColumnName(LPCSTR Name)
 {
 	for(int i=0;i<(int)m_pColumnInfos.GetCount();i++)
 	{
@@ -139,7 +139,7 @@ CDBValue& CDBStaticRecordSet::GetField(int Index)
 	return m_EmptyValue;
 }
 
-CDBValue& CDBStaticRecordSet::GetField(LPCTSTR Name)
+CDBValue& CDBStaticRecordSet::GetField(LPCSTR Name)
 {
 	if(m_CurRow>=0&&m_CurRow<(int)m_Records.GetCount())
 	{	

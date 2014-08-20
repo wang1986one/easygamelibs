@@ -10,6 +10,7 @@
 /*                                                                          */
 /****************************************************************************/
 #pragma once
+#include "afxcmn.h"
 
 
 // CDlgConfig ¶Ô»°¿ò
@@ -30,22 +31,20 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
-	INTERFACE_CONFIG * m_pConfig;
-protected:
-	BOOL m_IsExpProtocolFile;
-	BOOL m_IsExpInterface;
-	BOOL m_IsExpCallerHeader;
-	BOOL m_IsExpCallerSource;
-	BOOL m_IsExpHandlerHeader;
-	BOOL m_IsExpHandlerSource;
-	CString m_ProtocolFileExt;
-	CString m_InterfaceExt;
-	CString m_CallerHeaderExt;
-	CString m_CallerSourceExt;
-	CString m_HandlerHeaderExt;
-	CString m_HandlerSourceExt;
+	INTERFACE_CONFIG m_Config;
+protected:		
+	bool					m_IsModified;
 public:
+
+
 	virtual BOOL OnInitDialog();
-protected:
 	virtual void OnOK();
+protected:
+	virtual void OnCancel();
+	afx_msg void OnEnChangeEdit();
+public:
+	afx_msg void OnBnClickedButton1DefaultStructGenerateOperations();
+	afx_msg void OnBnClickedButtonArrayDefineConfig();
 };
+
+	

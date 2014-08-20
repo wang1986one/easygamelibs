@@ -77,7 +77,7 @@ public:
 
 		SAFE_DELETE_ARRAY(m_pBuffer);
 		m_pBuffer=new wchar_t[StrLen+1];
-		strncpy(m_pBuffer,pStr,StrLen);
+		wcsncpy_s(m_pBuffer,StrLen+1,pStr,StrLen);
 		m_pBuffer[StrLen]=0;
 
 		wchar_t * pSrc=m_pBuffer;

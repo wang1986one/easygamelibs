@@ -172,6 +172,15 @@ BOOL CEasyThread::WaitForTerminate(DWORD Milliseconds)
 	}
 }
 
+BOOL CEasyThread::SetThreadPriority(int Priority)
+{
+	return ::SetThreadPriority(m_hThread,Priority);
+}
+int CEasyThread::GetThreadPriority()
+{
+	return ::GetThreadPriority(m_hThread);
+}
+
 BOOL CEasyThread::OnStart()
 {
 	return TRUE;
@@ -197,10 +206,10 @@ void CEasyThread::OnTerminate()
 
 UINT __stdcall CEasyThread::ThreadProc(LPVOID pParam)
 {
-#ifdef USE_THREAD_EXCEPTION_CATCH
-	__try
-	{
-#endif
+//#ifdef USE_THREAD_EXCEPTION_CATCH
+//	__try
+//	{
+//#endif
 	
 		CEasyThread * pThread=(CEasyThread *)pParam;	
 		
@@ -215,11 +224,11 @@ UINT __stdcall CEasyThread::ThreadProc(LPVOID pParam)
 		_endthreadex(0);			
 		
 		return 0;
-#ifdef USE_THREAD_EXCEPTION_CATCH
-	}__except(CExceptionParser::ExceptionHander(GetExceptionInformation()))
-	{
-		exit(0);
-	}	
-	return 0;
-#endif
+//#ifdef USE_THREAD_EXCEPTION_CATCH
+//	}__except(CExceptionParser::ExceptionHander(GetExceptionInformation()))
+//	{
+//		exit(0);
+//	}	
+//	return 0;
+//#endif
 }

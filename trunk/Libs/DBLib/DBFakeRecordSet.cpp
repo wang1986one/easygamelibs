@@ -127,12 +127,12 @@ int CDBFakeRecordSet::GetColumnCount()
 	return 0;
 }
 
-LPCTSTR CDBFakeRecordSet::GetColumnName(int Index)
+LPCSTR CDBFakeRecordSet::GetColumnName(int Index)
 {
 	return NULL;
 }
 
-int CDBFakeRecordSet::GetIndexByColumnName(LPCTSTR Name)
+int CDBFakeRecordSet::GetIndexByColumnName(LPCSTR Name)
 {
 	return -1;
 }
@@ -148,7 +148,7 @@ CDBValue& CDBFakeRecordSet::GetField(int Index)
 	return m_EmptyValue;
 }
 
-CDBValue& CDBFakeRecordSet::GetField(LPCTSTR Name)
+CDBValue& CDBFakeRecordSet::GetField(LPCSTR Name)
 {
 	return m_EmptyValue;
 }

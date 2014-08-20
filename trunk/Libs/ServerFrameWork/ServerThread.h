@@ -28,12 +28,12 @@ protected:
 	CSystemNetLinkManager		*m_pSysNetLinkManager;
 	CSystemControlPort			*m_pUDPSystemControlPort;
 	CSmartStruct				m_ServerStatus;
-	
+	int							m_ConsoleLogLevel;
 
-	UINT						m_CycleCount;
-	
 
 	CEasyTimer					m_CountTimer;
+
+	CThreadPerformanceCounter	m_ThreadPerformanceCounter;
 
 	DECLARE_CLASS_INFO_STATIC(CServerThread);
 public:
@@ -48,7 +48,7 @@ public:
 		return this;
 	}
 
-	virtual BOOL PrintConsoleLog(LPCTSTR szLogMsg);
+	virtual BOOL PrintConsoleLog(int Level,LPCTSTR szLogMsg);
 
 	virtual void ExecCommand(LPCTSTR szCommand);
 
@@ -61,6 +61,15 @@ public:
 	virtual CSmartStruct& GetAllServerStatus()
 	{
 		return m_ServerStatus;
+	}
+
+	void SetConsoleLogLevel(int Level)
+	{
+		m_ConsoleLogLevel=Level;
+	}
+	int GetConsoleLogLevel()
+	{
+		return m_ConsoleLogLevel;
 	}
 
 	virtual void QueryShowDown();
@@ -96,4 +105,5 @@ protected:
 	int StopLog(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
 	int TestLog(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);	
 	int RebuildUDPControlPort(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
+	int SFSetConsoleLogLevel(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount);
 };

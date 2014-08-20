@@ -38,7 +38,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <ostream>
-
+#include <math.h>
 #ifdef WIN32
 
 #include "Win32AddOn.h"
@@ -54,6 +54,8 @@
 #define SAFE_DELETE(p)       { if(p) { delete (p);     (p)=NULL; } }
 #define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);   (p)=NULL; } }
 #define SAFE_RELEASE(p)      { if(p) { (p)->Release(); (p)=NULL; } }
+
+#define ASSERT_AND_THROW(Express)		if(!(Express)) {assert(Express);throw;}
 
 const float PI				= float(3.14159265358979323846);
 const float TWO_PI			= float(2.0 * 3.14159265358979323846);
@@ -118,7 +120,7 @@ enum EASY_DATA_STORAGE_MODE
 #include "StaticObject.h"
 #include "NameObject.h"
 
-
+#include "ClassifiedID.h"
 
 #include "ILogPrinter.h"
 #include "LogManager.h"
@@ -253,8 +255,16 @@ using namespace pug;
 
 #include "AsyncFileLogWorkThread.h"
 #include "AsyncFileLogPrinter.h"
+#include "CSVFileLogPrinter.h"
 
 #include "HashMD5.h"
+#include "Base64.h"
+#include "SHA1.h"
+#include "HMAC_SHA1.h"
+#include "URLEncode.h"
+#include "TEA.h"
+#include "Crypto/aes.h"
+#include "Crypto/des.h"
 
 #ifdef WIN32
 #include "SystemProcessList.h"
@@ -263,6 +273,3 @@ using namespace pug;
 
 
 
-#ifdef WIN32
-#pragma comment(lib,"Dbghelp.lib")
-#endif

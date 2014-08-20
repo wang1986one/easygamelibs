@@ -57,7 +57,9 @@ public:
 	UINT GetInMsgFlow();
 	UINT GetOutMsgCount();
 	UINT GetOutMsgFlow();
+	UINT GetMsgQueueLen();
 	float GetCycleTime();
+	float GetCPUUsedRate();
 	void ResetStatData();
 protected:
 	int DoMessageRoute(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT);	
@@ -88,9 +90,17 @@ inline UINT CDOSRouter::GetOutMsgFlow()
 {
 	return m_RouteOutMsgFlow;
 }
+inline UINT CDOSRouter::GetMsgQueueLen()
+{
+	return m_MsgQueue.GetObjectCount();
+}
 inline float CDOSRouter::GetCycleTime()
 {
 	return m_ThreadPerformanceCounter.GetCycleTime();
+}
+inline float CDOSRouter::GetCPUUsedRate()
+{
+	return m_ThreadPerformanceCounter.GetCPUUsedRate();
 }
 inline void CDOSRouter::ResetStatData()
 {

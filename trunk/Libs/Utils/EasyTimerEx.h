@@ -29,10 +29,8 @@ protected:
 
 	friend class CQueryPerformanceFrequency;
 public:
-	enum
-	{
-		TIME_UNIT_PER_SECOND=1000000000,
-	};
+	static const UINT64 TIME_UNIT_PER_SECOND=1000000000;
+
 	CEasyTimerEx():m_dwSavedTime(0),m_dwTimeoutTime(0)
 	{
 
@@ -54,7 +52,20 @@ public:
 		UINT64 Time;
 #ifdef WIN32
 		QueryPerformanceCounter((LARGE_INTEGER*)&Time);
-		Time=Time*TIME_UNIT_PER_SECOND/m_PerformanceFrequency;
+		Time=(UINT64)((float)Time/(float)m_PerformanceFrequency)*TIME_UNIT_PER_SECOND;
+#else
+		timespec OrginTime;		
+		clock_gettime(CLOCK_MONOTONIC,&OrginTime);
+		Time=(UINT64)OrginTime.tv_sec*1000000000+OrginTime.tv_nsec;
+#endif
+		return Time;
+	}
+
+	static inline UINT64	GetTimeOrigin()
+	{
+		UINT64 Time;
+#ifdef WIN32
+		QueryPerformanceCounter((LARGE_INTEGER*)&Time);
 #else
 		timespec OrginTime;		
 		clock_gettime(CLOCK_MONOTONIC,&OrginTime);

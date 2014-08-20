@@ -54,7 +54,7 @@ BOOL CNetConnection::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObje
 				if(pOverLappedObject->GetDataBuff()->GetUsedSize()<=0)
 				{						
 					GetServer()->DeleteOverLappedObject(pOverLappedObject);
-					//PrintNetLog(0xffffffff,"%s(%d)Connection收对方连接关闭信号(%d)！",
+					//PrintNetLog(0xffffffff,_T("%s(%d)Connection收对方连接关闭信号(%d)！"),
 					//	GetName(),m_Session,
 					//	pOverLappedObject->GetDataBuff()->GetUsedSize());
 					QueryDisconnect();
@@ -68,7 +68,7 @@ BOOL CNetConnection::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObje
 					{
 						if(!QueryRecv())
 						{
-							PrintNetLog(0xffffffff,"无法发出更多的Recv请求,连接关闭！");
+							PrintNetLog(0xffffffff,_T("无法发出更多的Recv请求,连接关闭！"));
 							QueryDisconnect();	
 							return FALSE;
 						}
@@ -79,25 +79,25 @@ BOOL CNetConnection::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObje
 						
 					}
 					else
-						PrintNetLog(0xffffffff,"Recv数据队列已满！");
+						PrintNetLog(0xffffffff,_T("Recv数据队列已满！"));
 			}
 			}
 			else
-				PrintNetLog(0xffffffff,"Connection收到非法IOCP包！");
+				PrintNetLog(0xffffffff,_T("Connection收到非法IOCP包！"));
 			
 		}
 		else
-			PrintNetLog(0xffffffff,"(%d)Connection收到IOCP错误！",GetID());
+			PrintNetLog(0xffffffff,_T("(%d)Connection收到IOCP错误！"),GetID());
 		if(IsConnected())
 		{
-			//PrintNetLog(0xffffffff,"(%d)(%d)Connection IOCP出错时连接还未断开,连接关闭！",GetID(),m_Session);
+			//PrintNetLog(0xffffffff,_T("(%d)(%d)Connection IOCP出错时连接还未断开,连接关闭！"),GetID(),m_Session);
 			QueryDisconnect();
 		}
 		
 	}
 	else
 	{
-		PrintNetLog(0xffffffff,"(%d)Connection未连接，IOCP包(%u)被忽略！",GetID(),pOverLappedObject->GetParentID());
+		PrintNetLog(0xffffffff,_T("(%d)Connection未连接，IOCP包(%u)被忽略！"),GetID(),pOverLappedObject->GetParentID());
 	}
 	GetServer()->DeleteOverLappedObject(pOverLappedObject);
 	
@@ -124,7 +124,7 @@ BOOL CNetConnection::Create(UINT RecvQueueSize,UINT SendQueueSize)
 
 	if(m_DataQueue.GetObjectCount())
 	{
-		PrintNetLog(0xffffffff,"(%d)CNetConnection::Create:数据队列不是空的！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)CNetConnection::Create:数据队列不是空的！"),GetID());
 	}
 
 	
@@ -135,7 +135,7 @@ BOOL CNetConnection::Create(UINT RecvQueueSize,UINT SendQueueSize)
 
 	if(SendQueueSize)
 	{
-		PrintNetLog(0,"启用发送队列，大小为%u",SendQueueSize);
+		PrintNetLog(0,_T("启用发送队列，大小为%u"),SendQueueSize);
 		m_UseSendBuffer=true;
 		if(m_SendBuffer.GetBufferSize()<SendQueueSize)
 		{
@@ -173,7 +173,7 @@ BOOL CNetConnection::Create(SOCKET Socket,UINT RecvQueueSize,UINT SendQueueSize)
 
 	if(m_DataQueue.GetObjectCount())
 	{
-		PrintNetLog(0xffffffff,"(%d)CNetConnection::Create:数据队列不是空的！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)CNetConnection::Create:数据队列不是空的！"),GetID());
 	}
 
 	if(m_DataQueue.GetBufferSize()<RecvQueueSize)
@@ -183,7 +183,7 @@ BOOL CNetConnection::Create(SOCKET Socket,UINT RecvQueueSize,UINT SendQueueSize)
 
 	if(SendQueueSize)
 	{
-		PrintNetLog(0,"启用发送队列，大小为%u",SendQueueSize);
+		PrintNetLog(0,_T("启用发送队列，大小为%u"),SendQueueSize);
 		m_UseSendBuffer=true;
 		if(m_SendBuffer.GetBufferSize()<SendQueueSize)
 		{
@@ -269,9 +269,9 @@ BOOL CNetConnection::Connect(const CIPAddress& Address ,DWORD TimeOut)
 }
 void CNetConnection::Disconnect()
 {
-	//PrintNetLog(0xffffffff,"(%d)Connection关闭",GetID());
+	//PrintNetLog(0xffffffff,_T("(%d)Connection关闭"),GetID());
 
-	//PrintNetLog(0xffffffff,"%s连接关闭",GetName());
+	//PrintNetLog(0xffffffff,_T("%s连接关闭"),GetName());
 
 	
 	m_Socket.Close();
@@ -302,7 +302,7 @@ void CNetConnection::QueryDisconnect()
 
 BOOL CNetConnection::StartWork()
 {	
-	//PrintNetLog(0xffffffff,"(%d)Connection开始工作",GetID());
+	//PrintNetLog(0xffffffff,_T("(%d)Connection开始工作"),GetID());
 
 	m_Socket.SetState(CNetSocket::SS_CONNECTED);	
 	m_pIOCPEventRouter->Init(this);
@@ -312,7 +312,7 @@ BOOL CNetConnection::StartWork()
 	if(!m_Socket.EnableBlocking(FALSE))
 	{
 		OnConnection(FALSE);
-		PrintNetLog(0xffffffff,"(%d)Connection开始非阻塞模式失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Connection开始非阻塞模式失败！"),GetID());
 		m_Socket.Close();		
 		return FALSE;
 	}
@@ -320,7 +320,7 @@ BOOL CNetConnection::StartWork()
 	if(!GetServer()->BindSocket(m_Socket.GetSocket()))
 	{
 		OnConnection(FALSE);
-		PrintNetLog(0xffffffff,"(%d)Connection绑定IOCP失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Connection绑定IOCP失败！"),GetID());
 		m_Socket.Close();		
 		return FALSE;
 	}
@@ -328,17 +328,17 @@ BOOL CNetConnection::StartWork()
 	if(!QueryRecv())
 	{
 		OnConnection(FALSE);
-		PrintNetLog(0xffffffff,"(%d)Connection初始化Recv失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Connection初始化Recv失败！"),GetID());
 		m_Socket.Close();
 		return FALSE;
 	}
 		
 	//CEasyString ConnectionName;
-	//ConnectionName.Format("[%s:%d]",GetRemoteAddress().GetIPString(),GetRemoteAddress().GetPort());
+	//ConnectionName.Format(_T("[%s:%d]"),GetRemoteAddress().GetIPString(),GetRemoteAddress().GetPort());
 	//SetName(ConnectionName);;
 
 
-	//PrintNetLog(0xffffffff,"%s连接建立[%u]",GetName(),(UINT)m_Socket.GetSocket());
+	//PrintNetLog(0xffffffff,_T("%s连接建立[%u]"),GetName(),(UINT)m_Socket.GetSocket());
 
 	OnConnection(TRUE);
 	return TRUE;
@@ -404,20 +404,20 @@ BOOL CNetConnection::Send(LPCVOID pData,UINT Size)
 					}
 					else
 					{
-						PrintNetLog(0,"异常，发送缓冲已满");
+						PrintNetLog(0,_T("异常，发送缓冲已满"));
 					}
 					
 				}
 				else
 				{
-					PrintNetLog(0xffffffff,"Connection要发送的数据包过大！");
+					PrintNetLog(0xffffffff,_T("Connection要发送的数据包过大！"));
 				}
 				
 				GetServer()->DeleteOverLappedObject(pOverLappedObject);
 			}
 			else
 			{
-				PrintNetLog(0xffffffff,"Connection创建Send用OverLappedObject失败！");
+				PrintNetLog(0xffffffff,_T("Connection创建Send用OverLappedObject失败！"));
 			}
 			Disconnect();
 			return FALSE;
@@ -455,7 +455,7 @@ BOOL CNetConnection::QuerySend(LPCVOID pData,UINT Size)
 			COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
 			if(pOverLappedObject==NULL)
 			{
-				PrintNetLog(0xffffffff,"Connection创建Send用OverLappedObject失败！");
+				PrintNetLog(0xffffffff,_T("Connection创建Send用OverLappedObject失败！"));
 				Disconnect();
 				return FALSE;
 			}
@@ -468,7 +468,7 @@ BOOL CNetConnection::QuerySend(LPCVOID pData,UINT Size)
 			if(!pOverLappedObject->GetDataBuff()->PushBack(pData,PacketSize))
 			{
 				GetServer()->DeleteOverLappedObject(pOverLappedObject);
-				PrintNetLog(0xffffffff,"Connection要发送的数据包过大！");
+				PrintNetLog(0xffffffff,_T("Connection要发送的数据包过大！"));
 				Disconnect();
 				return FALSE;
 			}
@@ -491,7 +491,7 @@ BOOL CNetConnection::QuerySend(LPCVOID pData,UINT Size)
 				continue;
 			}
 			AtomicDec(&m_SendQueryCount);
-			PrintNetLog(0xffffffff,"发出Send请求失败！");	
+			PrintNetLog(0xffffffff,_T("发出Send请求失败！"));	
 			GetServer()->DeleteOverLappedObject(pOverLappedObject);
 			Disconnect();
 			return FALSE;
@@ -515,14 +515,14 @@ BOOL CNetConnection::QueryRecv()
 	{
 		if(m_DataQueue.GetObjectCount()>=m_DataQueue.GetBufferSize())
 		{
-			PrintNetDebugLog(0,"接收缓冲已满，暂停接收");
+			PrintNetDebugLog(0,_T("接收缓冲已满，暂停接收"));
 			m_IsRecvPaused=true;
 			return TRUE;
 		}
 		COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
 		if(pOverLappedObject==NULL)
 		{
-			PrintNetLog(0xffffffff,"(%d)Connection创建Recv用OverLappedObject失败！",GetID());
+			PrintNetLog(0xffffffff,_T("(%d)Connection创建Recv用OverLappedObject失败！"),GetID());
 			return FALSE;
 		}
 
@@ -545,7 +545,7 @@ BOOL CNetConnection::QueryRecv()
 		{
 			return TRUE;
 		}
-		PrintNetLog(0xffffffff,"(%d)发出Recv请求失败！",GetID());	
+		PrintNetLog(0xffffffff,_T("(%d)发出Recv请求失败！"),GetID());	
 		GetServer()->DeleteOverLappedObject(pOverLappedObject);
 	}
 	return FALSE;
@@ -621,7 +621,7 @@ UINT CNetConnection::GetCurSendQueryCount()
 
 bool CNetConnection::StealFrom(CNameObject * pObject,UINT Param)
 {
-	PrintNetLog(0xffffffff,"(%d)执行连接替换(%d)！",GetID(),pObject->GetID());
+	PrintNetLog(0xffffffff,_T("(%d)执行连接替换(%d)！"),GetID(),pObject->GetID());
 	if(pObject->IsKindOf(GET_CLASS_INFO(CNetConnection)))
 	{
 		Destory();
@@ -702,7 +702,7 @@ int CNetConnection::DoBufferSend(int ProcessPacketLimit)
 			{
 
 				AtomicDec(&m_SendQueryCount);
-				PrintNetLog(0xffffffff,"发出Send请求失败！");	
+				PrintNetLog(0xffffffff,_T("发出Send请求失败！"));	
 				GetServer()->DeleteOverLappedObject(pOverLappedObject);
 				Disconnect();
 				break;

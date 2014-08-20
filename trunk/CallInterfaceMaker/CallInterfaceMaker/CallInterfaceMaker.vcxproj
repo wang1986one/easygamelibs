@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{5378F213-DE66-44FC-8AA4-065CBFCF26F3}</ProjectGuid>
+    <RootNamespace>CallInterfaceMaker</RootNamespace>
+    <Keyword>MFCProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <UseOfMfc>Static</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <UseOfMfc>Static</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\Work\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\Work\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0804</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0804</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Image Include="res\CallInterfaceMaker.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="CallInterfaceMaker.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\CallInterfaceMaker.rc2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="CallInterfaceMaker.h" />
+    <ClInclude Include="CallInterfaceMakerDlg.h" />
+    <ClInclude Include="DlgConfig.h" />
+    <ClInclude Include="DlgInterfaceEdtor.h" />
+    <ClInclude Include="DlgMethodEditor.h" />
+    <ClInclude Include="DlgParamEditor.h" />
+    <ClInclude Include="DlgTextEditor.h" />
+    <ClInclude Include="DlgDataStructDefine.h" />
+    <ClInclude Include="DlgGenerateOperationsEditor.h" />
+    <ClInclude Include="DlgTypeEditor.h" />
+    <ClInclude Include="DlgConstList.h" />
+    <ClInclude Include="DlgEnumEditor.h" />
+    <ClInclude Include="DlgEnumList.h" />
+    <ClInclude Include="DlgDataObjectModifyFlagEditor.h" />
+    <ClInclude Include="DlgDataObjectModifyFlagManager.h" />
+    <ClInclude Include="DlgStructEditor.h" />
+    <ClInclude Include="DlgStructList.h" />
+    <ClInclude Include="DlgStructMemberEditor.h" />
+    <ClInclude Include="DlgListSelector.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="CallInterfaceMaker.cpp" />
+    <ClCompile Include="CallInterfaceMakerDlg.cpp" />
+    <ClCompile Include="DlgConfig.cpp" />
+    <ClCompile Include="DlgInterfaceEdtor.cpp" />
+    <ClCompile Include="DlgMethodEditor.cpp" />
+    <ClCompile Include="DlgParamEditor.cpp" />
+    <ClCompile Include="DlgTextEditor.cpp" />
+    <ClCompile Include="DlgDataStructDefine.cpp" />
+    <ClCompile Include="DlgGenerateOperationsEditor.cpp" />
+    <ClCompile Include="DlgTypeEditor.cpp" />
+    <ClCompile Include="DlgConstList.cpp" />
+    <ClCompile Include="DlgEnumEditor.cpp" />
+    <ClCompile Include="DlgEnumList.cpp" />
+    <ClCompile Include="DlgDataObjectModifyFlagEditor.cpp" />
+    <ClCompile Include="DlgDataObjectModifyFlagManager.cpp" />
+    <ClCompile Include="DlgStructEditor.cpp" />
+    <ClCompile Include="DlgStructList.cpp" />
+    <ClCompile Include="DlgStructMemberEditor.cpp" />
+    <ClCompile Include="DlgListSelector.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libs\Utils\Utils.vcxproj">
+      <Project>{f4126b50-6b57-4b34-a58a-987d6b4219c8}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="CallInterfaceMaker.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

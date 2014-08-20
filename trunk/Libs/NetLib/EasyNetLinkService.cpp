@@ -41,7 +41,7 @@ CBaseTCPConnection * CEasyNetLinkService::CreateConnection(CIPAddress& RemoteAdd
 		}
 		if(!IsMatch)
 		{
-			PrintNetLog(0xffffff,"连接[%s]不在IP列表中，被拒绝",RemoteAddress.GetIPString());
+			PrintNetLog(0xffffff,_T("连接[%s]不在IP列表中，被拒绝"),RemoteAddress.GetIPString());
 			return NULL;
 		}
 	}
@@ -72,7 +72,7 @@ BOOL CEasyNetLinkService::DeleteConnection(CBaseTCPConnection * pConnection)
 void CEasyNetLinkService::PrintInfo(UINT LogChannel)
 {
 	CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,
-		"ServiceID=[%s] ListenAddress=%s:%u",
+		_T("ServiceID=[%s] ListenAddress=%s:%u"),
 		CClassifiedID(m_ReportID).ToStr(),
 		GetLocalAddress().GetIPString(),
 		GetLocalAddress().GetPort());

@@ -27,13 +27,13 @@ BOOL CIOCPEventRouter::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedOb
 		}
 		else
 		{
-			PrintNetLog(0xffffffff,"EventRouter没有EventHandler,Overlapped(%u)被忽略",
+			PrintNetLog(0xffffffff,_T("EventRouter没有EventHandler,Overlapped(%u)被忽略"),
 				pOverLappedObject->GetParentID());
 		}
 	}
 	else
 	{
-		PrintNetLog(0xffffffff,"EventRouter收到不是本Session的Overlapped(%u)，忽略",
+		PrintNetLog(0xffffffff,_T("EventRouter收到不是本Session的Overlapped(%u)，忽略"),
 			pOverLappedObject->GetParentID());
 	}
 	pOverLappedObject->Release();

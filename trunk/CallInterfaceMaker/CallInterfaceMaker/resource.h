@@ -1,19 +1,8 @@
-/****************************************************************************/
-/*                                                                          */
-/*      文件名:    resource.h                                               */
-/*      创建日期:  2012年04月22日                                           */
-/*      作者:      Sagasarate                                               */
-/*                                                                          */
-/*      本软件版权归Sagasarate(sagasarate@sina.com)所有                     */
-/*      你可以将本软件用于任何商业和非商业软件开发，但                      */
-/*      必须保留此版权声明                                                  */
-/*                                                                          */
-/****************************************************************************/
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
 // Used by CallInterfaceMaker.rc
 //
-#define ID_EDIT                         3
+#define ID_DATA_OBJECT_MODIFY_FLAGS_MANAGER 3
 #define ID_DEL                          4
 #define ID_NEW                          5
 #define IDM_ABOUTBOX                    0x0010
@@ -27,6 +16,17 @@
 #define IDD_DIALOG_TEXT_EDITOR          132
 #define IDD_DIALOG_TYPE_EDIT            133
 #define IDD_DIALOG_CONFIG               134
+#define IDD_DIALOG_STRUCT_LIST          135
+#define IDD_DIALOG_STRUCT_EDITOR        136
+#define IDD_DIALOG_STRUCT_MEMBER_EDITOR 137
+#define IDD_DIALOG_GENERATE_OPERATIONS_EDITOR 141
+#define IDD_DIALOG_DATA_OBJECT_MODIFY_FLAG_MANAGER 142
+#define IDD_DIALOG_DATA_OBJECT_MODIFY_FLAG_EDITOR 143
+#define IDD_DIALOG_ENUM_LIST            144
+#define IDD_DIALOG_ENUM_EDITOR          145
+#define IDD_DIALOG_CONST_LIST           146
+#define IDD_DIALOG_DATA_STRUCT_DEFINE   147
+#define IDD_DIALOG_LIST_SELECTOR        148
 #define IDC_INTERFACE_LIST              1000
 #define IDC_BUTTON_ADD_INTERFACE        1001
 #define IDC_BUTTON_EDIT_INTERFACE       1002
@@ -54,6 +54,7 @@
 #define IDC_EDIT_LENGTH                 1013
 #define IDC_BUTTON_PARAM_UP             1013
 #define IDC_BUTTON_CONFIG               1013
+#define IDC_EDIT_LIST_NAME              1013
 #define IDC_EDIT_DESCRIPTION            1014
 #define IDC_EDIT1                       1014
 #define IDC_EDIT_DEFAULT_VALUE          1015
@@ -62,40 +63,117 @@
 #define IDC_BUTTON_PARAM_UP2            1015
 #define IDC_BUTTON_PARAM_DOWN           1015
 #define IDC_EDIT2                       1015
+#define IDC_EDIT_MEMBER_DESCRIPTION     1015
 #define IDC_RADIO_CALL_BACK             1016
 #define IDC_EDIT3                       1016
 #define IDC_CHECK_CAN_NULL              1017
 #define IDC_EDIT4                       1017
+#define IDC_BUTTON_STRUCT_DEF           1017
 #define IDC_CHECK_IS_REFERENCE          1018
 #define IDC_EDIT5                       1018
+#define IDC_BUTTON_ENUM_DEF             1018
+#define IDC_BUTTON_STRUCT_DEF2          1018
+#define IDC_BUTTON_DATA_STRUCT_DEF      1018
 #define IDC_EDIT_PARAM_ID               1019
 #define IDC_EDIT6                       1019
+#define IDC_BUTTON_SELECT_ALL_INTERFACE 1019
 #define IDC_LIST_TYPES                  1020
-#define IDC_CHECK_IS_FIX_LENGTH         1021
-#define IDC_CHECK_NEED_NULL_CHECK       1022
-#define IDC_EDIT_CONTENT1               1023
 #define IDC_TAB1                        1024
 #define IDC_CHECK_EX_PROTOCOL           1025
 #define IDC_CHECK_EXP_PROTOCOL          1025
-#define IDC_EDIT_CONTENT7               1025
-#define IDC_EDIT_CONTENT2               1026
 #define IDC_CHECK_EXP_INTERFACE         1026
-#define IDC_EDIT_CONTENT3               1027
+#define IDC_LIST_STRUCT                 1026
 #define IDC_EXP_CALL_HEADER             1027
-#define IDC_EDIT_CONTENT4               1028
+#define IDC_BUTTON_NEW                  1027
 #define IDC_EXP_CALL_SOURCE             1028
-#define IDC_EDIT_CONTENT5               1029
+#define IDC_BUTTON_EDIT                 1028
+#define IDC_LIST_MEMBER_LIST            1028
 #define IDC_EXP_HANDLER_HEADER          1029
-#define IDC_EDIT_CONTENT6               1030
+#define IDC_BUTTON_DEL                  1029
+#define IDC_BUTTON_ADD_MEMBER           1029
 #define IDC_EXP_HANDLER_SOURCE          1030
+#define IDC_BUTTON_EDIT_MEMBER          1030
+#define IDC_BUTTON_NEW_ENUM             1030
+#define IDC_BUTTON_DEL_MEMBER           1031
+#define IDC_CHECK_EXP_STRUCT_DEFINE     1031
+#define IDC_BUTTON_NEW_STRUCT           1031
+#define IDC_EDIT_STRUCT_NAME            1032
+#define IDC_EXP_DATA_OBJECT_HEADER      1032
+#define IDC_BUTTON_MEMBER_MOVE_UP       1033
+#define IDC_EXP_DATA_OBJECT_SOURCE      1033
+#define IDC_COMBO_BASE_STRUCT           1034
+#define IDC_EXP_DATA_OBJECT_MODIFY_FLAGS 1034
+#define IDC_EDIT_MEMBER_NAME            1034
+#define IDC_BUTTON_DEL_MEMBER3          1035
+#define IDC_BUTTON_MEMBER_MOVE_DOWN     1035
+#define IDC_CHECK_EXP_ENUM              1035
+#define IDC_CHECK_IS_ARRAY              1036
+#define IDC_EDIT_OBJECT_ID              1036
+#define IDC_EDIT_MEMBER_STR_VALUE       1036
+#define IDC_CHECK_EXP_CONST             1036
+#define IDC_EDIT_ARRAY_LENGTH           1037
+#define IDC_EDIT_STRUCT_SHORT_NAME      1037
+#define IDC_EDIT_ARRAY_START_LENGTH     1037
+#define IDC_CHECK_EXP_DOHEADER          1037
+#define IDC_BUTTON_MEMBER_GENERATE_OPERATIONS 1038
+#define IDC_EDIT_ARRAY_GROW_LENGTH      1038
+#define IDC_EDIT_REFERENCE_USE          1039
+#define IDC_EDIT_MEMBER_VALUE           1039
+#define IDC_EDIT_VARIABLE_DEFINE        1040
+#define IDC_CHECK_EXCLUDE_IN_PACKET     1043
+#define IDC_CHECK_IS_DATA_OBJECT        1043
+#define IDC_CHECK_MERGE_TO_PARENT       1044
+#define IDC_BUTTON1_DEFAULT_STRUCT_GENERATE_OPERATIONS 1044
+#define IDC_CHECK_DECLARE_LATER         1044
+#define IDC_EDIT_OPERATION              1045
+#define IDC_BUTTON1_DEFAULT_STRUCT_GENERATE_OPERATIONS2 1045
+#define IDC_BUTTON_ARRAY_DEFINE_CONFIG  1045
+#define IDC_CHECK_MUST_PACK             1045
+#define IDC_CHECK_NOT_MONITOR_UPDATE    1046
+#define IDC_BUTTON_OVE_DOWN             1047
+#define IDC_BUTTON_MOVE_UP              1048
+#define IDC_TAB                         1049
+#define IDC_BUTTON_CLONE                1049
+#define IDC_LIST                        1050
+#define IDC_BUTTON_MOVE                 1050
+#define IDC_LIST_DATA_OBJECT_MEMBERS    1051
+#define IDC_LIST_DATA_OBJECTS           1052
+#define IDC_BUTTON_MOVE_DOWN            1053
+#define IDC_LIST_ENUM                   1054
+#define IDC_BUTTON_MOVE_SORT            1054
+#define IDC_CHECK_IS_64BIT              1055
+#define IDC_EDIT_SHORT_NAME             1056
+#define IDC_CHECK_EXPORT_STR_VALUE      1057
+#define IDC_EDIT_VALUE                  1057
+#define IDC_BUTTON_NEW_CONST            1058
+#define IDC_BUTTON_BASE_TYPE_DEF        1059
+#define IDC_EDIT_INTERFACE_EXT          1115
+#define IDC_EDIT_MSG_CALLER_HEADER_EXT  1116
+#define IDC_EDIT_MSG_CALLER_SOURCE_EXT  1117
+#define IDC_EDIT_MSG_HANDLER_HEADER_EXT 1118
+#define IDC_EDIT_MSG_HANDLER_SOURCE_EXT 1119
+#define IDC_EDIT_STRUCT_DEFINE_EXT      1120
+#define IDC_EDIT_DATA_OBJECT_HEADER_EXT 1121
+#define IDC_EDIT_DATA_OBJECT_SOURCE_EXT 1122
+#define IDC_EDIT_DATA_OBJECT_MODIFY_FLAGS_EXT 1123
+#define IDC_EDIT_ENUM_EXT               1124
+#define IDC_EDIT_CONST_EXT              1125
+#define IDC_EDIT_CONST_DOHEADER_EXT     1126
+#define IDC_EDIT_PROTOCOL_FILE_EXT      1138
+#define IDC_EDIT_PACK_OPERATION         1315
+#define IDC_EDIT_UNPACK_OPERATION       1316
+#define IDC_EDIT_SIZE_CACULATE_OPERATION 1317
+#define IDC_EDIT_REFERENCE_DEFINE       1318
+#define IDC_EDIT_PACK_OPERATION2        1319
+#define IDC_EDIT_PACK_OPERATION3        1320
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        135
+#define _APS_NEXT_RESOURCE_VALUE        149
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1026
+#define _APS_NEXT_CONTROL_VALUE         1061
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -115,7 +115,7 @@ IDBParameterSet * CODBCConnection::CreateParameterSet(int RecordSetType)
 }
 
 
-int CODBCConnection::Connect(LPCTSTR ConnectStr)
+int CODBCConnection::Connect(LPCSTR ConnectStr)
 {
 	int nResult;	
 
@@ -136,7 +136,7 @@ int CODBCConnection::Connect(LPCTSTR ConnectStr)
 
 
 	nResult = SQLDriverConnect( m_hDBConn, NULL, (SQLCHAR *)ConnectStr, (SQLSMALLINT)strlen(ConnectStr),
-		(SQLCHAR *)szBuffer,(SQLSMALLINT)strlen(szBuffer),(SQLSMALLINT *)&swStrLen,
+		(SQLCHAR *)szBuffer,1024,(SQLSMALLINT *)&swStrLen,
 		SQL_DRIVER_COMPLETE_REQUIRED|SQL_DRIVER_NOPROMPT); 
 	if ( nResult != SQL_SUCCESS )
 	{
@@ -194,6 +194,40 @@ int CODBCConnection::ExecuteSQL(LPCSTR SQLStr,int StrLen,IDBParameterSet * pPara
 	{
 		return ExecuteSQLDirect(SQLStr,StrLen);
 	}
+}
+
+int CODBCConnection::GetTables()
+{
+	int nResult;
+
+	
+	if(m_hStmt)
+	{
+		SQLFreeHandle( SQL_HANDLE_STMT, m_hStmt );
+		m_hStmt = NULL;			
+	}
+
+	//分配句柄
+
+	nResult=SQLAllocHandle( SQL_HANDLE_STMT, m_hDBConn, &m_hStmt );	
+	if (  nResult!= SQL_SUCCESS )
+	{
+		ProcessMessagesODBC(SQL_HANDLE_DBC, m_hDBConn,"分配静态Statement句柄失败！\r\n", TRUE);
+		return DBERR_SQLALLOCHANDLEFAIL;
+	}	
+
+
+	// 执行
+	
+	nResult=SQLTables( m_hStmt, NULL, 0, NULL, 0, NULL, 0, NULL, 0);
+
+	if ( (nResult != SQL_SUCCESS) && (nResult != SQL_SUCCESS_WITH_INFO) && (nResult != SQL_NO_DATA)) 
+	{	
+		ProcessMessagesODBC(SQL_HANDLE_STMT, m_hStmt,"获取所有表", TRUE);		
+		return DBERR_EXE_SQL_FAIL;
+	}	
+
+	return DBERR_SUCCEED;
 }
 
 int CODBCConnection::GetResults(IDBRecordSet * pDBRecordset)
@@ -256,7 +290,7 @@ int CODBCConnection::NextResults(IDBRecordSet * pDBRecordset)
 
 int CODBCConnection::GetAffectedRowCount()
 {
-	SQLINTEGER RowCount;
+	SQLLEN RowCount;
 	int nResult=SQLRowCount(m_hStmt,&RowCount);
 	if(nResult==SQL_SUCCESS||nResult==SQL_SUCCESS_WITH_INFO)
 	{
@@ -299,7 +333,7 @@ int CODBCConnection::FetchStaticResult(SQLHSTMT hStmt,CDBStaticRecordSet * pDBRe
 
 		nResult=SQLDescribeCol(hStmt,i+1,(SQLCHAR *)ColInfos[i].Name,MAX_COLUMN_NAME,
 			(SQLSMALLINT *)&ColNameLen,	(SQLSMALLINT *)&ColInfos[i].Type,
-			(SQLUINTEGER *)&ColInfos[i].Size,(SQLSMALLINT *)&ColInfos[i].DigitSize,
+			(SQLULEN *)&ColInfos[i].Size,(SQLSMALLINT *)&ColInfos[i].DigitSize,
 			(SQLSMALLINT *)&CanNULL);
 		if ( nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO )
 		{
@@ -342,7 +376,7 @@ int CODBCConnection::FetchStaticResult(SQLHSTMT hStmt,CDBStaticRecordSet * pDBRe
 	//绑定结果集列
 	CEasyBuffer RecordLineBuffer;
 	RecordLineBuffer.Create(RecordLineLen);
-	CEasyArray<SQLINTEGER> FieldSize;
+	CEasyArray<SQLLEN> FieldSize;
 	FieldSize.Resize(ColNum);
 	char * pFieldBuffer=(char *)RecordLineBuffer.GetFreeBuffer();	
 	for(UINT i=0;i<ColNum;i++)
@@ -437,12 +471,12 @@ UINT CODBCConnection::GetLastDatabaseErrorCode()
 	return m_LastErrorCode;
 }
 
-LPCTSTR CODBCConnection::GetLastDatabaseErrorString()
+LPCSTR CODBCConnection::GetLastDatabaseErrorString()
 {
 	return m_LastErrorString;
 }
 
-int CODBCConnection::TranslateString(LPCTSTR szSource,int SrcLen,LPTSTR szTarget,int MaxLen)
+int CODBCConnection::TranslateString(LPCSTR szSource,int SrcLen,LPTSTR szTarget,int MaxLen)
 {
 	int Len;
 	if(SrcLen>MaxLen)
@@ -580,10 +614,10 @@ void CODBCConnection::ProcessMessagesODBC(SQLSMALLINT plm_handle_type,SQLHANDLE 
 		}
 		plm_cRecNmbr++; 
 	} 
-	PrintDBLog( 0xff,"%s",(LPCTSTR)m_LastErrorString);
+	PrintDBLog( 0xff,"%s",(LPCSTR)m_LastErrorString);
 }
 
-int CODBCConnection::ODBCCTypeTODBLibType(int Type,UINT& Size)
+int CODBCConnection::ODBCCTypeTODBLibType(int Type,UINT64& Size)
 {
 	switch(Type)
 	{	
@@ -623,7 +657,7 @@ int CODBCConnection::ODBCCTypeTODBLibType(int Type,UINT& Size)
 	return DB_TYPE_UNKNOW;
 }
 
-int CODBCConnection::DBLibTypeToODBCCType(int Type,UINT& Size)
+int CODBCConnection::DBLibTypeToODBCCType(int Type,UINT64& Size)
 {
 	switch(Type)
 	{
@@ -657,7 +691,7 @@ int CODBCConnection::DBLibTypeToODBCCType(int Type,UINT& Size)
 	return Type;
 }
 
-int CODBCConnection::DBLibTypeToODBCSQLType(int Type,UINT& Size)
+int CODBCConnection::DBLibTypeToODBCSQLType(int Type,UINT64& Size)
 {
 	switch(Type)
 	{
@@ -691,7 +725,7 @@ int CODBCConnection::DBLibTypeToODBCSQLType(int Type,UINT& Size)
 	return Type;
 }
 
-int CODBCConnection::ODBCSQLTypeTOODBCCType(int Type,UINT& Size)
+int CODBCConnection::ODBCSQLTypeTOODBCCType(int Type,UINT64& Size)
 {
 	switch(Type)
 	{	
@@ -887,21 +921,21 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 			return DBERR_NOTENOUGHPARAM;
 		}	
 		
-		ParamDataLenBuffer.Create(sizeof(SQLINTEGER)*ParamNum);
+		ParamDataLenBuffer.Create(sizeof(SQLLEN)*ParamNum);
 
-		SQLINTEGER * pParamDataLen=(SQLINTEGER *)ParamDataLenBuffer.GetBuffer();
+		SQLLEN * pParamDataLen=(SQLLEN *)ParamDataLenBuffer.GetBuffer();
 
 		//绑定参数
 		for(int i=0;i<ParamNum;i++)
 		{
 			int ParamType=DBParamTypeToODBCParamType(pParamSet->GetParamInfo(i)->ParamType);
-			UINT Size=pParamSet->GetParam(i).GetLength();
+			UINT64 Size=pParamSet->GetParam(i).GetLength();
 			int DigitalSize=pParamSet->GetParam(i).GetDigitalLength();
 			int ODBCSQLType=DBLibTypeToODBCSQLType(pParamSet->GetParamInfo(i)->Type,Size);
 			int ODBCCType=DBLibTypeToODBCCType(pParamSet->GetParamInfo(i)->Type,Size);
 
 			SQLSMALLINT tParamType,tParamDigitalSize,tParamCanNull;
-			SQLUINTEGER tParamSize;
+			SQLULEN tParamSize;
 
 			nResult=SQLDescribeParam(m_hStmt,i+1,&tParamType,&tParamSize,&tParamDigitalSize,&tParamCanNull);
 			if ( nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO )
@@ -959,7 +993,7 @@ int  CODBCConnection::ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterS
 	return DBERR_SUCCEED;
 }
 
-void CODBCConnection::SetConnectFlags(LPCTSTR szFlags)
+void CODBCConnection::SetConnectFlags(LPCSTR szFlags)
 {
 	CStringSplitter Splitter(szFlags,'|');
 	for(int i=0;i<(int)Splitter.GetCount();i++)

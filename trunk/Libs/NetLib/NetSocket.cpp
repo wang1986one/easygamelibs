@@ -43,7 +43,7 @@ BOOL CNetSocket::MakeSocket( int af, int type, int protocol )
 	if( m_Socket == INVALID_SOCKET )
 	{
 		int ErrorCode=GetLastError();
-		PrintNetLog(0xffffffff,"(%d)Socket( %d, %d, %d )µ˜”√ ß∞‹£°",ErrorCode,af, type, protocol);
+		PrintNetLog(0xffffffff,_T("(%d)Socket( %d, %d, %d )µ˜”√ ß∞‹£°"),ErrorCode,af, type, protocol);
 		SetState( SS_UNINITED );
 		return FALSE;
 	}	
@@ -106,7 +106,7 @@ bool CNetSocket::SetRecvBufferSize(int Size)
 	if(RetCode==SOCKET_ERROR)
 	{
 		int ErrorCode=GetLastError();
-		PrintNetLog(0xffffffff,"CNetSocket::SetRecvBufferSize ß∞‹ErrorCode=%d£°",ErrorCode);
+		PrintNetLog(0xffffffff,_T("CNetSocket::SetRecvBufferSize ß∞‹ErrorCode=%d£°"),ErrorCode);
 		return false;
 	}
 	return true;
@@ -118,7 +118,7 @@ bool CNetSocket::SetSendBufferSize(int Size)
 	if(RetCode==SOCKET_ERROR)
 	{
 		int ErrorCode=GetLastError();
-		PrintNetLog(0xffffffff,"CNetSocket::SetSendBufferSize ß∞‹ErrorCode=%d£°",ErrorCode);
+		PrintNetLog(0xffffffff,_T("CNetSocket::SetSendBufferSize ß∞‹ErrorCode=%d£°"),ErrorCode);
 		return false;
 	}
 	return true;
@@ -132,7 +132,7 @@ int	CNetSocket::GetRecvBufferSize()
 	if(RetCode==SOCKET_ERROR)
 	{
 		int ErrorCode=GetLastError();
-		PrintNetLog(0xffffffff,"CNetSocket::GetRecvBufferSize ß∞‹ErrorCode=%d£°",ErrorCode);
+		PrintNetLog(0xffffffff,_T("CNetSocket::GetRecvBufferSize ß∞‹ErrorCode=%d£°"),ErrorCode);
 		return -1;
 	}
 	return Size;
@@ -146,7 +146,7 @@ int	CNetSocket::GetSendBufferSize()
 	if(RetCode==SOCKET_ERROR)
 	{
 		int ErrorCode=GetLastError();
-		PrintNetLog(0xffffffff,"CNetSocket::GetSendBufferSize ß∞‹ErrorCode=%d£°",ErrorCode);
+		PrintNetLog(0xffffffff,_T("CNetSocket::GetSendBufferSize ß∞‹ErrorCode=%d£°"),ErrorCode);
 		return -1;
 	}
 	return Size;
@@ -172,10 +172,10 @@ BOOL CNetSocket::Connect(const CIPAddress& Address)
 		erri = GetLastError();
 		if( erri != EWOULDBLOCK )
 		{
-			PrintNetLog(0xffffffff,"(%d)Connect() ÷– connect()  ß∞‹£°",erri);
+			PrintNetLog(0xffffffff,_T("(%d)Connect() ÷– connect()  ß∞‹£°"),erri);
 			return FALSE;
 		}
-		PrintNetLog(0xffffffff,"(%d)Connect() ≤ªƒ‹¡¢º¥ÕÍ≥…£°",erri);
+		PrintNetLog(0xffffffff,_T("(%d)Connect() ≤ªƒ‹¡¢º¥ÕÍ≥…£°"),erri);
 
 		SetState(SS_CONNECTING);
 	}
@@ -205,7 +205,7 @@ BOOL CNetSocket::ConnectNoBlocking(const CIPAddress& Address ,DWORD dwTimeOut)
 	{
 		if( GetLastError() != EWOULDBLOCK )
 		{
-			PrintNetLog(0xffffffff,"(%d)ConnectNoBlocking() ÷– connect()  ß∞‹£°",GetLastError());
+			PrintNetLog(0xffffffff,_T("(%d)ConnectNoBlocking() ÷– connect()  ß∞‹£°"),GetLastError());
 
 			return FALSE;
 		}
@@ -237,6 +237,7 @@ BOOL CNetSocket::Connected()
 		}
 		if( bFail )
 		{
+			PrintNetLog(0xffffffff,_T("(%d)Connected() ÷–Select ß∞‹£°"),GetLastError());
 			SetState(SS_UNUSED);
 			return FALSE;
 		}
@@ -244,6 +245,7 @@ BOOL CNetSocket::Connected()
 
 	if( m_ConnectTimer.IsTimeOut() )
 	{
+		PrintNetLog(0xffffffff,_T("Connected() ÷–≥¨ ±£°"));
 		SetState(SS_UNUSED);
 		return FALSE;
 	}
@@ -255,7 +257,7 @@ BOOL CNetSocket::Bind(const CIPAddress& Address)
 	if( ::bind(m_Socket, (struct sockaddr * )&(Address.GetSockAddr()), sizeof( struct sockaddr_in )) == SOCKET_ERROR )
 	{
 		int ErrorCode=GetLastError();
-		PrintNetLog(0xffffffff,"(%d)Bind() ÷– bind()  ß∞‹£°",ErrorCode);
+		PrintNetLog(0xffffffff,_T("(%d)Bind() ÷– bind()  ß∞‹£°"),ErrorCode);
 		return FALSE;
 	}
 	CIPAddress LocalAddress;
@@ -275,7 +277,7 @@ BOOL CNetSocket::Listen(const CIPAddress& Address)
 
 	if(!Bind(Address))
 	{
-		PrintNetLog(0xffffffff,"Listen() ÷– Bind()  ß∞‹£°");
+		PrintNetLog(0xffffffff,_T("Listen() ÷– Bind()  ß∞‹£°"));
 		return FALSE;
 	}
 
@@ -283,7 +285,7 @@ BOOL CNetSocket::Listen(const CIPAddress& Address)
 	if( ::listen( m_Socket, MAX_LISTEN_BACKLOG ) == SOCKET_ERROR )
 	{
 		int ErrorCode=GetLastError();
-		PrintNetLog(0xffffffff,"(%d)Listen() ÷– listen()  ß∞‹£°",ErrorCode);
+		PrintNetLog(0xffffffff,_T("(%d)Listen() ÷– listen()  ß∞‹£°"),ErrorCode);
 		return FALSE;
 	}
 	SetState(SS_LISTENING);
@@ -303,7 +305,7 @@ BOOL CNetSocket::EnableBlocking(BOOL Enable)
 	if( ioctlsocket( m_Socket, FIONBIO, &mode ) == SOCKET_ERROR )
 	{
 		int ErrorCode=GetLastError();
-		PrintNetLog(0xffffffff,"(%d)EnableBlocking() ÷– ioctlsocket()  ß∞‹£°",ErrorCode);
+		PrintNetLog(0xffffffff,_T("(%d)EnableBlocking() ÷– ioctlsocket()  ß∞‹£°"),ErrorCode);
 		return FALSE;
 	}
 	m_IsBlocking=Enable;
@@ -464,7 +466,7 @@ BOOL CNetSocket::SendOverlapped( LPVOID lpData, int nDatasize, DWORD &dwBytesSen
 		int code = GetLastError();
 		if( code != WSA_IO_PENDING )
 		{
-			PrintNetLog(0xffffffff,"(%d)WSASend()  ß∞‹£°",code);
+			PrintNetLog(0xffffffff,_T("(%d)WSASend()  ß∞‹£°"),code);
 			return FALSE;
 		}
 	}
@@ -485,7 +487,7 @@ BOOL CNetSocket::RecvOverlapped( LPVOID lpDataBuf, int nBufsize, DWORD &dwBytesR
 		int code = GetLastError();
 		if( code != WSA_IO_PENDING )
 		{
-			PrintNetLog(0xffffffff,"(%d)WSARecv()  ß∞‹£°",code);
+			PrintNetLog(0xffffffff,_T("(%d)WSARecv()  ß∞‹£°"),code);
 			return FALSE;
 		}
 	}
@@ -503,7 +505,7 @@ BOOL CNetSocket::AcceptOverlapped( SOCKET AcceptSocket, LPVOID lpDataBuf, DWORD 
 	if( Code == ERROR_IO_PENDING )
 		return TRUE;
 
-	PrintNetLog(0xffffffff,"(%d)AcceptEx()  ß∞‹£°",Code);
+	PrintNetLog(0xffffffff,_T("(%d)AcceptEx()  ß∞‹£°"),Code);
 
 	return FALSE;
 }
@@ -519,7 +521,7 @@ BOOL CNetSocket::SendToOverlapped(const CIPAddress& Address,LPVOID lpData, int n
 		int code = GetLastError();
 		if( code != WSA_IO_PENDING )
 		{
-			PrintNetLog(0xffffffff,"(%d)WSASendTo()  ß∞‹£°",GetLastError());
+			PrintNetLog(0xffffffff,_T("(%d)WSASendTo()  ß∞‹£°"),GetLastError());
 			return FALSE;
 		}
 	}
@@ -537,7 +539,7 @@ BOOL CNetSocket::RecvFromOverlapped(const CIPAddress& Address,int& AddresLen,LPV
 		int code = GetLastError();
 		if( code != WSA_IO_PENDING )
 		{
-			PrintNetLog(0xffffffff,"(%d)WSARecvFrom()  ß∞‹£°",code);
+			PrintNetLog(0xffffffff,_T("(%d)WSARecvFrom()  ß∞‹£°"),code);
 			return FALSE;
 		}
 	}

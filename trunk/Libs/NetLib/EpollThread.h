@@ -11,16 +11,17 @@
 /****************************************************************************/
 #pragma once
 
-
+class CNetServer;
 class CEpollThread :
 	public CEasyThread
 {
 protected:
+	CNetServer *	m_pServer;
 	UINT			m_hEpoll;	
 	
 	DECLARE_CLASS_INFO_STATIC(CEpollThread)
 public:
-	CEpollThread(void);
+	CEpollThread(CNetServer * pServer);
 	virtual ~CEpollThread(void);
 
 	void SetEpollHandle(UINT hEpoll);

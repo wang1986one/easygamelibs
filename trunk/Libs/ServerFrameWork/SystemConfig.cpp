@@ -16,12 +16,15 @@ CSystemConfig::CSystemConfig(void)
 {
 	m_MainThreadProcessLimit=DEFAULT_PROCESS_LIMIT;
 	m_UDPControlAddress.SetPort(0);
-	m_LogServerObjectUse=TRUE;
+	m_LogServerObjectUse=false;
+	m_PreLoadModuleSym=false;
+	m_MakeFullDump=false;
 #ifdef _DEBUG
 	m_LogLevel=ILogPrinter::LOG_LEVEL_NORMAL|ILogPrinter::LOG_LEVEL_DEBUG;
 #else
 	m_LogLevel=ILogPrinter::LOG_LEVEL_NORMAL;
 #endif
+	m_ConsoleLogLevel=m_LogLevel;
 	m_GuardThreadKeepAliveTime=20*1000;
 	m_GuardThreadKeepAliveCount=5;
 }
@@ -65,8 +68,17 @@ bool CSystemConfig::LoadConfig(LPCTSTR ConfigFileName)
 				if(LogConfig.has_attribute("LogServerObjectUse"))
 					m_LogServerObjectUse=(bool)LogConfig.attribute("LogServerObjectUse");
 
+				if(LogConfig.has_attribute("PreLoadModuleSym"))
+					m_PreLoadModuleSym=(bool)LogConfig.attribute("PreLoadModuleSym");
+
+				if(LogConfig.has_attribute("MakeFullDump"))
+					m_MakeFullDump=(bool)LogConfig.attribute("MakeFullDump");
+
 				if(LogConfig.has_attribute("LogLevel"))
 					m_LogLevel=LogConfig.attribute("LogLevel");
+
+				if(LogConfig.has_attribute("ConsoleLogLevel"))
+					m_ConsoleLogLevel=LogConfig.attribute("ConsoleLogLevel");
 			}
 
 			xml_node GuardThread=Config;
@@ -85,6 +97,7 @@ bool CSystemConfig::LoadConfig(LPCTSTR ConfigFileName)
 			PrintImportantLog(0,"UDP控制接口:%s:%u",m_UDPControlAddress.GetIPString(),m_UDPControlAddress.GetPort());
 			PrintImportantLog(0,"是否记录OverLapped对象使用状态:%s",m_LogServerObjectUse?"是":"否");
 			PrintImportantLog(0,"Log输出级别:%u",m_LogLevel);
+			PrintImportantLog(0,"控制台Log输出级别:%u",m_ConsoleLogLevel);
 			PrintImportantLog(0,"主线程死锁判定时间:%u",m_GuardThreadKeepAliveTime);
 			PrintImportantLog(0,"主线程死锁判定次数:%u",m_GuardThreadKeepAliveCount);
 

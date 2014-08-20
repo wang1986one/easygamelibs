@@ -24,7 +24,7 @@ IMPLEMENT_DYNAMIC(CDlgParamEditor, CDialog)
 CDlgParamEditor::CDlgParamEditor(CWnd* pParent /*=NULL*/)
 	: CDialog(CDlgParamEditor::IDD, pParent)
 	, m_Name(_T(""))
-	, m_Type(0)
+	, m_Type(_T(""))
 	, m_Length(0)
 	, m_Description(_T(""))
 	, m_DefaultValue(_T(""))
@@ -65,11 +65,14 @@ BOOL CDlgParamEditor::OnInitDialog()
 
 	// TODO:  在此添加额外的初始化
 
-	for(UINT i=0;i<GetMainDlg()->GetParamTypeCount();i++)
+	int Sel=-1;
+	for(UINT i=0;i<GetMainDlg()->GetVarTypeCount();i++)
 	{
-		m_cbType.InsertString(i,GetMainDlg()->GetParamType(i)->Name);
+		m_cbType.InsertString(i,GetMainDlg()->GetVarType(i)->Name);
+		if(m_Type==GetMainDlg()->GetVarType(i)->Name)
+			Sel=i;
 	}
-	m_cbType.SetCurSel(m_Type);
+	m_cbType.SetCurSel(Sel);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
@@ -79,7 +82,7 @@ void CDlgParamEditor::OnOK()
 {
 	// TODO: 在此添加专用代码和/或调用基类
 	UpdateData(true);
-	m_Type=m_cbType.GetCurSel();
+	m_cbType.GetWindowText(m_Type);
 	m_Name.Trim();
 	m_DefaultValue.Trim();
 	m_Description.Trim();

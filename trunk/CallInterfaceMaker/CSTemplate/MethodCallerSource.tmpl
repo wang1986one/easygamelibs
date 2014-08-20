@@ -1,37 +1,38 @@
-		public int <MethodName>(<Params>)
-		{
-			if(m_DosClient==null)
-			{
-				return (int)COMMON_RESULT_CODE.COMMON_RESULT_FAILED;
-			}
+public int <MethodName>(<Params>)
+{
+	if(m_DosClient==null)
+	{
+		return (int)COMMON_RESULT_CODE.COMMON_RESULT_FAILED;
+	}
 
-			uint MsgHeaderSize=sizeof(uint) * 2 + sizeof(ushort);
-			uint MsgDataSize=CSmartStruct.GetEmptyStructSize()<PacketSizes>;
-				
-			byte[] MsgBuffer=new byte[MsgHeaderSize+MsgDataSize];
-			
-			Array.Copy(BitConverter.GetBytes(MsgHeaderSize+MsgDataSize), MsgBuffer, sizeof(uint));
-            Array.Copy(BitConverter.GetBytes(
-				CBaseMsgHandler.MakeMsgID((uint)<!SpaceName>_INTERFACES.<InterfaceID>,(uint)<!InterfaceName>_METHODS.<MethodID>,<IsAckMsg>)), 
-				0, MsgBuffer, sizeof(uint), sizeof(uint));
-			
-			
-			CSmartStruct MsgPacket=new CSmartStruct(MsgBuffer,MsgHeaderSize,MsgDataSize,true);
-			
-			if(PackMsg<MethodName>(MsgPacket<,Params>))
-			{	
-				if(m_DosClient.SendMsg(MsgBuffer,0,MsgBuffer.Length))
-				{
-					return (int)COMMON_RESULT_CODE.COMMON_RESULT_SUCCEED;
-				}
-				else
-				{
-					return (int)COMMON_RESULT_CODE.COMMON_RESULT_MSG_SEND_ERROR;
-				}
-			}
-			else
-			{
-				return (int)COMMON_RESULT_CODE.COMMON_RESULT_MSG_PACK_ERROR;
-			}
-			
+	uint MsgHeaderSize=sizeof(uint) * 2 + sizeof(ushort);
+	uint MsgDataSize=CSmartStruct.GetEmptyStructSize()
+		<PacketSizes>;
+		
+	byte[] MsgBuffer=new byte[MsgHeaderSize+MsgDataSize];
+	
+	Array.Copy(BitConverter.GetBytes(MsgHeaderSize+MsgDataSize), MsgBuffer, sizeof(uint));
+    Array.Copy(BitConverter.GetBytes(
+		CBaseMsgHandler.MakeMsgID((uint)<!SpaceName>_INTERFACES.<InterfaceID>,(uint)<!InterfaceName>_METHODS.<MethodID>,<IsAckMsg>)), 
+		0, MsgBuffer, sizeof(uint), sizeof(uint));
+	
+	
+	CSmartStruct Packet=new CSmartStruct(MsgBuffer,MsgHeaderSize,MsgDataSize,true);
+	
+	if(PackMsg<MethodName>(Packet<,Params>))
+	{	
+		if(m_DosClient.SendMsg(MsgBuffer,0,MsgBuffer.Length))
+		{
+			return (int)COMMON_RESULT_CODE.COMMON_RESULT_SUCCEED;
 		}
+		else
+		{
+			return (int)COMMON_RESULT_CODE.COMMON_RESULT_MSG_SEND_ERROR;
+		}
+	}
+	else
+	{
+		return (int)COMMON_RESULT_CODE.COMMON_RESULT_MSG_PACK_ERROR;
+	}
+	
+}

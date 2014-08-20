@@ -91,15 +91,15 @@ public:
 
 	bool CloneFrom(const CSmartStructBase& Value)
 	{
-		if(Value.GetData()==NULL)
-			return false;
-		
 		Destory();
-		m_IsSelfData=true;
-		m_AllowChange=false;
-		m_DataLen=Value.m_DataLen;
-		m_pData=new BYTE[m_DataLen];
-		memcpy(m_pData,Value.GetData(),Value.GetDataLen());
+		if(Value.GetData()&&Value.m_DataLen)
+		{
+			m_IsSelfData=true;
+			m_AllowChange=false;
+			m_DataLen=Value.m_DataLen;
+			m_pData=new BYTE[m_DataLen];
+			memcpy(m_pData,Value.GetData(),Value.GetDataLen());
+		}
 		return true;
 	}
 	
@@ -127,7 +127,7 @@ public:
 			*((LENGTH_TYPE *)(m_pData+1))=0;
 	}	
 
-	operator CSmartValue()
+	operator CSmartValue() const
 	{
 		return CSmartValue(GetData(),GetDataLen());
 	}
@@ -380,7 +380,10 @@ public:
 		if(ID==0)
 			return false;
 		if(Value.GetDataLen()<=0)
-			return true;
+		{
+			//如果是空数据，插入一个0字节占个位子
+			return AddMember(ID,(BYTE)0);
+		}
 		LENGTH_TYPE NeedSize=sizeof(ID_TYPE)+Value.GetDataLen();
 		if(GetFreeLen()<NeedSize)
 		{
@@ -395,6 +398,10 @@ public:
 	}
 	bool AddMember(ID_TYPE ID,const char * pszStr,LENGTH_TYPE nStrLen);
 	bool AddMember(ID_TYPE ID,const wchar_t * pszStr,LENGTH_TYPE nStrLen);
+	bool AddMember(ID_TYPE ID,const CEasyString& Str)
+	{
+		return AddMember(ID,Str,(UINT)Str.GetLength());
+	}
 	void * PrepareMember(LENGTH_TYPE& nUsableSize)
 	{
 		if(m_pData==NULL)
@@ -407,6 +414,20 @@ public:
 		nUsableSize=GetFreeLen()-sizeof(ID_TYPE);
 		BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(LENGTH_TYPE)+GetLength()+sizeof(ID_TYPE);
 		return pFreeBuffer;
+	}
+	CSmartStructBase PrepareSubStruct()
+	{
+		CSmartStructBase SubStruct;
+		if(m_pData)			
+		{
+			if(GetFreeLen()>=GetStructMemberSize(0))
+			{
+				LENGTH_TYPE nUsableSize=GetFreeLen()-sizeof(ID_TYPE);
+				BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(LENGTH_TYPE)+GetLength()+sizeof(ID_TYPE);
+				SubStruct.Attach(pFreeBuffer,nUsableSize,true);
+			}			
+		}
+		return SubStruct;
 	}
 	bool FinishMember(ID_TYPE ID,LENGTH_TYPE MemberSize)
 	{
@@ -649,11 +670,17 @@ public:
 	}
 	static LENGTH_TYPE GetStringMemberSize(LENGTH_TYPE StrLen)
 	{		
-		return sizeof(ID_TYPE)+sizeof(BYTE)+sizeof(LENGTH_TYPE)+sizeof(char)*(StrLen+1);
+		if(CSmartValue::IsConvertWideCharToUTF8())
+			return sizeof(ID_TYPE)+sizeof(BYTE)+sizeof(LENGTH_TYPE)+sizeof(char)*3*(StrLen+1);
+		else
+			return sizeof(ID_TYPE)+sizeof(BYTE)+sizeof(LENGTH_TYPE)+sizeof(char)*(StrLen+1);
 	}
 	static LENGTH_TYPE GetWStringMemberSize(LENGTH_TYPE StrLen)
-	{		
-		return sizeof(ID_TYPE)+sizeof(BYTE)+sizeof(LENGTH_TYPE)+sizeof(wchar_t)*(StrLen+1);
+	{
+		if(CSmartValue::IsConvertWideCharToUTF8())
+			return sizeof(ID_TYPE)+sizeof(BYTE)+sizeof(LENGTH_TYPE)+sizeof(char)*3*(StrLen+1);
+		else
+			return sizeof(ID_TYPE)+sizeof(BYTE)+sizeof(LENGTH_TYPE)+sizeof(wchar_t)*(StrLen+1);
 	}
 
 	LENGTH_TYPE GetFreeLen()
@@ -777,23 +804,49 @@ inline bool CSmartStructBase<UINT,WORD>::AddMember(WORD ID,const wchar_t * pszSt
 		return false;
 	if(ID==0)
 		return false;	
-	UINT NeedSize=sizeof(WORD)+sizeof(BYTE)+sizeof(UINT)+sizeof(wchar_t)*(nStrLen+1);
-	if(GetFreeLen()<NeedSize)
+	if(CSmartValue::IsConvertWideCharToUTF8())
 	{
-		return false;
+		UINT UTF8Len=(UINT)UnicodeToUTF8(pszStr,nStrLen,NULL,0);
+		UINT NeedSize=sizeof(WORD)+sizeof(BYTE)+sizeof(UINT)+sizeof(char)*(UTF8Len+1);
+		if(GetFreeLen()<NeedSize)
+		{
+			return false;
+		}
+		BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(UINT)+GetLength();
+		*((WORD *)pFreeBuffer)=ID;
+		pFreeBuffer+=sizeof(WORD);
+		*((BYTE *)pFreeBuffer)=CSmartValue::VT_STRING;
+		pFreeBuffer+=sizeof(BYTE);
+		*((UINT *)pFreeBuffer)=UTF8Len;
+		pFreeBuffer+=sizeof(UINT);
+		if(pszStr&&nStrLen)
+		{
+			UnicodeToUTF8(pszStr,nStrLen,(char *)pFreeBuffer,UTF8Len);
+		}
+		pFreeBuffer+=sizeof(char)*UTF8Len;
+		*((wchar_t *)pFreeBuffer)=0;
+		*((UINT *)(m_pData+1))+=NeedSize;
 	}
-	BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(UINT)+GetLength();
-	*((WORD *)pFreeBuffer)=ID;
-	pFreeBuffer+=sizeof(WORD);
-	*((BYTE *)pFreeBuffer)=CSmartValue::VT_USTRING;
-	pFreeBuffer+=sizeof(BYTE);
-	*((UINT *)pFreeBuffer)=nStrLen;
-	pFreeBuffer+=sizeof(UINT);
-	if(pszStr&&nStrLen)
-		memcpy(pFreeBuffer,pszStr,sizeof(wchar_t)*nStrLen);
-	pFreeBuffer+=sizeof(wchar_t)*nStrLen;
-	*((wchar_t *)pFreeBuffer)=0;
-	*((UINT *)(m_pData+1))+=NeedSize;
+	else
+	{
+		UINT NeedSize=sizeof(WORD)+sizeof(BYTE)+sizeof(UINT)+sizeof(wchar_t)*(nStrLen+1);
+		if(GetFreeLen()<NeedSize)
+		{
+			return false;
+		}
+		BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(UINT)+GetLength();
+		*((WORD *)pFreeBuffer)=ID;
+		pFreeBuffer+=sizeof(WORD);
+		*((BYTE *)pFreeBuffer)=CSmartValue::VT_USTRING;
+		pFreeBuffer+=sizeof(BYTE);
+		*((UINT *)pFreeBuffer)=nStrLen;
+		pFreeBuffer+=sizeof(UINT);
+		if(pszStr&&nStrLen)
+			memcpy(pFreeBuffer,pszStr,sizeof(wchar_t)*nStrLen);
+		pFreeBuffer+=sizeof(wchar_t)*nStrLen;
+		*((wchar_t *)pFreeBuffer)=0;
+		*((UINT *)(m_pData+1))+=NeedSize;
+	}
 	return true;
 }
 
@@ -804,23 +857,49 @@ inline bool CSmartStructBase<WORD,BYTE>::AddMember(BYTE ID,const wchar_t * pszSt
 		return false;
 	if(ID==0)
 		return false;	
-	WORD NeedSize=sizeof(BYTE)+sizeof(BYTE)+sizeof(WORD)+sizeof(wchar_t)*(nStrLen+1);
-	if(GetFreeLen()<NeedSize)
+	if(CSmartValue::IsConvertWideCharToUTF8())
 	{
-		return false;
+		UINT UTF8Len=(UINT)UnicodeToUTF8(pszStr,nStrLen,NULL,0);
+		WORD NeedSize=(WORD)(sizeof(BYTE)+sizeof(BYTE)+sizeof(WORD)+sizeof(char)*(UTF8Len+1));
+		if(GetFreeLen()<NeedSize)
+		{
+			return false;
+		}
+		BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(WORD)+GetLength();
+		*((BYTE *)pFreeBuffer)=ID;
+		pFreeBuffer+=sizeof(BYTE);
+		*((BYTE *)pFreeBuffer)=CSmartValue::VT_STRING_TINY;
+		pFreeBuffer+=sizeof(BYTE);
+		*((WORD *)pFreeBuffer)=UTF8Len;
+		pFreeBuffer+=sizeof(WORD);
+		if(pszStr&&nStrLen)
+		{
+			UnicodeToUTF8(pszStr,nStrLen,(char *)pFreeBuffer,UTF8Len);
+		}
+		pFreeBuffer+=sizeof(char)*UTF8Len;
+		*((wchar_t *)pFreeBuffer)=0;
+		*((WORD *)(m_pData+1))+=NeedSize;
 	}
-	BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(WORD)+GetLength();
-	*((BYTE *)pFreeBuffer)=ID;
-	pFreeBuffer+=sizeof(BYTE);
-	*((BYTE *)pFreeBuffer)=CSmartValue::VT_USTRING_TINY;
-	pFreeBuffer+=sizeof(BYTE);
-	*((WORD *)pFreeBuffer)=nStrLen;
-	pFreeBuffer+=sizeof(WORD);
-	if(pszStr&&nStrLen)
-		memcpy(pFreeBuffer,pszStr,sizeof(wchar_t)*nStrLen);
-	pFreeBuffer+=sizeof(wchar_t)*nStrLen;
-	*((wchar_t *)pFreeBuffer)=0;
-	*((WORD *)(m_pData+1))+=NeedSize;
+	else
+	{
+		WORD NeedSize=sizeof(BYTE)+sizeof(BYTE)+sizeof(WORD)+sizeof(wchar_t)*(nStrLen+1);
+		if(GetFreeLen()<NeedSize)
+		{
+			return false;
+		}
+		BYTE * pFreeBuffer=m_pData+sizeof(BYTE)+sizeof(WORD)+GetLength();
+		*((BYTE *)pFreeBuffer)=ID;
+		pFreeBuffer+=sizeof(BYTE);
+		*((BYTE *)pFreeBuffer)=CSmartValue::VT_USTRING_TINY;
+		pFreeBuffer+=sizeof(BYTE);
+		*((WORD *)pFreeBuffer)=nStrLen;
+		pFreeBuffer+=sizeof(WORD);
+		if(pszStr&&nStrLen)
+			memcpy(pFreeBuffer,pszStr,sizeof(wchar_t)*nStrLen);
+		pFreeBuffer+=sizeof(wchar_t)*nStrLen;
+		*((wchar_t *)pFreeBuffer)=0;
+		*((WORD *)(m_pData+1))+=NeedSize;
+	}
 	return true;
 }
 

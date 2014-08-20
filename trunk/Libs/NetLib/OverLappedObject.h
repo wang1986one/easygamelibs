@@ -129,7 +129,7 @@ inline void COverLappedObject::Process(int EventID)
 	}
 	else
 	{
-		PrintNetLog(0xffffffff,"IOCP包(%u)没有EventRouter，被忽略",GetParentID());
+		PrintNetLog(0xffffffff,_T("IOCP包(%u)没有EventRouter，被忽略"),GetParentID());
 		Release();
 	}
 }

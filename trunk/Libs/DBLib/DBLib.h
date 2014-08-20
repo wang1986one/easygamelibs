@@ -14,9 +14,9 @@
 #define DBLIB_VERSION	"2.0.0.0"
 
 #define LOG_DB_ERROR_CHANNEL	1202
-typedef unsigned long ulong;
+//typedef unsigned long ulong;
 
-inline BOOL PrintDBLog(DWORD Color,LPCTSTR Format,...)
+inline BOOL PrintDBLog(DWORD Color,LPCSTR Format,...)
 {
 	va_list vl;
 	va_start(vl,Format);
@@ -25,7 +25,7 @@ inline BOOL PrintDBLog(DWORD Color,LPCTSTR Format,...)
 	return ret;
 }
 
-inline BOOL PrintDBDebugLog(DWORD Color,LPCTSTR Format,...)
+inline BOOL PrintDBDebugLog(DWORD Color,LPCSTR Format,...)
 {
 	va_list vl;
 	va_start(vl,Format);

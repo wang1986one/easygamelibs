@@ -15,8 +15,9 @@
 
 IMPLEMENT_CLASS_INFO_STATIC(CEpollThread,CEasyThread);
 
-CEpollThread::CEpollThread(void):CEasyThread()
+CEpollThread::CEpollThread(CNetServer * pServer):CEasyThread()
 {
+	m_pServer=pServer;
 	m_hEpoll=NULL;
 }
 
@@ -45,7 +46,7 @@ BOOL CEpollThread::OnRun()
 
 			Param64.QuadPart=Events[i].data.u64;	
 
-			CEpollEventRouter * pEpollEventRouter=(CEpollEventRouter *)Param64.LowPart;
+			CEpollEventRouter * pEpollEventRouter=m_pServer->GetEventRouter(Param64.LowPart);
 			if(pEpollEventRouter)
 			{
 				pEpollEventRouter->OnEpollEvent(Events[i].events,Param64.HighPart);

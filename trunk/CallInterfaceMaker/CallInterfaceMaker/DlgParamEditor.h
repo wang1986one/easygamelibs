@@ -38,7 +38,7 @@ protected:
 protected:	
 	CString			m_Name;
 	CComboBox		m_cbType;
-	int				m_Type;
+	CString			m_Type;
 	int				m_Length;
 	CString			m_Description;
 	CString			m_DefaultValue;

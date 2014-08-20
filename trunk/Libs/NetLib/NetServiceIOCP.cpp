@@ -42,7 +42,7 @@ BOOL CNetService::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObject)
 		{			
 			if(!QueryAccept())
 			{
-				PrintNetLog(0xffffffff,"无法发出更多的Accept请求！");
+				PrintNetLog(0xffffffff,_T("无法发出更多的Accept请求！"));
 				QueryClose();
 			}
 
@@ -59,17 +59,17 @@ BOOL CNetService::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObject)
 					}
 					else
 					{
-						PrintNetLog(0xffffffff,"Accept队列已满！");
+						PrintNetLog(0xffffffff,_T("Accept队列已满！"));
 					}
 				}				
 				else
 				{
-					PrintNetLog(0xffffffff,"更新AcceptScoket状态失败！");
+					PrintNetLog(0xffffffff,_T("更新AcceptScoket状态失败！"));
 				}
 			}
 			else
 			{
-				PrintNetLog(0xffffffff,"Accept返回错误！");
+				PrintNetLog(0xffffffff,_T("Accept返回错误！"));
 			}
 
 			closesocket(pOverLappedObject->GetAcceptSocket());
@@ -83,12 +83,12 @@ BOOL CNetService::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObject)
 					return TRUE;
 				}
 				else
-					PrintNetLog(0xffffffff,"Accept队列已满！");
+					PrintNetLog(0xffffffff,_T("Accept队列已满！"));
 				closesocket(pOverLappedObject->GetAcceptSocket());
 			}			
 			else
 			{
-				PrintNetLog(0xffffffff,"侦听失败，关闭侦听！");
+				PrintNetLog(0xffffffff,_T("侦听失败，关闭侦听！"));
 				QueryClose();
 			}
 		}
@@ -96,7 +96,7 @@ BOOL CNetService::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObject)
 		{			
 			if(!QueryUDPRecv())
 			{
-				PrintNetLog(0xffffffff,"无法发出更多的UDPRecv请求！");
+				PrintNetLog(0xffffffff,_T("无法发出更多的UDPRecv请求！"));
 				QueryClose();
 			}
 
@@ -109,11 +109,11 @@ BOOL CNetService::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObject)
 					return TRUE;
 				}
 				else
-					PrintNetLog(0xffffffff,"Accept队列已满！");		
+					PrintNetLog(0xffffffff,_T("Accept队列已满！"));		
 			}
 			else
 			{
-				PrintNetLog(0xffffffff,"接收失败！");
+				PrintNetLog(0xffffffff,_T("接收失败！"));
 			}				
 		}
 		else if(pOverLappedObject->GetType()==IO_SEND)
@@ -125,13 +125,13 @@ BOOL CNetService::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedObject)
 				return TRUE;
 			}
 			else
-				PrintNetLog(0xffffffff,"发送失败！");
+				PrintNetLog(0xffffffff,_T("发送失败！"));
 		}			
 		else
-			PrintNetLog(0xffffffff,"Service收到非法IOCP包！");
+			PrintNetLog(0xffffffff,_T("Service收到非法IOCP包！"));
 	}
 	else
-		PrintNetLog(0xffffffff,"Service未启用，IOCP包被忽略！");
+		PrintNetLog(0xffffffff,_T("Service未启用，IOCP包被忽略！"));
 	GetServer()->DeleteOverLappedObject(pOverLappedObject);
 
 
@@ -218,7 +218,7 @@ BOOL CNetService::StartListen(const CIPAddress& Address)
 	
 		if(!GetServer()->BindSocket(m_Socket.GetSocket()))
 		{
-			PrintNetLog(0xffffffff,"(%d)Service绑定IOCP失败！",GetID());
+			PrintNetLog(0xffffffff,_T("(%d)Service绑定IOCP失败！"),GetID());
 			Close();
 			return FALSE;
 		}	
@@ -229,7 +229,7 @@ BOOL CNetService::StartListen(const CIPAddress& Address)
 	{		
 		if(!m_Socket.Bind(Address))
 		{
-			PrintNetLog(0xffffffff,"(%d)Service绑定失败！",GetID());
+			PrintNetLog(0xffffffff,_T("(%d)Service绑定失败！"),GetID());
 			return FALSE;
 		}
 
@@ -239,7 +239,7 @@ BOOL CNetService::StartListen(const CIPAddress& Address)
 		{
 			if(!QueryUDPRecv())
 			{
-				PrintNetLog(0xffffffff,"(%d)Service发出UDPRecv请求失败！",GetID());
+				PrintNetLog(0xffffffff,_T("(%d)Service发出UDPRecv请求失败！"),GetID());
 				Close();
 				return FALSE;
 			}
@@ -249,13 +249,13 @@ BOOL CNetService::StartListen(const CIPAddress& Address)
 	{
 		if(!m_Socket.Listen(Address))
 		{
-			PrintNetLog(0xffffffff,"(%d)Service侦听失败！",GetID());
+			PrintNetLog(0xffffffff,_T("(%d)Service侦听失败！"),GetID());
 			return FALSE;
 		}
 
 		if(m_IsUseListenThread)
 		{
-			PrintNetLog(0xffffffff,"(%d)Service启用线程侦听模式！",GetID());
+			PrintNetLog(0xffffffff,_T("(%d)Service启用线程侦听模式！"),GetID());
 			if(m_pListenThread==NULL)
 				m_pListenThread=new CIOCPListenThread();
 			m_pListenThread->Init(this,m_Socket.GetSocket());
@@ -263,12 +263,12 @@ BOOL CNetService::StartListen(const CIPAddress& Address)
 		}
 		else
 		{		
-			PrintNetLog(0xffffffff,"(%d)Service启用IOCP侦听模式！",GetID());
+			PrintNetLog(0xffffffff,_T("(%d)Service启用IOCP侦听模式！"),GetID());
 			for(int i=0;i<m_ParallelAcceptCount;i++)
 			{
 				if(!QueryAccept())
 				{
-					PrintNetLog(0xffffffff,"(%d)Service发出Accpet请求失败！",GetID());
+					PrintNetLog(0xffffffff,_T("(%d)Service发出Accpet请求失败！"),GetID());
 					Close();
 					return FALSE;
 				}
@@ -318,14 +318,14 @@ int CNetService::Update(int ProcessPacketLimit)
 		{
 			if(!AcceptSocketEx(pOverLappedObject->GetAcceptSocket(),pOverLappedObject->GetDataBuff()))
 			{
-				PrintNetLog(0xffffffff,"(%d)AcceptSocketEx失败！",GetID());
+				PrintNetLog(0xffffffff,_T("(%d)AcceptSocketEx失败！"),GetID());
 			}
 		}
 		else if(pOverLappedObject->GetType()==IO_ACCEPT2)
 		{					
 			if(!AcceptSocket(pOverLappedObject->GetAcceptSocket()))
 			{
-				PrintNetLog(0xffffffff,"(%d)AcceptSocket失败！",GetID());
+				PrintNetLog(0xffffffff,_T("(%d)AcceptSocket失败！"),GetID());
 			}
 		}
 		else if(pOverLappedObject->GetType()==IO_RECV)
@@ -334,7 +334,7 @@ int CNetService::Update(int ProcessPacketLimit)
 		}
 		else
 		{
-			PrintNetLog(0xffffffff,"(%d)Servicec收到不明类型的OverLapped！",GetID());			
+			PrintNetLog(0xffffffff,_T("(%d)Servicec收到不明类型的OverLapped！"),GetID());			
 		}
 		GetServer()->DeleteOverLappedObject(pOverLappedObject);
 		PacketCount++;
@@ -364,20 +364,20 @@ BOOL CNetService::DeleteConnection(CBaseTCPConnection * pConnection)
 BOOL CNetService::QueryAccept()
 {		
 
-	//PrintNetLog(0xffffffff,"(%d)发出AcceptEx请求！",GetID());
+	//PrintNetLog(0xffffffff,_T("(%d)发出AcceptEx请求！"),GetID());
 
 	SOCKET	AcceptSocket=0;
 	AcceptSocket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 	if(AcceptSocket==INVALID_SOCKET)
 	{
-		PrintNetLog(0xffffffff,"(%d)创建AcceptSocket失败(%u)！",GetID(),GetLastError());
+		PrintNetLog(0xffffffff,_T("(%d)创建AcceptSocket失败(%u)！"),GetID(),GetLastError());
 		return FALSE;
 	}
 
 	COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
 	if(pOverLappedObject==NULL)
 	{
-		PrintNetLog(0xffffffff,"(%d)Service创建OverLappedObject失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Service创建OverLappedObject失败！"),GetID());
 		return FALSE;
 	}
 
@@ -396,7 +396,7 @@ BOOL CNetService::QueryAccept()
 	{
 		return TRUE;
 	}
-	PrintNetLog(0xffffffff,"(%d)发出Accept请求失败！",GetID());
+	PrintNetLog(0xffffffff,_T("(%d)发出Accept请求失败！"),GetID());
 	closesocket(AcceptSocket);
 	GetServer()->DeleteOverLappedObject(pOverLappedObject);
 
@@ -409,7 +409,7 @@ BOOL CNetService::QueryUDPRecv()
 	COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
 	if(pOverLappedObject==NULL)
 	{
-		PrintNetLog(0xffffffff,"(%d)Service创建热UDPRecv用OverLappedObject失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Service创建热UDPRecv用OverLappedObject失败！"),GetID());
 		return FALSE;
 	}
 
@@ -433,7 +433,7 @@ BOOL CNetService::QueryUDPRecv()
 	{
 		return TRUE;
 	}
-	PrintNetLog(0xffffffff,"(%d)Service发出UDPRecv请求失败！",GetID());	
+	PrintNetLog(0xffffffff,_T("(%d)Service发出UDPRecv请求失败！"),GetID());	
 	GetServer()->DeleteOverLappedObject(pOverLappedObject);
 	return FALSE;
 }
@@ -444,7 +444,7 @@ BOOL CNetService::QueryUDPSend(const CIPAddress& IPAddress,LPCVOID pData,int Siz
 	COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
 	if(pOverLappedObject==NULL)
 	{
-		PrintNetLog(0xffffffff,"(%d)Service创建UDPSend用OverLappedObject失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Service创建UDPSend用OverLappedObject失败！"),GetID());
 		return FALSE;
 	}
 
@@ -458,7 +458,7 @@ BOOL CNetService::QueryUDPSend(const CIPAddress& IPAddress,LPCVOID pData,int Siz
 	if(!pOverLappedObject->GetDataBuff()->PushBack(pData,Size))
 	{
 		GetServer()->DeleteOverLappedObject(pOverLappedObject);
-		PrintNetLog(0xffffffff,"(%d)Service要发送的数据包过大！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Service要发送的数据包过大！"),GetID());
 		return FALSE;
 	}
 	
@@ -477,7 +477,7 @@ BOOL CNetService::QueryUDPSend(const CIPAddress& IPAddress,LPCVOID pData,int Siz
 	{		
 		return TRUE;
 	}
-	PrintNetLog(0xffffffff,"(%d)Service发出UDPSend请求失败！",GetID());	
+	PrintNetLog(0xffffffff,_T("(%d)Service发出UDPSend请求失败！"),GetID());	
 	GetServer()->DeleteOverLappedObject(pOverLappedObject);
 	return FALSE;
 }
@@ -516,18 +516,18 @@ BOOL CNetService::AcceptSocket(SOCKET Socket)
 				return TRUE;	
 			}
 			else
-				PrintNetLog(0xffffffff,"(%d)Service启动Connection失败！",GetID());
+				PrintNetLog(0xffffffff,_T("(%d)Service启动Connection失败！"),GetID());
 		}
 		else
 		{
-			PrintNetLog(0xffffffff,"(%d)Service初始化Connection失败！",GetID());
+			PrintNetLog(0xffffffff,_T("(%d)Service初始化Connection失败！"),GetID());
 			closesocket(Socket);
 		}
 		DeleteConnection(pConnection);
 	}
 	else
 	{
-		PrintNetLog(0xffffffff,"(%d)Servicec创建Connection失败！",GetID());	
+		PrintNetLog(0xffffffff,_T("(%d)Servicec创建Connection失败！"),GetID());	
 		closesocket(Socket);
 	}
 	return FALSE;
@@ -573,18 +573,18 @@ BOOL CNetService::AcceptSocketEx(SOCKET Socket,CEasyBuffer * pAcceptData)
 				return TRUE;	
 			}
 			else
-				PrintNetLog(0xffffffff,"(%d)Service启动Connection失败！",GetID());
+				PrintNetLog(0xffffffff,_T("(%d)Service启动Connection失败！"),GetID());
 		}
 		else
 		{
-			PrintNetLog(0xffffffff,"(%d)Service初始化Connection失败！",GetID());
+			PrintNetLog(0xffffffff,_T("(%d)Service初始化Connection失败！"),GetID());
 			closesocket(Socket);
 		}
 		DeleteConnection(pConnection);
 	}
 	else
 	{
-		PrintNetLog(0xffffffff,"(%d)Servicec创建Connection失败！",GetID());	
+		PrintNetLog(0xffffffff,_T("(%d)Servicec创建Connection失败！"),GetID());	
 		closesocket(Socket);
 	}
 	return FALSE;

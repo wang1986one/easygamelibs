@@ -8,7 +8,7 @@ C<InterfaceName>MsgCaller::C<InterfaceName>MsgCaller(IDistributedObjectOperator 
 	m_TargetIDs.Add(TargetID);
 }
 
-C<InterfaceName>MsgCaller::C<InterfaceName>MsgCaller(IDistributedObjectOperator * pOperator,OBJECT_ID SenderID,OBJECT_ID * pTargetIDs,ID_LIST_COUNT_TYPE TargetIDCount)
+C<InterfaceName>MsgCaller::C<InterfaceName>MsgCaller(IDistributedObjectOperator * pOperator,OBJECT_ID SenderID,const OBJECT_ID * pTargetIDs,ID_LIST_COUNT_TYPE TargetIDCount)
 {
 	m_pOperator=pOperator;
 	m_SenderID=SenderID;
@@ -25,3 +25,4 @@ C<InterfaceName>MsgCaller::~C<InterfaceName>MsgCaller(void)
 
 
 <Methods>
+<PackMethods>

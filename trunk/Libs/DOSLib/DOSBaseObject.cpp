@@ -11,6 +11,10 @@
 /****************************************************************************/
 #include "StdAfx.h"
 
+#define CONCERNED_OBJECT_PAGE_SIZE			512
+#define CONCERNED_OBJECT_ONCE_TEST_COUNT	512
+#define CONCERNED_OBJECT_TEST_FACTOR		512
+
 IMPLEMENT_CLASS_INFO(CDOSBaseObject,CNameObject);
 
 
@@ -22,8 +26,9 @@ CDOSBaseObject::CDOSBaseObject(void)
 	m_pManager=NULL;
 	m_pGroup=NULL;
 	m_MsgProcessLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT;
-	m_ConcernedObjectTestTime=20*1000;
+	m_ConcernedObjectCheckTime=1000;
 	m_ConcernedObjectKeepAliveCount=5;
+	m_ConcernedObjectCheckPtr=1;
 	FUNCTION_END;
 }
 
@@ -43,15 +48,38 @@ bool CDOSBaseObject::Init(DOS_OBJECT_REGISTER_INFO& ObjectRegisterInfo)
 	if(ObjectRegisterInfo.MsgProcessLimit)
 		m_MsgProcessLimit=ObjectRegisterInfo.MsgProcessLimit;
 	
-	if(!m_MsgQueue.Create(MsgQueueSize))
+	if(m_MsgQueue.GetBufferSize()<MsgQueueSize)
 	{
-		PrintDOSLog(0,"对象[%llX]创建%u大小的消息队列失败",
-			GetObjectID().ID,MsgQueueSize);
-		return false;
+		if(!m_MsgQueue.Create(MsgQueueSize))
+		{
+			PrintDOSLog(0,_T("对象[%llX]创建%u大小的消息队列失败"),
+				GetObjectID().ID,MsgQueueSize);
+			return false;
+		}
 	}
+	else
+	{
+		m_MsgQueue.Clear();
+	}
+	if(m_ConcernedObject.GetBufferSize()<CONCERNED_OBJECT_PAGE_SIZE)
+	{
+		if(!m_ConcernedObject.Create(CONCERNED_OBJECT_PAGE_SIZE,CONCERNED_OBJECT_PAGE_SIZE))
+		{
+			PrintDOSLog(0,_T("对象[%llX]创建关注对象池失败"),
+				GetObjectID().ID);
+			return false;
+		}
+	}
+	else
+	{
+		m_ConcernedObject.Clear();
+	}
+	
 	m_ConcernedObjectTestTime=GetManager()->GetServer()->GetConfig().ObjectAliveTestTime;
+	m_ConcernedObjectCheckTime=GetManager()->GetServer()->GetConfig().ObjectAliveCheckTime;
 	m_ConcernedObjectKeepAliveCount=GetManager()->GetServer()->GetConfig().ObjectKeepAliveCount;
-	m_ConcernedObjectTestTimer.SaveTime();
+	m_ConcernedObjectCheckTimer.SaveTime();
+	m_ConcernedObjectCheckPtr=1;
 	return Initialize();
 	FUNCTION_END;
 	return false;
@@ -67,8 +95,20 @@ bool CDOSBaseObject::Initialize()
 
 void CDOSBaseObject::Destory()
 {
-	FUNCTION_BEGIN;
-	m_MsgQueue.Destory();
+	FUNCTION_BEGIN;	
+	CDOSMessagePacket * pPacket;	
+	while(m_MsgQueue.PopFront(pPacket))
+	{		
+		
+		if(!ReleaseMessagePacket(pPacket))
+		{
+			PrintDOSLog(0xff0000,_T("CDOSBaseObject::Destory:释放消息内存块失败！"));
+		}	
+	
+	}
+	//m_ConcernedObject.Clear();
+	//m_MsgQueue.Destory();
+	//m_ConcernedObject.Destory();
 	m_pRouter=NULL;
 	m_pManager=NULL;
 	m_pGroup=NULL;
@@ -84,6 +124,12 @@ UINT CDOSBaseObject::GetRouterID()
 	return 0;
 }
 
+int CDOSBaseObject::GetGroupIndex()
+{
+	if(m_pGroup)
+		return (int)m_pGroup->GetIndex();
+	return -1;
+}
 
 int CDOSBaseObject::DoCycle(int ProcessPacketLimit)
 {
@@ -103,7 +149,7 @@ int CDOSBaseObject::DoCycle(int ProcessPacketLimit)
 		}
 		if(!ReleaseMessagePacket(pPacket))
 		{
-			PrintDOSLog(0xff0000,"释放消息内存块失败！");
+			PrintDOSLog(0xff0000,_T("CDOSBaseObject::DoCycle:释放消息内存块失败！"));
 		}		
 		Limit--;
 		ProcessCount++;
@@ -121,6 +167,7 @@ BOOL CDOSBaseObject::PushMessage(CDOSMessagePacket * pPacket)
 {
 	FUNCTION_BEGIN;
 	((CDOSServer *)m_pRouter->GetServer())->AddRefMessagePacket(pPacket);
+	pPacket->SetAllocTime(2);
 	if(m_MsgQueue.PushBack(pPacket))
 	{			
 		return TRUE;
@@ -128,7 +175,7 @@ BOOL CDOSBaseObject::PushMessage(CDOSMessagePacket * pPacket)
 	else
 	{	
 		ReleaseMessagePacket(pPacket);		
-		PrintDOSLog(0xff0000,"CDOSBaseObject::PushMessage:消息压栈失败！");
+		PrintDOSLog(0xff0000,_T("CDOSBaseObject::PushMessage:消息压栈失败！"));
 	}
 	FUNCTION_END;
 	return FALSE;
@@ -155,7 +202,7 @@ BOOL CDOSBaseObject::SendMessageMulti(OBJECT_ID * pReceiverIDList,UINT ReceiverC
 	CDOSMessagePacket * pNewPacket=m_pRouter->GetServer()->NewMessagePacket(PacketSize);
 	if(pNewPacket==NULL)
 	{
-		PrintDOSLog(0xff0000,"分配消息内存块失败！");
+		PrintDOSLog(0xff0000,_T("分配消息内存块失败！"));
 		return FALSE;
 	}	
 	pNewPacket->GetMessage().SetMsgID(MsgID);
@@ -251,18 +298,15 @@ BOOL CDOSBaseObject::UnregisterGlobalMsgMap(ROUTE_ID_TYPE ProxyRouterID,MSG_ID_T
 BOOL CDOSBaseObject::AddConcernedObject(OBJECT_ID ObjectID,bool NeedTest)
 {
 	FUNCTION_BEGIN;
-	for(UINT i=0;i<m_ConcernedObject.GetCount();i++)
-	{
-		if(m_ConcernedObject[i].ObjectID==ObjectID)
-		{
-			return FALSE;
-		}
-	}
+	if(FindConcernedObjectInfo(ObjectID))
+		return FALSE;
+	
 	CONCERNED_OBJECT_INFO Info;
 	Info.ObjectID=ObjectID;
 	Info.AliveFailedCount=0;
 	Info.NeedTest=NeedTest;
-	m_ConcernedObject.Add(Info);
+	Info.RecentTestTime=CEasyTimer::GetTime();
+	m_ConcernedObject.Insert(ObjectID,Info);
 	FUNCTION_END;
 	return FALSE;
 }
@@ -270,14 +314,7 @@ BOOL CDOSBaseObject::AddConcernedObject(OBJECT_ID ObjectID,bool NeedTest)
 BOOL CDOSBaseObject::DeleteConcernedObject(OBJECT_ID ObjectID)
 {
 	FUNCTION_BEGIN;
-	for(UINT i=0;i<m_ConcernedObject.GetCount();i++)
-	{
-		if(m_ConcernedObject[i].ObjectID==ObjectID)
-		{
-			m_ConcernedObject.Delete(i);
-			return TRUE;
-		}
-	}
+	return m_ConcernedObject.Delete(ObjectID);	
 	FUNCTION_END;
 	return FALSE;
 }
@@ -302,6 +339,30 @@ BOOL CDOSBaseObject::ReportObject(OBJECT_ID TargetID,const CSmartStruct& ObjectI
 	return FALSE;
 }
 
+BOOL CDOSBaseObject::CloseProxyObject(OBJECT_ID ProxyObjectID,UINT Delay)
+{
+	FUNCTION_BEGIN;
+	return SendMessage(ProxyObjectID,DSM_PROXY_DISCONNECT,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE,&Delay,sizeof(Delay));
+	FUNCTION_END;
+	return FALSE;
+}
+
+BOOL CDOSBaseObject::RequestProxyObjectIP(OBJECT_ID ProxyObjectID)
+{
+	FUNCTION_BEGIN;
+	return SendMessage(ProxyObjectID,DSM_PROXY_GET_IP,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE);
+	FUNCTION_END;
+	return FALSE;
+}
+
+BOOL CDOSBaseObject::QueryShutDown(OBJECT_ID TargetID,int Level)
+{
+	FUNCTION_BEGIN;	
+	return SendMessage(TargetID,DSM_SYSTEM_SHUTDOWN,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE,&Level,sizeof(int));
+	FUNCTION_END;
+	return FALSE;
+}
+
 BOOL CDOSBaseObject::OnMessage(CDOSMessage * pMessage)
 {
 	FUNCTION_BEGIN;
@@ -322,6 +383,14 @@ BOOL CDOSBaseObject::OnSystemMessage(CDOSMessage * pMessage)
 	case DSM_PROXY_DISCONNECT:
 		OnProxyObjectDisconnect(pMessage->GetSenderID());
 		return TRUE;	
+	case DSM_PROXY_IP_REPORT:
+		if(pMessage->GetDataLength()>=sizeof(PROXY_CLIENT_IP_INFO))
+		{
+			PROXY_CLIENT_IP_INFO * pIPInfo=((PROXY_CLIENT_IP_INFO *)pMessage->GetDataBuffer());
+			CIPAddress IPAddress(pIPInfo->IP,(WORD)pIPInfo->Port);
+			OnProxyObjectIPReport(pMessage->GetSenderID(),pIPInfo->IP,pIPInfo->Port,IPAddress.GetIPString());
+		}
+		return TRUE;
 	case DSM_ROUTE_LINK_LOST:
 		OnRouteLinkLost(pMessage->GetSenderID().RouterID);
 		return TRUE;
@@ -337,6 +406,13 @@ BOOL CDOSBaseObject::OnSystemMessage(CDOSMessage * pMessage)
 	case DSM_OBJECT_REPORT:
 		OnObjectReport(pMessage->GetSenderID(),pMessage->GetDataPacket());
 		return TRUE;
+	case DSM_SYSTEM_SHUTDOWN:
+		if(pMessage->GetDataLength()>=sizeof(int))
+		{
+			int * pLevel=((int *)pMessage->GetDataBuffer());
+			OnShutDown(*pLevel);
+		}
+		return true;
 	}
 	FUNCTION_END;
 	return FALSE;
@@ -362,6 +438,13 @@ void CDOSBaseObject::OnObjectReport(OBJECT_ID ObjectID,const CSmartStruct& Objec
 	FUNCTION_END;
 }
 
+void CDOSBaseObject::OnProxyObjectIPReport(OBJECT_ID ProxyObjectID,UINT IP,UINT Port,LPCSTR szIPString)
+{
+	FUNCTION_BEGIN;
+	FUNCTION_END;
+}
+
+
 int CDOSBaseObject::Update(int ProcessPacketLimit)
 {
 	FUNCTION_BEGIN;
@@ -372,15 +455,12 @@ int CDOSBaseObject::Update(int ProcessPacketLimit)
 void CDOSBaseObject::OnProxyObjectDisconnect(OBJECT_ID ProxyObjectID)
 {
 	FUNCTION_BEGIN;
-	for(UINT i=0;i<m_ConcernedObject.GetCount();i++)
+	if(DeleteConcernedObject(ProxyObjectID))
 	{
-		if(m_ConcernedObject[i].ObjectID==ProxyObjectID)
-		{
-			PrintDOSDebugLog(0,"被关注的代理对象[0x%llX]已断线",
-				ProxyObjectID.ID);
-			OnConcernedObjectLost(m_ConcernedObject[i].ObjectID);
-		}
-	}
+		PrintDOSDebugLog(0,_T("[0x%llX]被关注的代理对象[0x%llX]已断线"),
+				GetObjectID(),ProxyObjectID.ID);
+		OnConcernedObjectLost(ProxyObjectID);
+	}	
 	FUNCTION_END;
 }
 void CDOSBaseObject::OnAliveTest(OBJECT_ID SenderID,BYTE IsEcho)
@@ -388,13 +468,11 @@ void CDOSBaseObject::OnAliveTest(OBJECT_ID SenderID,BYTE IsEcho)
 	FUNCTION_BEGIN;
 	if(IsEcho)
 	{
-		for(UINT i=0;i<m_ConcernedObject.GetCount();i++)
+		CONCERNED_OBJECT_INFO * pInfo=FindConcernedObjectInfo(SenderID);
+		if(pInfo)
 		{
-			if(m_ConcernedObject[i].ObjectID==SenderID)
-			{
-				m_ConcernedObject[i].AliveFailedCount=0;
-			}
-		}
+			pInfo->AliveFailedCount=0;
+		}		
 	}
 	else
 	{
@@ -406,45 +484,86 @@ void CDOSBaseObject::OnAliveTest(OBJECT_ID SenderID,BYTE IsEcho)
 void CDOSBaseObject::OnRouteLinkLost(UINT RouteID)
 {
 	FUNCTION_BEGIN;
-	for(UINT i=0;i<m_ConcernedObject.GetCount();i++)
+	void * Pos=m_ConcernedObject.GetFirstObjectPos();
+	while(Pos)
 	{
-		if(m_ConcernedObject[i].ObjectID.RouterID==RouteID)
+		OBJECT_ID Key;
+		CONCERNED_OBJECT_INFO * pInfo=m_ConcernedObject.GetNextObject(Pos,Key);
+		if(pInfo)
 		{
-			PrintDOSLog(0,"被关注的对象[0x%llX]对应的路由连接已断开",
-				m_ConcernedObject[i].ObjectID.ID);
-			OnConcernedObjectLost(m_ConcernedObject[i].ObjectID);
+			if(pInfo->ObjectID.RouterID==RouteID)
+			{
+				PrintDOSLog(0,_T("被关注的对象[0x%llX]对应的路由连接已断开"),pInfo->ObjectID.ID);
+				DeleteConcernedObject(Key);
+				OnConcernedObjectLost(Key);
+			}
 		}
-	}
+	}	
 	FUNCTION_END;
 }
 
-
+void CDOSBaseObject::OnShutDown(int Level)
+{
+	FUNCTION_BEGIN;
+	FUNCTION_END;
+}
 
 int CDOSBaseObject::DoConcernedObjectTest()
 {
 	FUNCTION_BEGIN;
 	int ProcessCount=0;
-	if(m_ConcernedObjectTestTimer.IsTimeOut(m_ConcernedObjectTestTime))
+
+	if(m_ConcernedObjectCheckTimer.IsTimeOut(m_ConcernedObjectCheckTime))
 	{
-		m_ConcernedObjectTestTimer.SaveTime();
-		for(int i=m_ConcernedObject.GetCount()-1;i>=0;i--)
+		m_ConcernedObjectCheckTimer.SaveTime();
+		UINT CurTime=CEasyTimer::GetTime();
+
+		int Factor=CONCERNED_OBJECT_ONCE_TEST_COUNT*CONCERNED_OBJECT_TEST_FACTOR;
+		while(Factor>0)
 		{
-			if(m_ConcernedObject[i].NeedTest)
+			CONCERNED_OBJECT_INFO * pInfo=m_ConcernedObject.GetObject(m_ConcernedObjectCheckPtr);
+			if(pInfo)
 			{
-				if(m_ConcernedObject[i].AliveFailedCount>m_ConcernedObjectKeepAliveCount)
+				if(pInfo->NeedTest)
 				{
-					PrintDOSLog(0,"被关注的对象[0x%llX]活动测试失败",
-						m_ConcernedObject[i].ObjectID.ID);
-					OnConcernedObjectLost(m_ConcernedObject[i].ObjectID);
-					m_ConcernedObject.Delete(i);
+					if(GetTimeToTime(pInfo->RecentTestTime,CurTime)>=m_ConcernedObjectTestTime)
+					{
+						pInfo->RecentTestTime=CurTime;
+
+						if(pInfo->AliveFailedCount>m_ConcernedObjectKeepAliveCount)
+						{
+							PrintDOSLog(0,_T("被关注的对象[0x%llX]活动测试失败"),
+								pInfo->ObjectID.ID);
+							OBJECT_ID ObjectID=pInfo->ObjectID;
+							DeleteConcernedObject(ObjectID);
+							OnConcernedObjectLost(ObjectID);
+						}
+						else
+						{
+							pInfo->AliveFailedCount++;
+							BYTE IsEcho=0;
+							SendMessage(pInfo->ObjectID,DSM_OBJECT_ALIVE_TEST,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE,&IsEcho,sizeof(IsEcho));
+						}
+					}
+					ProcessCount++;					
+					m_ConcernedObjectCheckPtr++;
+					Factor-=CONCERNED_OBJECT_TEST_FACTOR;
 				}
 				else
 				{
-					m_ConcernedObject[i].AliveFailedCount++;
-					BYTE IsEcho=0;
-					SendMessage(m_ConcernedObject[i].ObjectID,DSM_OBJECT_ALIVE_TEST,DOS_MESSAGE_FLAG_SYSTEM_MESSAGE,&IsEcho,sizeof(IsEcho));
+					m_ConcernedObjectCheckPtr++;
+					Factor--;
 				}
-				ProcessCount++;
+			}
+			else
+			{
+				m_ConcernedObjectCheckPtr++;
+				Factor--;
+			}
+			if(m_ConcernedObjectCheckPtr>=m_ConcernedObject.GetBufferSize())
+			{
+				m_ConcernedObjectCheckPtr=1;
+				break;
 			}
 		}
 	}
@@ -453,3 +572,7 @@ int CDOSBaseObject::DoConcernedObjectTest()
 	return 0;
 }
 
+CDOSBaseObject::CONCERNED_OBJECT_INFO * CDOSBaseObject::FindConcernedObjectInfo(OBJECT_ID ObjectID)
+{
+	return m_ConcernedObject.Find(ObjectID);
+}

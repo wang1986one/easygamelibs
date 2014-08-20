@@ -49,15 +49,4 @@ inline void LogDebug(const char* Format, ...)
 }
 
 
-inline void LogServerInfo(const char* Format, ...)
-{	
-	va_list vl;
-
-	va_start(vl, Format);
-	CLogManager::GetInstance()->PrintLogVL(SERVER_STATUS_LOG_CHANNEL,ILogPrinter::LOG_LEVEL_NORMAL,0,Format,vl);
-	va_end(vl);
-
-	
-
-}
 

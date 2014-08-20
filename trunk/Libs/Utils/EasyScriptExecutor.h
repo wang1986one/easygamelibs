@@ -26,7 +26,7 @@ public:
 
 protected:
 	int ExecScript(CESThread& ESThread,int StartPos,int EndPos);
-	int CallFunction(CESThread& ESThread,ES_FUNCTION * pFunction);
+	//int CallFunction(CESThread& ESThread,ES_FUNCTION * pFunction);
 	int DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESThread& ESThread);
 	int DoAdd(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult);
 	int DoSub(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,ES_BOLAN * pResult);

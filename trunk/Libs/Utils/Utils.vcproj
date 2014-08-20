@@ -12,6 +12,9 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
@@ -19,7 +22,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\Bin\Debug"
-			IntermediateDirectory="Debug"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -86,6 +89,75 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="..\Bin\x64\Debug"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions="/EHa"
+				Optimization="0"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
+				ExceptionHandling="1"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				BufferSecurityCheck="true"
+				DefaultCharIsUnsigned="false"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+				EnablePREfast="false"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\$(ProjectName)D.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\Bin\Release"
 			IntermediateDirectory="Release"
@@ -126,6 +198,77 @@
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 				EnablePREfast="true"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/Utils.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="true"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				ExceptionHandling="2"
+				BasicRuntimeChecks="0"
+				RuntimeLibrary="0"
+				FloatingPointExceptions="true"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+				EnablePREfast="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -225,6 +368,218 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="DebugUnicode|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions="/EHa"
+				Optimization="0"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
+				ExceptionHandling="1"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="true"
+				DefaultCharIsUnsigned="false"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+				EnablePREfast="true"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/UtilsD.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="ReleaseUnicode|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="true"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				ExceptionHandling="2"
+				BasicRuntimeChecks="0"
+				RuntimeLibrary="0"
+				FloatingPointExceptions="true"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+				EnablePREfast="true"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/Utils.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="ReleaseUnicode|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="true"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				ExceptionHandling="2"
+				BasicRuntimeChecks="0"
+				RuntimeLibrary="0"
+				FloatingPointExceptions="true"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+				EnablePREfast="false"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/Utils.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -264,6 +619,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -272,7 +635,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -386,6 +781,14 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
+							Name="Debug|x64"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
 							Name="Release|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -394,7 +797,39 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
+							Name="Release|x64"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
 							Name="DebugUnicode|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="DebugUnicode|x64"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="ReleaseUnicode|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="ReleaseUnicode|x64"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -418,6 +853,14 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
+							Name="Debug|x64"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
 							Name="Release|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -426,7 +869,39 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
+							Name="Release|x64"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
 							Name="DebugUnicode|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="DebugUnicode|x64"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="ReleaseUnicode|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="ReleaseUnicode|x64"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -487,6 +962,14 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
+						Name="Debug|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="Release|Win32"
 						ExcludedFromBuild="true"
 						>
@@ -495,7 +978,39 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
+						Name="Release|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="DebugUnicode|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="ReleaseUnicode|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="ReleaseUnicode|x64"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -636,6 +1151,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -644,7 +1167,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -752,6 +1307,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\CSVFileLogPrinter.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\CSVFileLogPrinter.h"
+					>
+				</File>
+				<File
 					RelativePath=".\FileLogPrinter.cpp"
 					>
 				</File>
@@ -788,7 +1351,23 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -801,6 +1380,30 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1050,18 +1653,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="MD5"
-			>
-			<File
-				RelativePath=".\HashMD5.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\HashMD5.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="操作系统相关"
 			>
 			<File
@@ -1112,6 +1703,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1120,7 +1719,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1144,6 +1775,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1152,7 +1791,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1176,6 +1847,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1184,7 +1863,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1208,6 +1919,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1216,7 +1935,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1244,6 +1995,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1252,7 +2011,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1276,6 +2067,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1284,7 +2083,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1312,6 +2143,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1320,7 +2159,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1340,6 +2211,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1348,7 +2227,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1368,6 +2279,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1376,7 +2295,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1400,6 +2351,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1408,7 +2367,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1432,6 +2423,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1440,7 +2439,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1464,6 +2495,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1472,7 +2511,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1516,7 +2587,23 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1748,6 +2835,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -1756,7 +2851,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="DebugUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugUnicode|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseUnicode|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1797,6 +2924,210 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="ID"
+			>
+			<File
+				RelativePath=".\ClassifiedID.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="加解密"
+			>
+			<Filter
+				Name="MD5"
+				>
+				<File
+					RelativePath=".\HashMD5.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\HashMD5.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Base64"
+				>
+				<File
+					RelativePath=".\Base64.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Base64.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="SHA1"
+				>
+				<File
+					RelativePath=".\HMAC_SHA1.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\HMAC_SHA1.h"
+					>
+				</File>
+				<File
+					RelativePath=".\SHA1.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\SHA1.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="URLEncode"
+				>
+				<File
+					RelativePath=".\URLEncode.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\URLEncode.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="TEA"
+				>
+				<File
+					RelativePath=".\TEA.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\TEA.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="AES"
+				>
+				<File
+					RelativePath=".\Crypto\aes.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="ReleaseUnicode|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Crypto\aes.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Crypto\crypto_types.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="DES"
+				>
+				<File
+					RelativePath=".\Crypto\des.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="DebugUnicode|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="ReleaseUnicode|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\Crypto\des.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
 		<File
 			RelativePath=".\Utils.cbp"
 			>
@@ -1809,7 +3140,23 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
+				Name="Debug|x64"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
 				Name="DebugUnicode|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="DebugUnicode|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool

@@ -53,18 +53,27 @@ void CServerLogPrinter::PrintLogVL(int Level,DWORD Color,LPCTSTR Format,va_list 
 		CurTime.FetchLocalTime();
 
 
-		sprintf_s(MsgBuff,5000,"[%02d-%02d][%02d:%02d:%02d]:",
-			CurTime.Month(),CurTime.Day(),
-			CurTime.Hour(),CurTime.Minute(),CurTime.Second());
+		if(Level==LOG_LEVEL_DEBUG)
+		{
+			_stprintf_s(MsgBuff,5000,_T("[%02d-%02d][%02d:%02d:%02d][D]"),
+				CurTime.Month(),CurTime.Day(),
+				CurTime.Hour(),CurTime.Minute(),CurTime.Second());
+		}
+		else
+		{
+			_stprintf_s(MsgBuff,5000,_T("[%02d-%02d][%02d:%02d:%02d][N]"),
+				CurTime.Month(),CurTime.Day(),
+				CurTime.Hour(),CurTime.Minute(),CurTime.Second());
+		}
 
 
-		vsprintf_s(MsgBuff+17,4096-17,Format, vl );
+		vsprintf_s(MsgBuff+20,4096-20,Format, vl );
 		MsgBuff[4095]=0;
 
 
 		if((m_LogOutputMode&LOM_CONSOLE)&&m_pServer)
 		{
-			m_pServer->PrintConsoleLog(MsgBuff+7);
+			m_pServer->PrintConsoleLog(Level,MsgBuff+7);
 		}
 
 		strncat_s(MsgBuff,5000,"\r\n",4096);

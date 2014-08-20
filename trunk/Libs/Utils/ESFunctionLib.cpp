@@ -27,7 +27,7 @@ void CESFunctionLib::AddFunction(CESFunctionList * pFunctionList)
 	ADD_SCRIPT_CFUNCTION(CESFunctionLib,RoundFN,_T("Round"),1,pFunctionList,this);
 	ADD_SCRIPT_CFUNCTION(CESFunctionLib,StrCmpFN,_T("StrCmp"),1,pFunctionList,this);
 	ADD_SCRIPT_CFUNCTION(CESFunctionLib,NumToStrFN,_T("NumToStr"),1,pFunctionList,this);
-	ADD_SCRIPT_CFUNCTION(CESFunctionLib,RandomFN,_T("Random"),1,pFunctionList,this);	
+	ADD_SCRIPT_CFUNCTION(CESFunctionLib,RandomFN,_T("Random"),2,pFunctionList,this);	
 }
 
 int CESFunctionLib::SinFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
@@ -83,6 +83,6 @@ int CESFunctionLib::NumToStrFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN*
 
 int CESFunctionLib::RandomFN(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
 {
-	*pResult=rand()%(int)pParams[0];
+	*pResult=GetRand((int)pParams[0],(int)pParams[1]);
 	return 0;
 }

@@ -16,7 +16,7 @@
 #define KEEP_ALIVE_TIME			(10*1000)
 #define MAX_KEEP_ALIVE_COUNT	6
 
-LPCTSTR g_szLinkStatus[ENL_LINK_MAX]={"None","Accepting","Accepted"};
+LPCTSTR g_szLinkStatus[ENL_LINK_MAX]={_T("None"),_T("Accepting"),_T("Accepted")};
 
 IMPLEMENT_CLASS_INFO_STATIC(CEasyNetLinkConnection,CNetConnection);
 
@@ -35,7 +35,7 @@ CEasyNetLinkConnection::CEasyNetLinkConnection(void)
 
 CEasyNetLinkConnection::~CEasyNetLinkConnection(void)
 {
-	PrintNetLog(0xffffffff,"[%s]连接[%s:%u]释放",
+	PrintNetLog(0xffffffff,_T("[%s]连接[%s:%u]释放"),
 		CClassifiedID(GetReportID()).ToStr(),
 		GetRemoteAddress().GetIPString(),
 		GetRemoteAddress().GetPort());
@@ -72,7 +72,7 @@ void CEasyNetLinkConnection::SendData(LPCVOID pData,int DataSize)
 	}
 	else
 	{
-		PrintNetLog(0xffffffff,"CEasyNetLinkConnection::SendData 发送的数据大小不合法");
+		PrintNetLog(0xffffffff,_T("CEasyNetLinkConnection::SendData 发送的数据大小不合法"));
 	}
 }
 
@@ -81,7 +81,7 @@ int CEasyNetLinkConnection::Update(int ProcessPacketLimit)
 	int Process=CNetConnection::Update(ProcessPacketLimit);
 	if(m_KeepAliveCount>MAX_KEEP_ALIVE_COUNT)
 	{
-		PrintNetLog(0xffffffff,"CEasyNetLinkConnection::Update 连接[%s]超时被断开",
+		PrintNetLog(0xffffffff,_T("CEasyNetLinkConnection::Update 连接[%s]超时被断开"),
 			CClassifiedID(GetID()).ToStr());
 		Disconnect();
 	}
@@ -93,7 +93,7 @@ int CEasyNetLinkConnection::Update(int ProcessPacketLimit)
 			{
 				m_ReconnectTimer.SaveTime();
 				Connect(GetRemoteAddress(),LINK_CONNECT_TIME);
-				PrintNetLog(0xffffffff,"[%s]开始连接[%s:%u]",
+				PrintNetLog(0xffffffff,_T("[%s]开始连接[%s:%u]"),
 					CClassifiedID(GetReportID()).ToStr(),
 					GetRemoteAddress().GetIPString(),
 					GetRemoteAddress().GetPort());
@@ -107,7 +107,7 @@ int CEasyNetLinkConnection::Update(int ProcessPacketLimit)
 			return Process;
 		}
 	}
-	else
+	else if(GetStatus()==ENL_LINK_ACCEPTED)
 	{
 		if(m_KeepAliveTimer.IsTimeOut(KEEP_ALIVE_TIME))
 		{
@@ -132,7 +132,7 @@ int CEasyNetLinkConnection::Update(int ProcessPacketLimit)
 			else
 			{
 				m_pStealer->Disconnect();
-				PrintNetLog(0xffffffff,"CEasyNetLinkConnection::Update 连接[%s][%s:%u]执行替换时没有设置管理器，被关闭",
+				PrintNetLog(0xffffffff,_T("CEasyNetLinkConnection::Update 连接[%s][%s:%u]执行替换时没有设置管理器，被关闭"),
 					CClassifiedID(GetID()).ToStr(),
 					GetRemoteAddress().GetIPString(),
 					GetRemoteAddress().GetPort());
@@ -158,7 +158,7 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 
 	if(!m_AssembleBuffer.PushBack(DataBuffer.GetBuffer(),DataBuffer.GetUsedSize()))
 	{
-		PrintNetLog(0xffffffff,"CEasyNetLinkConnection::OnRecvData 接受缓冲区,连接断开");
+		PrintNetLog(0xffffffff,_T("CEasyNetLinkConnection::OnRecvData 接受缓冲区,连接断开"));
 		Disconnect();
 		return;
 	}
@@ -170,7 +170,7 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 		UINT MsgSize=pMsg->Header.Size;
 		if(MsgSize<sizeof(EASY_NET_LINK_MSG_HEAD))
 		{
-			PrintNetLog(0xffffffff,"CEasyNetLinkConnection::OnRecvData 收到大小非法的消息,连接断开");
+			PrintNetLog(0xffffffff,_T("CEasyNetLinkConnection::OnRecvData 收到大小非法的消息,连接断开"));
 			Disconnect();
 			return;
 		}
@@ -185,7 +185,7 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 				{
 					if(!m_pManager->AcceptConnection(this))
 					{
-						PrintNetLog(0xffffffff,"CEasyNetLinkConnection::OnRecvData 非法连接[%s][%s:%u]被拒绝",
+						PrintNetLog(0xffffffff,_T("CEasyNetLinkConnection::OnRecvData 非法连接[%s][%s:%u]被拒绝"),
 							CClassifiedID(GetID()).ToStr(),
 							GetRemoteAddress().GetIPString(),
 							GetRemoteAddress().GetPort());
@@ -193,7 +193,7 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 					}
 					else
 					{
-						PrintNetLog(0xffffffff,"CEasyNetLinkConnection::OnRecvData 连接[%s][%s:%u]建立",
+						PrintNetLog(0xffffffff,_T("CEasyNetLinkConnection::OnRecvData 连接[%s][%s:%u]建立"),
 							CClassifiedID(GetID()).ToStr(),
 							GetRemoteAddress().GetIPString(),
 							GetRemoteAddress().GetPort());
@@ -201,7 +201,7 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 				}
 				else
 				{
-					PrintNetLog(0xffffffff,"CEasyNetLinkConnection::OnRecvData 连接[%s][%s:%u]建立时没有设置管理器，被关闭",
+					PrintNetLog(0xffffffff,_T("CEasyNetLinkConnection::OnRecvData 连接[%s][%s:%u]建立时没有设置管理器，被关闭"),
 						CClassifiedID(GetID()).ToStr(),
 						GetRemoteAddress().GetIPString(),
 						GetRemoteAddress().GetPort());
@@ -211,12 +211,14 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 			}
 			break;
 		case EASY_NET_LINK_MSG_KEEP_ALIVE:
-			m_KeepAliveCount=0;
-			if(!IsKeepConnect())
+			if(GetStatus()==ENL_LINK_ACCEPTED)
 			{
-				SendLinkMsg(EASY_NET_LINK_MSG_KEEP_ALIVE);
+				m_KeepAliveCount=0;
+				if(!IsKeepConnect())
+				{
+					SendLinkMsg(EASY_NET_LINK_MSG_KEEP_ALIVE);
+				}
 			}
-
 			break;
 		case EASY_NET_LINK_MSG_USER_DATA:
 			if(MsgSize>=sizeof(EASY_NET_LINK_MSG_HEAD))
@@ -229,7 +231,7 @@ void CEasyNetLinkConnection::OnRecvData(const CEasyBuffer& DataBuffer)
 			}
 			break;
 		default:
-			PrintNetLog(0xffffffff,"CEasyNetLinkConnection::OnRecvData 收到不明消息ID=%u,size=%u",
+			PrintNetLog(0xffffffff,_T("CEasyNetLinkConnection::OnRecvData 收到不明消息ID=%u,size=%u"),
 				pMsg->Header.MsgID,MsgSize);
 		}
 		m_AssembleBuffer.PopFront(NULL,MsgSize);
@@ -246,7 +248,7 @@ void CEasyNetLinkConnection::OnConnection(BOOL IsSucceed)
 
 	if(IsSucceed)
 	{
-		PrintNetLog(0xffffffff,"[%s]连接[%s:%u]成功",
+		PrintNetLog(0xffffffff,_T("[%s]连接[%s:%u]成功"),
 			CClassifiedID(GetReportID()).ToStr(),
 			GetRemoteAddress().GetIPString(),
 			GetRemoteAddress().GetPort());
@@ -260,7 +262,7 @@ void CEasyNetLinkConnection::OnConnection(BOOL IsSucceed)
 	}
 	else
 	{
-		PrintNetLog(0xffffffff,"[%s]连接[%s:%u]失败",
+		PrintNetLog(0xffffffff,_T("[%s]连接[%s:%u]失败"),
 			CClassifiedID(GetReportID()).ToStr(),
 			GetRemoteAddress().GetIPString(),
 			GetRemoteAddress().GetPort());
@@ -269,7 +271,7 @@ void CEasyNetLinkConnection::OnConnection(BOOL IsSucceed)
 
 void CEasyNetLinkConnection::OnDisconnection()
 {
-	PrintNetLog(0xffffffff,"[%s]连接[%s:%u]断开",
+	PrintNetLog(0xffffffff,_T("[%s]连接[%s:%u]断开"),
 		CClassifiedID(GetReportID()).ToStr(),
 		GetRemoteAddress().GetIPString(),
 		GetRemoteAddress().GetPort());
@@ -335,10 +337,10 @@ bool CEasyNetLinkConnection::StealFrom(CNameObject * pObject,UINT Param)
 void CEasyNetLinkConnection::PrintInfo(UINT LogChannel)
 {
 	CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,
-		"LinkID=[%s] RemoteAddress=%s:%u %s %s",
+		_T("LinkID=[%s] RemoteAddress=%s:%u %s %s"),
 		CClassifiedID(GetID()).ToStr(),
 		GetRemoteAddress().GetIPString(),
 		GetRemoteAddress().GetPort(),
-		IsConnected()?"Connected":"Disconnected",
+		IsConnected()?_T("Connected"):_T("Disconnected"),
 		g_szLinkStatus[m_Status]);
 }

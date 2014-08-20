@@ -21,6 +21,10 @@ CFastMemoryPool::CFastMemoryPool(void):CNameObject()
 	m_LevelSize=0;
 	m_BufferSize=0;
 	m_pBuffer=NULL;
+	m_AllocCount=0;
+	m_FreeCount=0;
+	m_SystemAllocCount=0;
+	m_SystemFreeCount=0;
 }
 
 CFastMemoryPool::~CFastMemoryPool(void)
@@ -149,8 +153,12 @@ void CFastMemoryPool::Clear()
 	}
 }
 
-void CFastMemoryPool::Verfy()
+void CFastMemoryPool::Verfy(int LogChannel)
 {
+	CAutoLockEx ThreadLock;
+	if(m_IsThreadLock)
+		ThreadLock.Lock(m_EasyCriticalSection);
+
 	for(UINT i=0;i<m_BlockLevelCount;i++)
 	{
 		for(UINT j=0;j<m_pBlockLevels[i].BlockCount;j++)
@@ -171,8 +179,23 @@ void CFastMemoryPool::Verfy()
 				PrintImportantLog(0,_T("CFastMemoryPool::FreeBlock:内存块%p头部已被破坏"));			
 				assert(false);
 
-			}			
+			}
+			if(pNode->Flag==BF_USED)
+			{
+				BYTE * pData=(BYTE *)pNode+sizeof(BlockNode);
+
+				CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,
+					_T("AllocedMem:%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,")
+					_T("%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X"),
+					pData[0],pData[1],pData[2],pData[3],pData[4],pData[5],pData[6],pData[7],
+					pData[8],pData[9],pData[10],pData[11],pData[12],pData[13],pData[14],pData[15],
+					pData[16],pData[17],pData[18],pData[19],pData[20],pData[21],pData[22],pData[23],
+					pData[24],pData[25],pData[26],pData[27],pData[28],pData[29],pData[30],pData[31]);
+			}
+			
 		}
+
+		
 	}
 }
 
@@ -190,9 +213,13 @@ LPVOID CFastMemoryPool::Alloc(UINT Size)
 		{
 			LPVOID pMem=AllocBlock(m_pBlockLevels+Level,Size);
 			if(pMem)
+			{
+				AtomicInc(&m_AllocCount);
 				return pMem;
+			}
 		}
 
+		AtomicInc(&m_SystemAllocCount);
 		return new char[Size];
 	}
 	else
@@ -205,8 +232,10 @@ BOOL CFastMemoryPool::Free(LPVOID pMem)
 	{
 		if((UINT)((char *)pMem-m_pBuffer)<m_BufferSize)
 		{
+			AtomicInc(&m_FreeCount);
 			return FreeBlock((BlockNode *)((char *)pMem-sizeof(BlockNode)));
 		}
+		AtomicInc(&m_SystemFreeCount);
 		delete[] (char *)pMem;
 		return TRUE;
 	}
@@ -319,3 +348,9 @@ void CFastMemoryPool::PrintCallStackLog(BlockNode * pNode)
 	}
 }
 #endif
+
+
+void CFastMemoryPool::DoStat()
+{
+	
+}

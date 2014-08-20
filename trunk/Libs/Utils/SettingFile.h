@@ -29,7 +29,7 @@ public:
 		pFile=CFileSystemManager::GetInstance()->CreateFileAccessor(m_FileChannel);
 		if(pFile==NULL)
 			return false;
-		if(!pFile->Open(FileName,IFileAccessor::modeRead))
+		if(!pFile->Open(FileName,IFileAccessor::modeRead|IFileAccessor::shareShareAll))
 		{
 			pFile->Release();
 			return false;	

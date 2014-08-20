@@ -122,7 +122,6 @@ inline BOOL PrintNetDebugLog(DWORD Color,LPCTSTR Format,...)
 
 
 #include "IPAddress.h"
-#include "ClassifiedID.h"
 #include "IPPattern.h"
 #include "NetSocket.h"
 

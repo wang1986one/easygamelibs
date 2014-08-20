@@ -91,7 +91,7 @@ int CMySQLRecordSet::GetColumnCount()
 		return 0;
 }
 
-LPCTSTR CMySQLRecordSet::GetColumnName(int Index)
+LPCSTR CMySQLRecordSet::GetColumnName(int Index)
 {
 	if(Index>=0&&Index<(int)m_pColumnInfos.GetCount())
 	{
@@ -100,7 +100,7 @@ LPCTSTR CMySQLRecordSet::GetColumnName(int Index)
 	return NULL;
 }
 
-int CMySQLRecordSet::GetIndexByColumnName(LPCTSTR Name)
+int CMySQLRecordSet::GetIndexByColumnName(LPCSTR Name)
 {
 	for(int i=0;i<(int)m_pColumnInfos.GetCount();i++)
 	{
@@ -129,7 +129,7 @@ CDBValue& CMySQLRecordSet::GetField(int Index)
 	return m_EmptyValue;
 }
 
-CDBValue& CMySQLRecordSet::GetField(LPCTSTR Name)
+CDBValue& CMySQLRecordSet::GetField(LPCSTR Name)
 {
 	int Index=GetIndexByColumnName(Name);
 	if(Index>=0)
@@ -288,9 +288,8 @@ int CMySQLRecordSet::FetchRow()
 			{
 				m_RowBuffer[j].SetEmptyValue(DBType,Size,DigitalSize);
 				CMySQLConnection::MySQLStrValueToDBValue(
-					m_pColumnInfos[j].Type,RowData[j],
-					ValueLen[j],m_pColumnInfos[j].DigitSize,
-					m_RowBuffer[j].GetBuffer(),m_RowBuffer[j].GetLength());
+					m_pColumnInfos[j].Type,RowData[j],ValueLen[j],
+					DBType,DigitalSize,m_RowBuffer[j]);
 			}
 			else
 			{

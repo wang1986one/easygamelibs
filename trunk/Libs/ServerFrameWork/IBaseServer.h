@@ -17,7 +17,7 @@ public:
 
 	virtual CNetServer * GetServer()=0;
 
-	virtual BOOL PrintConsoleLog(LPCTSTR szLogMsg)=0;
+	virtual BOOL PrintConsoleLog(int Level,LPCTSTR szLogMsg)=0;
 
 	virtual void ExecCommand(LPCTSTR szCommand)=0;
 

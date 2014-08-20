@@ -43,13 +43,13 @@ BOOL CDOSRouter::OnStart()
 
 	if(m_MsgProcessLimit==0)
 	{
-		PrintDOSLog(0xff0000,"路由消息处理限制不能为0！");
+		PrintDOSLog(0xff0000,_T("路由消息处理限制不能为0！"));
 		return FALSE;
 	}
 
 	if(!m_MsgQueue.Create(Config.MaxRouterSendMsgQueue))
 	{
-		PrintDOSLog(0xff0000,"创建%d大小的路由消息队列失败！",Config.MaxRouterSendMsgQueue);
+		PrintDOSLog(0xff0000,_T("创建%d大小的路由消息队列失败！"),Config.MaxRouterSendMsgQueue);
 		return FALSE;
 	}
 
@@ -57,13 +57,13 @@ BOOL CDOSRouter::OnStart()
 
 	if(!Parser.parse_file(Config.RouterLinkConfigFileName,pug::parse_trim_attribute))
 	{
-		PrintDOSLog(0xff0000,"打开路由连接配置文件[%s]失败！",(LPCTSTR)Config.RouterLinkConfigFileName);
+		PrintDOSLog(0xff0000,_T("打开路由连接配置文件[%s]失败！"),(LPCTSTR)Config.RouterLinkConfigFileName);
 		return FALSE;
 	}
 	xml_node LinkConfig=Parser.document();
-	if(!LinkConfig.moveto_child("RouterLink"))
+	if(!LinkConfig.moveto_child(_T("RouterLink")))
 	{
-		PrintDOSLog(0xff0000,"路由连接配置文件[%s]格式错误！",(LPCTSTR)Config.RouterLinkConfigFileName);
+		PrintDOSLog(0xff0000,_T("路由连接配置文件[%s]格式错误！"),(LPCTSTR)Config.RouterLinkConfigFileName);
 		return FALSE;
 	}
 
@@ -71,7 +71,14 @@ BOOL CDOSRouter::OnStart()
 
 	m_ThreadPerformanceCounter.Init(GetThreadHandle(),THREAD_CPU_COUNT_TIME);
 
-	return CEasyNetLinkManager::Init(m_pServer,LinkConfig);
+	if(!CEasyNetLinkManager::Init(m_pServer,LinkConfig))
+	{
+		PrintDOSLog(0xff0000,_T("连接管理器初始化失败！"));
+		return FALSE;
+	}
+
+	PrintDOSLog(0xff0000,_T("路由线程[%u]已启动"),GetThreadID());
+	return TRUE;
 	FUNCTION_END;
 	return FALSE;
 }
@@ -150,12 +157,23 @@ BOOL CDOSRouter::RouterMessage(OBJECT_ID SenderID,OBJECT_ID ReceiverID,MSG_ID_TY
 BOOL CDOSRouter::RouterMessage(CDOSMessagePacket * pPacket)
 {
 	FUNCTION_BEGIN;
+	if(pPacket->GetTargetIDCount()<=0)
+	{
+		PrintDOSLog(0xff0000,_T("消息[0x%X]没有发送目标，不发送！"),pPacket->GetMessage().GetMsgID());
+		return FALSE;
+	}
 	pPacket->MakePacketLength();
+	if(!pPacket->CheckPacket())
+	{
+		PrintDOSLog(0xff0000,_T("消息[0x%X]有效性检查失败！"),pPacket->GetMessage().GetMsgID());
+		return FALSE;
+	}
 	((CDOSServer *)GetServer())->AddRefMessagePacket(pPacket);
+	pPacket->SetAllocTime(1);
 	if(!m_MsgQueue.PushBack(pPacket))
 	{
 		((CDOSServer *)GetServer())->ReleaseMessagePacket(pPacket);
-		PrintDOSLog(0xff0000,"将消息压入路由发送队列失败！");
+		PrintDOSLog(0xff0000,_T("将消息压入路由发送队列失败！"));
 		return FALSE;
 	}
 	
@@ -180,7 +198,7 @@ int CDOSRouter::DoMessageRoute(int ProcessPacketLimit)
 	int ProcessCount=0;
 	while(m_MsgQueue.PopFront(pPacket))
 	{
-		//PrintDOSDebugLog(0,"路由了消息[%u]",pPacket->GetMessage().GetCmdID());
+		//PrintDOSDebugLog(0,_T("路由了消息[%u]"),pPacket->GetMessage().GetCmdID());
 
 		AtomicInc(&m_RouteInMsgCount);
 		AtomicAdd(&m_RouteInMsgFlow,pPacket->GetPacketLength());
@@ -189,7 +207,7 @@ int CDOSRouter::DoMessageRoute(int ProcessPacketLimit)
 		OBJECT_ID * pReceiverIDs=pPacket->GetTargetIDs();
 		if(ReceiverIDCount==0)
 		{
-			PrintDOSLog(0xff0000,"错误的消息格式！");
+			PrintDOSLog(0xff0000,_T("错误的消息格式！"));
 			continue;
 		}
 		if((ReceiverIDCount==1||IsSameRouter(pReceiverIDs,ReceiverIDCount))
@@ -212,7 +230,7 @@ int CDOSRouter::DoMessageRoute(int ProcessPacketLimit)
 				}
 				else
 				{
-					PrintDOSLog(0xff0000,"无法找到路由%u！",pReceiverIDs->RouterID);
+					PrintDOSLog(0xff0000,_T("无法找到路由%u！"),pReceiverIDs->RouterID);
 				}
 			}
 		}
@@ -276,7 +294,7 @@ int CDOSRouter::DoMessageRoute(int ProcessPacketLimit)
 					}
 					else
 					{
-						PrintDOSLog(0xff0000,"无法找到路由%u！",pReceiverIDGroup->RouterID);
+						PrintDOSLog(0xff0000,_T("无法找到路由%u！"),pReceiverIDGroup->RouterID);
 					}
 				}
 				pReceiverIDGroup+=GroupCount;
@@ -287,7 +305,7 @@ int CDOSRouter::DoMessageRoute(int ProcessPacketLimit)
 
 		if(!((CDOSServer *)GetServer())->ReleaseMessagePacket(pPacket))
 		{
-			PrintDOSLog(0xff0000,"释放消息内存块失败！");
+			PrintDOSLog(0xff0000,_T("释放消息内存块失败！"));
 		}
 		ProcessPacketLimit--;
 		ProcessCount++;
@@ -322,7 +340,7 @@ int CDOSRouter::GetGroupCount(OBJECT_ID * pReceiverIDs,int Count)
 	for(int i=1;i<Count;i++)
 	{
 		if(pReceiverIDs[i].RouterID!=RouterID)
-			return i-1;
+			return i;
 	}
 	return Count;
 	FUNCTION_END;
@@ -346,9 +364,14 @@ BOOL CDOSRouter::DispatchMessage(CDOSMessagePacket * pPacket,OBJECT_ID * pReceiv
 				AtomicAdd(&m_RouteOutMsgFlow,pPacket->GetMessage().GetMsgLength());
 				((CDOSServer *)GetServer())->GetObjectProxy()->PushMessage(pPacket);
 			}
-			if((pReceiverIDs[i].ObjectIndex!=0&&pReceiverIDs[i].ObjectIndex!=BROAD_CAST_OBJECT_INDEX)||
-				(pReceiverIDs[i].ObjectIndex==BROAD_CAST_OBJECT_INDEX&&
-				(pPacket->GetMessage().GetMsgFlag()&DOS_MESSAGE_FLAG_SYSTEM_MESSAGE)))
+			if(pReceiverIDs[i].ObjectIndex==BROAD_CAST_OBJECT_INDEX)
+			{
+				//群发消息
+				AtomicInc(&m_RouteOutMsgCount);
+				AtomicAdd(&m_RouteOutMsgFlow,pPacket->GetPacketLength());
+				((CDOSServer *)GetServer())->GetObjectProxy()->PushBroadcastMessage(pPacket);
+			}
+			else
 			{
 				CDOSProxyConnection * pProxy=((CDOSServer *)GetServer())->GetObjectProxy()->GetConnection(pReceiverIDs[i].ObjectIndex);
 				if(pProxy)
@@ -356,6 +379,13 @@ BOOL CDOSRouter::DispatchMessage(CDOSMessagePacket * pPacket,OBJECT_ID * pReceiv
 					AtomicInc(&m_RouteOutMsgCount);
 					AtomicAdd(&m_RouteOutMsgFlow,pPacket->GetPacketLength());
 					pProxy->PushMessage(pPacket);
+				}
+				else
+				{
+					PrintDOSDebugLog(0,_T("CDOSRouter::DispatchMessage:将[0x%llX]发出的消息[%X]递送到代理对象[%llX]时代理对象不存在"),
+						pPacket->GetMessage().GetSenderID(),
+						pPacket->GetMessage().GetMsgID(),
+						pReceiverIDs[i]);
 				}
 			}			
 		}
@@ -369,7 +399,9 @@ BOOL CDOSRouter::DispatchMessage(CDOSMessagePacket * pPacket,OBJECT_ID * pReceiv
 			}
 			else
 			{
-				PrintDOSLog(0,"CDOSRouter::DispatchMessage:将消息递送到对象[%llX]失败",
+				PrintDOSDebugLog(0,_T("CDOSRouter::DispatchMessage:将[0x%llX]发出的消息[%X]递送到对象[%llX]失败"),
+					pPacket->GetMessage().GetSenderID(),
+					pPacket->GetMessage().GetMsgID(),
 					pReceiverIDs[i]);
 			}
 		}

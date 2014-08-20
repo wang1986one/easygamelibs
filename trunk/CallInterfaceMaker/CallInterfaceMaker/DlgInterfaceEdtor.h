@@ -20,14 +20,10 @@ class CDlgInterfaceEdtor : public CDialog
 {
 	DECLARE_DYNAMIC(CDlgInterfaceEdtor)
 protected:
-	vector<INTERFACE_METHOD>		m_MethodList;
+	CALLER_INTERFACE				m_InterfaceInfo;
 	CListCtrl						m_lvMethodList;
-	CString							m_Name;
-	CString							m_Description;
-	int								m_InterfaceType;
 	CButton							m_rdIsCall;
 	CButton							m_rdIsCallBack;
-	CString							m_ID;
 public:
 	CDlgInterfaceEdtor(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CDlgInterfaceEdtor();
@@ -52,28 +48,27 @@ protected:
 	void AddListItem(INTERFACE_METHOD& MethodInfo,UINT Index);
 	void EditListItem(int Item,INTERFACE_METHOD& MethodInfo);
 	void FillListItem();
-
+	void SelectItemByName(LPCTSTR szName);
 
 public:
 	void SetData(CALLER_INTERFACE& InterfaceInfo);
+	void SetID(UINT ID);
 	void GetData(CALLER_INTERFACE& InterfaceInfo);	
 	
 	afx_msg void OnNMDblclkListMethod(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedButtonMoveUp();
+	afx_msg void OnBnClickedButtonMoveDown();
 };
 
 inline void CDlgInterfaceEdtor::SetData(CALLER_INTERFACE& InterfaceInfo)
 {
-	m_Name=InterfaceInfo.Name;
-	m_MethodList=InterfaceInfo.MethodList;
-	m_Description=InterfaceInfo.Description;
-	m_InterfaceType=InterfaceInfo.Type;
-	m_ID=InterfaceInfo.ID;
+	m_InterfaceInfo=InterfaceInfo;	
+}
+inline void CDlgInterfaceEdtor::SetID(UINT ID)
+{
+	m_InterfaceInfo.ID=ID;
 }
 inline void CDlgInterfaceEdtor::GetData(CALLER_INTERFACE& InterfaceInfo)
 {
-	InterfaceInfo.Name=m_Name;
-	InterfaceInfo.MethodList=m_MethodList;
-	InterfaceInfo.Description=m_Description;
-	InterfaceInfo.Type=m_InterfaceType;
-	InterfaceInfo.ID=m_ID;
+	InterfaceInfo=m_InterfaceInfo;
 }

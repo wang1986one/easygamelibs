@@ -23,6 +23,18 @@ enum THREAD_STATUS
 	THREAD_STATUS_ENDING,
 };
 
+enum THREAD_PRIORITY
+{
+	ET_PRIORITY_TIME_CRITICAL=0,
+	ET_PRIORITY_HIGHEST,
+	ET_PRIORITY_ABOVE_NORMA,
+	ET_PRIORITY_NORMAL,
+	ET_PRIORITY_BELOW_NORMA,
+	ET_PRIORITY_LOWEST,
+	ET_PRIORITY_IDLE,
+	ET_PRIORITY_ERROR_RETURN=-1,
+};
+
 class CEasyThread :
 	public CNameObject
 {
@@ -73,6 +85,10 @@ public:
 
 	HANDLE GetThreadHandle();
 	UINT GetThreadID();
+
+	BOOL SetThreadPriority(int Priority);
+	int GetThreadPriority();
+
 protected:
 	virtual BOOL OnStart();
 	virtual void Execute();

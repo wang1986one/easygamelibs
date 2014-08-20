@@ -46,7 +46,7 @@ public:
 
 protected:
 
-	CDOSObjectGroup * SelectGroup();
+	CDOSObjectGroup * SelectGroup(int GroupIndex);
 
 };
 
@@ -70,7 +70,7 @@ inline UINT CDOSObjectManager::GetObejctCount()
 }
 inline UINT CDOSObjectManager::GetGroupCount()
 {
-	return m_ObjectGroups.GetCount();
+	return (UINT)m_ObjectGroups.GetCount();
 }
 inline CDOSObjectGroup * CDOSObjectManager::GetGroup(UINT Index)
 {

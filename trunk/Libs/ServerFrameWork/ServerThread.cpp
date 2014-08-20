@@ -19,6 +19,7 @@ CServerThread::CServerThread()
 	FUNCTION_BEGIN
 	m_pSysNetLinkManager=NULL;
 	m_pUDPSystemControlPort=NULL;
+	m_ConsoleLogLevel=0;
 	FUNCTION_END;
 }
 
@@ -67,7 +68,6 @@ BOOL CServerThread::OnStart()
 	FUNCTION_BEGIN;
 
 	
-	m_CycleCount=0;
 	m_TCPRecvBytes=0;
 	m_TCPSendBytes=0;
 	m_UDPRecvBytes=0;
@@ -95,11 +95,15 @@ BOOL CServerThread::OnStart()
 	CLogManager::GetInstance()->AddChannel(SERVER_LOG_CHANNEL,pLog);
 	SAFE_RELEASE(pLog);
 
+	SetConsoleLogLevel(CSystemConfig::GetInstance()->GetConsoleLogLevel());
+
 	LogFileName.Format("%s/Log/%s.Status",(LPCTSTR)ModulePath,g_ProgramName);
-	pLog=new CServerLogPrinter(this,CServerLogPrinter::LOM_FILE,
-		CSystemConfig::GetInstance()->GetLogLevel(),LogFileName);
-	CLogManager::GetInstance()->AddChannel(SERVER_STATUS_LOG_CHANNEL,pLog);
-	SAFE_RELEASE(pLog);
+	CCSVFileLogPrinter * pCSVLog=new CCSVFileLogPrinter();
+	pCSVLog->Init(CSystemConfig::GetInstance()->GetLogLevel(),LogFileName,
+		"CycleTime,CPUUsed,TCPRecvFlow,TCPSendFlow,UDPRecvFlow,UDPSendFlow,"
+		"TCPRecvCount,TCPSendCount,UDPRecvCount=,UDPSendCount,ClientCount");	
+	CLogManager::GetInstance()->AddChannel(SERVER_STATUS_LOG_CHANNEL,pCSVLog);
+	SAFE_RELEASE(pCSVLog);
 
 	
 
@@ -135,6 +139,7 @@ BOOL CServerThread::OnStart()
 	m_ESFactionList.AddCFunction("StopLog",2,this,&CServerThread::StopLog);
 	m_ESFactionList.AddCFunction("TestLog",1,this,&CServerThread::TestLog);
 	m_ESFactionList.AddCFunction("RebuildUDPControlPort",0,this,&CServerThread::RebuildUDPControlPort);
+	m_ESFactionList.AddCFunction("SetConsoleLogLevel",1,this,&CServerThread::SFSetConsoleLogLevel);
 
 	if(!CNetServer::OnStart())
 		return FALSE;
@@ -186,6 +191,7 @@ BOOL CServerThread::OnStart()
 	SetServerStatusFormat(SC_SST_SS_PROGRAM_VERSION,"服务器版本",SSFT_VERSION);
 	SetServerStatusFormat(SC_SST_SS_CLIENT_COUNT,"客户端数量");
 	SetServerStatusFormat(SC_SST_SS_CYCLE_TIME,"循环时间(毫秒)");
+	SetServerStatusFormat(SC_SST_SS_CPU_COST,"CPU占用率",SSFT_PERCENT);
 	SetServerStatusFormat(SC_SST_SS_TCP_RECV_FLOW,"TCP接收流量(Byte/S)",SSFT_FLOW);
 	SetServerStatusFormat(SC_SST_SS_TCP_SEND_FLOW,"TCP发送流量(Byte/S)",SSFT_FLOW);
 	SetServerStatusFormat(SC_SST_SS_UDP_RECV_FLOW,"UDP接收流量(Byte/S)",SSFT_FLOW);
@@ -194,6 +200,9 @@ BOOL CServerThread::OnStart()
 	SetServerStatusFormat(SC_SST_SS_TCP_SEND_COUNT,"TCP发送次数(次/S)");
 	SetServerStatusFormat(SC_SST_SS_UDP_RECV_COUNT,"UDP接收次数(次/S)");
 	SetServerStatusFormat(SC_SST_SS_UDP_SEND_COUNT,"UDP发送次数(次/S)");
+
+	m_ThreadPerformanceCounter.Init(GetThreadHandle(),SERVER_INFO_COUNT_TIME);
+
 	
 
 	Log("服务器成功启动");
@@ -230,8 +239,9 @@ BOOL CServerThread::OnRun()
 		DoSleep(1);
 	}
 
+	m_ThreadPerformanceCounter.DoPerformanceCount();
+
 	//计算服务器循环时间
-	m_CycleCount++;
 	if(m_CountTimer.IsTimeOut(SERVER_INFO_COUNT_TIME))
 	{		
 		m_CountTimer.SaveTime();
@@ -279,16 +289,20 @@ LPCTSTR CServerThread::GetConfigFileName()
 	return SYSTEM_NET_LINK_CONFIG_FILE_NAME;
 }
 
-BOOL CServerThread::PrintConsoleLog(LPCTSTR szLogMsg)
+BOOL CServerThread::PrintConsoleLog(int Level,LPCTSTR szLogMsg)
 {
 	FUNCTION_BEGIN;
+	if(m_ConsoleLogLevel&Level)
+	{
 #ifdef WIN32
-	CControlPanel::GetInstance()->PushMsg(szLogMsg);
+		CControlPanel::GetInstance()->PushMsg(szLogMsg);
 #else
-	printf("%s\n",szLogMsg);
+		printf("%s\n",szLogMsg);
 #endif
-	if(m_pSysNetLinkManager)
-		m_pSysNetLinkManager->SendLogMsg(szLogMsg);
+		if(m_pSysNetLinkManager)
+			m_pSysNetLinkManager->SendLogMsg(szLogMsg);
+	}
+	return TRUE;
 	FUNCTION_END;
 	return FALSE;
 }
@@ -356,7 +370,7 @@ void CServerThread::QueryShowDown()
 bool CServerThread::IsServerTerminated()
 {
 	FUNCTION_BEGIN;
-	return IsTerminated();
+	return IsTerminated()!=FALSE;
 	FUNCTION_END;
 	return true;
 }
@@ -494,11 +508,7 @@ int CServerThread::TestLog(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pPa
 	else if(_stricmp(pParams[0].StrValue,"Debug")==0)
 	{
 		LogDebug("Debug");
-	}
-	else if(_stricmp(pParams[0].StrValue,"Status")==0)
-	{		
-		LogServerInfo("Status");
-	}
+	}	
 	else if(_stricmp(pParams[0].StrValue,"DB")==0)
 	{
 		PrintDBLog(0,"DB");
@@ -529,11 +539,23 @@ int CServerThread::RebuildUDPControlPort(CESThread * pESThread,ES_BOLAN* pResult
 	return 0;
 }
 
+int CServerThread::SFSetConsoleLogLevel(CESThread * pESThread,ES_BOLAN* pResult,ES_BOLAN* pParams,int ParamCount)
+{
+	FUNCTION_BEGIN;
+	
+	SetConsoleLogLevel(pParams[0]);
+	Log("控制台Log输出等级设置为%d",GetConsoleLogLevel());
+	
+	FUNCTION_END;
+	return 0;
+}
+
 void CServerThread::DoServerStat()
 {
 	FUNCTION_BEGIN;
 	int ClientCount=GetClientCount();
-	float CycleTime=(float)SERVER_INFO_COUNT_TIME/m_CycleCount;
+	float CycleTime=m_ThreadPerformanceCounter.GetCycleTime();
+	float CPUCost=m_ThreadPerformanceCounter.GetCPUUsedRate();
 	float TCPRecvFlow=(float)m_TCPRecvBytes*1000/1024/SERVER_INFO_COUNT_TIME;
 	float TCPSendFlow=(float)m_TCPSendBytes*1000/1024/SERVER_INFO_COUNT_TIME;
 	float UDPRecvFlow=(float)m_UDPRecvBytes*1000/1024/SERVER_INFO_COUNT_TIME;
@@ -545,11 +567,11 @@ void CServerThread::DoServerStat()
 	float UDPSendCount=(float)m_UDPSendCount*1000/SERVER_INFO_COUNT_TIME;
 
 
-	LogServerInfo("CycleTime=%g,"
-		"TCPRecvFlow=%s,TCPSendFlow=%s,UDPRecvFlow=%s,UDPSendFlow=%s,"
-		"TCPRecvCount=%g,TCPSendCount=%g,UDPRecvCount=%g,UDPSendCount=%g,"
-		"ClientCount=%d",
+
+	CLogManager::GetInstance()->PrintLog(SERVER_STATUS_LOG_CHANNEL,ILogPrinter::LOG_LEVEL_NORMAL,0,
+		"%g,%g,%s,%s,%s,%s,%g,%g,%g,%g,%u",
 		CycleTime,
+		CPUCost,
 		(LPCTSTR)FormatNumberWordsFloat(TCPRecvFlow,true),
 		(LPCTSTR)FormatNumberWordsFloat(TCPSendFlow,true),
 		(LPCTSTR)FormatNumberWordsFloat(UDPRecvFlow,true),
@@ -562,6 +584,7 @@ void CServerThread::DoServerStat()
 
 	SetServerStatus(SC_SST_SS_CLIENT_COUNT,CSmartValue(ClientCount));
 	SetServerStatus(SC_SST_SS_CYCLE_TIME,CSmartValue(CycleTime));
+	SetServerStatus(SC_SST_SS_CPU_COST,CSmartValue(CPUCost));
 	SetServerStatus(SC_SST_SS_TCP_RECV_FLOW,CSmartValue(TCPRecvFlow));
 	SetServerStatus(SC_SST_SS_TCP_SEND_FLOW,CSmartValue(TCPSendFlow));
 	SetServerStatus(SC_SST_SS_UDP_RECV_FLOW,CSmartValue(UDPRecvFlow));
@@ -573,7 +596,6 @@ void CServerThread::DoServerStat()
 
 	CControlPanel::GetInstance()->SetServerStatus(m_ServerStatus.GetData(),m_ServerStatus.GetDataLen());
 
-	m_CycleCount=0;
 	ResetFluxStat();
 
 	if(CSystemConfig::GetInstance()->IsLogServerObjectUse())

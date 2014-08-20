@@ -21,9 +21,9 @@ class CEasyArray
 {
 protected:
 	T *		m_pBuffer;
-	UINT	m_BufferSize;
-	UINT	m_ArrayLength;
-	UINT	m_GrowSize;
+	size_t	m_BufferSize;
+	size_t	m_ArrayLength;
+	size_t	m_GrowSize;
 public:
 	CEasyArray()
 	{
@@ -40,8 +40,9 @@ public:
 		m_GrowSize=1;
 		*this=Array;		
 	}
-	CEasyArray(UINT Size,UINT GrowSize=1)
+	CEasyArray(size_t Size,size_t GrowSize=1)
 	{
+		ASSERT_AND_THROW(GrowSize>0);
 		m_pBuffer=NULL;
 		m_BufferSize=Size;
 		m_ArrayLength=0;
@@ -49,7 +50,7 @@ public:
 		if(m_BufferSize)
 		{
 			m_pBuffer=(T *)malloc(sizeof(T)*m_BufferSize);
-			ConstructObjects(m_pBuffer,m_BufferSize);
+			//ConstructObjects(m_pBuffer,m_BufferSize);
 		}
 	}
 	~CEasyArray()
@@ -77,8 +78,9 @@ public:
 			m_ArrayLength=0;
 		}		
 	}
-	void Create(UINT Size,UINT GrowSize=1)
+	void Create(size_t Size,size_t GrowSize=1)
 	{
+		ASSERT_AND_THROW(GrowSize>0);
 		Clear();		
 		m_BufferSize=Size;
 		m_ArrayLength=0;
@@ -86,7 +88,7 @@ public:
 		if(m_BufferSize)
 		{
 			m_pBuffer=(T *)malloc(sizeof(T)*m_BufferSize);
-			ConstructObjects(m_pBuffer,m_BufferSize);
+			//ConstructObjects(m_pBuffer,m_BufferSize);
 		}
 	}
 
@@ -117,13 +119,13 @@ public:
 			ResizeBuffer(m_BufferSize+Array.GetCount()+m_GrowSize);
 		}
 		ConstructObjects(m_pBuffer+m_ArrayLength,Array.GetCount());
-		for(UINT i=0;i<Array.GetCount();i++)
+		for(size_t i=0;i<Array.GetCount();i++)
 		{
 			m_pBuffer[m_ArrayLength]=Array.GetObjectConst(i);
 			m_ArrayLength++;
 		}
 	}
-	bool Insert(UINT BeforeIndex,const T& Value)
+	bool Insert(size_t BeforeIndex,const T& Value)
 	{
 		if(BeforeIndex<=m_ArrayLength)
 		{
@@ -140,7 +142,7 @@ public:
 		}
 		return false;
 	}
-	bool Insert(UINT BeforeIndex,const CEasyArray<T>& Array)
+	bool Insert(size_t BeforeIndex,const CEasyArray<T>& Array)
 	{
 		if(BeforeIndex<=m_ArrayLength&&Array.GetCount())
 		{
@@ -151,7 +153,7 @@ public:
 			if(m_ArrayLength-BeforeIndex)
 				memmove(m_pBuffer+BeforeIndex+Array.GetCount(),m_pBuffer+BeforeIndex,sizeof(T)*(m_ArrayLength-BeforeIndex));
 			ConstructObjects(m_pBuffer+BeforeIndex,Array.GetCount());
-			for(UINT i=0;i<Array.GetCount();i++)
+			for(size_t i=0;i<Array.GetCount();i++)
 			{
 				m_pBuffer[BeforeIndex+i]=Array.GetObjectConst(i);
 			}			
@@ -160,7 +162,7 @@ public:
 		}
 		return false;
 	}
-	bool Delete(UINT Index)
+	bool Delete(size_t Index)
 	{
 		if(Index<m_ArrayLength)
 		{
@@ -177,11 +179,11 @@ public:
 		}
 		return false;
 	}
-	UINT GetCount() const
+	size_t GetCount() const
 	{
 		return m_ArrayLength;
 	}
-	bool SetCount(UINT NewLength)
+	bool SetCount(size_t NewLength)
 	{
 		if(NewLength<=m_BufferSize)
 		{
@@ -190,7 +192,7 @@ public:
 		}
 		return false;
 	}
-	UINT GetBufferLength()
+	size_t GetBufferLength()
 	{
 		return m_BufferSize;
 	}
@@ -198,7 +200,7 @@ public:
 	{
 		return m_pBuffer;
 	}
-	T * GetObject(UINT Index)
+	T * GetObject(size_t Index)
 	{
 		if(Index<m_ArrayLength)
 		{
@@ -206,22 +208,27 @@ public:
 		}
 		return NULL;
 	}
-	const T& GetObjectConst(UINT Index) const
+	const T& GetObjectConst(size_t Index) const
 	{
 #ifdef _DEBUG
-		assert(Index<m_ArrayLength);
+		ASSERT_AND_THROW(Index<m_ArrayLength);
 #endif
 		return m_pBuffer[Index];
 	}
-	void Resize(UINT NewSize)
+	void Resize(size_t NewSize)
 	{
 		if(NewSize)
 		{
+			if(NewSize<m_ArrayLength)
+			{
+				DestructObjects(m_pBuffer+NewSize,m_ArrayLength-NewSize);
+			}
 			ResizeBuffer(NewSize);
 			if(NewSize>m_ArrayLength)
 			{
 				ConstructObjects(m_pBuffer+m_ArrayLength,NewSize-m_ArrayLength);
 			}
+			
 			m_ArrayLength=NewSize;
 		}
 		else
@@ -229,32 +236,33 @@ public:
 			Clear();
 		}
 	}
-	void Reserve(UINT NewSize)
+	void Reserve(size_t NewSize)
 	{		
 		ResizeBuffer(NewSize);		
 	}
 	const CEasyArray& operator=(const CEasyArray& Array)
 	{
-		if(m_BufferSize<Array.m_ArrayLength)
-			Create(Array.m_ArrayLength,m_GrowSize);
+		Empty();
+		if(m_ArrayLength<Array.m_ArrayLength)
+			Resize(Array.m_ArrayLength);
 		m_ArrayLength=Array.m_ArrayLength;
-		for(UINT i=0;i<m_ArrayLength;i++)
+		for(size_t i=0;i<m_ArrayLength;i++)
 		{
 			m_pBuffer[i]=Array.m_pBuffer[i];
 		}
 		return *this;
 	}
-	T& operator[](UINT Index)
+	T& operator[](size_t Index)
 	{
-		assert(Index<m_ArrayLength);
+		ASSERT_AND_THROW(Index<m_ArrayLength);
 		return m_pBuffer[Index];
 	}
 	
 
 protected:
-	void ConstructObjects(T * pObjects,UINT ObjectCount)
+	void ConstructObjects(T * pObjects,size_t ObjectCount)
 	{
-		for(UINT i=0;i<ObjectCount;i++)
+		for(size_t i=0;i<ObjectCount;i++)
 		{
 			void * pPoint=pObjects+i;
 
@@ -269,31 +277,36 @@ protected:
 #endif
 		}
 	}
-	void DestructObjects(T * pObjects,UINT ObjectCount)
+	void DestructObjects(T * pObjects,size_t ObjectCount)
 	{
-		for(UINT i=0;i<ObjectCount;i++)
+		for(size_t i=0;i<ObjectCount;i++)
 		{
 			pObjects[i].~T();
 		}
 	}
-	void ResizeBuffer(UINT NewSize)
+	void ResizeBuffer(size_t NewSize)
 	{
+		if(NewSize==0)
+		{
+			Clear();
+			return;
+		}	
+		if(NewSize<=m_BufferSize)
+		{
+			return;
+		}
 		T * pNewBuffer=(T *)malloc(sizeof(T)*NewSize);
-		UINT CopySize;
-		if(NewSize>m_BufferSize)
-			CopySize=m_BufferSize;
+		size_t CopySize;
+		if(NewSize>m_ArrayLength)
+			CopySize=m_ArrayLength;
 		else
 			CopySize=NewSize;
-		memcpy(pNewBuffer,m_pBuffer,sizeof(T)*CopySize);
-		if(NewSize<m_BufferSize)
-		{
-			DestructObjects(m_pBuffer+NewSize,m_BufferSize-NewSize);
-		}
+		memcpy(pNewBuffer,m_pBuffer,sizeof(T)*CopySize);		
 		m_BufferSize=NewSize;
 		free(m_pBuffer);
 		m_pBuffer=pNewBuffer;
 	}	
-	void ShrinkBuffer(UINT NewSize)
+	void ShrinkBuffer(size_t NewSize)
 	{		
 		if(NewSize==0)
 		{
@@ -302,7 +315,7 @@ protected:
 		}
 		if(NewSize>=m_BufferSize)
 		{
-			assert(NewSize<m_BufferSize);
+			ASSERT_AND_THROW(NewSize<m_BufferSize);
 			return;
 		}
 		T * pNewBuffer=(T *)malloc(sizeof(T)*NewSize);				

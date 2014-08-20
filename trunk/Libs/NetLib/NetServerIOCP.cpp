@@ -73,7 +73,7 @@ BOOL CNetServer::OnStart()
 	m_hIOCP = CreateIoCompletionPort( INVALID_HANDLE_VALUE, NULL, 0, 0 );
 	if( m_hIOCP == NULL )
 	{
-		PrintNetLog(0xffffffff,"(%d)创建完成端口失败(%d)！",GetID(),GetLastError());		
+		PrintNetLog(0xffffffff,_T("(%d)创建完成端口失败(%d)！"),GetID(),GetLastError());		
 		return FALSE;
 	}
 
@@ -125,7 +125,7 @@ void CNetServer::OnTerminate()
 	m_hIOCP = NULL;	
 	if(m_OverLappedObjectPool.GetObjectCount())
 	{		
-		PrintNetLog(0xffffffff,"(%d)关闭，开始统计OverLappedObject使用状况！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)关闭，开始统计OverLappedObject使用状况！"),GetID());
 		PrintObjectStatus();
 	}
 
@@ -146,13 +146,13 @@ COverLappedObject * CNetServer::CreateOverLappedObject()
 	{
 		if(pOverLappedObject->GetParentID())
 		{
-			PrintImportantLog(0,"分配了未释放的OverLappedObject");
+			PrintImportantLog(0,_T("分配了未释放的OverLappedObject"));
 		}
 		pOverLappedObject->Create(this);
 		
 		return pOverLappedObject;
 	}
-	PrintNetLog(0xffffffff,"(%d)Server无法创建COverLappedObject！",GetID());
+	PrintNetLog(0xffffffff,_T("(%d)Server无法创建COverLappedObject！"),GetID());
 
 
 
@@ -164,7 +164,7 @@ BOOL CNetServer::DeleteOverLappedObject(COverLappedObject * pOverLappedObject)
 	pOverLappedObject->Destory();
 	if(!m_OverLappedObjectPool.DeleteObject(pOverLappedObject->GetID()))
 	{
-		PrintNetLog(0xffffffff,"(%d)Server无法删除COverLappedObject(%d)！",GetID(),pOverLappedObject->GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Server无法删除COverLappedObject(%d)！"),GetID(),pOverLappedObject->GetID());
 		return FALSE;
 	}	
 	
@@ -184,7 +184,7 @@ CIOCPEventRouter * CNetServer::CreateEventRouter()
 		pEventRouter->SetID(ID);
 		return pEventRouter;
 	}
-	PrintNetLog(0xffffffff,"(%d)Server无法创建CIOCPEventRouter！",GetID());
+	PrintNetLog(0xffffffff,_T("(%d)Server无法创建CIOCPEventRouter！"),GetID());
 	return NULL;
 }
 
@@ -194,7 +194,7 @@ BOOL CNetServer::DeleteEventRouter(CIOCPEventRouter * pEventRouter)
 	pEventRouter->Destory();
 	if(!m_EventRouterPool.DeleteObject(pEventRouter->GetID()))
 	{
-		PrintNetLog(0xffffffff,"(%d)Server无法删除CIOCPEventRouter(%d)！",GetID(),pEventRouter->GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Server无法删除CIOCPEventRouter(%d)！"),GetID(),pEventRouter->GetID());
 		return FALSE;
 	}
 
@@ -206,12 +206,12 @@ BOOL CNetServer::BindSocket(SOCKET Socket)
 {
 	if(m_hIOCP == NULL)
 	{
-		PrintNetLog(0xffffffff,"(%d)完成端口没有初始化,无法绑定Socket！",GetID());		
+		PrintNetLog(0xffffffff,_T("(%d)完成端口没有初始化,无法绑定Socket！"),GetID());		
 		return FALSE;
 	}
 	if(Socket == INVALID_SOCKET)
 	{
-		PrintNetLog(0xffffffff,"(%d)Socket没有初始化,无法绑定Socket！",GetID());		
+		PrintNetLog(0xffffffff,_T("(%d)Socket没有初始化,无法绑定Socket！"),GetID());		
 		return FALSE;
 	}
 	HANDLE hPort = CreateIoCompletionPort((HANDLE)Socket, m_hIOCP, 0, 0 );
@@ -222,12 +222,12 @@ BOOL CNetServer::BindFile(HANDLE FileHandle)
 {
 	if(m_hIOCP == NULL)
 	{
-		PrintNetLog(0xffffffff,"(%d)完成端口没有初始化,无法绑定FileHandle！",GetID());		
+		PrintNetLog(0xffffffff,_T("(%d)完成端口没有初始化,无法绑定FileHandle！"),GetID());		
 		return FALSE;
 	}
 	if(FileHandle == INVALID_HANDLE_VALUE)
 	{
-		PrintNetLog(0xffffffff,"(%d)FileHandle没有初始化,无法绑定FileHandle！",GetID());		
+		PrintNetLog(0xffffffff,_T("(%d)FileHandle没有初始化,无法绑定FileHandle！"),GetID());		
 		return FALSE;
 	}
 	HANDLE hPort = CreateIoCompletionPort(FileHandle, m_hIOCP, 0, 0 );
@@ -282,12 +282,12 @@ void CNetServer::PrintObjectStatus()
 
 	m_OverLappedObjectPool.Verfy(UsedCount,FreeCount);
 
-	PrintNetLog(0,"有%d(%u,%u,%u)个OverLapped对象使用中,其中Accept=%d,Recv=%d,Send=%d,Other=%d",
+	PrintNetLog(0,_T("有%d(%u,%u,%u)个OverLapped对象使用中,其中Accept=%d,Recv=%d,Send=%d,Other=%d"),
 		m_OverLappedObjectPool.GetObjectCount(),
 		UsedCount,FreeCount,UsedCount+FreeCount,
 		AcceptCount,
 		RecvCount,
 		SendCount,
 		OtherCount);
-	PrintNetLog(0,"有%d个EventRouter使用中",m_EventRouterPool.GetObjectCount());
+	PrintNetLog(0,_T("有%d个EventRouter使用中"),m_EventRouterPool.GetObjectCount());
 }
