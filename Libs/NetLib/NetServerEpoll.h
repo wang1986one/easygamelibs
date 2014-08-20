@@ -53,6 +53,7 @@ public:
 	BOOL DeleteEventObject(CEpollEventObject * pEpollEventObject);
 
 	CEpollEventRouter * CreateEventRouter();
+	CEpollEventRouter * GetEventRouter(UINT ID);
 	BOOL DeleteEventRouter(CEpollEventRouter * pEventRouter);	
 
 

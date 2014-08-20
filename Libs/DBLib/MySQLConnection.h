@@ -42,7 +42,7 @@ public:
 	virtual IDBRecordSet * CreateRecordSet(int RecordSetType);
 	virtual IDBParameterSet * CreateParameterSet(int RecordSetType);
 
-	virtual int Connect(LPCTSTR ConnectStr);
+	virtual int Connect(LPCSTR ConnectStr);
 	virtual int Disconnect();
 	virtual BOOL IsConnected();
 	virtual int ExecuteSQL(LPCSTR SQLStr,int StrLen=0,IDBParameterSet * pParamSet=NULL);		
@@ -54,25 +54,25 @@ public:
 	virtual int RollBack();
 
 	virtual UINT GetLastDatabaseErrorCode();
-	virtual LPCTSTR GetLastDatabaseErrorString();
+	virtual LPCSTR GetLastDatabaseErrorString();
 
-	virtual int TranslateString(LPCTSTR szSource,int SrcLen,LPTSTR szTarget,int MaxLen);
+	virtual int TranslateString(LPCSTR szSource,int SrcLen,LPTSTR szTarget,int MaxLen);
 
 	static int DBLibTypeToMySQLType(int Type,UINT& Size,UINT& DitigalSize);
 	static int MySQLTypeToDBLibType(int Type,UINT& Size,UINT& DitigalSize);
 	static UINT GetMySQLTypeBinLength(int Type,UINT Size,UINT DitigalSize);
 
-	static BOOL MySQLStrValueToDBValue(int ValueType,LPCVOID pData,int DataSize,int DitigalSize,LPVOID pDBValue,int DBValueSize);
+	static BOOL MySQLStrValueToDBValue(int ValueType,LPCVOID pData,int DataSize,int DBType,int DitigalSize,CDBValue& DBValue);
 
 	static BOOL DBValueToMySQLBinValue(int Type,LPCVOID pDBValue,int DBValueSize,LPVOID pData,int DataSize);
-	static BOOL MySQLBinValueToDBValue(int Type,LPCVOID pData,int DataSize,LPVOID pDBValue,int DBValueSize);
+	static BOOL MySQLBinValueToDBValue(int Type,LPCVOID pData,int DataSize,int DBType,int DitigalSize,CDBValue& DBValue);
 
-	void ProcessErrorMsg(MYSQL_STMT_HANDLE hStmt,LPCTSTR Msg);
+	void ProcessErrorMsg(MYSQL_STMT_HANDLE hStmt,LPCSTR Msg);
 protected:
 	int FetchStaticResult(CDBStaticRecordSet * pDBRecordset);
 	int FetchResult(CMySQLRecordSet * pDBRecordset);
 	int FetchDynamicResult(CMySQLDynamicRecordSet * pDBRecordset);
-	DWORD FetchConnectFlags(LPCTSTR FlagsStr);
+	DWORD FetchConnectFlags(LPCSTR FlagsStr);
 
 	int ExecuteSQLDirect(LPCSTR SQLStr,int StrLen);
 	int ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterSet * pParamSet);

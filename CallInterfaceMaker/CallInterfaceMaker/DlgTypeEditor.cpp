@@ -26,8 +26,6 @@ CDlgTypeEditor::CDlgTypeEditor(CWnd* pParent /*=NULL*/)
 	: CDialog(CDlgTypeEditor::IDD, pParent)
 	, m_TypeName(_T(""))
 	, m_CType(_T(""))
-	, m_IsFixLength(FALSE)
-	, m_NeedNullCheck(FALSE)
 {
 	m_IsModified=false;
 	m_CurSelectItem=-1;
@@ -41,37 +39,23 @@ void CDlgTypeEditor::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_TAB1, m_tabMain);
-	DDX_Control(pDX, IDC_EDIT_CONTENT1, m_edConstructOperation);
-	DDX_Control(pDX, IDC_EDIT_CONTENT2, m_edEvaluateOperation);
-	DDX_Control(pDX, IDC_EDIT_CONTENT3, m_edSizeCaculateOperation);
-	DDX_Control(pDX, IDC_EDIT_CONTENT4, m_edPackOperation);
-	DDX_Control(pDX, IDC_EDIT_CONTENT5, m_edUnpackOperation);
-	DDX_Control(pDX, IDC_EDIT_CONTENT6, m_edNULLCheckOperation);
-	DDX_Control(pDX, IDC_EDIT_CONTENT7, m_edReferenceDefine);
+	DDX_Control(pDX, IDC_EDIT_OPERATION, m_edOperation);	
 	DDX_Control(pDX, IDC_LIST_TYPES, m_lvTypeList);
 	DDX_Text(pDX, IDC_EDIT_NAME, m_TypeName);
 	DDX_Text(pDX, IDC_EDIT_CTYPE, m_CType);
-	DDX_Check(pDX, IDC_CHECK_IS_FIX_LENGTH, m_IsFixLength);
-	DDX_Check(pDX, IDC_CHECK_NEED_NULL_CHECK, m_NeedNullCheck);
 }
 
 
 BEGIN_MESSAGE_MAP(CDlgTypeEditor, CDialog)
+	ON_NOTIFY(TCN_SELCHANGING, IDC_TAB1, &CDlgTypeEditor::OnTcnSelchangingTab1)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB1, &CDlgTypeEditor::OnTcnSelchangeTab1)
 	ON_EN_CHANGE(IDC_EDIT_NAME, &CDlgTypeEditor::OnEnChangeEdit)
 	ON_EN_CHANGE(IDC_EDIT_CTYPE, &CDlgTypeEditor::OnEnChangeEdit)
-	ON_EN_CHANGE(IDC_EDIT_CONTENT1, &CDlgTypeEditor::OnEnChangeEdit)
-	ON_EN_CHANGE(IDC_EDIT_CONTENT2, &CDlgTypeEditor::OnEnChangeEdit)
-	ON_EN_CHANGE(IDC_EDIT_CONTENT3, &CDlgTypeEditor::OnEnChangeEdit)
-	ON_EN_CHANGE(IDC_EDIT_CONTENT4, &CDlgTypeEditor::OnEnChangeEdit)
-	ON_EN_CHANGE(IDC_EDIT_CONTENT5, &CDlgTypeEditor::OnEnChangeEdit)
-	ON_EN_CHANGE(IDC_EDIT_CONTENT6, &CDlgTypeEditor::OnEnChangeEdit)
-	ON_EN_CHANGE(IDC_EDIT_CONTENT7, &CDlgTypeEditor::OnEnChangeEdit)
-	ON_BN_CLICKED(IDC_CHECK_IS_FIX_LENGTH, &CDlgTypeEditor::OnBnClickedCheckIsFixLength)
-	ON_BN_CLICKED(IDC_CHECK_NEED_NULL_CHECK, &CDlgTypeEditor::OnBnClickedCheckNeedNullCheck)
+	ON_EN_CHANGE(IDC_EDIT_OPERATION, &CDlgTypeEditor::OnEnChangeEdit)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_TYPES, &CDlgTypeEditor::OnNMClickListTypes)
 	ON_BN_CLICKED(ID_NEW, &CDlgTypeEditor::OnBnClickedNew)
 	ON_BN_CLICKED(ID_DEL, &CDlgTypeEditor::OnBnClickedDel)
+	
 END_MESSAGE_MAP()
 
 
@@ -82,25 +66,21 @@ BOOL CDlgTypeEditor::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	// TODO:  在此添加额外的初始化
-	m_tabMain.InsertItem(0,"构造操作");
-	m_tabMain.InsertItem(1,"赋值操作");
-	m_tabMain.InsertItem(2,"长度计算操作");
-	m_tabMain.InsertItem(3,"打包操作");
-	m_tabMain.InsertItem(4,"解包操作");
-	m_tabMain.InsertItem(5,"空值检查操作");
-	m_tabMain.InsertItem(6,"引用定义方式");
+	m_tabMain.InsertItem(0,"长度计算操作");
+	m_tabMain.InsertItem(1,"打包操作");
+	m_tabMain.InsertItem(2,"解包操作");
+	m_tabMain.InsertItem(3,"引用定义方式");
+	m_tabMain.InsertItem(4,"引用使用方式");
+	m_tabMain.InsertItem(5,"变量定义");
+	m_tabMain.InsertItem(6,"初始化操作");
+	m_tabMain.InsertItem(7,"复制操作");
+	m_tabMain.InsertItem(8,"Get方法声明");
+	m_tabMain.InsertItem(9,"Get方法实现");
+	m_tabMain.InsertItem(10,"Set方法声明");
+	m_tabMain.InsertItem(11,"Set方法实现");
 
-	m_edConstructOperation.ShowWindow(SW_HIDE);
-	m_edEvaluateOperation.ShowWindow(SW_HIDE);
-	m_edSizeCaculateOperation.ShowWindow(SW_HIDE);
-	m_edPackOperation.ShowWindow(SW_HIDE);
-	m_edUnpackOperation.ShowWindow(SW_HIDE);
-	m_edNULLCheckOperation.ShowWindow(SW_HIDE);
-	m_edReferenceDefine.ShowWindow(SW_HIDE);
 
 	m_tabMain.SetCurSel(0);
-	m_edConstructOperation.ShowWindow(SW_SHOW);
-
 	m_lvTypeList.SetExtendedStyle(LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
 
 	m_lvTypeList.InsertColumn(0,"名称",LVCFMT_LEFT,80);
@@ -113,40 +93,27 @@ BOOL CDlgTypeEditor::OnInitDialog()
 	// 异常: OCX 属性页应返回 FALSE
 }
 
+void CDlgTypeEditor::OnTcnSelchangingTab1(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	// TODO: 在此添加控件通知处理程序代码
+	*pResult = 0;
+	POSITION Pos=m_lvTypeList.GetFirstSelectedItemPosition();
+	if(Pos)
+	{
+		int Item=m_lvTypeList.GetNextSelectedItem(Pos);
+		FetchItemData(Item);
+	}
+}
+
 void CDlgTypeEditor::OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	// TODO: 在此添加控件通知处理程序代码
 	*pResult = 0;
-	m_edConstructOperation.ShowWindow(SW_HIDE);
-	m_edEvaluateOperation.ShowWindow(SW_HIDE);
-	m_edSizeCaculateOperation.ShowWindow(SW_HIDE);
-	m_edPackOperation.ShowWindow(SW_HIDE);
-	m_edUnpackOperation.ShowWindow(SW_HIDE);
-	m_edNULLCheckOperation.ShowWindow(SW_HIDE);
-	m_edReferenceDefine.ShowWindow(SW_HIDE);
-	switch(m_tabMain.GetCurSel())
+	POSITION Pos=m_lvTypeList.GetFirstSelectedItemPosition();
+	if(Pos)
 	{
-	case 0:
-		m_edConstructOperation.ShowWindow(SW_SHOW);
-		break;
-	case 1:
-		m_edEvaluateOperation.ShowWindow(SW_SHOW);
-		break;
-	case 2:
-		m_edSizeCaculateOperation.ShowWindow(SW_SHOW);
-		break;
-	case 3:
-		m_edPackOperation.ShowWindow(SW_SHOW);
-		break;
-	case 4:
-		m_edUnpackOperation.ShowWindow(SW_SHOW);
-		break;	
-	case 5:
-		m_edNULLCheckOperation.ShowWindow(SW_SHOW);
-		break;
-	case 6:
-		m_edReferenceDefine.ShowWindow(SW_SHOW);
-		break;
+		int Item=m_lvTypeList.GetNextSelectedItem(Pos);
+		ShowItemData(Item);
 	}
 }
 
@@ -159,19 +126,6 @@ void CDlgTypeEditor::OnEnChangeEdit()
 	// 同时将 ENM_CHANGE 标志“或”运算到掩码中。
 
 	// TODO:  在此添加控件通知处理程序代码
-	m_IsModified=true;
-}
-
-
-void CDlgTypeEditor::OnBnClickedCheckIsFixLength()
-{
-	// TODO: 在此添加控件通知处理程序代码
-	m_IsModified=true;
-}
-
-void CDlgTypeEditor::OnBnClickedCheckNeedNullCheck()
-{
-	// TODO: 在此添加控件通知处理程序代码
 	m_IsModified=true;
 }
 
@@ -189,33 +143,11 @@ void CDlgTypeEditor::OnNMClickListTypes(NMHDR *pNMHDR, LRESULT *pResult)
 	
 	if(NewSelect!=m_CurSelectItem)
 	{
-		if(m_IsModified&&m_CurSelectItem>=0)
-		{
-			int Ret=AfxMessageBox("是否要保存更改?",MB_YESNOCANCEL);
-			switch(Ret)
-			{
-			case IDYES:
-				FetchItemData(m_CurSelectItem);
-				m_CurSelectItem=NewSelect;
-				m_IsModified=false;
-				ShowItemData(m_CurSelectItem);
-				break;
-			case IDNO:
-				m_CurSelectItem=NewSelect;
-				m_IsModified=false;
-				ShowItemData(m_CurSelectItem);
-				break;
-			case IDCANCEL:
-				m_lvTypeList.SetItemState(m_CurSelectItem,LVIS_SELECTED|LVIS_FOCUSED,LVIS_SELECTED|LVIS_FOCUSED);
-				m_lvTypeList.SetItemState(NewSelect,0,LVIS_SELECTED|LVIS_FOCUSED);
-				break;;
-			}
-		}
-		else
-		{
-			m_CurSelectItem=NewSelect;
-			ShowItemData(m_CurSelectItem);
-		}
+		if(m_CurSelectItem>=0)
+			FetchItemData(m_CurSelectItem);
+		m_CurSelectItem=NewSelect;			
+		ShowItemData(m_CurSelectItem);
+		
 	}
 	
 	*pResult = 0;
@@ -227,15 +159,7 @@ void CDlgTypeEditor::ShowItemData(int Item)
 	{
 		m_TypeName.Empty();
 		m_CType.Empty();
-		m_IsFixLength=FALSE;
-		m_NeedNullCheck=FALSE;
-		m_edConstructOperation.SetWindowText("");
-		m_edEvaluateOperation.SetWindowText("");
-		m_edSizeCaculateOperation.SetWindowText("");
-		m_edPackOperation.SetWindowText("");
-		m_edUnpackOperation.SetWindowText("");
-		m_edNULLCheckOperation.SetWindowText("");
-		m_edReferenceDefine.SetWindowText("");
+		m_edOperation.SetWindowText("");		
 		UpdateData(false);
 		return;
 	}
@@ -244,15 +168,47 @@ void CDlgTypeEditor::ShowItemData(int Item)
 	{
 		m_TypeName=m_TypeList[Index].Name;
 		m_CType=m_TypeList[Index].CType;
-		m_IsFixLength=m_TypeList[Index].IsFixedLength;
-		m_NeedNullCheck=m_TypeList[Index].NeedNULLCheck;
-		m_edConstructOperation.SetWindowText(m_TypeList[Index].ConstructOperation);
-		m_edEvaluateOperation.SetWindowText(m_TypeList[Index].EvaluateOperation);
-		m_edSizeCaculateOperation.SetWindowText(m_TypeList[Index].SizeCaculateOperation);
-		m_edPackOperation.SetWindowText(m_TypeList[Index].PackOperation);
-		m_edUnpackOperation.SetWindowText(m_TypeList[Index].UnpackOperation);
-		m_edNULLCheckOperation.SetWindowText(m_TypeList[Index].NULLCheckOperation);
-		m_edReferenceDefine.SetWindowText(m_TypeList[Index].ReferenceDefine);
+
+		switch(m_tabMain.GetCurSel())
+		{
+		case 0:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.SizeCaculateOperation);
+			break;
+		case 1:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.PackOperation);
+			break;
+		case 2:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.UnpackOperation);
+			break;	
+		case 3:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.ReferenceDefine);
+			break;
+		case 4:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.ReferenceUse);
+			break;
+		case 5:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.VariableDefine);
+			break;
+		case 6:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.InitOperation);
+			break;
+		case 7:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.CloneOperation);
+			break;
+		case 8:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.GetMethodDeclare);
+			break;
+		case 9:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.GetMethodDefine);
+			break;
+		case 10:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.SetMethodDeclare);
+			break;
+		case 11:
+			m_edOperation.SetWindowText(m_TypeList[Index].GenerateOperations.SetMethodDefine);
+			break;
+		}
+		
 		UpdateData(false);
 	}
 }
@@ -264,15 +220,45 @@ void CDlgTypeEditor::FetchItemData(int Item)
 		UpdateData(true);
 		m_TypeList[Index].Name=m_TypeName;
 		m_TypeList[Index].CType=m_CType;
-		m_TypeList[Index].IsFixedLength=m_IsFixLength;
-		m_TypeList[Index].NeedNULLCheck=m_NeedNullCheck;
-		m_edConstructOperation.GetWindowText(m_TypeList[Index].ConstructOperation);
-		m_edEvaluateOperation.GetWindowText(m_TypeList[Index].EvaluateOperation);
-		m_edSizeCaculateOperation.GetWindowText(m_TypeList[Index].SizeCaculateOperation);
-		m_edPackOperation.GetWindowText(m_TypeList[Index].PackOperation);
-		m_edUnpackOperation.GetWindowText(m_TypeList[Index].UnpackOperation);
-		m_edNULLCheckOperation.GetWindowText(m_TypeList[Index].NULLCheckOperation);
-		m_edReferenceDefine.GetWindowText(m_TypeList[Index].ReferenceDefine);
+		switch(m_tabMain.GetCurSel())
+		{
+		case 0:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.SizeCaculateOperation);
+			break;
+		case 1:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.PackOperation);
+			break;
+		case 2:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.UnpackOperation);
+			break;	
+		case 3:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.ReferenceDefine);
+			break;
+		case 4:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.ReferenceUse);
+			break;
+		case 5:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.VariableDefine);
+			break;
+		case 6:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.InitOperation);
+			break;
+		case 7:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.CloneOperation);
+			break;
+		case 8:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.GetMethodDeclare);
+			break;
+		case 9:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.GetMethodDefine);
+			break;
+		case 10:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.SetMethodDeclare);
+			break;
+		case 11:
+			m_edOperation.GetWindowText(m_TypeList[Index].GenerateOperations.SetMethodDefine);
+			break;
+		}
 		m_lvTypeList.SetItemText(Item,0,m_TypeList[Index].Name);
 		m_lvTypeList.SetItemText(Item,1,m_TypeList[Index].CType);
 	}
@@ -281,17 +267,16 @@ void CDlgTypeEditor::FetchItemData(int Item)
 void CDlgTypeEditor::OnBnClickedNew()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	PARAM_TYPE NewType;
+	TYPE_DEFINE NewType;
 	NewType.Name="新类型";
 	NewType.CType="char";
-	NewType.IsFixedLength=true;
-	NewType.NeedNULLCheck=false;
 	m_TypeList.push_back(NewType);
 	UINT Index=m_TypeList.size()-1;
-
+	m_IsModified=true;
 	int Item=m_lvTypeList.InsertItem(m_lvTypeList.GetItemCount(),m_TypeList[Index].Name);
 	m_lvTypeList.SetItemText(Item,1,m_TypeList[Index].CType);
 	m_lvTypeList.SetItemData(Item,Index);
+	
 }
 
 void CDlgTypeEditor::OnBnClickedDel()
@@ -305,6 +290,7 @@ void CDlgTypeEditor::OnBnClickedDel()
 		{
 			UINT Index=m_lvTypeList.GetItemData(Item);
 			m_TypeList.erase(m_TypeList.begin()+Index);
+			m_IsModified=true;
 			FillList();
 		}
 	}
@@ -321,3 +307,28 @@ void CDlgTypeEditor::FillList()
 		m_lvTypeList.SetItemData(Item,i);
 	}
 }
+void CDlgTypeEditor::OnCancel()
+{
+	// TODO: 在此添加专用代码和/或调用基类
+	if(m_IsModified)
+	{
+		if(AfxMessageBox("是否要放弃已作出的更改？",MB_YESNO)==IDYES)
+		{
+			CDialog::OnCancel();
+		}
+	}
+	else
+	{
+		CDialog::OnCancel();
+	}
+}
+
+void CDlgTypeEditor::OnOK()
+{
+	// TODO: 在此添加专用代码和/或调用基类
+	if(m_IsModified)
+		FetchItemData(m_CurSelectItem);
+	CDialog::OnOK();
+}
+
+

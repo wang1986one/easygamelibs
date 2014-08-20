@@ -1,0 +1,51 @@
+<StructDescription>
+public class <StructName><BaseStruct>
+{
+	<Members>
+	<SSTIDEnumDefine>
+	public <StructName>()
+	{
+		Clear();
+	}
+	public void Clear()
+	{
+		<InitOperations>
+	}
+	public bool MakePacket(CSmartStruct Packet)
+	{
+		uint FailCount=0;
+
+		<PackOperations>
+
+		return FailCount==0;
+	}
+	public bool ParsePacket(CSmartStruct Packet)
+	{
+		<IfHaveMember>
+		int Pos=Packet.GetFirstMemberPosition();
+		while(Pos>0)
+		{
+			ushort MemberID=0;
+			CSmartValue Value=Packet.GetNextMember(ref Pos,ref MemberID);
+			switch(MemberID)
+			{
+			<UnpackOperations>
+			}
+		}
+		</IfHaveMember>
+		return true;
+	}
+	public uint GetSmartStructSize()
+	{
+		uint Size=0;
+		<PacketSizes>
+		return Size;
+	}
+	public <StructName> Clone()
+	{
+		<StructName> CloneObject=new <StructName>();
+		<CloneToOperations>
+		return CloneObject;
+	}
+};
+

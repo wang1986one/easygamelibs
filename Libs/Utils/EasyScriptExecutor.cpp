@@ -149,8 +149,8 @@ LPCTSTR ESGetErrorMsg(int ErrCode)
 		return _T("要调用的函数未找到");
 	case 6007:
 		return _T("要调用的函数不是脚本函数");
-	case 6008:
-		return _T("添加局部变量失败");		
+	case 6009:
+		return _T("添加局部变量失败");
 	case 10000:
 		return _T("遇到意外的布兰式");
 	}
@@ -176,7 +176,6 @@ int CEasyScriptExecutor::ExecScript(CESThread& ESThread)
 	}
 
 	ESThread.GetStack()->Clear();
-	ESThread.ClearLocalVariable();
 	ESThread.ClearCallStack();
 
 	int Ret=ExecScript(ESThread,0,-1);
@@ -227,7 +226,19 @@ int CEasyScriptExecutor::CallFunction(CESThread& ESThread,LPCTSTR szFunctionName
 		return 6007;
 	}
 
-	int Ret=CallFunction(ESThread,pFunction);
+	if(ESThread.GetStack()->GetSize()<pFunction->ParaCount)
+		return 3007;
+
+	ES_BOLAN * pParams=ESThread.GetStack()->GetTop()-(pFunction->ParaCount-1);
+
+	for(int i=0;i<pFunction->ParaCount;i++)
+	{
+		if(pParams[i].Type!=BOLAN_TYPE_VALUE&&pParams[i].Type!=BOLAN_TYPE_VARIABLE)
+			return 3008;
+	}
+	ESThread.NewLocalVariableList();
+	int Ret=ExecScript(ESThread,pFunction->FunStartPos,pFunction->FunEndPos);
+
 	ESThread.SetResultCode(Ret);
 	ES_BOLAN * pResult=ESThread.GetStack()->Pop();
 	if(pResult)
@@ -417,8 +428,10 @@ int CEasyScriptExecutor::ExecScript(CESThread& ESThread,int StartPos,int EndPos)
 				StartPos++;
 				break;
 			case OPERATOR_JMP:
+			case OPERATOR_JMP_FUNC:
 				//BLOCK_BEGIN("OPERATOR_JMP");
 				StartPos=pBolan->Level;
+				pStack->Clear();
 				//BLOCK_END;
 				break;
 			case OPERATOR_JZ:
@@ -427,8 +440,11 @@ int CEasyScriptExecutor::ExecScript(CESThread& ESThread,int StartPos,int EndPos)
 				ResultCode=IsZero(t1);
 				if(ResultCode>0)
 					return ResultCode;
-				else if(ResultCode==0)				
+				else if(ResultCode==0)
+				{
 					StartPos=pBolan->Level;
+					pStack->Clear();
+				}
 				else
 					StartPos++;
 				//BLOCK_END;
@@ -469,19 +485,36 @@ int CEasyScriptExecutor::ExecScript(CESThread& ESThread,int StartPos,int EndPos)
 						else
 						{
 							pStack->PushValue(&FnResult);
-						}				
+						}		
+						StartPos++;
 					}
 					else
 					{
+
+						if(ESThread.GetStack()->GetSize()<pFunction->ParaCount)
+							return 3007;
+
+						ES_BOLAN * pParams=ESThread.GetStack()->GetTop()-(pFunction->ParaCount-1);
+
+						for(int i=0;i<pFunction->ParaCount;i++)
+						{
+							if(pParams[i].Type!=BOLAN_TYPE_VALUE&&pParams[i].Type!=BOLAN_TYPE_VARIABLE)
+								return 3008;
+						}
+
 						ESThread.PushCallStack(StartPos+1);
-						ResultCode=CallFunction(ESThread,pFunction);
-						if(ResultCode)
-							return ResultCode;					
+						ESThread.NewLocalVariableList();
+						StartPos=pFunction->FunStartPos;											
+						
+						
+						//ResultCode=CallFunction(ESThread,pFunction);
+						//if(ResultCode)
+						//	return ResultCode;					
 					}
-				}
-				StartPos++;
+				}				
 				break;
 			case OPERATOR_RET:
+				ESThread.ReleaseLocalVariableList();
 				StartPos=ESThread.PopCallStack();
 				if(StartPos<0)
 					return 0;
@@ -490,8 +523,8 @@ int CEasyScriptExecutor::ExecScript(CESThread& ESThread,int StartPos,int EndPos)
 				pStack->Clear();
 				StartPos++;
 				break;
-			case OPERATOR_ADD_VAR:
-				pVar=ESThread.GetLocalVariableList()->AddEmptyVariable(pBolan->StrValue,pBolan->ValueType);
+			case OPERATOR_ADD_VAR:				
+				pVar=ESThread.AddEmptyLocalVariable(pBolan->StrValue,pBolan->ValueType);
 				if(pVar==NULL)
 				{
 					return 6009;
@@ -500,7 +533,7 @@ int CEasyScriptExecutor::ExecScript(CESThread& ESThread,int StartPos,int EndPos)
 				break;
 			case OPERATOR_ADD_CALL_PARAM:
 				{
-					pVar=ESThread.GetLocalVariableList()->AddEmptyVariable(pBolan->StrValue,pBolan->ValueType);
+					pVar=ESThread.AddEmptyLocalVariable(pBolan->StrValue,pBolan->ValueType);
 					if(pVar==NULL)
 					{
 						return 6009;
@@ -526,11 +559,10 @@ int CEasyScriptExecutor::ExecScript(CESThread& ESThread,int StartPos,int EndPos)
 				return 3019;
 				break;
 			}			
-			break;
-		case BOLAN_TYPE_FUNCTION:			
-		case BOLAN_TYPE_KEYWORD:
-			return 10000;
 			break;		
+		default:
+			return 10000;
+			break;
 		}		
 		if(EndPos>=0)
 		{
@@ -543,31 +575,27 @@ int CEasyScriptExecutor::ExecScript(CESThread& ESThread,int StartPos,int EndPos)
 }
 
 
-int CEasyScriptExecutor::CallFunction(CESThread& ESThread,ES_FUNCTION * pFunction)
-{
-	int RetCode;
-
-	ESThread.ClearLocalVariable();
-	//RetCode=ESThread.GetScript()->DealIdentifiers(&ESThread,pFunction->FunStartPos,pFunction->FunEndPos,true);
-	//if(RetCode)
-	//	return RetCode;
-
-	if(ESThread.GetStack()->GetSize()<pFunction->ParaCount)
-		return 3007;
-
-	ES_BOLAN * pParams=ESThread.GetStack()->GetTop()-(pFunction->ParaCount-1);
-
-	for(int i=0;i<pFunction->ParaCount;i++)
-	{
-		if(pParams[i].Type!=BOLAN_TYPE_VALUE&&pParams[i].Type!=BOLAN_TYPE_VARIABLE)
-			return 3008;
-	}
-	
-	RetCode=ExecScript(ESThread,pFunction->FunStartPos,pFunction->FunEndPos);
-	if(RetCode)
-		return RetCode;	
-	return 0;
-}
+//int CEasyScriptExecutor::CallFunction(CESThread& ESThread,ES_FUNCTION * pFunction)
+//{
+//	int RetCode;
+//
+//
+//	if(ESThread.GetStack()->GetSize()<pFunction->ParaCount)
+//		return 3007;
+//
+//	ES_BOLAN * pParams=ESThread.GetStack()->GetTop()-(pFunction->ParaCount-1);
+//
+//	for(int i=0;i<pFunction->ParaCount;i++)
+//	{
+//		if(pParams[i].Type!=BOLAN_TYPE_VALUE&&pParams[i].Type!=BOLAN_TYPE_VARIABLE)
+//			return 3008;
+//	}
+//	ESThread.NewLocalVariableList();
+//	RetCode=ExecScript(ESThread,pFunction->FunStartPos,pFunction->FunEndPos);
+//	if(RetCode)
+//		return RetCode;	
+//	return 0;
+//}
 
 int CEasyScriptExecutor::DoEva(ES_BOLAN * pLeftValue,ES_BOLAN * pRightValue,CESThread& ESThread)
 {

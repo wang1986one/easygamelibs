@@ -1,0 +1,90 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CallInterfaceMaker", "CallInterfaceMaker\CallInterfaceMaker.2005.vcproj", "{5378F213-DE66-44FC-8AA4-065CBFCF26F3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Work", "Work", "{7BA9BAB8-5128-4C87-8D63-81F813C3304E}"
+	ProjectSection(SolutionItems) = preProject
+		Work\Config.xml = Work\Config.xml
+		Work\DataObjectDefineHeader.tmpl = Work\DataObjectDefineHeader.tmpl
+		Work\DataObjectDefineSource.tmpl = Work\DataObjectDefineSource.tmpl
+		Work\DataObjectModifyFlagDefine.tmpl = Work\DataObjectModifyFlagDefine.tmpl
+		Work\DataObjectModifyFlags.tmpl = Work\DataObjectModifyFlags.tmpl
+		Work\DataObjectModifyFlagUnit.tmpl = Work\DataObjectModifyFlagUnit.tmpl
+		Work\GlobalDefineHeader.tmpl = Work\GlobalDefineHeader.tmpl
+		Work\Interface.tmpl = Work\Interface.tmpl
+		Work\MethodCallerSource.tmpl = Work\MethodCallerSource.tmpl
+		Work\MethodHeader.tmpl = Work\MethodHeader.tmpl
+		Work\MethodHeaderPureTail.tmpl = Work\MethodHeaderPureTail.tmpl
+		Work\MethodSSTIDEnumDefine.tmpl = Work\MethodSSTIDEnumDefine.tmpl
+		Work\MsgCallerHeader.tmpl = Work\MsgCallerHeader.tmpl
+		Work\MsgCallerSource.tmpl = Work\MsgCallerSource.tmpl
+		Work\MsgHandlerHeader.tmpl = Work\MsgHandlerHeader.tmpl
+		Work\MsgHandlerMethodHeader.tmpl = Work\MsgHandlerMethodHeader.tmpl
+		Work\MsgHandlerMethodSource.tmpl = Work\MsgHandlerMethodSource.tmpl
+		Work\MsgHandlerSource.tmpl = Work\MsgHandlerSource.tmpl
+		Work\MsgMapInit.tmpl = Work\MsgMapInit.tmpl
+		Work\MsgPackMethodHeader.tmpl = Work\MsgPackMethodHeader.tmpl
+		Work\MsgPackMethodSource.tmpl = Work\MsgPackMethodSource.tmpl
+		Work\PackOperationUnit.tmpl = Work\PackOperationUnit.tmpl
+		Work\Param.tmpl = Work\Param.tmpl
+		Work\ParamDescript.tmpl = Work\ParamDescript.tmpl
+		Work\ProtocolFile.tmpl = Work\ProtocolFile.tmpl
+		Work\StructDefine.tmpl = Work\StructDefine.tmpl
+		Work\StructMember.tmpl = Work\StructMember.tmpl
+		Work\TypeDef.xml = Work\TypeDef.xml
+		Work\UnpackOperationUnit.tmpl = Work\UnpackOperationUnit.tmpl
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CSTemplate", "CSTemplate", "{E8A0666B-65B4-4435-9D37-2CCCE10B95BE}"
+	ProjectSection(SolutionItems) = preProject
+		CSTemplate\Config.xml = CSTemplate\Config.xml
+		CSTemplate\DataObjectDefineHeader.tmpl = CSTemplate\DataObjectDefineHeader.tmpl
+		CSTemplate\DataObjectDefineSource.tmpl = CSTemplate\DataObjectDefineSource.tmpl
+		CSTemplate\DataObjectModifyFlagDefine.tmpl = CSTemplate\DataObjectModifyFlagDefine.tmpl
+		CSTemplate\DataObjectModifyFlags.tmpl = CSTemplate\DataObjectModifyFlags.tmpl
+		CSTemplate\DataObjectModifyFlagUnit.tmpl = CSTemplate\DataObjectModifyFlagUnit.tmpl
+		CSTemplate\GlobalDefineHeader.tmpl = CSTemplate\GlobalDefineHeader.tmpl
+		CSTemplate\Interface.tmpl = CSTemplate\Interface.tmpl
+		CSTemplate\MethodCallerSource.tmpl = CSTemplate\MethodCallerSource.tmpl
+		CSTemplate\MethodHeader.tmpl = CSTemplate\MethodHeader.tmpl
+		CSTemplate\MethodHeaderPureTail.tmpl = CSTemplate\MethodHeaderPureTail.tmpl
+		CSTemplate\MethodSSTIDEnumDefine.tmpl = CSTemplate\MethodSSTIDEnumDefine.tmpl
+		CSTemplate\MsgCallerHeader.tmpl = CSTemplate\MsgCallerHeader.tmpl
+		CSTemplate\MsgCallerSource.tmpl = CSTemplate\MsgCallerSource.tmpl
+		CSTemplate\MsgHandlerHeader.tmpl = CSTemplate\MsgHandlerHeader.tmpl
+		CSTemplate\MsgHandlerMethodHeader.tmpl = CSTemplate\MsgHandlerMethodHeader.tmpl
+		CSTemplate\MsgHandlerMethodSource.tmpl = CSTemplate\MsgHandlerMethodSource.tmpl
+		CSTemplate\MsgHandlerSource.tmpl = CSTemplate\MsgHandlerSource.tmpl
+		CSTemplate\MsgMapInit.tmpl = CSTemplate\MsgMapInit.tmpl
+		CSTemplate\MsgPackMethodHeader.tmpl = CSTemplate\MsgPackMethodHeader.tmpl
+		CSTemplate\MsgPackMethodSource.tmpl = CSTemplate\MsgPackMethodSource.tmpl
+		CSTemplate\PackOperationUnit.tmpl = CSTemplate\PackOperationUnit.tmpl
+		CSTemplate\Param.tmpl = CSTemplate\Param.tmpl
+		CSTemplate\ParamDescript.tmpl = CSTemplate\ParamDescript.tmpl
+		CSTemplate\ProtocolFile.tmpl = CSTemplate\ProtocolFile.tmpl
+		CSTemplate\StructDefine.tmpl = CSTemplate\StructDefine.tmpl
+		CSTemplate\StructMember.tmpl = CSTemplate\StructMember.tmpl
+		CSTemplate\Test.xml = CSTemplate\Test.xml
+		CSTemplate\TypeDef.xml = CSTemplate\TypeDef.xml
+		CSTemplate\UnpackOperationUnit.tmpl = CSTemplate\UnpackOperationUnit.tmpl
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		MinRelease|Win32 = MinRelease|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.Debug|Win32.Build.0 = Debug|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.MinRelease|Win32.ActiveCfg = Release|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.MinRelease|Win32.Build.0 = Release|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.Release|Win32.ActiveCfg = Release|Win32
+		{5378F213-DE66-44FC-8AA4-065CBFCF26F3}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -32,12 +32,12 @@ bool CDOSObjectManager::Initialize()
 	FUNCTION_BEGIN;
 	if(m_pServer==NULL)
 	{
-		PrintDOSLog(0xff0000,"没有初始化服务器，对象管理器无法初始化！");
+		PrintDOSLog(0xff0000,_T("没有初始化服务器，对象管理器无法初始化！"));
 		return false;
 	}
 	if(m_pServer->GetConfig().ObjectGroupCount<=0)
 	{
-		PrintDOSLog(0xff0000,"服务器没有正确配置对象组数量，对象管理器无法初始化！");
+		PrintDOSLog(0xff0000,_T("服务器没有正确配置对象组数量，对象管理器无法初始化！"));
 		return false;
 	}	
 	m_ObjectGroups.Resize(m_pServer->GetConfig().ObjectGroupCount);
@@ -52,7 +52,7 @@ bool CDOSObjectManager::Initialize()
 		}
 	}
 	
-	PrintDOSLog(0xffff,"对象管理器创建了%d个对象组！",m_pServer->GetConfig().ObjectGroupCount);
+	PrintDOSLog(0xffff,_T("对象管理器创建了%d个对象组！"),m_pServer->GetConfig().ObjectGroupCount);
 	return true;
 	FUNCTION_END;
 	return false;
@@ -81,13 +81,13 @@ BOOL CDOSObjectManager::RegisterObject(DOS_OBJECT_REGISTER_INFO& ObjectRegisterI
 
 	if(ObjectRegisterInfo.pObject==NULL)
 	{
-		PrintDOSLog(0xff0000,"空对象无法注册！");
+		PrintDOSLog(0xff0000,_T("空对象无法注册！"));
 		return FALSE;
 	}
 
 	if(ObjectRegisterInfo.Weight<=0)
 	{
-		PrintDOSLog(0xff0000,"对象权重必须大于零！");
+		PrintDOSLog(0xff0000,_T("对象权重必须大于零！"));
 		return FALSE;
 	}
 		
@@ -96,20 +96,22 @@ BOOL CDOSObjectManager::RegisterObject(DOS_OBJECT_REGISTER_INFO& ObjectRegisterI
 	ObjectRegisterInfo.pObject->SetRouter(GetServer()->GetRouter());	
 
 	
-	CDOSObjectGroup * pGroup=SelectGroup();
+	CDOSObjectGroup * pGroup=SelectGroup(ObjectRegisterInfo.ObjectGroupIndex);
 
 	if(pGroup==NULL)
 	{
-		PrintDOSLog(0xff0000,"无法分配合适的对象组！");
+		PrintDOSLog(0xff0000,_T("无法分配合适的对象组！"));
 		return FALSE;
 	}
+
+	ObjectRegisterInfo.ObjectGroupIndex=pGroup->GetIndex();
 		
 	ObjectRegisterInfo.ObjectID.RouterID=GetServer()->GetRouter()->GetRouterID();
 		
 
 	if(!pGroup->RegisterObject(ObjectRegisterInfo))
 	{
-		PrintDOSLog(0xff0000,"无法将对象添加到对象组！");
+		PrintDOSLog(0xff0000,_T("无法将对象添加到对象组！"));
 		return FALSE;
 	}
 
@@ -127,7 +129,7 @@ BOOL CDOSObjectManager::UnregisterObject(OBJECT_ID ObjectID)
 	UINT GroupIndex=ObjectID.GroupIndex;
 	if(GroupIndex>=m_ObjectGroups.GetCount())
 	{
-		PrintDOSLog(0xff0000,"对象所在组%u无效",GroupIndex);
+		PrintDOSLog(0xff0000,_T("对象所在组%u无效"),GroupIndex);
 		return FALSE;
 	}
 	
@@ -137,13 +139,13 @@ BOOL CDOSObjectManager::UnregisterObject(OBJECT_ID ObjectID)
 	{
 		if(!pGroup->UnregisterObject(ObjectID))
 		{
-			PrintDOSLog(0xff0000,"向对象组请求注销对象失败");
+			PrintDOSLog(0xff0000,_T("向对象组请求注销对象失败"));
 			return FALSE;
 		}
 	}
 	else
 	{
-		PrintDOSLog(0xff0000,"无法找到对象所在的对象组");
+		PrintDOSLog(0xff0000,_T("无法找到对象所在的对象组"));
 		return FALSE;
 	}	
 	
@@ -169,7 +171,7 @@ BOOL CDOSObjectManager::PushMessage(OBJECT_ID ObjectID,CDOSMessagePacket * pPack
 	{
 		if(GroupIndex>=m_ObjectGroups.GetCount())
 		{
-			PrintDOSLog(0xff0000,"CDOSObjectManager::PushMessage:对象所在组%u无效",GroupIndex);
+			PrintDOSLog(0xff0000,_T("CDOSObjectManager::PushMessage:对象所在组%u无效"),GroupIndex);
 			return FALSE;
 		}
 		return m_ObjectGroups[GroupIndex]->PushMessage(ObjectID,pPacket);
@@ -180,20 +182,27 @@ BOOL CDOSObjectManager::PushMessage(OBJECT_ID ObjectID,CDOSMessagePacket * pPack
 }
 
 
-CDOSObjectGroup * CDOSObjectManager::SelectGroup()
+CDOSObjectGroup * CDOSObjectManager::SelectGroup(int GroupIndex)
 {
 	FUNCTION_BEGIN;
-	int Weight=0x7fffffff;
-	CDOSObjectGroup * pGroup=NULL;
-	for(UINT i=0;i<m_ObjectGroups.GetCount();i++)
+	if(GroupIndex>=0&&GroupIndex<m_ObjectGroups.GetCount())
 	{
-		if(m_ObjectGroups[i]->GetWeight()<Weight)
-		{
-			Weight=m_ObjectGroups[i]->GetWeight();
-			pGroup=m_ObjectGroups[i];
-		}
+		return m_ObjectGroups[GroupIndex];
 	}
-	return pGroup;
+	else
+	{
+		int Weight=0x7fffffff;
+		CDOSObjectGroup * pGroup=NULL;
+		for(UINT i=0;i<m_ObjectGroups.GetCount();i++)
+		{
+			if(m_ObjectGroups[i]->GetWeight()<Weight)
+			{
+				Weight=m_ObjectGroups[i]->GetWeight();
+				pGroup=m_ObjectGroups[i];
+			}
+		}
+		return pGroup;
+	}
 	FUNCTION_END;
 	return NULL;
 }
@@ -204,11 +213,14 @@ void CDOSObjectManager::PrintGroupInfo(UINT LogChannel)
 	FUNCTION_BEGIN;
 	for(UINT i=0;i<m_ObjectGroups.GetCount();i++)
 	{		
+		
 		CLogManager::GetInstance()->PrintLog(LogChannel,ILogPrinter::LOG_LEVEL_NORMAL,0,
-			"对象组[%u]:对象数[%u],权重[%u],CPU占用率[%0.2f%%],循环时间[%gMS]",
+			_T("对象组[%u]:对象数[%u],权重[%u],CPU占用率[%0.2f%%],循环时间[%gMS]"),
 			i,m_ObjectGroups[i]->GetObjectCount(),m_ObjectGroups[i]->GetWeight(),
 			m_ObjectGroups[i]->GetCPUUsedRate()*100,
 			m_ObjectGroups[i]->GetCycleTime());
+
+		m_ObjectGroups[i]->PrintObjectStat(LogChannel);
 	}
 	FUNCTION_END;
 }

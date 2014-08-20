@@ -36,7 +36,7 @@
 #define WIN32_LEAN_AND_MEAN		// 从 Windows 头中排除极少使用的资料
 
 
-#define USE_CRT_DETAIL_NEW
+//#define USE_CRT_DETAIL_NEW
 #endif
 
 //#define _CRTDBG_MAP_ALLOC
@@ -46,9 +46,9 @@
 
 //#define USE_USER_NEW
 
+
 // TODO: 在此处引用程序要求的附加头文件
 #include "Utils.h"
 
-//#define FUNCTION_BEGIN				static int s_FunctionIndex=0;static CPerformanceStatistician * s_pPS=NULL;if(!s_FunctionIndex) {s_pPS=CPerformanceStatistician::GetInstance();s_FunctionIndex=s_pPS->GetFunctionIndex(s_FunctionIndex,__FUNCTION__);} CAutoPerformanceCounter tmpPerformanceCounter(s_pPS,s_FunctionIndex);
-//#define FUNCTION_END
-//
+
+

@@ -11,80 +11,21 @@
 /****************************************************************************/
 #pragma once
 
-#define LOG_DOS_CHANNEL				1301
-#define THREAD_CPU_COUNT_TIME		(5000)
+#define LOG_DOS_CHANNEL					1301
+#define LOG_DOS_OBJECT_STATE_CHANNEL	1302
+#define THREAD_CPU_COUNT_TIME			(5000)
+//#define DOS_PROXY_KEEP_ALIVE_TIME		(10000)
+//#define DOS_PROXY_KEEP_ALIVE_MAX_COUNT	(20)
 
-typedef WORD	ROUTE_ID_TYPE;
-
-struct OBJECT_ID_BASE
+enum MSG_COMPRESS_TYPE
 {
-	union
-	{
-		UINT64	ID;
-		struct
-		{
-			WORD ObjectIndex;
-			WORD GroupIndex;
-			WORD ObjectTypeID;
-			WORD RouterID;
-		};
-	};
+	MSG_COMPRESS_NONE,
+	MSG_COMPRESS_LZO,
+	MSG_COMPRESS_ZIP_FAST,
+	MSG_COMPRESS_ZIP_NORMAL,
+	MSG_COMPRESS_ZIP_SLOW,
 };
 
-struct OBJECT_ID:public OBJECT_ID_BASE
-{
-	OBJECT_ID()
-	{
-		ID=0;
-	}	
-	OBJECT_ID(const OBJECT_ID_BASE& ObjectID)
-	{
-		ID=ObjectID.ID;
-	}
-	OBJECT_ID(unsigned __int64 Value)
-	{
-		ID=Value;
-	}
-	OBJECT_ID& operator=(const OBJECT_ID_BASE& ObjectID)
-	{
-		ID=ObjectID.ID;
-		return *this;
-	}
-	bool operator==(const OBJECT_ID& ObjectID)
-	{
-		return ID==ObjectID.ID;
-	}
-	bool operator!=(const OBJECT_ID& ObjectID)
-	{
-		return ID!=ObjectID.ID;
-	}
-	static int Compare(const void * Value1,const void * Value2);
-};
-
-inline int OBJECT_ID::Compare(const void * Value1,const void * Value2)
-{
-	if(((OBJECT_ID *)Value1)->ID==((OBJECT_ID *)Value2)->ID)
-		return 0;
-	else if(((OBJECT_ID *)Value1)->ID<((OBJECT_ID *)Value2)->ID)
-		return -1;
-	else
-		return 1;
-}
-
-#define BROAD_CAST_ROUTER_ID		(0xFFFF)
-#define BROAD_CAST_OBJECT_TYPE_ID	(0xFFFF)
-#define BROAD_CAST_GROUP_INDEX		(0xFFFF)
-#define BROAD_CAST_OBJECT_INDEX		(0xFFFF)
-
-enum DOS_OBJECT_TYPE
-{
-	DOT_UNKNOW,
-	DOT_PROXY_OBJECT,
-	//DOT_MAIN_CONTROL_OBJECT,
-	//DOT_MAIN_NORMAL_OBJECT,
-	DOT_NORMAL_OBJECT,
-	DOT_MAX,
-};
 
 struct DOS_CONFIG
 {
@@ -104,8 +45,12 @@ struct DOS_CONFIG
 	UINT										ProxySendBufferSize;
 	UINT										ProxySendDelay;
 	UINT										ProxySendQueryLimit;
-	UINT										ProxyKeepAliveTime;
+	UINT										ProxyMsgCompressType;
 	UINT										ProxyMsgMinCompressSize;
+	UINT										ProxyUnacceptConnectionKeepTime;
+	bool										ProxyUseServerInitiativeKeepAlive;
+	UINT										ProxyKeepAliveTime;
+	UINT										ProxyKeepAliveCount;
 
 	UINT										MemoryPoolBlockSize;
 	UINT										MemoryPoolLeveSize;
@@ -115,7 +60,9 @@ struct DOS_CONFIG
 	UINT										MaxGroupObjectCount;
 	UINT										MaxObjectMsgQueue;	
 	UINT										ObjectAliveTestTime;
+	UINT										ObjectAliveCheckTime;
 	UINT										ObjectKeepAliveCount;
+	bool										StatObjectCPUCost;
 
 	DOS_CONFIG()
 	{
@@ -131,8 +78,12 @@ struct DOS_CONFIG
 		ProxySendBufferSize=0;
 		ProxySendDelay=0;
 		ProxySendQueryLimit=0;
-		ProxyKeepAliveTime=3*60*1000;
+		ProxyMsgCompressType=MSG_COMPRESS_NONE;
 		ProxyMsgMinCompressSize=0;
+		ProxyUnacceptConnectionKeepTime=30*1000;
+		ProxyUseServerInitiativeKeepAlive=false;
+		ProxyKeepAliveTime=30000;
+		ProxyKeepAliveCount=10;
 		MemoryPoolBlockSize=0;
 		MemoryPoolLeveSize=0;
 		MemoryPoolLevelCount=0;
@@ -140,7 +91,9 @@ struct DOS_CONFIG
 		MaxGroupObjectCount=0;
 		MaxObjectMsgQueue=0;
 		ObjectAliveTestTime=20*1000;
+		ObjectAliveCheckTime=1000;
 		ObjectKeepAliveCount=5;
+		StatObjectCPUCost=false;
 	}
 };
 
@@ -150,6 +103,7 @@ struct DOS_OBJECT_REGISTER_INFO
 {
 	OBJECT_ID			ObjectID;
 	int					Weight;
+	int					ObjectGroupIndex;
 	UINT				MsgQueueSize;
 	UINT				MsgProcessLimit;
 	CDOSBaseObject *	pObject;
@@ -159,12 +113,15 @@ struct DOS_OBJECT_REGISTER_INFO
 	{
 		ObjectID=0;
 		Weight=1;
+		ObjectGroupIndex=-1;
 		MsgQueueSize=0;
 		MsgProcessLimit=0;
 		pObject=NULL;
 		Param=0;
 	}
 };
+
+extern UINT DistinctObjectID(OBJECT_ID * pObjectIDs,UINT Count);
 
 inline BOOL PrintDOSLog(DWORD Color,LPCTSTR Format,...)
 {
@@ -181,6 +138,15 @@ inline BOOL PrintDOSDebugLog(DWORD Color,LPCTSTR Format,...)
 	va_list vl;
 	va_start(vl,Format);
 	BOOL ret=CLogManager::GetInstance()->PrintLogVL(LOG_DOS_CHANNEL,ILogPrinter::LOG_LEVEL_DEBUG,Color,Format,vl);
+	va_end(vl);
+	return ret;
+}
+
+inline BOOL PrintDOSObjectStatLog(DWORD Color,LPCTSTR Format,...)
+{
+	va_list vl;
+	va_start(vl,Format);
+	BOOL ret=CLogManager::GetInstance()->PrintLogVL(LOG_DOS_OBJECT_STATE_CHANNEL,ILogPrinter::LOG_LEVEL_NORMAL,Color,Format,vl);
 	va_end(vl);
 	return ret;
 }

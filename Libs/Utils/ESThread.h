@@ -20,12 +20,13 @@ protected:
 		DEFAULT_CALL_STACK_SIZE=16,
 		LOCAL_VARIABLE_ID_START=0x80000000,
 	};
-	CESVariableList *	m_pVariableList;
-	CESVariableList		m_LocalVariableList;
-	CESFunctionList *	m_pFunctionList;
-	CESBolanStack *		m_pScript;
-	CESBolanStack		m_Stack;
-	CEasyArray<UINT>	m_CallStack;
+	CESVariableList *				m_pVariableList;
+	CEasyArray<CESVariableList>		m_LocalVariableListStack;
+	CESVariableList *				m_pCurLocalVariableList;
+	CESFunctionList *				m_pFunctionList;
+	CESBolanStack *					m_pScript;
+	CESBolanStack					m_Stack;
+	CEasyArray<UINT>				m_CallStack;
 
 	bool				m_IsInInterrupt;
 	int					m_InterruptPos;	
@@ -35,6 +36,8 @@ protected:
 	ES_BOLAN			m_Result;
 	int					m_ResultCode;
 	int					m_LastLine;
+
+	UINT				m_MaxLocalVariableCount;
 public:
 	CESThread(void);
 	CESThread(UINT MaxLocalVariableCount);
@@ -42,10 +45,16 @@ public:
 
 	void SetVariableList(CESVariableList * pVariableList);
 	CESVariableList * GetVariableList();
-	CESVariableList * GetLocalVariableList();
+	ES_VARIABLE * AddLocalVariable(LPCTSTR VarName,int Value);
+	ES_VARIABLE * AddLocalVariable(LPCTSTR VarName,INT64 Value);
+	ES_VARIABLE * AddLocalVariable(LPCTSTR VarName,float Value);
+	ES_VARIABLE * AddLocalVariable(LPCTSTR VarName,double Value);
+	ES_VARIABLE * AddLocalVariable(LPCTSTR VarName,LPCTSTR Value);
+	ES_VARIABLE * AddEmptyLocalVariable(LPCTSTR VarName,VALUE_TYPE Type);
 	ES_VARIABLE * FindVariable(UINT VarID);
 	ES_VARIABLE * FindVariable(LPCTSTR VarName);
-	void ClearLocalVariable();
+	void NewLocalVariableList();
+	void ReleaseLocalVariableList();
 
 	void SetFunctionList(CESFunctionList * pFunctionList);
 	CESFunctionList * GetFunctionList();
@@ -89,16 +98,51 @@ inline CESVariableList * CESThread::GetVariableList()
 {
 	return m_pVariableList;
 }
-inline CESVariableList * CESThread::GetLocalVariableList()
+inline ES_VARIABLE * CESThread::AddLocalVariable(LPCTSTR VarName,int Value)
 {
-	return &m_LocalVariableList;
+	if(m_pCurLocalVariableList)
+		return m_pCurLocalVariableList->AddVariable(VarName,Value);
+	return NULL;
+}
+inline ES_VARIABLE * CESThread::AddLocalVariable(LPCTSTR VarName,INT64 Value)
+{
+	if(m_pCurLocalVariableList)
+		return m_pCurLocalVariableList->AddVariable(VarName,Value);
+	return NULL;
+}
+inline ES_VARIABLE * CESThread::AddLocalVariable(LPCTSTR VarName,float Value)
+{
+	if(m_pCurLocalVariableList)
+		return m_pCurLocalVariableList->AddVariable(VarName,Value);
+	return NULL;
+}
+inline ES_VARIABLE * CESThread::AddLocalVariable(LPCTSTR VarName,double Value)
+{
+	if(m_pCurLocalVariableList)
+		return m_pCurLocalVariableList->AddVariable(VarName,Value);
+	return NULL;
+}
+inline ES_VARIABLE * CESThread::AddLocalVariable(LPCTSTR VarName,LPCTSTR Value)
+{
+	if(m_pCurLocalVariableList)
+		return m_pCurLocalVariableList->AddVariable(VarName,Value);
+	return NULL;
+}
+inline ES_VARIABLE * CESThread::AddEmptyLocalVariable(LPCTSTR VarName,VALUE_TYPE Type)
+{
+	if(m_pCurLocalVariableList)
+		return m_pCurLocalVariableList->AddEmptyVariable(VarName,Type);
+	return NULL;
 }
 
 inline ES_VARIABLE * CESThread::FindVariable(UINT VarID)
 {
 	if(VarID>LOCAL_VARIABLE_ID_START)
 	{
-		return m_LocalVariableList.FindVariable(VarID);
+		if(m_pCurLocalVariableList)
+			return m_pCurLocalVariableList->FindVariable(VarID);
+		else
+			return NULL;
 	}
 	else
 	{
@@ -108,16 +152,30 @@ inline ES_VARIABLE * CESThread::FindVariable(UINT VarID)
 inline ES_VARIABLE * CESThread::FindVariable(LPCTSTR VarName)
 {
 	ES_VARIABLE * pVar=NULL;	
-	pVar=m_LocalVariableList.FindVariable(VarName);
+	if(m_pCurLocalVariableList)
+		pVar=m_pCurLocalVariableList->FindVariable(VarName);
 	if(pVar==NULL&&m_pVariableList)
 	{
 		pVar=m_pVariableList->FindVariable(VarName);
 	}
 	return pVar;
 }
-inline void CESThread::ClearLocalVariable()
+
+inline void CESThread::NewLocalVariableList()
 {
-	m_LocalVariableList.Clear();
+	m_pCurLocalVariableList=m_LocalVariableListStack.AddEmpty();
+	m_pCurLocalVariableList->Create(m_MaxLocalVariableCount);
+	m_pCurLocalVariableList->SetIDStart(LOCAL_VARIABLE_ID_START);
+}
+inline void CESThread::ReleaseLocalVariableList()
+{
+	
+	if(m_LocalVariableListStack.GetCount())
+		m_LocalVariableListStack.Delete(m_LocalVariableListStack.GetCount()-1);
+	if(m_LocalVariableListStack.GetCount())
+		m_pCurLocalVariableList=m_LocalVariableListStack.GetObject(m_LocalVariableListStack.GetCount()-1);
+	else
+		m_pCurLocalVariableList=NULL;
 }
 
 inline void CESThread::SetFunctionList(CESFunctionList * pFunctionList)
@@ -233,7 +291,8 @@ inline void CESThread::Reset()
 	ClearStack();
 	ClearCallStack();
 	ClearInterrupt();
-	ClearLocalVariable();
+	m_LocalVariableListStack.Clear();
+	m_pCurLocalVariableList=NULL;
 }
 inline int CESThread::PushScript(LPCTSTR szExpStr)
 {

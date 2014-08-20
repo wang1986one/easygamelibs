@@ -17,11 +17,12 @@ IMPLEMENT_CLASS_INFO_STATIC(CAsyncFileLogWorkThread,CEasyThread);
 
 CAsyncFileLogWorkThread::CAsyncFileLogWorkThread()
 {
+	m_LogFileExtName="log";
 	m_RecentLogTime.FetchLocalTime();
 	m_pLogFile=NULL;
 }
 
-BOOL CAsyncFileLogWorkThread::Init(LPCTSTR FileName,int LogBufferLen)
+BOOL CAsyncFileLogWorkThread::Init(LPCTSTR FileName,LPCTSTR FileExtName,int LogBufferLen)
 {
 
 	if(LogBufferLen)
@@ -43,13 +44,23 @@ BOOL CAsyncFileLogWorkThread::Init(LPCTSTR FileName,int LogBufferLen)
 		}
 	}
 
+	if(FileExtName)
+	{
+		if(FileExtName[0])
+		{
+			m_LogFileExtName=FileExtName;			
+		}
+	}
+
+
 
 	CEasyString LogFileName;
-	LogFileName.Format(_T("%s.%u-%02u-%02u.log"),
+	LogFileName.Format(_T("%s.%u-%02u-%02u.%s"),
 		(LPCTSTR)m_LogFileName,
 		m_RecentLogTime.Year(),
 		m_RecentLogTime.Month(),
-		m_RecentLogTime.Day());
+		m_RecentLogTime.Day(),
+		(LPCTSTR)m_LogFileExtName);
 
 
 	int FileOpenMode=IFileAccessor::modeAppend|IFileAccessor::modeWrite|
@@ -71,6 +82,10 @@ BOOL CAsyncFileLogWorkThread::Init(LPCTSTR FileName,int LogBufferLen)
 		return FALSE;
 	}
 	m_pLogFile->Seek(0,IFileAccessor::seekEnd);
+	if(m_LogFileHeaderString.GetLength()&&m_pLogFile->GetCurPos()==0)
+	{
+		m_pLogFile->Write(m_LogFileHeaderString.GetBuffer(),m_LogFileHeaderString.GetLength());
+	}
 	return TRUE;
 }
 
@@ -105,7 +120,7 @@ BOOL CAsyncFileLogWorkThread::OnRun()
 			m_RecentLogTime.Day()!=CurTime.Day())
 		{
 			m_RecentLogTime=CurTime;
-			Init(m_LogFileName,0);
+			Init(NULL,NULL,0);
 		}
 
 		DoSleep(1);

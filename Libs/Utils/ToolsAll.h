@@ -50,15 +50,46 @@ inline BOOL PrintImportantLog(DWORD Color,LPCTSTR Format,...)
 	return ret;
 }
 
+inline int Saturate(int Value, int Min, int Max)
+{
+	if (Value<Min)
+		return Min;
+	if (Value>Max)
+		return Max;
+	return Value;
+}
+
+inline float Saturate(float Value, float Min, float Max)
+{
+	if (Value<Min)
+		return Min;
+	if (Value>Max)
+		return Max;
+	return Value;
+}
+
 
 inline int GetRand(int Min,int Max)
 {
+	if(Min>Max)
+	{
+		int Temp=Min;
+		Min=Max;
+		Max=Temp;
+	}
 	return rand()%(Max-Min+1)+Min;
 }
 
 inline float GetRandf(float Min,float Max)
 {
 	return (((float)rand())/RAND_MAX)*(Max-Min)+Min;
+}
+
+inline float GetRandGaussf(float Min,float Max)
+{
+	float sigma=(Max-Min)/2.0f;
+	float mu=(Max+Min)/2.0f;
+	return Saturate((mu + (rand() % 2 ? -1.0 : 1.0)*sigma*pow(-log(0.99999f*((double)rand() / RAND_MAX)), 0.5)),Min,Max);
 }
 
 
@@ -126,4 +157,37 @@ inline CEasyString FormatNumberWordsFloat(float Number,bool IsTiny=false)
 		return temp;
 	else
 		return temp+_T(" Byte");
+}
+
+enum BOM_HEADER_TYPE
+{
+	BMT_UNICODE=0xFEFF,
+	BMT_UNICODE_BIG_ENDIAN=0xFFFE,
+	BMT_UTF_8=0xBFBBEF,
+};
+
+inline UINT GetBomHeader(LPVOID pData)
+{
+	BYTE * pByte=(BYTE *)pData;
+	if(pByte[0]==0xFF&&pByte[1]==0xFE)
+		return BMT_UNICODE;
+	if(pByte[0]==0xFE&&pByte[1]==0xFF)
+		return BMT_UNICODE_BIG_ENDIAN;
+	if(pByte[0]==0xEF&&pByte[1]==0xBB&&pByte[2]==0xBF)
+		return BMT_UTF_8;
+	return 0;
+}
+
+
+inline CEasyString BinToString(BYTE * pData,UINT Len)
+{
+	CEasyString BinString,temp;
+	int i;
+
+	for (i = 0; i < Len; i++)
+	{
+		temp.Format(_T("%02x"), pData[i]);
+		BinString+=temp;
+	}
+	return BinString;
 }

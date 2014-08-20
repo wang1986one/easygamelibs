@@ -49,7 +49,7 @@ public:
 
 	void Destory();
 
-	bool Init(IDatabase * pDatabase,LPCTSTR szConnectStr,int ThreadCount=DEFAULT_TRANS_THREAD,int QueueSize=DEFAULT_TRANS_QUEUE,UINT Flag=0);
+	bool Init(IDatabase * pDatabase,LPCSTR szConnectStr,int ThreadCount=DEFAULT_TRANS_THREAD,int QueueSize=DEFAULT_TRANS_QUEUE,UINT Flag=0);
 
 	void ModifyFlag(UINT Add,UINT Remove)
 	{

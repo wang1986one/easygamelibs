@@ -234,8 +234,13 @@ public:
 	CD3DSceneRender(void);
 	~CD3DSceneRender(void);
 
+
+
 	bool Create(CD3DDevice * pDevice,UINT TreeMode,CD3DBoundingBox SceneBox,int StartDepth,int DepthLimit);
 	virtual void Destory();
+
+	virtual bool Reset();
+	virtual bool Restore();	
 
 
 	virtual bool AddObject(CD3DObject * pObj,bool IsRecursive=true);	

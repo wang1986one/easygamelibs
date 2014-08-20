@@ -19,7 +19,9 @@ protected:
 	BYTE *			m_pData;
 	UINT			m_DataLen;
 	bool			m_IsSelfData;
-	bool			m_AllowChange;	
+	bool			m_AllowChange;
+
+	static bool		m_ConvertWideCharToUTF8;
 public:
 	enum SMART_VALUE_TYPE
 	{
@@ -287,6 +289,12 @@ public:
 			*((UINT *)(m_pData+sizeof(BYTE)))=0;
 			*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(UINT)))=0;
 			break;
+		case VT_STRUCT:
+			m_DataLen=Len+sizeof(BYTE)+sizeof(UINT);
+			m_pData=new BYTE[m_DataLen];
+			m_pData[0]=Type;
+			*((UINT *)(m_pData+sizeof(BYTE)))=0;
+			break;
 		case VT_STRING_TINY:
 			m_DataLen=sizeof(char)*(Len+1)+sizeof(BYTE)+sizeof(WORD);
 			m_pData=new BYTE[m_DataLen];
@@ -300,6 +308,12 @@ public:
 			m_pData[0]=Type;
 			*((WORD *)(m_pData+sizeof(BYTE)))=0;
 			*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(WORD)))=0;
+			break;
+		case VT_STRUCT_TINY:
+			m_DataLen=Len+sizeof(BYTE)+sizeof(WORD);
+			m_pData=new BYTE[m_DataLen];
+			m_pData[0]=Type;
+			*((WORD *)(m_pData+sizeof(BYTE)))=0;
 			break;
 		case VT_BOOL:
 			m_DataLen=sizeof(bool)+sizeof(BYTE);
@@ -446,7 +460,11 @@ public:
 				m_pData[0]=ClearType;
 				*((UINT *)(m_pData+sizeof(BYTE)))=0;
 				*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(UINT)))=0;
-				break;		
+				break;	
+			case VT_STRUCT:
+				m_pData[0]=ClearType;
+				*((UINT *)(m_pData+sizeof(BYTE)))=0;
+				break;	
 			case VT_STRING_TINY:
 				m_pData[0]=ClearType;
 				*((WORD *)(m_pData+sizeof(BYTE)))=0;
@@ -457,6 +475,10 @@ public:
 				*((WORD *)(m_pData+sizeof(BYTE)))=0;
 				*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(WORD)))=0;
 				break;
+			case VT_STRUCT_TINY:
+				m_pData[0]=ClearType;
+				*((WORD *)(m_pData+sizeof(BYTE)))=0;
+				break;	
 			case VT_BOOL:
 				m_pData[0]=ClearType;
 				*((bool *)(m_pData+1))=false;
@@ -935,7 +957,7 @@ public:
 	{
 		static wchar_t pEmptyStr[1]={0};
 		switch(GetType())
-		{	
+		{			
 		case VT_USTRING:
 			return (wchar_t *)(m_pData+sizeof(BYTE)+sizeof(UINT));
 		case VT_USTRING_TINY:
@@ -943,6 +965,7 @@ public:
 		}		
 		return pEmptyStr;
 	}
+
 
 	operator bool() const
 	{
@@ -972,6 +995,58 @@ public:
 			return (*((bool *)(m_pData+1)));
 		}
 		return false;
+	}
+
+	const CEasyString ToStr() const
+	{
+		CEasyString String;
+		GetStr(String);		
+		return String;
+	}
+
+	void GetStr(CEasyString& String) const
+	{
+		switch(GetType())
+		{	
+		case VT_STRING:
+			if(CSmartValue::IsConvertWideCharToUTF8()&&String.IsUnicode())
+			{
+				const char * szSrc=(const char *)(m_pData+sizeof(BYTE)+sizeof(UINT));
+				int SrcLen=strlen(szSrc);
+				int DestLen=0;
+				DestLen=MultiByteToWideChar(CP_UTF8,0,szSrc,SrcLen,NULL,0);
+				String.Resize(DestLen,false);
+				MultiByteToWideChar(CP_UTF8,0,szSrc,SrcLen,(wchar_t *)String.GetBuffer(),DestLen);
+				String.TrimBuffer();
+			}
+			else
+			{
+				String=(const char *)(m_pData+sizeof(BYTE)+sizeof(UINT));
+			}			
+			break;
+		case VT_STRING_TINY:
+			if(CSmartValue::IsConvertWideCharToUTF8()&&String.IsUnicode())
+			{
+				const char * szSrc=(const char *)(m_pData+sizeof(BYTE)+sizeof(WORD));
+				int SrcLen=strlen(szSrc);
+				int DestLen=0;
+				DestLen=MultiByteToWideChar(CP_UTF8,0,szSrc,SrcLen,NULL,0);
+				String.Resize(DestLen,false);
+				MultiByteToWideChar(CP_UTF8,0,szSrc,SrcLen,(wchar_t *)String.GetBuffer(),DestLen);
+				String.TrimBuffer();
+			}
+			else
+			{
+				String=(const char *)(m_pData+sizeof(BYTE)+sizeof(WORD));
+			}			
+			break;
+		case VT_USTRING:
+			String=(wchar_t *)(m_pData+sizeof(BYTE)+sizeof(UINT));
+			break;
+		case VT_USTRING_TINY:
+			String=(wchar_t *)(m_pData+sizeof(BYTE)+sizeof(WORD));
+			break;
+		}
 	}
 	
 	void operator=(const CSmartValue& Value)
@@ -1536,6 +1611,12 @@ public:
 			SetString(Value,(UINT)wcslen(Value));
 	}
 
+	void operator=(const CEasyString& Value)
+	{
+		Destory();
+		SetString(Value,(UINT)Value.GetLength());
+	}	
+
 	void SetString(const char * pStr,UINT Len)
 	{
 		if(GetType()==VT_STRING)			
@@ -1549,10 +1630,10 @@ public:
 		}
 		else if(GetType()==VT_STRING_TINY)
 		{
-			WORD MaxLen=m_DataLen-sizeof(BYTE)-sizeof(WORD)-sizeof(char);
+			WORD MaxLen=(WORD)(m_DataLen-sizeof(BYTE)-sizeof(WORD)-sizeof(char));
 			if(Len>MaxLen)
 				Len=MaxLen;
-			*((WORD *)(m_pData+sizeof(BYTE)))=Len*sizeof(char);
+			*((WORD *)(m_pData+sizeof(BYTE)))=(WORD)(Len*sizeof(char));
 			memcpy(m_pData+sizeof(BYTE)+sizeof(WORD),pStr,Len*sizeof(char));
 			*((char *)(m_pData+sizeof(BYTE)+sizeof(WORD)+Len*sizeof(char)))=0;
 		}
@@ -1571,14 +1652,36 @@ public:
 		}
 		else if(GetType()==VT_USTRING_TINY)
 		{
-			WORD MaxLen=m_DataLen-sizeof(BYTE)-sizeof(WORD)-sizeof(wchar_t);
+			WORD MaxLen=(WORD)(m_DataLen-sizeof(BYTE)-sizeof(WORD)-sizeof(wchar_t));
 			if(Len>MaxLen)
 				Len=MaxLen;		
-			*((WORD *)(m_pData+sizeof(BYTE)))=Len*sizeof(wchar_t);
+			*((WORD *)(m_pData+sizeof(BYTE)))=(WORD)(Len*sizeof(wchar_t));
 			memcpy(m_pData+sizeof(BYTE)+sizeof(WORD),pStr,Len*sizeof(wchar_t));
 			*((wchar_t *)(m_pData+sizeof(BYTE)+sizeof(WORD)+Len*sizeof(wchar_t)))=0;
+		}
+		else if(GetType()==VT_STRING&&IsConvertWideCharToUTF8())			
+		{
+			UINT UTF8Len=(UINT)UnicodeToUTF8(pStr,Len,NULL,0);
+			UINT MaxLen=m_DataLen-sizeof(BYTE)-sizeof(UINT)-sizeof(char);
+			if(UTF8Len>MaxLen)
+				UTF8Len=MaxLen;
+			*((UINT *)(m_pData+sizeof(BYTE)))=UTF8Len*sizeof(char);
+			UnicodeToUTF8(pStr,Len,(char *)m_pData+sizeof(BYTE)+sizeof(UINT),UTF8Len);			
+			*((char *)(m_pData+sizeof(BYTE)+sizeof(UINT)+UTF8Len*sizeof(char)))=0;
+		}
+		else if(GetType()==VT_STRING_TINY&&IsConvertWideCharToUTF8())
+		{
+			UINT UTF8Len=(UINT)UnicodeToUTF8(pStr,Len,NULL,0);
+			WORD MaxLen=(WORD)(m_DataLen-sizeof(BYTE)-sizeof(WORD)-sizeof(char));
+			if(UTF8Len>MaxLen)
+				UTF8Len=MaxLen;
+			*((WORD *)(m_pData+sizeof(BYTE)))=(WORD)(UTF8Len*sizeof(char));
+			UnicodeToUTF8(pStr,Len,(char *)m_pData+sizeof(BYTE)+sizeof(WORD),UTF8Len);
+			*((char *)(m_pData+sizeof(BYTE)+sizeof(WORD)+UTF8Len*sizeof(char)))=0;
 		}
 	}
 
 	static int GetTypeFromData(LPCVOID pData,UINT DataSize);
+	static void EnableConvertWideCharToUTF8(bool Enable);
+	static bool IsConvertWideCharToUTF8();
 };

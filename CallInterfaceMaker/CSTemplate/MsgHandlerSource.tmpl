@@ -1,8 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Runtime.InteropServices;
 using CSharpUtils;
 using CSharpUtils.DOSBase;
 using <SpaceName>;
@@ -17,9 +16,9 @@ namespace <SpaceName>
 		public void InitMsgMap(I<InterfaceName> pMsgHandler,Dictionary<uint,MsgHandler> MsgMap)
 		{
 			m_pMsgHandler=pMsgHandler;
-<MsgMapInits>
+			<MsgMapInits>
 		}
 
-<Methods>
+		<Methods>
 	};
 };

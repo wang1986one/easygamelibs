@@ -1448,6 +1448,36 @@ public:
 #endif
 	}
 
+	operator char()
+	{
+		if(!has_value()) return 0;
+#ifdef PUGOPT_NONSEG
+		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
+		unsigned int valulen = sizeof(temp)-1;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
+		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
+		temp[maxlen] = 0;
+		return (char)_tcstol( temp, NULL, 0 );    // rem: base = 0 so value can be Dec|Octal|Hex
+#else
+		return (char)_tcstol( _attr->value, NULL, 0 ); // rem: base = 0 so value can be Dec|Octal|Hex
+#endif
+	}
+
+	operator unsigned char()
+	{
+		if(!has_value()) return 0;
+#ifdef PUGOPT_NONSEG
+		TCHAR temp[PUGDEF_ATTR_VALU_SIZE];
+		unsigned int valulen = sizeof(temp)-1;
+		const unsigned int maxlen = valulen ? Min(valulen,_attr->value_size) : _attr->value_size;
+		_tcsncpy_s(temp,PUGDEF_ATTR_VALU_SIZE,_attr->value,maxlen);
+		temp[maxlen] = 0;
+		return (unsigned char)_tcstoul( temp, NULL, 0 );    // rem: base = 0 so value can be Dec|Octal|Hex
+#else
+		return (unsigned char)_tcstoul( _attr->value, NULL, 0 ); // rem: base = 0 so value can be Dec|Octal|Hex
+#endif
+	}
+
 	//<summary>Cast attribute value as long. If not found, return 0.</summary>
 	//<returns>Attribute value as long, or 0.</returns>
 	//<remarks>Note: Modifying this will not change the value, e.g. read only.</remarks>

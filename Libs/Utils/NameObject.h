@@ -294,7 +294,7 @@ inline LPCTSTR CNameObject::GetName()
 
 inline UINT CNameObject::GetNameLength()
 {
-	return m_Name.GetLength();
+	return (UINT)m_Name.GetLength();
 }
 
 inline void CNameObject::SetID(UINT ID)

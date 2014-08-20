@@ -90,13 +90,16 @@ inline LPVOID CEasyBuffer::GetFreeBuffer() const
 
 inline BOOL CEasyBuffer::PushFront(LPCVOID pData,UINT Size)
 {
-	if(m_UsedSize+Size<=m_BufferSize)
+	if(m_pBuffer)
 	{
-		memmove(m_pBuffer+Size,m_pBuffer,m_UsedSize);
-		if(pData)
-			memcpy(m_pBuffer,pData,Size);
-		m_UsedSize+=Size;
-		return TRUE;
+		if(m_UsedSize+Size<=m_BufferSize)
+		{
+			memmove(m_pBuffer+Size,m_pBuffer,m_UsedSize);
+			if(pData)
+				memcpy(m_pBuffer,pData,Size);
+			m_UsedSize+=Size;
+			return TRUE;
+		}
 	}
 	return FALSE;
 }
@@ -106,12 +109,15 @@ inline BOOL CEasyBuffer::PushConstFront(UINT Data,UINT Size)
 }
 inline BOOL CEasyBuffer::PushBack(LPCVOID pData,UINT Size)
 {
-	if(m_UsedSize+Size<=m_BufferSize)
+	if(m_pBuffer)
 	{
-		if(pData)
-			memcpy(m_pBuffer+m_UsedSize,pData,Size);
-		m_UsedSize+=Size;
-		return TRUE;
+		if(m_UsedSize+Size<=m_BufferSize)
+		{
+			if(pData)
+				memcpy(m_pBuffer+m_UsedSize,pData,Size);
+			m_UsedSize+=Size;
+			return TRUE;
+		}
 	}
 	return FALSE;
 }
@@ -122,44 +128,53 @@ inline BOOL CEasyBuffer::PushConstBack(UINT Data,UINT Size)
 
 inline BOOL CEasyBuffer::PopFront(LPVOID pData,UINT Size)
 {
-	if(Size<=m_UsedSize)
+	if(m_pBuffer)
 	{
-		if(pData)
-			memcpy(pData,m_pBuffer,Size);
-		m_UsedSize-=Size;
-		memmove(m_pBuffer,m_pBuffer+Size,m_UsedSize);
-		return TRUE;
+		if(Size<=m_UsedSize)
+		{
+			if(pData)
+				memcpy(pData,m_pBuffer,Size);
+			m_UsedSize-=Size;
+			memmove(m_pBuffer,m_pBuffer+Size,m_UsedSize);
+			return TRUE;
+		}
 	}
 	return FALSE;
 }
 
 inline BOOL CEasyBuffer::PopBack(LPVOID pData,UINT Size)
 {
-	if(Size<=m_UsedSize)
+	if(m_pBuffer)
 	{
-		if(pData)
-			memcpy(pData,m_pBuffer+m_UsedSize,Size);
-		m_UsedSize-=Size;
-		return TRUE;
+		if(Size<=m_UsedSize)
+		{
+			if(pData)
+				memcpy(pData,m_pBuffer+m_UsedSize,Size);
+			m_UsedSize-=Size;
+			return TRUE;
+		}
 	}
 	return FALSE;
 }
 
 inline BOOL CEasyBuffer::Peek(UINT& Pos,LPVOID pData,UINT Size) const
 {
-	if(Pos+Size<=m_UsedSize)
+	if(m_pBuffer)
 	{
-		if(pData)
-			memcpy(pData,m_pBuffer+Pos,Size);
-		Pos+=Size;
-		return TRUE;
+		if(Pos+Size<=m_UsedSize)
+		{
+			if(pData)
+				memcpy(pData,m_pBuffer+Pos,Size);
+			Pos+=Size;
+			return TRUE;
+		}
 	}
 	return FALSE;
 }
 
 inline BOOL CEasyBuffer::PickData(CEasyBuffer& Buffer)
 {
-	if(Buffer.m_pBuffer)
+	if(m_pBuffer&&Buffer.m_pBuffer)
 	{
 		Destory();
 		m_pBuffer=Buffer.m_pBuffer;

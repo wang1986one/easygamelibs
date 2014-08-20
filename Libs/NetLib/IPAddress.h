@@ -51,12 +51,12 @@ public:
 	}
 	CIPAddress(DWORD IP,WORD Port)
 	{
-		m_IPAddress.SocketAddress.sin_addr.s_addr=IP;
+		m_IPAddress.SocketAddress.sin_addr.s_addr=htonl(IP);
 		m_IPAddress.SocketAddress.sin_port=htons(Port);
 		m_IPAddress.Reserve=0;
 		m_IPAddress.SocketAddress.sin_family=PF_INET;
 	}
-	CIPAddress(LPCTSTR szHost,WORD Port)
+	CIPAddress(LPCSTR szHost,WORD Port)
 	{
 		if(szHost)
 		{
@@ -76,6 +76,31 @@ public:
 	}
 	~CIPAddress(void)
 	{
+	}
+	void Clear()
+	{
+		m_IPAddress.Address=0;
+		m_IPAddress.Reserve=0;
+		m_IPAddress.SocketAddress.sin_family=PF_INET;
+	}
+	static bool FetchAllHostAddress(CEasyArray<CIPAddress>& AddressList)
+	{
+		char szHost[256];
+		if(gethostname(szHost,256)==0)
+		{
+			struct hostent * pHost = gethostbyname(szHost);
+			if(pHost)
+			{
+				int Index=0;
+				while(pHost->h_addr_list[Index])
+				{
+					CIPAddress * pAddress=AddressList.AddEmpty();
+					pAddress->m_IPAddress.SocketAddress.sin_addr.s_addr=*(ULONG *)pHost->h_addr_list[Index];
+					Index++;
+				}
+			}
+		}
+		return false;
 	}
 
 	CIPAddress& operator=(const CIPAddress& IPAddress)
@@ -111,10 +136,10 @@ public:
 
 	DWORD GetIP() const
 	{
-		return m_IPAddress.SocketAddress.sin_addr.s_addr;
+		return ntohl(m_IPAddress.SocketAddress.sin_addr.s_addr);
 	}
 
-	LPCTSTR GetIPString() const
+	LPCSTR GetIPString() const
 	{
 		return inet_ntoa(m_IPAddress.SocketAddress.sin_addr);
 	}
@@ -126,10 +151,10 @@ public:
 
 	void SetIP(DWORD IP)
 	{
-		m_IPAddress.SocketAddress.sin_addr.s_addr=IP;
+		m_IPAddress.SocketAddress.sin_addr.s_addr=htonl(IP);
 	}
 
-	void SetIP(LPCTSTR IP)
+	void SetIP(LPCSTR IP)
 	{
 		if(IP)
 		{
@@ -181,6 +206,11 @@ public:
 	}
 	~CIPAddressPair()
 	{
+	}
+	void Clear()
+	{
+		m_LocalIPAddress.Clear();
+		m_RemoteIPAddress.Clear();
 	}
 	CIPAddressPair& operator=(const CIPAddressPair& IPAddressPair)
 	{

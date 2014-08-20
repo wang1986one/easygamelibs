@@ -19,6 +19,10 @@ protected:
 	CIDStorage<CDOSProxyConnection>				m_ConnectionPool;
 	CThreadSafeIDStorage<CDOSMessagePacket *>	m_MsgQueue;
 	CStaticMap<MSG_ID_TYPE,OBJECT_ID>			m_MessageMap;
+
+	CEasyCriticalSection						m_EasyCriticalSection;
+
+	CThreadPerformanceCounter					m_ThreadPerformanceCounter;
 	
 
 	DECLARE_CLASS_INFO(CDOSObjectProxyService);
@@ -37,8 +41,11 @@ public:
 	
 
 	CDOSProxyConnection * GetConnection(UINT ID);
+	float GetCPUUsedRate();
+	float GetCycleTime();
 
 	BOOL PushMessage(CDOSMessagePacket * pPacket);
+	BOOL PushBroadcastMessage(CDOSMessagePacket * pPacket);
 
 	OBJECT_ID GetGlobalMsgMapObjectID(MSG_ID_TYPE MsgID);
 protected:
@@ -55,4 +62,13 @@ protected:
 inline CDOSProxyConnection * CDOSObjectProxyService::GetConnection(UINT ID)
 {
 	return m_ConnectionPool.GetObject(ID);
+}
+inline float CDOSObjectProxyService::GetCPUUsedRate()
+{
+	return m_ThreadPerformanceCounter.GetCPUUsedRate();
+}
+
+inline float CDOSObjectProxyService::GetCycleTime()
+{
+	return m_ThreadPerformanceCounter.GetCycleTime();
 }

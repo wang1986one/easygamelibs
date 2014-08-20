@@ -47,6 +47,7 @@ enum OPERATOR_TYPE
 	OPERATOR_OR,
 	OPERATOR_NOT,
 	OPERATOR_JMP,
+	OPERATOR_JMP_FUNC,
 	OPERATOR_JZ,
 	OPERATOR_CALL,
 	OPERATOR_RET,
@@ -580,11 +581,20 @@ inline BOOL CanMakeIdentifier(TCHAR c)
 
 inline void StrToNumber(LPCTSTR szNumberStr,ES_BOLAN& Value)
 {
-	bool IsReal=_tcschr(szNumberStr,'.')!=NULL||_tcschr(szNumberStr,'E')!=NULL;
-	bool IsFloat=_tcschr(szNumberStr,'F')!=NULL;
-	bool IsDouble=_tcschr(szNumberStr,'D')!=NULL;
+	bool IsReal=false;
+	bool IsFloat=false;
+	bool IsDouble=false;
 	bool IsInt=_tcschr(szNumberStr,'I')!=NULL;
-	bool IsInt64=_tcschr(szNumberStr,'L')!=NULL;	
+	bool IsInt64=_tcschr(szNumberStr,'L')!=NULL;
+	bool IsHex=(*szNumberStr=='0'&&*(szNumberStr+1)=='X');
+	if(!IsHex)
+	{
+		IsReal=_tcschr(szNumberStr,'.')!=NULL||_tcschr(szNumberStr,'E')!=NULL;
+		IsFloat=_tcschr(szNumberStr,'F')!=NULL;
+		IsDouble=_tcschr(szNumberStr,'D')!=NULL;
+	}
+	
+
 	if(IsReal||IsFloat||IsDouble)
 	{
 		double ValueMax=_tstof(szNumberStr);
@@ -614,7 +624,12 @@ inline void StrToNumber(LPCTSTR szNumberStr,ES_BOLAN& Value)
 	}
 	else
 	{		
-		INT64 ValueMax=_tstoi64(szNumberStr);
+		INT64 ValueMax=0;
+		if(IsHex)
+			_stscanf(szNumberStr,_T("0X%llX"),&ValueMax);
+		else
+			ValueMax=_tstoi64(szNumberStr);
+
 		if(IsInt)
 		{
 			Value.ValueType=VALUE_TYPE_INT;

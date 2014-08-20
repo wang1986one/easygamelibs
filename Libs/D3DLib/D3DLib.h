@@ -50,6 +50,8 @@ inline BOOL PrintD3DDebugLog(DWORD Color,LPCTSTR Format,...)
 
 #include <algorithm>
 
+#include "D3DTools.h"
+
 #include "D3DVector2.h"
 #include "D3DVector3.h"
 #include "D3DVector4.h"

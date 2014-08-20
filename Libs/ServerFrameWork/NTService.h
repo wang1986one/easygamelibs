@@ -327,6 +327,8 @@ class CNTService {
 							DWORD	dwEventID = DWORD(-1)
 						);
 
+		virtual void OnSetServiceName();
+
 	public:		// default handlers
 			// The following functions will be used by default.
 			// You can provide other handlers. If so, you have to
@@ -343,7 +345,7 @@ class CNTService {
 	//##ModelId=40F1FA04016A
 		BOOL OsIsWin95() const { return ! m_bWinNT; }
 	//##ModelId=40F1FA040169
-		void SetupConsole();
+		void SetupConsole();		
 
 };
 

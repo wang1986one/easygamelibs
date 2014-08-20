@@ -64,7 +64,7 @@ protected:
 	virtual void OnCommand(LPCTSTR szCommand);
 	virtual void OnConsoleMsg(PANEL_MSG * pMsg);
 	virtual void OnLogMsg(LPCTSTR szLogMsg);
-	void OnTimer(UINT nIDEvent);
+	void OnTimer(UINT_PTR nIDEvent);
 	void OnBnClickedExecCommand();
 	afx_msg void OnBnClickedCloseServer();
 

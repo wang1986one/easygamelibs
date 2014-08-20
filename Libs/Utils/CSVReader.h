@@ -8,8 +8,10 @@ protected:
 	UINT									m_DataSize;
 	UINT									m_BufferSize;
 	UINT									m_GrowSize;
-	CEasyArray<CEasyArray<LPTSTR> >			m_Records;
-	CEasyArray<LPTSTR>						m_ColumnNames;
+	int										m_LocalCodePage;
+	int										m_SaveCodePage;
+	CEasyArray<CEasyArray<UINT> >			m_Records;
+	CEasyArray<UINT>						m_ColumnNames;
 
 	DECLARE_FILE_CHANNEL_MANAGER
 
@@ -41,6 +43,23 @@ public:
 	bool GetDataBool(UINT Row,UINT Col,bool Default);
 	bool GetDataBool(UINT Row,LPCTSTR ColName,bool Default);
 
+	void SetLocalCodePage(int CodePage)
+	{
+		m_LocalCodePage=CodePage;
+	}
+	int GetLocalCodePage()
+	{
+		return m_LocalCodePage;
+	}
+	void SetSaveCodePage(int CodePage)
+	{
+		m_SaveCodePage=CodePage;
+	}
+	int GetSaveCodePage()
+	{
+		return m_SaveCodePage;
+	}
+
 public:
 	bool Create(UINT BufferSize,UINT GrowSize);
 	bool Save(LPCTSTR szFileName,bool WriteHeader=true);
@@ -54,11 +73,24 @@ public:
 	bool AddDataBool(bool Data);
 protected:
 	UINT GetLineCount(LPCTSTR szData);
-	LPTSTR ParseLine(LPTSTR szLine,CEasyArray<LPTSTR>& LineRecord);
+	LPTSTR ParseLine(LPTSTR szLine,CEasyArray<UINT>& LineRecord);
 	void ConfirmBufferFreeSize(UINT NeedSize);
+	LPTSTR AllocBuffer(UINT NeedSize);
 	UINT GetSavedDataLen();
-	UINT GetSavedLineLen(CEasyArray<LPTSTR>& LineRecord);
-	UINT SaveLine(LPTSTR pSaveBuffer,UINT BufferSize,CEasyArray<LPTSTR>& LineRecord);
+	UINT GetSavedLineLen(CEasyArray<UINT>& LineRecord);
+	UINT SaveLine(LPTSTR pSaveBuffer,UINT BufferSize,CEasyArray<UINT>& LineRecord);
+
+	LPTSTR OffsetToStr(UINT Offset);
+	UINT StrToOffset(LPCTSTR szStr);
 
 
 };
+
+inline LPTSTR CCSVReader::OffsetToStr(UINT Offset)
+{
+	return m_pData+Offset;
+}
+inline UINT CCSVReader::StrToOffset(LPCTSTR szStr)
+{
+	return (UINT)(szStr-m_pData);
+}

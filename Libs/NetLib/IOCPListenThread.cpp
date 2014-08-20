@@ -30,7 +30,7 @@ bool CIOCPListenThread::Init(CNetService * pService,SOCKET ListenSocket)
 
 BOOL CIOCPListenThread::OnStart()
 {
-	PrintNetLog(0xffffffff,"ListenThread启动");
+	PrintNetLog(0xffffffff,_T("ListenThread启动"));
 	return TRUE;
 }
 
@@ -42,7 +42,7 @@ BOOL CIOCPListenThread::OnRun()
 	if(AcceptSocket==INVALID_SOCKET)
 	{
 		int ErrorCode=GetLastError();
-		PrintNetLog(0xffffffff,"Accept失败(%u)",ErrorCode);
+		PrintNetLog(0xffffffff,_T("Accept失败(%u)"),ErrorCode);
 		if(ErrorCode!=WSAECONNRESET&&ErrorCode!=WSAEINTR&&
 			ErrorCode!=WSAEINPROGRESS&&ErrorCode!=WSAEMFILE&&
 			ErrorCode!=WSAENOBUFS&&ErrorCode!=WSAEWOULDBLOCK&&
@@ -58,7 +58,7 @@ BOOL CIOCPListenThread::OnRun()
 			}
 			else
 			{
-				PrintNetLog(0xffffffff,"CIOCPListenThread创建Accept用OverLappedObject失败！");			
+				PrintNetLog(0xffffffff,_T("CIOCPListenThread创建Accept用OverLappedObject失败！"));			
 			}
 		}
 	}
@@ -78,11 +78,11 @@ BOOL CIOCPListenThread::OnRun()
 			}
 			else
 			{
-				PrintNetLog(0xffffffff,"CIOCPListenThread创建Accept用OverLappedObject失败！");			
+				PrintNetLog(0xffffffff,_T("CIOCPListenThread创建Accept用OverLappedObject失败！"));			
 			}
 		//}				
 		//else
-		//	PrintNetLog(0xffffffff,"CIOCPListenThread更新AcceptScoket状态失败！",GetID());
+		//	PrintNetLog(0xffffffff,_T("CIOCPListenThread更新AcceptScoket状态失败！"),GetID());
 
 		closesocket(AcceptSocket);
 	}
@@ -91,5 +91,5 @@ BOOL CIOCPListenThread::OnRun()
 
 void CIOCPListenThread::OnTerminate()
 {
-	PrintNetLog(0xffffffff,"ListenThread关闭");
+	PrintNetLog(0xffffffff,_T("ListenThread关闭"));
 }

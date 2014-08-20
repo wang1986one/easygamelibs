@@ -29,7 +29,7 @@ public:
 	{
 		SetPattern(p1,p2,p3,p4);
 	}
-	CIPPattern(LPCTSTR Pattern)
+	CIPPattern(LPCSTR Pattern)
 	{
 		SetPattern(Pattern);
 	}
@@ -52,11 +52,11 @@ public:
 		m_Pattern[2]=p3;
 		m_Pattern[3]=p4;
 	}
-	void SetPattern(LPCTSTR Pattern)
+	void SetPattern(LPCSTR Pattern)
 	{
 		if(Pattern)
 		{
-			CStringSplitter Split(Pattern,'.');
+			CStringSplitterA Split(Pattern,'.');
 
 			if(Split.GetCount()>=4)
 			{				

@@ -86,7 +86,7 @@ int CODBCRecordSet::Init(CODBCConnection * pDBConnection,SQLHSTMT hStmt)
 
 		nResult=SQLDescribeCol(m_hStmt,i+1,(SQLCHAR *)m_ColInfos[i].Name,MAX_COLUMN_NAME,
 			(SQLSMALLINT *)&ColNameLen,	(SQLSMALLINT *)&m_ColInfos[i].Type,
-			(SQLUINTEGER *)&m_ColInfos[i].Size,(SQLSMALLINT *)&m_ColInfos[i].DigitSize,
+			(SQLULEN *)&m_ColInfos[i].Size,(SQLSMALLINT *)&m_ColInfos[i].DigitSize,
 			(SQLSMALLINT *)&CanNULL);
 		if ( nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO )
 		{
@@ -289,7 +289,7 @@ int CODBCRecordSet::GetColumnCount()
 	return (int)m_ColInfos.GetCount();
 }
 
-LPCTSTR CODBCRecordSet::GetColumnName(int Index)
+LPCSTR CODBCRecordSet::GetColumnName(int Index)
 {
 	if(Index>=0&&Index<(int)m_ColInfos.GetCount())
 	{
@@ -298,7 +298,7 @@ LPCTSTR CODBCRecordSet::GetColumnName(int Index)
 	return NULL;
 }
 
-int CODBCRecordSet::GetIndexByColumnName(LPCTSTR Name)
+int CODBCRecordSet::GetIndexByColumnName(LPCSTR Name)
 {
 	for(int i=0;i<(int)m_ColInfos.GetCount();i++)
 	{
@@ -327,7 +327,7 @@ CDBValue& CODBCRecordSet::GetField(int Index)
 	return m_EmptyValue;
 }
 
-CDBValue& CODBCRecordSet::GetField(LPCTSTR Name)
+CDBValue& CODBCRecordSet::GetField(LPCSTR Name)
 {
 	int Index=GetIndexByColumnName(Name);
 	if(Index>=0)

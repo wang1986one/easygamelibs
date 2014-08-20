@@ -1,0 +1,183 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="预编译">
+      <UniqueIdentifier>{384eddc1-9fca-4956-9603-d2302fe78359}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="主程序">
+      <UniqueIdentifier>{aa94cb4e-59a3-477e-8f53-6fd24523639e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="主对话框">
+      <UniqueIdentifier>{13e33e3b-6fc9-4e51-ac64-ae83b120cc64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="系统设置">
+      <UniqueIdentifier>{df0249e5-b0bd-4277-aee6-18bf8e269203}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="接口定义">
+      <UniqueIdentifier>{a782a8e4-6691-42f7-8513-12a05d04eeec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="数据结构定义">
+      <UniqueIdentifier>{78b0befb-005e-4adb-82f7-3cbe9fe1fccb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="数据结构定义\类型定义">
+      <UniqueIdentifier>{5cad9acd-0f4d-42ba-8635-26d9163ba7e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="数据结构定义\常量定义">
+      <UniqueIdentifier>{5746540e-e498-4324-be19-fd3e0cfac11a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="数据结构定义\枚举定义">
+      <UniqueIdentifier>{f2106b69-f719-4b67-863d-84ecbb0863da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="数据结构定义\结构定义">
+      <UniqueIdentifier>{23d56b24-a96a-4d2c-bd63-521c01b3e604}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\CallInterfaceMaker.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="CallInterfaceMaker.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\CallInterfaceMaker.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource.h">
+      <Filter>资源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>预编译</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>预编译</Filter>
+    </ClInclude>
+    <ClInclude Include="CallInterfaceMaker.h">
+      <Filter>主程序</Filter>
+    </ClInclude>
+    <ClInclude Include="CallInterfaceMakerDlg.h">
+      <Filter>主对话框</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgConfig.h">
+      <Filter>系统设置</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgInterfaceEdtor.h">
+      <Filter>接口定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgMethodEditor.h">
+      <Filter>接口定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgParamEditor.h">
+      <Filter>接口定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgTextEditor.h">
+      <Filter>接口定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgDataStructDefine.h">
+      <Filter>数据结构定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgGenerateOperationsEditor.h">
+      <Filter>数据结构定义\类型定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgTypeEditor.h">
+      <Filter>数据结构定义\类型定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgConstList.h">
+      <Filter>数据结构定义\常量定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgEnumEditor.h">
+      <Filter>数据结构定义\枚举定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgEnumList.h">
+      <Filter>数据结构定义\枚举定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgDataObjectModifyFlagEditor.h">
+      <Filter>数据结构定义\结构定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgDataObjectModifyFlagManager.h">
+      <Filter>数据结构定义\结构定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgStructEditor.h">
+      <Filter>数据结构定义\结构定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgStructList.h">
+      <Filter>数据结构定义\结构定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgStructMemberEditor.h">
+      <Filter>数据结构定义\结构定义</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgListSelector.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>预编译</Filter>
+    </ClCompile>
+    <ClCompile Include="CallInterfaceMaker.cpp">
+      <Filter>主程序</Filter>
+    </ClCompile>
+    <ClCompile Include="CallInterfaceMakerDlg.cpp">
+      <Filter>主对话框</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgConfig.cpp">
+      <Filter>系统设置</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgInterfaceEdtor.cpp">
+      <Filter>接口定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgMethodEditor.cpp">
+      <Filter>接口定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgParamEditor.cpp">
+      <Filter>接口定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgTextEditor.cpp">
+      <Filter>接口定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgDataStructDefine.cpp">
+      <Filter>数据结构定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgGenerateOperationsEditor.cpp">
+      <Filter>数据结构定义\类型定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgTypeEditor.cpp">
+      <Filter>数据结构定义\类型定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgConstList.cpp">
+      <Filter>数据结构定义\常量定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgEnumEditor.cpp">
+      <Filter>数据结构定义\枚举定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgEnumList.cpp">
+      <Filter>数据结构定义\枚举定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgDataObjectModifyFlagEditor.cpp">
+      <Filter>数据结构定义\结构定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgDataObjectModifyFlagManager.cpp">
+      <Filter>数据结构定义\结构定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgStructEditor.cpp">
+      <Filter>数据结构定义\结构定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgStructList.cpp">
+      <Filter>数据结构定义\结构定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgStructMemberEditor.cpp">
+      <Filter>数据结构定义\结构定义</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgListSelector.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+</Project>

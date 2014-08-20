@@ -9,6 +9,8 @@ CCSVReader::CCSVReader(void)
 	m_DataSize=0;
 	m_BufferSize=0;
 	m_GrowSize=0;
+	m_LocalCodePage=CP_ACP;
+	m_SaveCodePage=CP_ACP;
 }
 
 CCSVReader::~CCSVReader(void)
@@ -37,33 +39,29 @@ bool CCSVReader::Open(LPCTSTR szFileName,bool HaveHeader)
 		}
 		SAFE_RELEASE(pFileAccessor);
 	}
+	else
+	{
+		PrintSystemLog(0,_T("CCSVReader::Open:CreateFileAccessor Failed"));
+	}
 	return Ret;
 }
 bool CCSVReader::Open(IFileAccessor * pFileAccessor,bool HaveHeader)
 {
 	Destory();
 
-#ifdef UNICODE
-	UINT FileSize=(UINT)pFileAccessor->GetSize();
-	BYTE * pBuffer=new BYTE[FileSize];
-	if(pFileAccessor->Read(pBuffer,FileSize)<FileSize)
+	CStringFile StringFile(GetFileChannel());
+	
+	StringFile.SetLocalCodePage(m_LocalCodePage);
+	if(!StringFile.LoadFile(pFileAccessor,false))
 	{
 		return false;
 	}
-	m_DataSize=AnsiToUnicode((char *)pBuffer,FileSize,NULL,0);
-	m_pData=new TCHAR[m_DataSize+1];
-	AnsiToUnicode((char *)pBuffer,FileSize,m_pData,m_DataSize);
-	delete[] pBuffer;
-#else
-	m_DataSize=(UINT)pFileAccessor->GetSize();
-	m_pData=new TCHAR[m_DataSize+1];
-	if(pFileAccessor->Read(m_pData,m_DataSize*sizeof(TCHAR))<m_DataSize*sizeof(TCHAR))
-	{
-		return false;
-	}
-	m_pData[m_DataSize]=0;
-#endif
 
+	m_DataSize=_tcslen(StringFile.GetData());
+	m_pData=new TCHAR[m_DataSize+1];
+	_tcscpy(m_pData,StringFile.GetData());
+	m_pData[m_DataSize]=0;
+	
 	UINT RowCount=GetLineCount(m_pData);
 	LPTSTR szLine=m_pData;
 	if(HaveHeader&&RowCount)
@@ -94,7 +92,7 @@ LPCTSTR CCSVReader::GetDataString(UINT Row,UINT Col,LPCTSTR Default)
 	{
 		if(Col<m_Records[Row].GetCount())
 		{
-			return m_Records[Row][Col];
+			return OffsetToStr(m_Records[Row][Col]);
 		}
 	}
 	return Default;
@@ -103,7 +101,7 @@ LPCTSTR CCSVReader::GetDataString(UINT Row,LPCTSTR ColName,LPCTSTR Default)
 {
 	for(UINT i=0;i<m_ColumnNames.GetCount();i++)
 	{
-		if(_tcsicmp(m_ColumnNames[i],ColName)==0)
+		if(_tcsicmp(OffsetToStr(m_ColumnNames[i]),ColName)==0)
 		{
 			return GetDataString(Row,i,Default);
 		}
@@ -254,7 +252,13 @@ bool CCSVReader::Save(IFileAccessor * pFileAccessor,bool WriteHeader)
 
 	assert(BufferLen==DataLen);
 
-	bool Ret=pFileAccessor->Write(pSaveBuffer,DataLen)==DataLen;
+	CStringFile StringFile(GetFileChannel());
+
+	StringFile.SetLocalCodePage(m_LocalCodePage);
+	StringFile.SetSaveCodePage(m_SaveCodePage);
+
+	StringFile.LoadFromString(pSaveBuffer,DataLen,false);
+	bool Ret=StringFile.SaveToFile(pFileAccessor)==TRUE;
 
 	SAFE_DELETE_ARRAY(pSaveBuffer);
 	return Ret;
@@ -262,11 +266,10 @@ bool CCSVReader::Save(IFileAccessor * pFileAccessor,bool WriteHeader)
 
 bool CCSVReader::AddColumn(LPCTSTR ColName)
 {
-	int NeedSize=_tcslen(ColName)+1;
-	ConfirmBufferFreeSize(NeedSize);
-	LPTSTR pData=m_pData+m_DataSize;
+	int NeedSize=_tcslen(ColName)+1;	
+	LPTSTR pData=AllocBuffer(NeedSize);
 	_tcscpy_s(pData,NeedSize,ColName);
-	m_ColumnNames.Add(pData);
+	m_ColumnNames.Add(StrToOffset(pData));
 	return true;
 }
 
@@ -279,62 +282,57 @@ bool CCSVReader::AddRow()
 bool CCSVReader::AddDataString(LPCTSTR Data)
 {
 	int NeedSize=_tcslen(Data)+1;
-	ConfirmBufferFreeSize(NeedSize);
-	LPTSTR pData=m_pData+m_DataSize;
+	LPTSTR pData=AllocBuffer(NeedSize);
 	_tcscpy_s(pData,NeedSize,Data);
-	m_Records[m_Records.GetCount()-1].Add(pData);
+	m_Records[m_Records.GetCount()-1].Add(StrToOffset(pData));
 	return true;
 }
 
 bool CCSVReader::AddDataInt(int Data)
 {
-	int NeedSize=_tcprintf(_T("%d"),Data);
+	int NeedSize=_sctprintf(_T("%d"),Data);
 	if(NeedSize<0)
 		return false;
 	NeedSize++;
-	ConfirmBufferFreeSize(NeedSize);
-	LPTSTR pData=m_pData+m_DataSize;
+	LPTSTR pData=AllocBuffer(NeedSize);
 	_stprintf_s(pData,NeedSize,_T("%d"),Data);
-	m_Records[m_Records.GetCount()-1].Add(pData);
+	m_Records[m_Records.GetCount()-1].Add(StrToOffset(pData));
 	return true;
 }
 
 bool CCSVReader::AddDataInt64(INT64 Data)
 {
-	int NeedSize=_tcprintf(_T("%lld"),Data);
+	int NeedSize=_sctprintf(_T("%lld"),Data);
 	if(NeedSize<0)
 		return false;
 	NeedSize++;
-	ConfirmBufferFreeSize(NeedSize);
-	LPTSTR pData=m_pData+m_DataSize;
+	LPTSTR pData=AllocBuffer(NeedSize);
 	_stprintf_s(pData,NeedSize,_T("%lld"),Data);
-	m_Records[m_Records.GetCount()-1].Add(pData);
+	m_Records[m_Records.GetCount()-1].Add(StrToOffset(pData));
 	return true;
 }
 
 bool CCSVReader::AddDataDouble(double Data)
 {
-	int NeedSize=_tcprintf(_T("%g"),Data);
+	int NeedSize=_sctprintf(_T("%g"),Data);
 	if(NeedSize<0)
 		return false;
 	NeedSize++;
-	ConfirmBufferFreeSize(NeedSize);
-	LPTSTR pData=m_pData+m_DataSize;
+	LPTSTR pData=AllocBuffer(NeedSize);
 	_stprintf_s(pData,NeedSize,_T("%g"),Data);
-	m_Records[m_Records.GetCount()-1].Add(pData);
+	m_Records[m_Records.GetCount()-1].Add(StrToOffset(pData));
 	return true;
 }
 
 bool CCSVReader::AddDataBool(bool Data)
 {
-	int NeedSize=_tcprintf(_T("%d"),Data?1:0);
+	int NeedSize=_sctprintf(_T("%d"),Data?1:0);
 	if(NeedSize<0)
 		return false;
 	NeedSize++;
-	ConfirmBufferFreeSize(NeedSize);
-	LPTSTR pData=m_pData+m_DataSize;
+	LPTSTR pData=AllocBuffer(NeedSize);
 	_stprintf_s(pData,NeedSize,_T("%d"),Data?1:0);
-	m_Records[m_Records.GetCount()-1].Add(pData);
+	m_Records[m_Records.GetCount()-1].Add(StrToOffset(pData));
 	return true;
 }
 
@@ -369,7 +367,7 @@ UINT CCSVReader::GetLineCount(LPCTSTR szData)
 	return LineCount;
 }
 
-LPTSTR CCSVReader::ParseLine(LPTSTR szLine,CEasyArray<LPTSTR>& LineRecord)
+LPTSTR CCSVReader::ParseLine(LPTSTR szLine,CEasyArray<UINT>& LineRecord)
 {
 	bool IsInStr=false;
 	LPTSTR szLineHead=szLine;
@@ -386,7 +384,7 @@ LPTSTR CCSVReader::ParseLine(LPTSTR szLine,CEasyArray<LPTSTR>& LineRecord)
 				if(*szLine==_T('\r')&&*(szLine+1)==_T('\n'))
 				{
 					*szLine=0;
-					LineRecord.Add(szLineHead);
+					LineRecord.Add(StrToOffset(szLineHead));
 					szLine+=2;
 				}
 				else
@@ -398,7 +396,7 @@ LPTSTR CCSVReader::ParseLine(LPTSTR szLine,CEasyArray<LPTSTR>& LineRecord)
 			else if(*szLine==_T(','))
 			{
 				*szLine=0;
-				LineRecord.Add(szLineHead);
+				LineRecord.Add(StrToOffset(szLineHead));
 				szLineHead=szLine+1;
 			}
 		}		
@@ -406,7 +404,7 @@ LPTSTR CCSVReader::ParseLine(LPTSTR szLine,CEasyArray<LPTSTR>& LineRecord)
 	}	
 	for(UINT i=0;i<LineRecord.GetCount();i++)
 	{
-		LPTSTR szField=LineRecord[i];
+		LPTSTR szField=OffsetToStr(LineRecord[i]);
 		UINT Len=_tcslen(szField);
 		if(Len)
 		{
@@ -440,7 +438,7 @@ LPTSTR CCSVReader::ParseLine(LPTSTR szLine,CEasyArray<LPTSTR>& LineRecord)
 				}
 				szField++;
 			}
-			LPTSTR szDest=LineRecord[i];
+			LPTSTR szDest=OffsetToStr(LineRecord[i]);
 			LPTSTR szSrc=szDest;
 			for(UINT j=0;j<Len;j++)
 			{
@@ -460,7 +458,7 @@ void CCSVReader::ConfirmBufferFreeSize(UINT NeedSize)
 {
 	if(m_DataSize+NeedSize>m_BufferSize)
 	{
-		UINT NewBufferSize=m_DataSize+NeedSize;
+  		UINT NewBufferSize=m_DataSize+NeedSize;
 		NewBufferSize=((NewBufferSize/m_GrowSize)+1)*m_GrowSize;
 		TCHAR * pNewBuffer=new TCHAR[NewBufferSize+1];
 		memcpy(pNewBuffer,m_pData,m_DataSize*sizeof(TCHAR));
@@ -468,6 +466,14 @@ void CCSVReader::ConfirmBufferFreeSize(UINT NeedSize)
 		m_pData=pNewBuffer;
 		m_BufferSize=NewBufferSize;		
 	}
+}
+
+LPTSTR CCSVReader::AllocBuffer(UINT NeedSize)
+{
+	ConfirmBufferFreeSize(NeedSize);
+	LPTSTR pBuffer=m_pData+m_DataSize;
+	m_DataSize+=NeedSize;
+	return pBuffer;
 }
 
 UINT CCSVReader::GetSavedDataLen()
@@ -480,13 +486,13 @@ UINT CCSVReader::GetSavedDataLen()
 	return DataLen;
 }
 
-UINT CCSVReader::GetSavedLineLen(CEasyArray<LPTSTR>& LineRecord)
+UINT CCSVReader::GetSavedLineLen(CEasyArray<UINT>& LineRecord)
 {
 	UINT DataLen=0;
 	for(UINT i=0;i<LineRecord.GetCount();i++)
 	{
 		bool AddQuotationMark=false;
-		LPCTSTR szField=LineRecord[i];
+		LPCTSTR szField=OffsetToStr(LineRecord[i]);
 		while(*szField)
 		{
 			if(*szField==_T('"')||*szField==_T(',')||*szField==_T('\r')||*szField==_T('\n'))
@@ -516,13 +522,13 @@ UINT CCSVReader::GetSavedLineLen(CEasyArray<LPTSTR>& LineRecord)
 	return DataLen;
 }
 
-UINT CCSVReader::SaveLine(LPTSTR pSaveBuffer,UINT BufferSize,CEasyArray<LPTSTR>& LineRecord)
+UINT CCSVReader::SaveLine(LPTSTR pSaveBuffer,UINT BufferSize,CEasyArray<UINT>& LineRecord)
 {
 	UINT DataLen=0;
 	for(UINT i=0;i<LineRecord.GetCount();i++)
 	{
 		bool AddQuotationMark=false;
-		LPCTSTR szField=LineRecord[i];
+		LPCTSTR szField=OffsetToStr(LineRecord[i]);
 		UINT FieldPtr=0;
 		while(*szField&&BufferSize)
 		{

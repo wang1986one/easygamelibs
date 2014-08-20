@@ -53,10 +53,10 @@ struct FLOAT_RECT
 	operator RECT()
 	{
 		RECT rc;
-		rc.left=(LONG)left;
-		rc.top=(LONG)top;
-		rc.right=(LONG)right;
-		rc.bottom=(LONG)bottom;
+		rc.left=(int)left;
+		rc.top=(int)top;
+		rc.right=(int)right;
+		rc.bottom=(int)bottom;
 		return rc;
 	}	
 	bool operator==(FLOAT_RECT& rect)

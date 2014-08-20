@@ -48,7 +48,7 @@ public:
 	virtual IDBRecordSet * CreateRecordSet(int RecordSetType)=0;
 	virtual IDBParameterSet * CreateParameterSet(int RecordSetType)=0;
 
-	virtual int Connect(LPCTSTR ConnectStr)=0;
+	virtual int Connect(LPCSTR ConnectStr)=0;
 	virtual int Disconnect()=0;
 	virtual BOOL IsConnected()=0;
 	virtual int ExecuteSQL(LPCSTR SQLStr,int StrLen=0,IDBParameterSet * pParamSet=NULL)=0;	
@@ -59,8 +59,8 @@ public:
 	virtual int Commit()=0;
 	virtual int RollBack()=0;	
 	virtual UINT GetLastDatabaseErrorCode()=0;
-	virtual LPCTSTR GetLastDatabaseErrorString()=0;
-	virtual int TranslateString(LPCTSTR szSource,int SrcLen,LPTSTR szTarget,int MaxLen)=0;
+	virtual LPCSTR GetLastDatabaseErrorString()=0;
+	virtual int TranslateString(LPCSTR szSource,int SrcLen,LPTSTR szTarget,int MaxLen)=0;
 
 };
 
@@ -76,13 +76,13 @@ public:
 
 	virtual int GetRecordCount()=0;
 	virtual int GetColumnCount()=0;
-	virtual LPCTSTR GetColumnName(int Index)=0;
-	virtual int GetIndexByColumnName(LPCTSTR Name)=0;
+	virtual LPCSTR GetColumnName(int Index)=0;
+	virtual int GetIndexByColumnName(LPCSTR Name)=0;
 	virtual DB_COLUMN_INFO * GetColumnInfo(int Index)=0;
 
 
 	virtual CDBValue& GetField(int Index)=0;
-	virtual CDBValue& GetField(LPCTSTR Name)=0;
+	virtual CDBValue& GetField(LPCSTR Name)=0;
 	virtual int MoveFirst()=0;
 	virtual int MoveLast()=0;
 	virtual int MoveNext()=0;

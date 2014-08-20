@@ -80,7 +80,7 @@ inline CEasyString GetPathDirectory(LPCTSTR Path)
 	return Drv;
 }
 
-inline CEasyString GetPathFileName(LPCTSTR Path)
+inline CEasyString GetPathFileNameExt(LPCTSTR Path)
 {
 	CEasyString FileName,ExtName;
 
@@ -90,6 +90,16 @@ inline CEasyString GetPathFileName(LPCTSTR Path)
 	FileName.TrimBuffer();
 	ExtName.TrimBuffer();
 	FileName+=ExtName;
+	return FileName;
+}
+
+inline CEasyString GetPathFileName(LPCTSTR Path)
+{
+	CEasyString FileName;
+
+	FileName.Resize(MAX_PATH);
+	_tsplitpath_s(Path,NULL,0,NULL,0,FileName,MAX_PATH,NULL,0);
+	FileName.TrimBuffer();
 	return FileName;
 }
 

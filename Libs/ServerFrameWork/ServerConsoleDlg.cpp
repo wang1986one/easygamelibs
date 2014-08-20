@@ -250,7 +250,7 @@ void CServerConsoleDlg::OnLogMsg(LPCTSTR szLogMsg)
 		m_edMsgWnd.SetSel(sm1,sm2);
 }
 
-void CServerConsoleDlg::OnTimer(UINT nIDEvent)
+void CServerConsoleDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	if(nIDEvent==PANEL_TIMER_ID&&IsWindowVisible())

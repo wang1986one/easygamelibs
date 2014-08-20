@@ -5,7 +5,8 @@ int C<InterfaceName>MsgCaller::<MethodName>(<Params>)
 		return COMMON_RESULT_FAILED;
 	}
 
-	UINT MsgDataSize=CSmartStruct::GetEmptyStructSize()<PacketSizes>;
+	UINT MsgDataSize=CSmartStruct::GetEmptyStructSize()
+		<PacketSizes>;
 		
 	CDOSMessagePacket * pMsgPacket=m_pOperator->NewMessagePacket(MsgDataSize,m_TargetIDs.GetCount());
 	if(pMsgPacket==NULL)
@@ -19,9 +20,9 @@ int C<InterfaceName>MsgCaller::<MethodName>(<Params>)
 
 	UINT FailCount=0;
 	
-	CSmartStruct MsgPacket=pMsgPacket->GetMessage().GetEmptyDataPacket();
+	CSmartStruct Packet=pMsgPacket->GetMessage().GetEmptyDataPacket();
 	
-	if(PackMsg<MethodName>(MsgPacket<,Params>))
+	if(PackMsg<MethodName>(Packet<,Params>))
 	{	
 		pMsgPacket->SetTargetIDs(m_TargetIDs.GetCount(),m_TargetIDs.GetBuffer());
 		if(m_pOperator->SendMessagePacket(pMsgPacket))

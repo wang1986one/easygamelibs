@@ -58,21 +58,29 @@ CEasyBuffer::~CEasyBuffer(void)
 BOOL CEasyBuffer::Create(UINT Size)
 {
 	Destory();
-	m_pBuffer=new BYTE[Size];
-	m_BufferSize=Size;
-	m_UsedSize=0;
-	m_IsSelfBuffer=true;
-	return TRUE;
+	if(Size)
+	{
+		m_pBuffer=new BYTE[Size];
+		m_BufferSize=Size;
+		m_UsedSize=0;
+		m_IsSelfBuffer=true;
+		return TRUE;
+	}
+	return FALSE;
 }
 
 BOOL CEasyBuffer::Create(LPVOID pBuff,UINT Size)
 {
 	Destory();
-	m_pBuffer=(BYTE *)pBuff;
-	m_BufferSize=Size;
-	m_UsedSize=0;
-	m_IsSelfBuffer=false;
-	return TRUE;
+	if(pBuff&&Size)
+	{
+		m_pBuffer=(BYTE *)pBuff;
+		m_BufferSize=Size;
+		m_UsedSize=0;
+		m_IsSelfBuffer=false;
+		return TRUE;
+	}
+	return FALSE;
 }
 
 void CEasyBuffer::Destory()

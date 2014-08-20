@@ -125,6 +125,20 @@ public:
 		}
 		return FALSE;
 	}
+	BOOL DeleteByPos(void * Pos)
+	{
+		StorageNode * pNode=(StorageNode *)Pos;
+		if(pNode)
+		{
+			StorageNode * pNeedBalanceNode=DeleteNode(pNode);
+			if(pNeedBalanceNode)
+			{
+				BalanceDelete(pNeedBalanceNode);
+			}
+			return TRUE;
+		}
+		return FALSE;
+	}
 	T * Find(const KEY& Key)
 	{
 		StorageNode * pNode=FindNode(m_pTreeRoot,Key);
@@ -209,6 +223,41 @@ public:
 		}
 		return NULL;
 	}
+	T * GetNextObject(LPVOID& Pos)
+	{
+		if(Pos)
+		{
+			StorageNode * pNode=(StorageNode *)Pos;			
+			if(pNode->Color!=NC_NONE)
+			{
+				Pos=pNode->pNext;
+				return &(pNode->Object);
+			}
+			else
+			{
+				Pos=NULL;
+			}
+		}
+		return NULL;
+	}
+
+	T * GetPrevObject(LPVOID& Pos)
+	{
+		if(Pos)
+		{
+			StorageNode * pNode=(StorageNode *)Pos;			
+			if(pNode->Color!=NC_NONE)
+			{
+				Pos=pNode->pPrev;
+				return &(pNode->Object);
+			}
+			else
+			{
+				Pos=NULL;
+			}
+		}
+		return NULL;
+	}
 	LPVOID GetSortedFirstObjectPos()
 	{
 		return m_pFront;
@@ -246,6 +295,41 @@ public:
 			{
 				Pos=pNode->pFront;
 				Key=pNode->Key;
+				return (pNode->Object);
+			}
+			else
+			{
+				Pos=NULL;
+			}
+		}
+		return NULL;
+	}
+	T * GetSortedNextObject(LPVOID& Pos)
+	{
+		if(Pos)
+		{
+			StorageNode * pNode=(StorageNode *)Pos;			
+			if(pNode->Color!=NC_NONE)
+			{
+				Pos=pNode->pBack;
+				return &(pNode->Object);
+			}
+			else
+			{
+				Pos=NULL;
+			}
+		}
+		return NULL;
+	}
+
+	T * GetSortedPrevObject(LPVOID& Pos)
+	{
+		if(Pos)
+		{
+			StorageNode * pNode=(StorageNode *)Pos;			
+			if(pNode->Color!=NC_NONE)
+			{
+				Pos=pNode->pFront;
 				return (pNode->Object);
 			}
 			else

@@ -47,9 +47,10 @@ BOOL CControlPanel::PushMsg(UINT Type,LPCVOID pData,int Len)
 	{
 		pMsg->ID=ID;
 		pMsg->MsgType=Type;
-		if(Len>MAX_CONSOLE_MSG_LEN)
-			Len=MAX_CONSOLE_MSG_LEN;
+		if(Len>=MAX_CONSOLE_MSG_LEN)
+			Len=MAX_CONSOLE_MSG_LEN-1;
 		memcpy(pMsg->Msg,pData,Len);
+		pMsg->Msg[Len]=0;
 		return TRUE;
 	}
 

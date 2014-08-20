@@ -41,7 +41,7 @@ void CDBTransationManager::Destory()
 	m_WorkThreads.Clear();
 }
 
-bool CDBTransationManager::Init(IDatabase * pDatabase,LPCTSTR szConnectStr,int ThreadCount,int QueueSize,UINT Flag)
+bool CDBTransationManager::Init(IDatabase * pDatabase,LPCSTR szConnectStr,int ThreadCount,int QueueSize,UINT Flag)
 {
 	if(pDatabase==NULL)
 		return false;
@@ -97,7 +97,10 @@ bool CDBTransationManager::AddTransaction(CDBTransaction * pDBTansaction)
 		return pThread->AddTransaction(pDBTansaction);
 	}
 	else
+	{
+		PrintDBLog(0xff,"无工作线程可分配");
 		return false;
+	}
 }
 
 

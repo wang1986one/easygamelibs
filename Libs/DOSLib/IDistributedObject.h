@@ -57,7 +57,10 @@
 		m_CurMsgSenderID=pMessage->GetSenderID();\
 		m_pCurHandleMsg=pMessage;\
 		CSmartStruct MsgPacket=pMessage->GetDataPacket();\
-		return HandleMsg(pMessage->GetMsgID(),MsgPacket);\
+		BOOL Ret=HandleMsg(pMessage->GetMsgID(),MsgPacket);\
+		m_CurMsgSenderID=0;\
+		m_pCurHandleMsg=NULL;\
+		return Ret;\
 	}
 
 #define INIT_DOS_MSG_MAP	InitDOSMsgMap();
@@ -129,7 +132,7 @@ enum COMMON_RESULT_CODE
 	COMMON_RESULT_MSG_ALLOC_ERROR=189101,
 	COMMON_RESULT_MSG_SEND_ERROR=189102,
 	COMMON_RESULT_MSG_HANDLER_NOT_FIND=189103,
-	COMMON_RESULT_FAILED=-1,
+	COMMON_RESULT_FAILED=-2,
 };
 
 class IDistributedObject;
@@ -138,6 +141,7 @@ struct DOS_OBJECT_REGISTER_INFO_EX
 {
 	OBJECT_ID				ObjectID;
 	int						Weight;
+	int						ObjectGroupIndex;
 	UINT					MsgQueueSize;
 	UINT					MsgProcessLimit;
 	IDistributedObject *	pObject;
@@ -147,6 +151,7 @@ struct DOS_OBJECT_REGISTER_INFO_EX
 	{
 		ObjectID=0;
 		Weight=1;
+		ObjectGroupIndex=-1;
 		MsgQueueSize=0;
 		MsgProcessLimit=0;
 		pObject=NULL;
@@ -159,6 +164,7 @@ class IDistributedObjectOperator
 public:
 	virtual UINT GetRouterID()=0;
 	virtual OBJECT_ID GetObjectID()=0;
+	virtual int GetGroupIndex()=0;
 	virtual BOOL SendMessage(OBJECT_ID ReceiverID,MSG_ID_TYPE MsgID,WORD MsgFlag=0,LPCVOID pData=0,UINT DataSize=0)=0;
 	virtual BOOL SendMessageMulti(OBJECT_ID * pReceiverIDList,UINT ReceiverCount,bool IsSorted,MSG_ID_TYPE MsgID,WORD MsgFlag=0,LPCVOID pData=0,UINT DataSize=0)=0;
 
@@ -176,9 +182,14 @@ public:
 
 	virtual BOOL FindObject(UINT ObjectType)=0;
 	virtual BOOL ReportObject(OBJECT_ID TargetID,const CSmartStruct& ObjectInfo)=0;
+	virtual BOOL CloseProxyObject(OBJECT_ID ProxyObjectID,UINT Delay)=0;
+	virtual BOOL RequestProxyObjectIP(OBJECT_ID ProxyObjectID)=0;
 
 	virtual BOOL RegisterObject(DOS_OBJECT_REGISTER_INFO_EX& ObjectRegisterInfo)=0;
 	virtual void Release()=0;
+
+	virtual BOOL QueryShutDown(OBJECT_ID TargetID,int Level)=0;
+	virtual void ShutDown(UINT PluginID)=0;
 };
 
 class IDistributedObject:public CNameObject
@@ -197,7 +208,9 @@ public:
 	virtual void OnConcernedObjectLost(OBJECT_ID ObjectID){}
 	virtual BOOL OnFindObject(OBJECT_ID CallerID){return FALSE;}
 	virtual void OnObjectReport(OBJECT_ID ObjectID,const CSmartStruct& ObjectInfo){}
-	virtual int Update(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT){return 0;}
+	virtual void OnProxyObjectIPReport(OBJECT_ID ProxyObjectID,UINT IP,UINT Port,LPCSTR szIPString){}
+	virtual void OnShutDown(int Level){}
+	virtual int Update(int ProcessPacketLimit){return 0;}
 
 };
 

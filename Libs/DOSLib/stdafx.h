@@ -45,19 +45,8 @@
 #include "../Utils/Utils.h"
 #include "../NetLib/NetLib.h"
 
+
 #include "DOSLib.h"
 
 
-//#define PERFORMANCE_STAT
 
-#ifdef PERFORMANCE_STAT
-
-#define FUNCTION_BEGIN				{static int s_FunctionIndex=0;if(!s_FunctionIndex) s_FunctionIndex=CPerformanceStatistician::GetInstance()->GetFunctionIndex(s_FunctionIndex,__FUNCTION__); CAutoPerformanceCounter tmpPerformanceCounter(s_FunctionIndex);
-#define FUNCTION_END				}
-
-#else
-
-#define FUNCTION_BEGIN
-#define FUNCTION_END
-
-#endif

@@ -14,6 +14,7 @@ CD3DLine::CD3DLine(void)
 
 CD3DLine::~CD3DLine(void)
 {
+	Destory();
 }
 
 void CD3DLine::Destory()

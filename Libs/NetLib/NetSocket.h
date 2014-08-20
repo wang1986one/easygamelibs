@@ -174,6 +174,7 @@ inline void CNetSocket::SetState( int State)
 inline void CNetSocket::Clear()
 { 
 	SetSocket( INVALID_SOCKET );
+	m_IPAddressPair.Clear();
 }
 
 inline void CNetSocket::SetRemoteAddress(const CIPAddress& IPAddress)

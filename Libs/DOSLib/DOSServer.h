@@ -78,7 +78,9 @@ inline CDOSMessagePacket * CDOSServer::NewMessagePacket(UINT Size)
 	if(pPacket)
 	{
 		pPacket->Init();	
+		pPacket->SetAllocSize(Size);
 		pPacket->SetPacketLength(Size);
+		pPacket->SetAllocTime(0);
 		UINT RefCount=pPacket->IncRefCount();
 #ifdef LOG_MEM_CALL_STACK
 		m_MemoryPool.LogMemUse(pPacket,RefCount);
@@ -86,7 +88,7 @@ inline CDOSMessagePacket * CDOSServer::NewMessagePacket(UINT Size)
 	}
 	else
 	{
-		PrintDOSLog(0,"分配%u大小的消息包失败",Size);
+		PrintDOSLog(0,_T("分配%u大小的消息包失败"),Size);
 	}
 	return pPacket;
 }

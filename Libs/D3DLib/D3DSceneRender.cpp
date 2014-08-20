@@ -105,6 +105,45 @@ void CD3DSceneRender::Destory()
 	CD3DBaseRender::Destory();
 }
 
+bool CD3DSceneRender::Reset()
+{		
+	m_pDepthTexture->Reset();
+	for(UINT i=0;i<m_ObjectList.GetCount();i++)
+	{
+		m_ObjectList[i]->Reset();
+	}
+	for(UINT i=0;i<m_BackGroundObjectList.GetCount();i++)
+	{
+		m_BackGroundObjectList[i]->Reset();
+	}
+	for(UINT i=0;i<m_SceneObjectList.GetCount();i++)
+	{
+		m_SceneObjectList[i]->Reset();
+	}	
+	return true;
+}
+
+bool CD3DSceneRender::Restore() 
+{		
+	if(m_pDepthTexture)
+	{
+		CreateDepthTexture();
+	}
+	for(UINT i=0;i<m_ObjectList.GetCount();i++)
+	{
+		m_ObjectList[i]->Restore();
+	}
+	for(UINT i=0;i<m_BackGroundObjectList.GetCount();i++)
+	{
+		m_BackGroundObjectList[i]->Restore();
+	}
+	for(UINT i=0;i<m_SceneObjectList.GetCount();i++)
+	{
+		m_SceneObjectList[i]->Restore();
+	}	
+	return true;
+}
+
 
 bool CD3DSceneRender::DelObject(CD3DObject * pObj,bool IsRecursive)
 {
@@ -932,6 +971,7 @@ bool CD3DSceneRender::CreateDepthTexture()
 	{
 		Lock.Lock(m_RenderLock);
 	}
+	SAFE_RELEASE(m_pDepthTexture);
 	m_pDepthTexture=new CD3DTexture(m_pDevice->GetTextureManager());
 	if(m_pDepthTexture->CreateTexture(m_pDevice->GetCreateParam().PresentParams.BackBufferWidth,
 		m_pDevice->GetCreateParam().PresentParams.BackBufferHeight,

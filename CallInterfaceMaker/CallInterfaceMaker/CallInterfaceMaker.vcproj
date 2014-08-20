@@ -6,7 +6,7 @@
 	ProjectGUID="{5378F213-DE66-44FC-8AA4-065CBFCF26F3}"
 	RootNamespace="CallInterfaceMaker"
 	Keyword="MFCProj"
-	TargetFrameworkVersion="196613"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\CSTemplate"
+			OutputDirectory="..\Work"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="1"
@@ -70,6 +70,8 @@
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -152,6 +154,8 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -181,42 +185,30 @@
 	</References>
 	<Files>
 		<Filter
-			Name="源文件"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			Name="资源文件"
+			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
+			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\CallInterfaceMaker.cpp"
+				RelativePath=".\res\CallInterfaceMaker.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\CallInterfaceMakerDlg.cpp"
+				RelativePath=".\CallInterfaceMaker.rc"
 				>
 			</File>
 			<File
-				RelativePath=".\DlgConfig.cpp"
+				RelativePath=".\res\CallInterfaceMaker.rc2"
 				>
 			</File>
 			<File
-				RelativePath=".\DlgInterfaceEdtor.cpp"
+				RelativePath=".\Resource.h"
 				>
 			</File>
-			<File
-				RelativePath=".\DlgMethodEditor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DlgParamEditor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DlgTextEditor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DlgTypeEditor.cpp"
-				>
-			</File>
+		</Filter>
+		<Filter
+			Name="预编译"
+			>
 			<File
 				RelativePath=".\stdafx.cpp"
 				>
@@ -237,52 +229,6 @@
 					/>
 				</FileConfiguration>
 			</File>
-		</Filter>
-		<Filter
-			Name="头文件"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath=".\CallInterfaceMaker.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CallInterfaceMakerDlg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DlgConfig.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DlgInterfaceEdtor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DlgMethodEditor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DlgParamEditor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DlgTextEditor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DlgTypeEditor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\pugxml.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Resource.h"
-				>
-			</File>
 			<File
 				RelativePath=".\stdafx.h"
 				>
@@ -293,23 +239,201 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="资源文件"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+			Name="XML"
 			>
 			<File
-				RelativePath=".\res\CallInterfaceMaker.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\CallInterfaceMaker.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\res\CallInterfaceMaker.rc2"
+				RelativePath=".\pugxml.h"
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="主程序"
+			>
+			<File
+				RelativePath=".\CallInterfaceMaker.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CallInterfaceMaker.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="主对话框"
+			>
+			<File
+				RelativePath=".\CallInterfaceMakerDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CallInterfaceMakerDlg.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="系统设置"
+			>
+			<File
+				RelativePath=".\DlgConfig.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DlgConfig.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="接口定义"
+			>
+			<File
+				RelativePath=".\DlgInterfaceEdtor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DlgInterfaceEdtor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DlgMethodEditor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DlgMethodEditor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DlgParamEditor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DlgParamEditor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DlgTextEditor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DlgTextEditor.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="数据结构定义"
+			>
+			<File
+				RelativePath=".\DlgDataStructDefine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DlgDataStructDefine.h"
+				>
+			</File>
+			<Filter
+				Name="类型定义"
+				>
+				<File
+					RelativePath=".\DlgGenerateOperationsEditor.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgGenerateOperationsEditor.h"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgTypeEditor.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgTypeEditor.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="常量定义"
+				>
+				<File
+					RelativePath=".\DlgConstList.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgConstList.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="枚举定义"
+				>
+				<File
+					RelativePath=".\DlgEnumEditor.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgEnumEditor.h"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgEnumList.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgEnumList.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="结构定义"
+				>
+				<File
+					RelativePath=".\DlgDataObjectModifyFlagEditor.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgDataObjectModifyFlagEditor.h"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgDataObjectModifyFlagManager.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgDataObjectModifyFlagManager.h"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgStructEditor.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgStructEditor.h"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgStructList.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgStructList.h"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgStructMemberEditor.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DlgStructMemberEditor.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<File
+			RelativePath=".\DlgListSelector.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\DlgListSelector.h"
+			>
+		</File>
 		<File
 			RelativePath=".\ReadMe.txt"
 			>

@@ -17,11 +17,17 @@ class CDOSClient :
 	public IDistributedObjectOperator
 {
 protected:
-	CEasyBuffer		m_AssembleBuffer;	
-	CEasyBuffer		m_SendBuffer;
+	CEasyBuffer									m_AssembleBuffer;	
+	CEasyBuffer									m_SendBuffer;
+	UINT										m_KeepAliveCount;
+	UINT										m_MaxKeepAliveCount;
+	UINT										m_KeepAliveTime;
+	CEasyTimer									m_KeepAliveTimer;
 
 	CDOSSimpleMessage *							m_pCurHandleMsg;
 	CEasyMap<MSG_ID_TYPE,DOS_MSG_HANDLE_INFO>	m_MsgFnMap;
+
+	int											m_MsgCompressType;
 
 	DECLARE_CLASS_INFO(CDOSClient);
 public:
@@ -30,11 +36,14 @@ public:
 	virtual void Destory();
 	
 
-	BOOL Start(UINT MaxMsgSize,const CIPAddress& Address,DWORD TimeOut=NO_CONNECTION_TIME_OUT);
+	BOOL Start(UINT SendBufferSize,UINT AssembleBufferSize,const CIPAddress& Address,DWORD TimeOut=NO_CONNECTION_TIME_OUT);
 	void Close();
+
+	void SetMsgCompressType(int Type);
 
 	virtual UINT GetRouterID();
 	virtual OBJECT_ID GetObjectID();
+	virtual int GetGroupIndex();
 	virtual BOOL SendMessage(OBJECT_ID ReceiverID,MSG_ID_TYPE MsgID,WORD MsgFlag=0,LPCVOID pData=0,UINT DataSize=0);
 	virtual BOOL SendMessageMulti(OBJECT_ID * pReceiverIDList,UINT ReceiverCount,bool IsSorted,MSG_ID_TYPE MsgID,WORD MsgFlag=0,LPCVOID pData=0,UINT DataSize=0);
 
@@ -52,12 +61,24 @@ public:
 
 	virtual BOOL FindObject(UINT ObjectType);
 	virtual BOOL ReportObject(OBJECT_ID TargetID,const CSmartStruct& ObjectInfo);
+	virtual BOOL CloseProxyObject(OBJECT_ID ProxyObjectID,UINT Delay);
+	virtual BOOL RequestProxyObjectIP(OBJECT_ID ProxyObjectID);
 
 	virtual BOOL RegisterObject(DOS_OBJECT_REGISTER_INFO_EX& ObjectRegisterInfo);
 	virtual void Release();
+
+	virtual BOOL QueryShutDown(OBJECT_ID TargetID,int Level);
+	virtual void ShutDown(UINT PluginID);
 
 protected:
 	virtual void OnRecvData(const CEasyBuffer& DataBuffer);
 	virtual BOOL OnDOSMessage(CDOSSimpleMessage * pMessage);
 
+	virtual int Update(int ProcessPacketLimit=DEFAULT_SERVER_PROCESS_PACKET_LIMIT);
+
 };
+
+inline void CDOSClient::SetMsgCompressType(int Type)
+{
+	m_MsgCompressType=Type;
+}

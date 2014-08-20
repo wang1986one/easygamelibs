@@ -53,7 +53,7 @@ BOOL CIOCPFileAccessor::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedO
 				}
 				else
 				{
-					PrintNetLog(0xffffffff,"CIOCPFileAccessor::数据队列已满！");										
+					PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::数据队列已满！"));										
 					PushError(FET_QUEUE_ERROR,FQEC_QUEUE_FULL,pOverLappedObject->GetType(),
 						pOverLappedObject->GetOverlapped()->OffsetHigh,
 						pOverLappedObject->GetOverlapped()->Offset,
@@ -74,7 +74,7 @@ BOOL CIOCPFileAccessor::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedO
 				}
 				else
 				{
-					PrintNetLog(0xffffffff,"CIOCPFileAccessor::数据队列已满！");										
+					PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::数据队列已满！"));										
 					PushError(FET_QUEUE_ERROR,FQEC_QUEUE_FULL,pOverLappedObject->GetType(),
 						pOverLappedObject->GetOverlapped()->OffsetHigh,
 						pOverLappedObject->GetOverlapped()->Offset,
@@ -83,7 +83,7 @@ BOOL CIOCPFileAccessor::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedO
 			}
 			else
 			{
-				PrintNetLog(0xffffffff,"CIOCPFileAccessor::收到非法IOCP包！");
+				PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::收到非法IOCP包！"));
 				PushError(FET_UNKNOW,0,
 					pOverLappedObject->GetOverlapped()->OffsetHigh,
 					pOverLappedObject->GetOverlapped()->Offset,
@@ -93,7 +93,7 @@ BOOL CIOCPFileAccessor::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedO
 		}
 		else
 		{
-			PrintNetLog(0xffffffff,"CIOCPFileAccessor::收到IOCP错误！");	
+			PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::收到IOCP错误！"));	
 			PushError(FET_SYSTEM_ERROR,pOverLappedObject->GetErrorCode(),
 				pOverLappedObject->GetOverlapped()->OffsetHigh,
 				pOverLappedObject->GetOverlapped()->Offset,
@@ -103,7 +103,7 @@ BOOL CIOCPFileAccessor::OnIOCPEvent(int EventID,COverLappedObject * pOverLappedO
 	}
 	else
 	{
-		PrintNetLog(0xffffffff,"CIOCPFileAccessor::文件未打开IOCP包被忽略！");
+		PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::文件未打开IOCP包被忽略！"));
 	}
 	GetServer()->DeleteOverLappedObject(pOverLappedObject);
 
@@ -155,26 +155,26 @@ BOOL CIOCPFileAccessor::Open(LPCTSTR lpFileName,
 
 	if(!m_DataQueue.Create(DataQueueSize))
 	{
-		PrintNetLog(0,"CIOCPFileAccessor::创建数据缓冲失败");
+		PrintNetLog(0,_T("CIOCPFileAccessor::创建数据缓冲失败"));
 		return FALSE;
 	}
 	if(RequestQueuSize==0)
 	{		
 		m_UseAsyncQuery=true;
-		PrintNetLog(0,"CIOCPFileAccessor::开启异步请求模式");
+		PrintNetLog(0,_T("CIOCPFileAccessor::开启异步请求模式"));
 	}
 	else
 	{
 		m_UseAsyncQuery=false;
 		if(!m_RequestQueue.Create(RequestQueuSize))
 		{
-			PrintNetLog(0,"CIOCPFileAccessor::创建请求缓冲失败");
+			PrintNetLog(0,_T("CIOCPFileAccessor::创建请求缓冲失败"));
 			return FALSE;
 		}
 	}
 	if(!m_ErrorQueue.Create(ErrorQueuSize))
 	{
-		PrintNetLog(0,"CIOCPFileAccessor::创建错误缓冲失败");
+		PrintNetLog(0,_T("CIOCPFileAccessor::创建错误缓冲失败"));
 		return FALSE;
 	}
 
@@ -189,7 +189,7 @@ BOOL CIOCPFileAccessor::Open(LPCTSTR lpFileName,
 	if(m_FileHandle==INVALID_HANDLE_VALUE)
 	{
 		UINT ErrorCode=GetLastError();
-		PrintNetLog(0,"CIOCPFileAccessor::打开文件失败%u",ErrorCode);
+		PrintNetLog(0,_T("CIOCPFileAccessor::打开文件失败%u"),ErrorCode);
 		PushError(FET_SYSTEM_ERROR,ErrorCode);
 		return FALSE;
 	}
@@ -229,27 +229,27 @@ BOOL CIOCPFileAccessor::OpenByHandle(HANDLE FileHandle,int DataQueueSize,int Req
 
 	if(!m_DataQueue.Create(DataQueueSize))
 	{
-		PrintNetLog(0,"CIOCPFileAccessor::创建数据缓冲失败");
+		PrintNetLog(0,_T("CIOCPFileAccessor::创建数据缓冲失败"));
 		return FALSE;
 	}
 
 	if(RequestQueuSize==0)
 	{		
 		m_UseAsyncQuery=true;
-		PrintNetLog(0,"CIOCPFileAccessor::开启异步请求模式");
+		PrintNetLog(0,_T("CIOCPFileAccessor::开启异步请求模式"));
 	}
 	else
 	{
 		m_UseAsyncQuery=false;
 		if(!m_RequestQueue.Create(RequestQueuSize))
 		{
-			PrintNetLog(0,"CIOCPFileAccessor::创建请求缓冲失败");
+			PrintNetLog(0,_T("CIOCPFileAccessor::创建请求缓冲失败"));
 			return FALSE;
 		}
 	}
 	if(!m_ErrorQueue.Create(ErrorQueuSize))
 	{
-		PrintNetLog(0,"CIOCPFileAccessor::创建错误缓冲失败");
+		PrintNetLog(0,_T("CIOCPFileAccessor::创建错误缓冲失败"));
 		return FALSE;
 	}
 
@@ -391,7 +391,7 @@ BOOL CIOCPFileAccessor::QueryRead(ULONG64 StartPos,ULONG64 ReadSize)
 			COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
 			if(pOverLappedObject==NULL)
 			{
-				PrintNetLog(0xffffffff,"CIOCPFileAccessor::创建Write用OverLappedObject失败！");
+				PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::创建Write用OverLappedObject失败！"));
 				PushError(FET_QUEUE_ERROR,FQEC_QUEUE_FULL);
 				return FALSE;
 			}
@@ -415,7 +415,7 @@ BOOL CIOCPFileAccessor::QueryRead(ULONG64 StartPos,ULONG64 ReadSize)
 			{
 				if(!m_RequestQueue.PushBack(pOverLappedObject))
 				{
-					PrintNetLog(0xffffffff,"CIOCPFileAccessor::请求缓冲队列已满！");	
+					PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::请求缓冲队列已满！"));	
 					GetServer()->DeleteOverLappedObject(pOverLappedObject);
 					PushError(FET_QUEUE_ERROR,FQEC_QUEUE_FULL);
 					return FALSE;
@@ -458,7 +458,7 @@ BOOL CIOCPFileAccessor::QueryWrite(ULONG64 StartPos,LPVOID pData,ULONG64 WriteSi
 			COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
 			if(pOverLappedObject==NULL)
 			{
-				PrintNetLog(0xffffffff,"CIOCPFileAccessor::创建Write用OverLappedObject失败！");
+				PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::创建Write用OverLappedObject失败！"));
 				PushError(FET_QUEUE_ERROR,FQEC_QUEUE_FULL);
 				return FALSE;
 			}
@@ -474,7 +474,7 @@ BOOL CIOCPFileAccessor::QueryWrite(ULONG64 StartPos,LPVOID pData,ULONG64 WriteSi
 			if(!pOverLappedObject->GetDataBuff()->PushBack(pData,(int)PacketSize))
 			{
 				GetServer()->DeleteOverLappedObject(pOverLappedObject);
-				PrintNetLog(0xffffffff,"CIOCPFileAccessor::要写入的数据包过大！");
+				PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::要写入的数据包过大！"));
 				PushError(FET_UNKNOW,0);
 				return FALSE;
 			}			
@@ -490,7 +490,7 @@ BOOL CIOCPFileAccessor::QueryWrite(ULONG64 StartPos,LPVOID pData,ULONG64 WriteSi
 			{
 				if(!m_RequestQueue.PushBack(pOverLappedObject))
 				{
-					PrintNetLog(0xffffffff,"CIOCPFileAccessor::请求缓冲队列已满！");	
+					PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::请求缓冲队列已满！"));	
 					GetServer()->DeleteOverLappedObject(pOverLappedObject);
 					PushError(FET_QUEUE_ERROR,FQEC_QUEUE_FULL);
 					return FALSE;
@@ -585,7 +585,7 @@ BOOL CIOCPFileAccessor::DoOverlappedOperation(COverLappedObject * pOverLappedObj
 				int ErrorCode=GetLastError();
 				if(ErrorCode!=ERROR_IO_PENDING)
 				{
-					PrintNetLog(0xffffffff,"CIOCPFileAccessor::发出Read请求失败%d！",ErrorCode);
+					PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::发出Read请求失败%d！"),ErrorCode);
 					PushError(FET_SYSTEM_ERROR,ErrorCode,
 						pOverLappedObject->GetOverlapped()->OffsetHigh,
 						pOverLappedObject->GetOverlapped()->Offset,
@@ -605,7 +605,7 @@ BOOL CIOCPFileAccessor::DoOverlappedOperation(COverLappedObject * pOverLappedObj
 				int ErrorCode=GetLastError();
 				if(ErrorCode!=ERROR_IO_PENDING)
 				{
-					PrintNetLog(0xffffffff,"CIOCPFileAccessor::发出Write请求失败%d！",ErrorCode);
+					PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::发出Write请求失败%d！"),ErrorCode);
 					PushError(FET_SYSTEM_ERROR,ErrorCode,
 						pOverLappedObject->GetOverlapped()->OffsetHigh,
 						pOverLappedObject->GetOverlapped()->Offset,
@@ -616,7 +616,7 @@ BOOL CIOCPFileAccessor::DoOverlappedOperation(COverLappedObject * pOverLappedObj
 		}
 		else
 		{
-			PrintNetLog(0xffffffff,"CIOCPFileAccessor::未知的Overlapped请求%d！",pOverLappedObject->GetType());
+			PrintNetLog(0xffffffff,_T("CIOCPFileAccessor::未知的Overlapped请求%d！"),pOverLappedObject->GetType());
 			PushError(FET_UNKNOW,0);
 			return FALSE;
 		}

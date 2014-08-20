@@ -135,6 +135,16 @@ BOOL CEasyThread::WaitForTerminate(DWORD Milliseconds)
 	}
 }
 
+BOOL CEasyThread::SetThreadPriority(int Priority)
+{
+	return FALSE;
+}
+
+int CEasyThread::GetThreadPriority()
+{
+	return ET_PRIORITY_ERROR_RETURN;
+}
+
 BOOL CEasyThread::OnStart()
 {
 	return TRUE;

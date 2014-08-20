@@ -28,15 +28,7 @@ protected:
 public:
 	CEasyTime()
 	{
-		m_wYear=0;
-		m_wDayOfYear=0;
-		m_wMonth=0;
-		m_wDayOfWeek=0;
-		m_wDay=0;
-		m_wHour=0;
-		m_wMinute=0;
-		m_wSecond=0;
-		m_wMilliseconds=0;
+		Clear();
 	}
 	CEasyTime(const CEasyTime& Time)
 	{
@@ -49,6 +41,11 @@ public:
 		m_wMinute=Time.m_wMinute;
 		m_wSecond=Time.m_wSecond;
 		m_wMilliseconds=Time.m_wMilliseconds;
+	}
+	CEasyTime(LPCTSTR szTime)
+	{
+		Clear();
+		FromString(szTime);
 	}
 #ifdef WIN32
 	CEasyTime(const SYSTEMTIME& Time)
@@ -107,6 +104,23 @@ public:
 	~CEasyTime()
 	{
 
+	}
+	bool IsValidate() const
+	{
+		return m_wYear!=0||m_wDayOfYear!=0||m_wMonth!=0||m_wDayOfWeek!=0||
+			m_wDay!=0||m_wHour!=0||m_wMinute!=0||m_wSecond!=0;
+	}
+	void Clear()
+	{
+		m_wYear=0;
+		m_wDayOfYear=0;
+		m_wMonth=0;
+		m_wDayOfWeek=0;
+		m_wDay=0;
+		m_wHour=0;
+		m_wMinute=0;
+		m_wSecond=0;
+		m_wMilliseconds=0;
 	}
 #ifdef WIN32
 	CEasyTime& operator=(const SYSTEMTIME& Time)
@@ -192,17 +206,24 @@ public:
 	}
 	CEasyTime& operator=(const time_t Time)
 	{
-		tm Tm;
-		localtime_s(&Tm,&Time);
-		m_wYear=1900+Tm.tm_year;
-		m_wDayOfYear=Tm.tm_yday;
-		m_wMonth=Tm.tm_mon+1;
-		m_wDayOfWeek=Tm.tm_wday;
-		m_wDay=Tm.tm_mday;
-		m_wHour=Tm.tm_hour;
-		m_wMinute=Tm.tm_min;
-		m_wSecond=Tm.tm_sec;
-		m_wMilliseconds=0;
+		if(Time)
+		{
+			tm Tm;
+			localtime_s(&Tm,&Time);
+			m_wYear=1900+Tm.tm_year;
+			m_wDayOfYear=Tm.tm_yday;
+			m_wMonth=Tm.tm_mon+1;
+			m_wDayOfWeek=Tm.tm_wday;
+			m_wDay=Tm.tm_mday;
+			m_wHour=Tm.tm_hour;
+			m_wMinute=Tm.tm_min;
+			m_wSecond=Tm.tm_sec;
+			m_wMilliseconds=0;
+		}
+		else
+		{
+			Clear();
+		}
 
 		return *this;
 	}
@@ -233,17 +254,24 @@ public:
 	}
 	void GetTime(time_t& Time) const
 	{
-		tm Tm;
-		Tm.tm_year=m_wYear-1900;
-		Tm.tm_yday=m_wDayOfYear;
-		Tm.tm_mon=m_wMonth-1;
-		Tm.tm_wday=m_wDayOfWeek;
-		Tm.tm_mday=m_wDay;
-		Tm.tm_hour=m_wHour;
-		Tm.tm_min=m_wMinute;
-		Tm.tm_sec=m_wSecond;
+		if(IsValidate())
+		{
+			tm Tm;
+			Tm.tm_year=m_wYear-1900;
+			Tm.tm_yday=m_wDayOfYear;
+			Tm.tm_mon=m_wMonth-1;
+			Tm.tm_wday=m_wDayOfWeek;
+			Tm.tm_mday=m_wDay;
+			Tm.tm_hour=m_wHour;
+			Tm.tm_min=m_wMinute;
+			Tm.tm_sec=m_wSecond;
 
-		Time=mktime(&Tm);
+			Time=mktime(&Tm);
+		}
+		else
+		{
+			Time=0;
+		}
 	}
 	operator tm() const
 	{
@@ -421,6 +449,32 @@ public:
 	{
 		return m_wMilliseconds;
 	}
+	bool FromString(LPCTSTR szTime)
+	{
+		WORD Year;
+		WORD Month;		
+		WORD Day;
+		WORD Hour;
+		WORD Minute;
+		WORD Second;
+	
+
+		int Count=_stscanf(szTime,_T("%hd-%hd-%hd %hd:%hd:%hd"),&Year,&Month,&Day,&Hour,&Minute,&Second);
+		if(Count>=6)
+		{
+			m_wYear=Year;
+			m_wDayOfYear=0;
+			m_wMonth=Month;
+			m_wDayOfWeek=0;
+			m_wDay=Day;
+			m_wHour=Hour;
+			m_wMinute=Minute;
+			m_wSecond=Second;
+			m_wMilliseconds=0;
+			return true;
+		}
+		return false;
+	}
 	LPCTSTR FormatStatic(LPCTSTR szFormat)
 	{
 		static TCHAR szFormatBuffer[TIME_FORMAT_BUFFER_LEN+1];
@@ -505,6 +559,11 @@ public:
 		GetTime(Time);
 		Time+=Minute*60;
 		*this=Time;
+	}
+
+	bool IsValidate()
+	{
+		return m_wYear<=6199&&m_wMonth>=1&&m_wMonth<=12&&m_wDay>=1&&m_wDay<=31&&m_wHour<=23&&m_wMinute<=59&&m_wSecond<=59;
 	}
 
 	static bool IsSameDate(const CEasyTime& Time1,const CEasyTime& Time2)

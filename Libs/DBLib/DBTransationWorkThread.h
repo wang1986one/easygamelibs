@@ -37,7 +37,7 @@ public:
 
 	void Destory();
 
-	bool Init(IDBConnection * pConnection,LPCTSTR ConnectStr,int QueueSize=DEFAULT_TRANS_QUEUE);
+	bool Init(IDBConnection * pConnection,LPCSTR ConnectStr,int QueueSize=DEFAULT_TRANS_QUEUE);
 	bool AddTransaction(CDBTransaction * pDBTansaction);
 	CDBTransaction *PopFinishTransaction();
 

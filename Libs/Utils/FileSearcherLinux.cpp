@@ -27,7 +27,7 @@ BOOL CFileSearcher::FindFirst(LPCTSTR FindPattern)
 	Close();
 	CEasyString SearchPattern=MakeFullPath(FindPattern);
 	m_SearchDir=GetPathDirectory(SearchPattern);
-	CEasyString FilePattern=GetPathFileName(SearchPattern);
+	CEasyString FilePattern=GetPathFileNameExt(SearchPattern);
 
 	DIR * pDir=opendir(m_SearchDir);
 

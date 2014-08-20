@@ -12,10 +12,10 @@
 #pragma once
 
 
-#define   _FILE_OFFSET_BITS   64
-#define   _LARGEFILE64_SOURCE
-#define   __USE_LARGEFILE64
-
+#define _FILE_OFFSET_BITS   64
+#define _LARGEFILE64_SOURCE
+#define __USE_LARGEFILE64
+#define	_RENENTRANT
 
 #include <string.h>
 #include <stdarg.h>
@@ -342,12 +342,12 @@ inline unsigned int AtomicDec(volatile unsigned int * pVal)
 
 inline unsigned int AtomicAdd(volatile unsigned int * pVal,int AddVal)
 {
-	return AO_int_fetch_and_add(pVal,AddVal);
+	return AO_int_fetch_and_add(pVal,AddVal)+AddVal;
 }
 
 inline unsigned int AtomicSub(volatile unsigned int * pVal,int SubVal)
 {
-	return AO_int_fetch_and_add(pVal,-SubVal);
+	return AO_int_fetch_and_add(pVal,-SubVal)-SubVal;
 }
 
 inline int AtomicCompareAndSet(volatile unsigned int * pVal,unsigned int CompValue,unsigned int NewVal)
@@ -359,7 +359,15 @@ inline int AtomicCompareAndSet(volatile unsigned int * pVal,unsigned int CompVal
 
 #define ZeroMemory(Destination,Length) memset((Destination),0,(Length))
 
+inline size_t AnsiToUnicode(const char * SrcStr,size_t SrcLen,wchar_t * DestStr,size_t DestLen)
+{
+	return mbstowcs(DestStr,SrcStr,SrcLen);
+}
 
+inline size_t UnicodeToAnsi(const wchar_t * SrcStr,size_t SrcLen,char * DestStr,size_t DestLen)
+{
+	return wcstombs(DestStr,SrcStr,SrcLen);
+}
 
 
 #include "TCharLinux.h"
@@ -370,26 +378,26 @@ inline int AtomicCompareAndSet(volatile unsigned int * pVal,unsigned int CompVal
 
 typedef struct tagRECT
 {
-	LONG    left;
-	LONG    top;
-	LONG    right;
-	LONG    bottom;
+	int    left;
+	int    top;
+	int    right;
+	int    bottom;
 } RECT, *PRECT,  *LPRECT;
 
 typedef const tagRECT * LPCRECT;
 
 typedef struct tagPOINT
 {
-	LONG  x;
-	LONG  y;
+	int  x;
+	int  y;
 } POINT, *PPOINT,  *LPPOINT;
 
 typedef const tagPOINT * LPCPOINT;
 
 typedef struct tagSIZE
 {
-	LONG        cx;
-	LONG        cy;
+	int        cx;
+	int        cy;
 } SIZE, *PSIZE, *LPSIZE;
 
 typedef const tagSIZE * LPCSIZE;

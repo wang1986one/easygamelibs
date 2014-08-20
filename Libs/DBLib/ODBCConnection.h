@@ -40,10 +40,11 @@ public:
 	virtual IDBRecordSet * CreateRecordSet(int RecordSetType);
 	virtual IDBParameterSet * CreateParameterSet(int RecordSetType);
 
-	virtual int Connect(LPCTSTR ConnectStr);
+	virtual int Connect(LPCSTR ConnectStr);
 	virtual int Disconnect();
 	virtual BOOL IsConnected();
-	virtual int ExecuteSQL(LPCSTR SQLStr,int StrLen=0,IDBParameterSet * pParamSet=NULL);	
+	virtual int ExecuteSQL(LPCSTR SQLStr,int StrLen=0,IDBParameterSet * pParamSet=NULL);
+	virtual int GetTables();
 	virtual int GetResults(IDBRecordSet * pDBRecordset);
 	virtual int NextResults(IDBRecordSet * pDBRecordset);
 	virtual int GetAffectedRowCount();
@@ -51,22 +52,23 @@ public:
 	virtual int Commit();
 	virtual int RollBack();
 	virtual UINT GetLastDatabaseErrorCode();
-	virtual LPCTSTR GetLastDatabaseErrorString();
-	virtual int TranslateString(LPCTSTR szSource,int SrcLen,LPTSTR szTarget,int MaxLen);
+	virtual LPCSTR GetLastDatabaseErrorString();
+	virtual int TranslateString(LPCSTR szSource,int SrcLen,LPTSTR szTarget,int MaxLen);
 	
 	void ProcessMessagesODBC(SQLSMALLINT plm_handle_type,SQLHANDLE plm_handle,char *logstring,int ConnInd);
-	static int ODBCCTypeTODBLibType(int Type,UINT& Size);
-	static int DBLibTypeToODBCCType(int Type,UINT& Size);
-	static int DBLibTypeToODBCSQLType(int Type,UINT& Size);
-	static int ODBCSQLTypeTOODBCCType(int Type,UINT& Size);
+	static int ODBCCTypeTODBLibType(int Type,UINT64& Size);
+	static int DBLibTypeToODBCCType(int Type,UINT64& Size);
+	static int DBLibTypeToODBCSQLType(int Type,UINT64& Size);
+	static int ODBCSQLTypeTOODBCCType(int Type,UINT64& Size);
 	
 	static int DBParamTypeToODBCParamType(int Type);
+	
 
 protected:
 	virtual int FetchStaticResult(SQLHSTMT hStmt,CDBStaticRecordSet * pDBRecordset);
 	int ExecuteSQLDirect(LPCSTR SQLStr,int StrLen);
 	int ExecuteSQLWithParam(LPCSTR SQLStr,int StrLen,CDBParameterSet * pParamSet);
-	void SetConnectFlags(LPCTSTR szFlags);
+	void SetConnectFlags(LPCSTR szFlags);
 	
 };
 

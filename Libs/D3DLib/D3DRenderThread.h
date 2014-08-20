@@ -41,6 +41,7 @@ protected:
 
 	CEasyTimer						m_FrameCountTimer;
 	UINT							m_FrameCount;
+	UINT64							m_TotalFrameCount;
 	volatile float					m_FrameRate;
 
 	CEasyTimer						m_RenderControlTimer;
@@ -48,7 +49,7 @@ protected:
 
 	DECLARE_CLASS_INFO(CD3DRenderThread)
 public:
-	CD3DRenderThread(void);
+	CD3DRenderThread(UINT LockSpinCount=0);
 	~CD3DRenderThread(void);
 
 	void SetDevice(CD3DDevice * pDevice)
@@ -100,6 +101,15 @@ public:
 	float GetFrameRate()
 	{
 		return m_FrameRate;
+	}
+	UINT64 GetFrameTotalCount()
+	{
+		return m_TotalFrameCount;
+	}
+
+	CEasyCriticalSection& GetLock()
+	{
+		return m_EditLock;
 	}
 
 	int GetRenderObjectCount(UINT InstanceID);

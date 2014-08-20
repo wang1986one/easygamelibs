@@ -17,10 +17,13 @@ class CSystemConfig :
 protected:
 	UINT			m_MainThreadProcessLimit;
 	CIPAddress		m_UDPControlAddress;
-	bool			m_LogServerObjectUse;
+	bool			m_LogServerObjectUse;	
 	UINT			m_LogLevel;
+	UINT			m_ConsoleLogLevel;
 	UINT			m_GuardThreadKeepAliveTime;
 	UINT			m_GuardThreadKeepAliveCount;
+	bool			m_PreLoadModuleSym;
+	bool			m_MakeFullDump;
 public:
 	CSystemConfig(void);
 	~CSystemConfig(void);
@@ -40,9 +43,21 @@ public:
 	{
 		return m_LogServerObjectUse;
 	}
+	bool IsPreLoadModuleSym()
+	{
+		return m_PreLoadModuleSym;
+	}
+	bool IsMakeFullDump()
+	{
+		return m_MakeFullDump;
+	}
 	UINT GetLogLevel()
 	{
 		return m_LogLevel;
+	}
+	UINT GetConsoleLogLevel()
+	{
+		return m_ConsoleLogLevel;
 	}
 	UINT GetGuardThreadKeepAliveTime()
 	{

@@ -25,7 +25,7 @@ CDlgMethodEditor::CDlgMethodEditor(CWnd* pParent /*=NULL*/)
 	: CDialog(CDlgMethodEditor::IDD, pParent)
 	, m_Name(_T(""))
 	, m_Description(_T(""))
-	, m_ID(_T(""))
+	, m_ID(0)
 	,m_ParamIDSeed(0)
 {
 
@@ -65,7 +65,7 @@ BOOL CDlgMethodEditor::OnInitDialog()
 	m_lvParamList.SetExtendedStyle(LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
 
 
-	m_lvParamList.InsertColumn(0,"名称",LVCFMT_LEFT,100);
+	m_lvParamList.InsertColumn(0,"名称",LVCFMT_LEFT,150);
 	m_lvParamList.InsertColumn(1,"ID",LVCFMT_LEFT,50);
 	m_lvParamList.InsertColumn(2,"类型",LVCFMT_LEFT,60);	
 	m_lvParamList.InsertColumn(3,"长度",LVCFMT_LEFT,50);
@@ -179,6 +179,7 @@ void CDlgMethodEditor::OnBnClickedButtonParamUp()
 			m_ParamList.erase(m_ParamList.begin()+Index);
 			m_ParamList.insert(m_ParamList.begin()+Index-1,Temp);
 			FillListItem();
+			SelectItemByName(Temp.Name);
 		}
 	}
 }
@@ -197,6 +198,7 @@ void CDlgMethodEditor::OnBnClickedButtonParamDown()
 			m_ParamList.erase(m_ParamList.begin()+Index);
 			m_ParamList.insert(m_ParamList.begin()+Index+1,Temp);
 			FillListItem();
+			SelectItemByName(Temp.Name);
 		}
 	}
 }
@@ -210,11 +212,15 @@ void CDlgMethodEditor::AddListItem(METHOD_PARAM& ParamInfo,UINT Index)
 	Temp.Format("%u",ParamInfo.ID);
 	m_lvParamList.SetItemText(Item,1,Temp);
 
-	PARAM_TYPE * pTypeInfo=GetMainDlg()->GetParamType(ParamInfo.Type);
+	TYPE_DEFINE * pTypeInfo=GetMainDlg()->FindVarType(ParamInfo.Type);
 	if(pTypeInfo)
 	{
-		if(ParamInfo.IsReference)			
-			m_lvParamList.SetItemText(Item,2,pTypeInfo->ReferenceDefine);
+		if(ParamInfo.IsReference)		
+		{
+			CString Temp=pTypeInfo->GenerateOperations.ReferenceDefine;
+			Temp.Replace("<Type>",pTypeInfo->Name);
+			m_lvParamList.SetItemText(Item,2,Temp);
+		}
 		else
 			m_lvParamList.SetItemText(Item,2,pTypeInfo->Name);
 	}
@@ -227,11 +233,11 @@ void CDlgMethodEditor::AddListItem(METHOD_PARAM& ParamInfo,UINT Index)
 	m_lvParamList.SetItemText(Item,4,ParamInfo.DefaultValue);
 	if(ParamInfo.CanNull)
 	{
-		m_lvParamList.SetItemText(Item,5,"可为空");
+		m_lvParamList.SetItemText(Item,5,"是");
 	}
 	else
 	{
-		m_lvParamList.SetItemText(Item,5,"不可为空");
+		m_lvParamList.SetItemText(Item,5,"否");
 	}
 	m_lvParamList.SetItemText(Item,6,ParamInfo.Description);
 }
@@ -243,11 +249,15 @@ void CDlgMethodEditor::EditListItem(int Item,METHOD_PARAM& ParamInfo)
 	Temp.Format("%u",ParamInfo.ID);
 	m_lvParamList.SetItemText(Item,1,Temp);
 
-	PARAM_TYPE * pTypeInfo=GetMainDlg()->GetParamType(ParamInfo.Type);
+	TYPE_DEFINE * pTypeInfo=GetMainDlg()->FindVarType(ParamInfo.Type);
 	if(pTypeInfo)
 	{
-		if(ParamInfo.IsReference)			
-			m_lvParamList.SetItemText(Item,2,pTypeInfo->ReferenceDefine);
+		if(ParamInfo.IsReference)		
+		{
+			CString Temp=pTypeInfo->GenerateOperations.ReferenceDefine;
+			Temp.Replace("<Type>",pTypeInfo->Name);
+			m_lvParamList.SetItemText(Item,2,Temp);
+		}
 		else
 			m_lvParamList.SetItemText(Item,2,pTypeInfo->Name);
 	}
@@ -275,6 +285,22 @@ void CDlgMethodEditor::FillListItem()
 	for(UINT i=0;i<m_ParamList.size();i++)
 	{
 		AddListItem(m_ParamList[i],i);
+	}
+}
+
+void CDlgMethodEditor::SelectItemByName(LPCTSTR szName)
+{
+	for(int i=0;i<m_lvParamList.GetItemCount();i++)
+	{
+		if(m_lvParamList.GetItemText(i,0)==szName)
+		{
+			m_lvParamList.SetItemState(i,LVIS_SELECTED,LVIS_SELECTED);
+			m_lvParamList.EnsureVisible(i,false);
+		}
+		else
+		{
+			m_lvParamList.SetItemState(i,0,LVIS_SELECTED);
+		}
 	}
 }
 

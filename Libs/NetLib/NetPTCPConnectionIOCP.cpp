@@ -44,7 +44,7 @@ BOOL CNetPTCPConnection::OnIOCPEvent(int EventID,COverLappedObject * pOverLapped
 				if(pOverLappedObject->GetDataBuff()->GetUsedSize()<=0)
 				{						
 					GetServer()->DeleteOverLappedObject(pOverLappedObject);
-					//PrintNetLog(0xffffffff,"%s(%d)Connection收对方连接关闭信号(%d)！",
+					//PrintNetLog(0xffffffff,_T("%s(%d)Connection收对方连接关闭信号(%d)！"),
 					//	GetName(),m_Session,
 					//	pOverLappedObject->GetDataBuff()->GetUsedSize());
 					Disconnect();
@@ -57,7 +57,7 @@ BOOL CNetPTCPConnection::OnIOCPEvent(int EventID,COverLappedObject * pOverLapped
 					GetServer()->DeleteOverLappedObject(pOverLappedObject);
 					if(!QueryRecv())
 					{
-						PrintNetLog(0xffffffff,"无法发出更多的Recv请求,连接关闭！");
+						PrintNetLog(0xffffffff,_T("无法发出更多的Recv请求,连接关闭！"));
 						Disconnect();	
 						return FALSE;
 					}
@@ -68,21 +68,21 @@ BOOL CNetPTCPConnection::OnIOCPEvent(int EventID,COverLappedObject * pOverLapped
 				}
 			}
 			else
-				PrintNetLog(0xffffffff,"Connection收到非法IOCP包！");
+				PrintNetLog(0xffffffff,_T("Connection收到非法IOCP包！"));
 			
 		}
 
 		//else
-		//	PrintNetLog(0xffffffff,"(%d)(%d)Connection收到IOCP错误！",GetID(),m_Session);
+		//	PrintNetLog(0xffffffff,_T("(%d)(%d)Connection收到IOCP错误！"),GetID(),m_Session);
 		if(IsConnected())
 		{
-			//PrintNetLog(0xffffffff,"(%d)(%d)Connection IOCP出错时连接还未断开,连接关闭！",GetID(),m_Session);
+			//PrintNetLog(0xffffffff,_T("(%d)(%d)Connection IOCP出错时连接还未断开,连接关闭！"),GetID(),m_Session);
 			Disconnect();
 		}		
 	}
 	else
 	{
-		//PrintNetLog(0xffffffff,"(%d)(%d)Connection未连接，IOCP包(%u)被忽略！",GetID(),m_Session,pOverLappedObject->GetParentID());
+		//PrintNetLog(0xffffffff,_T("(%d)(%d)Connection未连接，IOCP包(%u)被忽略！"),GetID(),m_Session,pOverLappedObject->GetParentID());
 	}
 	GetServer()->DeleteOverLappedObject(pOverLappedObject);
 
@@ -206,7 +206,7 @@ BOOL CNetPTCPConnection::IsDisconnected()
 
 BOOL CNetPTCPConnection::StartWork()
 {	
-	//PrintNetLog(0xffffffff,"(%d)Connection开始工作",GetID());	
+	//PrintNetLog(0xffffffff,_T("(%d)Connection开始工作"),GetID());	
 
 	m_Socket.SetState(CNetSocket::SS_CONNECTED);	
 	m_pIOCPEventRouter->Init(this);
@@ -216,7 +216,7 @@ BOOL CNetPTCPConnection::StartWork()
 	if(!m_Socket.EnableBlocking(FALSE))
 	{
 		OnConnection(FALSE);
-		PrintNetLog(0xffffffff,"(%d)Connection开始非阻塞模式失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Connection开始非阻塞模式失败！"),GetID());
 		m_Socket.Close();		
 		return FALSE;
 	}
@@ -224,7 +224,7 @@ BOOL CNetPTCPConnection::StartWork()
 	if(!GetServer()->BindSocket(m_Socket.GetSocket()))
 	{
 		OnConnection(FALSE);
-		PrintNetLog(0xffffffff,"(%d)Connection绑定IOCP失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Connection绑定IOCP失败！"),GetID());
 		m_Socket.Close();		
 		return FALSE;
 	}
@@ -232,13 +232,13 @@ BOOL CNetPTCPConnection::StartWork()
 	if(!QueryRecv())
 	{
 		OnConnection(FALSE);
-		PrintNetLog(0xffffffff,"(%d)Connection初始化Recv失败！",GetID());
+		PrintNetLog(0xffffffff,_T("(%d)Connection初始化Recv失败！"),GetID());
 		m_Socket.Close();
 		return FALSE;
 	}
 		
 	
-	//PrintNetLog(0xffffffff,"%s连接建立[%u]",GetName(),(UINT)m_Socket.GetSocket());
+	//PrintNetLog(0xffffffff,_T("%s连接建立[%u]"),GetName(),(UINT)m_Socket.GetSocket());
 
 	OnConnection(TRUE);
 	return TRUE;
@@ -269,7 +269,7 @@ BOOL CNetPTCPConnection::QuerySend(LPCVOID pData,int Size)
 			COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
 			if(pOverLappedObject==NULL)
 			{
-				PrintNetLog(0xffffffff,"Connection创建Send用OverLappedObject失败！");
+				PrintNetLog(0xffffffff,_T("Connection创建Send用OverLappedObject失败！"));
 				return FALSE;
 			}
 
@@ -281,7 +281,7 @@ BOOL CNetPTCPConnection::QuerySend(LPCVOID pData,int Size)
 			if(!pOverLappedObject->GetDataBuff()->PushBack(pData,PacketSize))
 			{
 				GetServer()->DeleteOverLappedObject(pOverLappedObject);
-				PrintNetLog(0xffffffff,"Connection要发送的数据包过大！");
+				PrintNetLog(0xffffffff,_T("Connection要发送的数据包过大！"));
 				return FALSE;
 			}
 			pData=(char *)pData+PacketSize;
@@ -301,7 +301,7 @@ BOOL CNetPTCPConnection::QuerySend(LPCVOID pData,int Size)
 				AtomicInc(&m_SendQueryCount);
 				continue;
 			}
-			PrintNetLog(0xffffffff,"发出Send请求失败！");	
+			PrintNetLog(0xffffffff,_T("发出Send请求失败！"));	
 			GetServer()->DeleteOverLappedObject(pOverLappedObject);
 			return FALSE;
 		}
@@ -317,7 +317,7 @@ BOOL CNetPTCPConnection::QueryRecv()
 		COverLappedObject * pOverLappedObject=GetServer()->CreateOverLappedObject();
 		if(pOverLappedObject==NULL)
 		{
-			PrintNetLog(0xffffffff,"(%d)Connection创建Recv用OverLappedObject失败！",GetID());
+			PrintNetLog(0xffffffff,_T("(%d)Connection创建Recv用OverLappedObject失败！"),GetID());
 			return FALSE;
 		}
 
@@ -340,7 +340,7 @@ BOOL CNetPTCPConnection::QueryRecv()
 		{
 			return TRUE;
 		}
-		PrintNetLog(0xffffffff,"(%d)发出Recv请求失败！",GetID());	
+		PrintNetLog(0xffffffff,_T("(%d)发出Recv请求失败！"),GetID());	
 		GetServer()->DeleteOverLappedObject(pOverLappedObject);
 	}
 	return FALSE;

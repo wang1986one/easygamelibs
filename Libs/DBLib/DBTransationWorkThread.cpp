@@ -42,7 +42,7 @@ void CDBTransationWorkThread::Destory()
 	SAFE_RELEASE(m_pConnection);
 }
 
-bool CDBTransationWorkThread::Init(IDBConnection * pConnection,LPCTSTR ConnectStr,int QueueSize)
+bool CDBTransationWorkThread::Init(IDBConnection * pConnection,LPCSTR ConnectStr,int QueueSize)
 {
 	if(pConnection==NULL)
 		return false;
@@ -58,13 +58,23 @@ bool CDBTransationWorkThread::Init(IDBConnection * pConnection,LPCTSTR ConnectSt
 
 	PrintDBLog(0xff,"工作线程队列长度%d",QueueSize);
 
-	return Start();
+	return Start()!=FALSE;
 }
 
 bool CDBTransationWorkThread::AddTransaction(CDBTransaction * pDBTansaction)
 {
 	if(pDBTansaction)
-		return m_TransQueue.PushBack(pDBTansaction);
+	{
+		if(m_TransQueue.PushBack(pDBTansaction))
+		{
+			return true;
+		}
+		else
+		{
+			PrintDBLog(0xff,"事务队列已满(%u,%u)",m_TransQueue.GetObjectCount(),m_TransQueue.GetBufferSize());
+			return false;
+		}
+	}
 	else
 		return false;
 }
@@ -87,7 +97,7 @@ BOOL CDBTransationWorkThread::OnRun()
 	m_TransQueue.PopFront(pDBTansaction);
 	if(pDBTansaction)
 	{
-		LONG ExecTime=CEasyTimer::GetTime();
+		DWORD ExecTime=CEasyTimer::GetTime();
 		bool Ret=pDBTansaction->OnExecute(m_pConnection);
 		ExecTime=GetTimeToTime(ExecTime,CEasyTimer::GetTime());
 		m_pManager->AddExecTime(ExecTime);
@@ -114,7 +124,7 @@ BOOL CDBTransationWorkThread::OnRun()
 		{
 			PrintDBLog(0xff,"连接已断开，重新连接");
 			m_pConnection->Disconnect();
-			m_pConnection->Connect((LPCTSTR)m_ConnectString);
+			m_pConnection->Connect((LPCSTR)m_ConnectString);
 		}
 		m_ConnectionTestTimer.SaveTime();
 	}

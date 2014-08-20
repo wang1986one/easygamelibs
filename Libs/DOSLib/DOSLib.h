@@ -11,8 +11,9 @@
 /****************************************************************************/
 #pragma once
 
-#include "DOSDefines.h"
 #include "DOSMessage.h"
+#include "DOSDefines.h"
+
 
 
 #include "DOSBaseObject.h"

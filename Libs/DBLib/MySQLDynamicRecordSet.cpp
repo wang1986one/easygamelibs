@@ -64,6 +64,7 @@ int CMySQLDynamicRecordSet::Init(CMySQLConnection * pDBConnection,MYSQL_STMT_HAN
 	for(int i=0;i<ColNum;i++)
 	{	
 		m_FetchBuffer[i].buffer_type=pFields[i].type;
+		m_FetchBuffer[i].is_unsigned=(pFields[i].flags&UNSIGNED_FLAG)?1:0;
 		m_FetchBuffer[i].buffer=(char *)m_FetchDataBuffer.GetFreeBuffer();
 		m_FetchBuffer[i].buffer_length=CMySQLConnection::GetMySQLTypeBinLength(pFields[i].type,pFields[i].length,pFields[i].decimals);
 		m_FetchDataBuffer.PushBack(NULL,m_FetchBuffer[i].buffer_length);		
@@ -77,6 +78,33 @@ int CMySQLDynamicRecordSet::Init(CMySQLConnection * pDBConnection,MYSQL_STMT_HAN
 		
 	}
 	mysql_free_result(hResult);
+
+	if(mysql_stmt_bind_result(m_hStmt,&(m_FetchBuffer[0])))
+	{
+		m_pDBConnection->ProcessErrorMsg(m_hStmt,"绑定结果集失败");
+		return DBERR_BINDCOLFAIL;
+	}
+	if(m_CacheAllData)
+	{
+		if(mysql_stmt_store_result(m_hStmt))
+		{
+			m_pDBConnection->ProcessErrorMsg(m_hStmt,"缓存结果集失败");
+			return DBERR_BUFFER_OVERFLOW;
+		}
+	}
+	int Ret=FetchRow();	
+	return Ret;
+}
+
+int CMySQLDynamicRecordSet::NextResults()
+{
+	if(m_pDBConnection==NULL||m_hStmt==NULL)
+		return DBERR_INVALID_PARAM;
+
+	int RetCode;
+	RetCode=mysql_stmt_next_result(m_hStmt);
+	if(RetCode>0)
+		return DBERR_FETCH_RESULT_FAIL;
 
 	if(mysql_stmt_bind_result(m_hStmt,&(m_FetchBuffer[0])))
 	{
@@ -122,7 +150,7 @@ int CMySQLDynamicRecordSet::GetColumnCount()
 	return (int)m_pColumnInfos.GetCount();
 }
 
-LPCTSTR CMySQLDynamicRecordSet::GetColumnName(int Index)
+LPCSTR CMySQLDynamicRecordSet::GetColumnName(int Index)
 {
 	if(Index>=0&&Index<(int)m_pColumnInfos.GetCount())
 	{
@@ -131,7 +159,7 @@ LPCTSTR CMySQLDynamicRecordSet::GetColumnName(int Index)
 	return NULL;
 }
 
-int CMySQLDynamicRecordSet::GetIndexByColumnName(LPCTSTR Name)
+int CMySQLDynamicRecordSet::GetIndexByColumnName(LPCSTR Name)
 {
 	for(int i=0;i<(int)m_pColumnInfos.GetCount();i++)
 	{
@@ -160,7 +188,7 @@ CDBValue& CMySQLDynamicRecordSet::GetField(int Index)
 	return m_EmptyValue;
 }
 
-CDBValue& CMySQLDynamicRecordSet::GetField(LPCTSTR Name)
+CDBValue& CMySQLDynamicRecordSet::GetField(LPCSTR Name)
 {
 	int Index=GetIndexByColumnName(Name);
 	if(Index>=0)
@@ -234,7 +262,7 @@ int CMySQLDynamicRecordSet::MovePrevious()
 			Offset--;
 			mysql_stmt_row_seek(m_hStmt,Offset);
 			int Ret=FetchRow();
-			if(Ret=DBERR_NO_RECORDS)
+			if(Ret==DBERR_NO_RECORDS)
 			{
 				m_IsBOF=true;
 				return DBERR_IS_RECORDSET_HEAD;
@@ -263,7 +291,7 @@ int CMySQLDynamicRecordSet::MoveTo(int Index)
 		{
 			mysql_stmt_data_seek(m_hStmt,Index);
 			int Ret=FetchRow();
-			if(Ret=DBERR_NO_RECORDS)
+			if(Ret==DBERR_NO_RECORDS)
 			{
 				m_IsEOF=true;
 				return DBERR_IS_RECORDSET_TAIL;
@@ -308,7 +336,7 @@ int CMySQLDynamicRecordSet::FetchRow()
 		{
 			if(Ret==MYSQL_DATA_TRUNCATED)
 			{
-				m_pDBConnection->ProcessErrorMsg(m_hStmt,"出现数据截断");
+				m_pDBConnection->ProcessErrorMsg(m_hStmt,"出现数据截断");				
 				return DBERR_FETCH_RESULT_FAIL;
 			}
 			else if(Ret==MYSQL_NO_DATA)
@@ -333,14 +361,13 @@ int CMySQLDynamicRecordSet::FetchRow()
 			}
 			else
 			{
-				m_RowBuffer[i].SetEmptyValue(m_pColumnInfos[i].Type,m_pColumnInfos[i].Size,m_pColumnInfos[i].DigitSize);
-
 				if(!CMySQLConnection::MySQLBinValueToDBValue(m_FetchBuffer[i].buffer_type,
 					m_FetchBuffer[i].buffer,*(m_FetchBuffer[i].length),
-					m_RowBuffer[i].GetBuffer(),m_RowBuffer[i].GetLength()))
+					m_pColumnInfos[i].Type,m_pColumnInfos[i].DigitSize,
+					m_RowBuffer[i]))
 				{
 					return DBERR_BINDPARAMFAIL;
-				}
+				}				
 			}
 		}
 		m_IsBOF=false;

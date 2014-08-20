@@ -24,4 +24,5 @@ public:
 	virtual BOOL OnInitDialog();
 
 	void FlushStatus(CSmartStruct& ServerStatus);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };
